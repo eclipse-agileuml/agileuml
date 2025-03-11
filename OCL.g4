@@ -48,8 +48,8 @@ classBodyElement
     ; 
 
 attributeDefinition 
-    :  'attribute' identifier ('identity' | 'derived')? ':' type ';' 
-    | 'static' 'attribute' identifier ':' type ';'
+    :  'attribute' identifier ('identity' | 'derived')? ':' type ( ':=' expression )? ';' 
+    | 'static' 'attribute' identifier ':' type ( ':=' expression )? ';'
     ; 
 
 operationDefinition
@@ -96,7 +96,8 @@ invariant
 
 stereotype
       : 'stereotype' identifier ';'  
-      | 'stereotype' identifier '=' STRING_LITERAL ';'  
+      | 'stereotype' identifier '=' STRING1_LITERAL ';'  
+      | 'stereotype' identifier '=' STRING2_LITERAL ';'  
       | 'stereotype' identifier '=' identifier ';' 
       ;
 
@@ -121,6 +122,7 @@ type
     | 'Set' '(' type ')'  
     | 'Bag' '(' type ')' 
     | 'OrderedSet' '(' type ')' 
+    | 'SortedSet' '(' type ')' 
     | 'Ref' '(' type ')'  
     | 'Map' '(' type ',' type ')' 
     | 'Function' '(' type ',' type ')' 
@@ -150,7 +152,8 @@ basicExpression
     | ID '@pre'  
     |	INT  
     | FLOAT_LITERAL
-    | STRING_LITERAL
+    | STRING1_LITERAL
+    | STRING2_LITERAL
     | ID   
     |	'(' expression ')'
     ; 
@@ -366,7 +369,9 @@ identifier: ID ;
 
 FLOAT_LITERAL:  Digits '.' Digits ;
 
-STRING_LITERAL:     '"' (~["\\\r\n] | EscapeSequence)* '"';
+STRING1_LITERAL:     '"' (~["\\\r\n] | EscapeSequence)* '"';
+
+STRING2_LITERAL:     '\'' (~['\\\r\n] | EscapeSequence)* '\'';
 
 NULL_LITERAL:       'null';
 

@@ -6277,8 +6277,10 @@ class WhileStatement extends Statement
       // JOptionPane.showMessageDialog(null, 
       //    ">>> Type of loop range " + loopRange + " is " + lrt + "(" + lret + ")",
       //    "Type error", JOptionPane.ERROR_MESSAGE); 
+
       System.out.println(">>> Type of loop range " + loopRange + " is " + lrt + "(" + lret + ")");
       System.out.println(); 
+
       if (lret == null)
       { if (loopVar.type != null) 
         { lret = loopVar.type; } 
@@ -6297,6 +6299,33 @@ class WhileStatement extends Statement
       System.out.println(">>> Type of loop variable " + lv + " is " + lv.getType() + " entity: " + lv.getEntity());   
 
       env1.add(lv); 
+
+      // variables of loopRange should be disjoint from 
+      // write frame of body: 
+
+      Vector wrf = body.writeFrame(); 
+      Vector actuses = loopRange.getVariableUses();
+      actuses = ModelElement.removeExpressionByName("skip", actuses); 
+      actuses.add(loopVar + ""); 
+      Vector attrs = loopRange.allAttributesUsedIn(); 
+
+      for (int i = 0; i < wrf.size(); i++) 
+      { String wv = (String) wrf.get(i); 
+        int indx = wv.indexOf("::"); 
+        if (indx > 0) 
+        { wv = wv.substring(indx + 2); }
+
+        // System.out.println(wv + " " + actuses); 
+ 
+        if (VectorUtil.containsEqualString(wv,actuses))
+        { System.err.println("!! ERROR: writing loop var/range variable " + wv + " in loop body\n"); } 
+
+        // System.out.println(wv + " " + attrs); 
+
+        if (VectorUtil.containsEqualString(wv,attrs))
+        { System.err.println("!! ERROR: writing loop range attribute " + wv + " in loop body\n"); } 
+      } 
+
     } 
 
     return body.typeCheck(types,entities,ctxs,env1); 

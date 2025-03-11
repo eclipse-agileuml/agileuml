@@ -4,12 +4,15 @@ import re
 import copy
 
 from mathlib import *
+from stringlib import *
 from oclfile import *
 from ocltype import *
 from ocldate import *
 from oclprocess import *
 from ocliterator import *
+from oclrandom import *
 from ocldatasource import *
+from sortedcontainers import *
 from enum import Enum
 
 def free(x):
@@ -39,5 +42,36 @@ def displaySet(x):
 
 def displayMap(x):
   print(x)
+
+
+class CC : 
+  cc_instances = []
+  cc_index = dict({})
+
+  def __init__(self):
+    self.sq = ["a","1","b","2"]
+    CC.cc_instances.append(self)
+
+
+
+  def op(self, x) :
+    while x in self.sq :
+      self.sq = ocl.excludingFirst(self.sq, x)
+
+  def killCC(cc_x) :
+    cc_instances = ocl.excludingSet(cc_instances, cc_x)
+    free(cc_x)
+
+def createCC():
+  cc = CC()
+  return cc
+
+def allInstances_CC():
+  return CC.cc_instances
+
+
+cc_OclType = createByPKOclType("CC")
+cc_OclType.instance = createCC()
+cc_OclType.actualMetatype = type(cc_OclType.instance)
 
 

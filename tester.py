@@ -28,17 +28,6 @@ MAXOBJECTS = 500
 
 
 
-fromvb_count = len(app.FromVB.fromvb_instances)
-fromvb_FindArray_counts = [0 for _x in range(0,100)]
-fromvb_FindArray_totals = [0 for _y in range(0,100)]
-
-for _ex in app.FromVB.fromvb_instances :
-  MutationTest.MutationTest.FindArray_mutation_tests(_ex,fromvb_FindArray_counts, fromvb_FindArray_totals)
-  print("")
-
-for _idx in range(0,len(fromvb_FindArray_counts)) :
-  if fromvb_FindArray_totals[_idx] > 0 :
-    print("Test " + str(_idx) + " effectiveness: " + str(100.0*fromvb_FindArray_counts[_idx]/fromvb_FindArray_totals[_idx]) + "%")
-
+cc_count = len(app.CC.cc_instances)
 
 
