@@ -3162,6 +3162,14 @@ class BinaryExpression
   {   result = "ocl.excludingMapValue(" + ls + ", " + rs + ")";
  
   }  else
+      {   if (((String) operator).equals("->excludingKey")) 
+  {   result = "ocl.excludingMapKey(" + ls + ", " + rs + ")";
+ 
+  }  else
+      {   if (((String) operator).equals("->excludingValue")) 
+  {   result = "ocl.excludingMapValue(" + ls + ", " + rs + ")";
+ 
+  }  else
       {   if (((String) operator).equals("->excludingAt")) 
   {   result = "ocl.excludingAtMap(" + ls + ", " + rs + ")";
  
@@ -3194,6 +3202,8 @@ class BinaryExpression
   {   result = ls + " " + operator + " " + rs;
  
   }   
+   } 
+   } 
    } 
    } 
    } 
@@ -19727,7 +19737,8 @@ public void setisStatic(BehaviouralFeature behaviouralfeaturex, boolean isStatic
 
   }
 
-  public static void main(String[] args)
+
+   public static void main(String[] args)
   { Controller c = Controller.inst();
 
     java.util.Date d0 = new java.util.Date(); 
@@ -19747,8 +19758,6 @@ public void setisStatic(BehaviouralFeature behaviouralfeaturex, boolean isStatic
     System.err.println(">>> Time for model load = " + (t1-t0) + " Time for transformation: " + (t2-t1));  
   }  
 
-
- 
 }
 
 
