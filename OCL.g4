@@ -125,6 +125,7 @@ type
     | 'SortedSet' '(' type ')' 
     | 'Ref' '(' type ')'  
     | 'Map' '(' type ',' type ')' 
+    | 'SortedMap' '(' type ',' type ')' 
     | 'Function' '(' type ',' type ')' 
     | ID
     ; 
@@ -267,7 +268,7 @@ factor2Expression
    | factor2Expression ('->pow' | '->gcd') '(' expression ')' 
    | factor2Expression ('->at' | '->union' | '->intersection' 
             | '->includes' | '->excludes' | '->including' 
-            | '->excluding' | '->includesAll'  
+            | '->excluding' | '->excludingKey' | '->excludingValue' | '->includesAll'  
             | '->symmetricDifference' 
             | '->excludesAll' | '->prepend' | '->append'  
             | '->count' | '->apply' ) 
@@ -314,6 +315,7 @@ setExpression
     | 'SortedSet{' expressionList? '}' 
     | 'Sequence{' expressionList? '}' 
     | 'Map{' expressionList? '}'
+    | 'SortedMap{' expressionList? '}'
     ; 
 
 statement 
