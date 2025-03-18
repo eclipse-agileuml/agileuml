@@ -2255,6 +2255,7 @@ ocltype::
 = _1 |-->Map<when> _1`isMapExpression true
 = _1 |-->_1`ocltype
 
+
 True |-->boolean
 False |-->boolean
 inf |-->double
@@ -2270,6 +2271,23 @@ deque |-->Sequence
 set |-->Set
 tuple |-->Sequence
 bool |-->boolean
+name |-->String
+
+_1 |-->_1`ocltype<when> _1 testlist_star_expr
+_1 |-->_1`ocltype<when> _1 testlist
+_1 |-->_1`ocltype<when> _1 trailer
+_1 |-->_1`ocltype<when> _1 arglist
+_1 |-->_1`ocltype<when> _1 argument
+_1 |-->_1`ocltype<when> _1 arguments
+_1 |-->_1`ocltype<when> _1 test
+_1 |-->_1`ocltype<when> _1 logical_test
+_1 |-->_1`ocltype<when> _1 comparison
+_1 |-->_1`ocltype<when> _1 expr
+_1 |-->_1`ocltype<when> _1 atom
+_1 |-->_1`ocltype<when> _1 name
+_1 |-->_1`ocltype<when> _1 subscriptlist
+_1 |-->_1`ocltype<when> _1 subscript
+_1 |-->_1`numberType<when> _1 number
 
 callable _1 |-->boolean
 bool _1 |-->boolean
@@ -2402,26 +2420,10 @@ _1 _2 |-->_2`sequenceTrailerType<when> _1 Sequence, _2 trailer
 
 _1 _2 |-->_2`trailerOclType<when> _1 atom, _2 trailer
 
-_1 |-->int<when> _1 int
+_1 |-->int<when> _1 integer
 _1 |-->double<when> _1 real
 _1 |-->String<when> _1 String
 _1 |-->Sequence<when> _1`isSequenceExpression true
-
-_1 |-->_1`ocltype<when> _1 testlist_star_expr
-_1 |-->_1`ocltype<when> _1 testlist
-_1 |-->_1`ocltype<when> _1 trailer
-_1 |-->_1`ocltype<when> _1 arglist
-_1 |-->_1`ocltype<when> _1 argument
-_1 |-->_1`ocltype<when> _1 arguments
-_1 |-->_1`ocltype<when> _1 test
-_1 |-->_1`ocltype<when> _1 logical_test
-_1 |-->_1`ocltype<when> _1 comparison
-_1 |-->_1`ocltype<when> _1 expr
-_1 |-->_1`ocltype<when> _1 atom
-_1 |-->_1`ocltype<when> _1 name
-_1 |-->_1`ocltype<when> _1 subscriptlist
-_1 |-->_1`ocltype<when> _1 subscript
-_1 |-->_1`numberType<when> _1 number
 
 _1 |-->OclAny
 _* |-->OclAny
@@ -2675,7 +2677,7 @@ _1 |-->_1`attributeDefinitions<when> _1 compound_stmt
 
 _1 |--><when> _1 funcdef
 
-_1 _2 |-->  attribute _1`removeSelf : _2`ocltype _2;\n<when> _2 assign_part, _1 matches self.*
+_1 _2 |-->  attribute _1`removeSelf : _2`ocltype;\n<when> _2 assign_part, _1 matches self.*
 
 _1 |-->
 _* |-->

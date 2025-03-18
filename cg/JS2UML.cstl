@@ -1,3 +1,7 @@
+/* Abstractor for JavaScript to UML. Uses definitions of Set, Map from */
+/* https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ */
+
+
 program::
 _1 _2 _3 |-->_2
 _1 _2 |-->_1
@@ -54,10 +58,24 @@ _1 _2 |-->_1
 variableDeclarationList::
 _1 _* |-->_*\n
 
+
 variableDeclaration::
-_1 = _2 |-->    var _1 : _2`type ;\n    _1 := _2 ;\n 
+_1 = _2 |-->    var _1 : _2`ocltype := _2 ;\n 
 , |-->
-_1 |-->    var _1 : OclAny ;\n    _1 := null ;\n
+_1 |-->    var _1 : OclAny := null ;\n
+
+
+singleVariableDeclaration::
+var _1 |-->_1`singleVariableDeclaration<when> _1 variableDeclaration
+_1 = _2 |-->true
+_1 |-->false
+_* |-->false 
+
+initValue::
+var _1 |-->_1`initValue<when> _1 variableDeclaration
+_1 = _2 |-->_2
+_1 |-->
+_* |--> 
 
 
 variableName::
@@ -81,30 +99,33 @@ ifStatement::
 if ( _1 ) _2 else _3 |-->    if _1 then\n  _2\n    else (\n  _3\n    )
 if ( _1 ) _2 |-->    if _1 then\n  _2\n    else skip
 
+
 iterationStatement::
 do _1 while ( _2 ) _3 |-->    while true do (\n  _1 ;\n      if _2 then skip else break\n    )\n
                                                                         
 while ( _1 ) _2 |-->    while _1 do (\n  _1`updateForm_2 )\n                                                                       
 
-for ( _1 ; _2 ; _3 ) _4 |-->_1`updateForm ;\n    while _2 do (\n  _4; _3`updateForm )\n
+for ( _1 ; _2 ; _3 ) _4 |-->    for _1`variableName : Integer.subrange(_1`initValue,_2`upperBound) do (\n  _4 ) ; \n<when> _1`singleVariableDeclaration true, _1`variableName _2`lowerBound, _1`variableName _3`simpleIncrementVariable 
 
-for ( _1 ; _2 ; ) _3 |-->_1`updateForm ;\n    while _2 do (\n  _3 )\n
+for ( _1 ; _2 ; _3 ) _4 |-->_1`updateForm\n    while _2 do (\n  _4; _3`updateForm ) ;\n
 
-for ( _1 ; ; _2 ) _3 |-->_1`updateForm ;\n    while true do (\n  _3; _2`updateForm )\n
+for ( _1 ; _2 ; ) _3 |-->_1`updateForm\n    while _2 do (\n  _3 ) ;\n
 
-for ( _1 ; ; ) _2 |-->_1`updateForm ;\n    while true do (\n  _2 )\n
+for ( _1 ; ; _2 ) _3 |-->_1`updateForm\n    while true do (\n  _3; _2`updateForm ) ;\n
 
-for ( ; _1 ; _2 ) _3 |-->    while _1 do (\n  _3; _2`updateForm )\n
+for ( _1 ; ; ) _2 |-->_1`updateForm\n    while true do (\n  _2 ) ;\n
 
-for ( ; _1 ; ) _2 |-->    while _1 do (\n  _2 )\n
+for ( ; _1 ; _2 ) _3 |-->    while _1 do (\n  _3; _2`updateForm ) ;\n
 
-for ( ; ; _1 ) _2 |-->    while true do (\n  _2; _1`updateForm )\n
+for ( ; _1 ; ) _2 |-->    while _1 do (\n  _2 ) ;\n
 
-for ( ; ; ) _1 |-->    while true do (\n  _1 )\n
+for ( ; ; _1 ) _2 |-->    while true do (\n  _2; _1`updateForm ) ;\n
 
-for ( _1 in _2 ) _3 |-->    for _1`variableName : _2`domain do (\n  _3 )\n
+for ( ; ; ) _1 |-->    while true do (\n  _1 ) ;\n
 
-for ( _1 of _2 ) _3 |-->    for _1`variableName : _2 do (\n  _3 )\n 
+for ( _1 in _2 ) _3 |-->    for _1`variableName : _2`domain do (\n  _3 ) ; \n
+
+for ( _1 of _2 ) _3 |-->    for _1`variableName : _2 do (\n  _3 ) ;\n 
    
 
 domain::
@@ -345,11 +366,36 @@ argument::
 _1 |-->_1
 
 
+
+upperBound::
+_1 |-->_1`upperBound<when> _1 singleExpression
+_1 < _2 |-->(_2)-1
+_1 <= _2 |-->_2
+_1 |-->Math_PINFINITY
+_* |-->Math_PINFINITY
+
+lowerBound::
+_1 |-->_1`lowerBound<when> _1 singleExpression
+_1 < _2 |-->_1
+_1 <= _2 |-->_1
+_1 |-->Math_NINFINITY
+_* |-->Math_NINFINITY
+
+simpleIncrementVariable::
+_1 |-->_1`simpleIncrementVariable<when> _1 singleExpression
+_1 ++ |-->_1
+++ _1 |-->_1
+_1 |-->
+_* |-->
+
 expressionSequence::
 _* |-->_*`last
 
 
+
 singleExpression::
+
+window . alert |-->OclFile["System.out"].println
 
 alert |-->OclFile["System.out"].println
 
@@ -471,6 +517,9 @@ _1 . next |-->_1.nextResult
 
 _1 . slice |-->_1.subrange
 
+_1 . union |-->_1->union
+_1 . difference |-->_1 - 
+
 _1 . add |-->_1 := _1->including
 _1 . delete |-->_1 := _1->excluding
 _1 . push |-->_1 := _1->append
@@ -527,7 +576,8 @@ _1 [ _2 ] |-->_1[_2+1]<when> _1 String
 _1 [ _2 ] |-->_1->at(_2)
 _1 . _2 |-->_1._2
 
-new Set _1 |-->Set{}->union(_1)
+new Set _1 |-->Set{}->union_1
+new WeakSet _1 |-->Set{}->union_1
 new Map _1 |-->Map{}
 new WeakMap _1 |-->Map{}
 
@@ -710,8 +760,8 @@ _1 %= _2 |-->_1 mod _2
 _1 += _2 |-->_1 + _2
 _1 -= _2 |-->_1 - _2
 _1 <<= _2 |-->(_1*(2->pow(_2)))
-_1 >>= _2 |-->(_1/(2->pow(_2)))
-_1 >>>= _2 |-->(_1/(2->pow(_2)))
+_1 >>= _2 |-->(_1 div (2->pow(_2)))
+_1 >>>= _2 |-->(_1 div (2->pow(_2)))
 _1 &= _2 |-->MathLib.bitwiseAnd(_1,_2)
 _1 ^= _2 |-->MathLib.bitwiseXor(_1,_2)
 _1 |= _2 |-->MathLib.bitwiseOr(_1,_2)
@@ -727,9 +777,354 @@ _1 _2 |-->_1_2
 _1 |-->_1
 
 
+ocltype::
+PI |-->double
+LN10 |-->double
+LN2 |-->double
+LOG10E |-->double
+SQRT1_2 |-->double
+SQRT2 |-->double
+
+Infinity |-->double
+NaN |-->double
+
+this |-->OclAny
+
+random |-->double
+
+console . log |-->
+
+ArrayBuffer _1 |-->Sequence
+
+Array.of _1 |-->Sequence
+Array.from _1 |-->Sequence
+Int8Array.of _1 |-->Sequence
+Int8Array.from _1 |-->Sequence
+Int16Array.of _1 |-->Sequence
+Int16Array.from _1 |-->Sequence
+Int32Array.of _1 |-->Sequence
+Int32Array.from _1 |-->Sequence
+
+Number . MIN_VALUE |-->double
+Number . NaN |-->double
+Number . EPSILON |-->double
+Number . POSITIVE_INFINITY |-->double
+Number . NEGATIVE_INFINITY |-->double
+Number . MIN_SAFE_INTEGER |-->double
+Number . MAX_SAFE_INTEGER |-->double
+
+Math . PI |-->double
+Math . random |-->double
+Math . LN10 |-->double
+Math . LN2 |-->double
+Math . LOG10E |-->double
+Math . SQRT1_2 |-->double
+Math . SQRT2 |-->double
+
+_1 . buffer |-->Sequence<when> _1 Sequence
+_1 . lastIndex |-->int
+
+Object.create _1 |-->_1`ocltype
+Object.assign _1 |-->Map
+Object.defineProperty _1 |-->Map
+Object.defineProperties _1 |-->Map
+Object.entries _1 |-->Sequence
+Object.freeze _1 |-->_1`ocltype
+Object.fromEntries _1 |-->Map<when> _1 Sequence
+Object.fromEntries _1 |-->_1`ocltype
+Object.getOwnPropertyNames _1 |-->Set
+Object.hasOwn _1 |-->boolean
+Object.hasOwnProperty _1 |-->boolean
+Object.is _1 |-->boolean
+Object.keys _1 |-->Set
+Object.values _1 |-->Sequence
+
+
+Number.parseFloat _1 |-->double
+Number.parseInt _1 |-->int
+
+Math.cos _1 |-->double
+Math.sin _1 |-->double
+Math.tan _1 |-->double
+Math.acos _1 |-->double
+Math.asin _1 |-->double
+Math.atan _1 |-->double
+Math.cosh _1 |-->double
+Math.sinh _1 |-->double
+Math.tanh _1 |-->double
+Math.log _1 |-->double
+Math.log10 _1 |-->double
+Math.exp _1 |-->double
+Math.sqrt _1 |-->double
+Math.cbrt _1 |-->double
+Math.abs _1 |-->double
+Math.floor _1 |-->double
+Math.ceil _1 |-->double
+Math.round _1 |-->double
+Math.fround _1 |-->double
+Math.trunc _1 |-->int
+Math.sign _1 |-->int
+Math.log2 _1 |-->double
+Math.acosh _1 |-->double
+Math.asinh _1 |-->double
+Math.atanh _1 |-->double
+Math.pow _1 |-->double
+Math.min _1 |-->double
+Math.max _1 |-->double
+Math.hypot _1 |-->double
+
+Reflect.construct _1 |-->_1`firstArg
+Reflect.has _1 |-->boolean
+Reflect.ownKeys _1 |-->Sequence
+
+_1 . next |-->OclAny
+
+_1 . slice |-->_1`ocltype
+
+_1 . union |-->Set
+_1 . difference |-->Set 
+
+_1 . entries |-->Sequence
+
+_1 . size |-->int
+_1 . length |-->int
+
+_1 . keys |-->OclIterator
+_1 . values |-->OclIterator
+
+_1 . reverse |-->_1`ocltype
+_1 . has |-->boolean
+_1 . includes |-->boolean
+_1 . toString |-->String
+_1 . join |-->String
+_1 . hasOwnProperty |-->boolean
+_1 . get |-->OclAny
+_1 . at |-->OclAny
+_1 . charAt |-->String
+_1 . concat |-->String
+_1 . trim |-->String
+_1 . startsWith |-->boolean
+_1 . endsWith |-->boolean
+_1 . split |-->Sequence
+_1 . toUpperCase |-->String
+_1 . toLowerCase |-->String
+_1 . valueOf |-->_1`ocltype
+_1 . match |-->String
+_1 . matchAll |-->Sequence
+_1 . replaceAll |-->String
+
+_1 . filter |-->_1`ocltype
+_1 . map |-->Sequence
+_1 . every |-->boolean
+_1 . some |-->boolean
+
+_1 . test |-->OclAny
+_1 . exec |-->Sequence
+
+_1 . deref |-->OclAny
+
+_1 [ "length" ] |-->int <when> _1 Sequence
+_1 [ _2 ] |-->OclAny<when> _1 Sequence
+_1 [ _2 ] |-->String<when> _1 String
+_1 [ _2 ] |-->OclAny
+_1 . _2 |-->OclAny
+
+new Set _1 |-->Set
+new WeakSet _1 |-->Set
+new Map _1 |-->Map
+new WeakMap _1 |-->Map
+
+new Array _1 |-->Sequence
+
+new ArrayBuffer _1 |-->Sequence
+
+new SharedArrayBuffer _1 |-->Sequence
+
+new BigInt64Array _1 |-->Sequence
+
+new Int32Array _1 |-->Sequence
+new Int16Array _1 |-->Sequence
+new Int8Array _1 |-->Sequence
+
+new Uint32Array _1 |-->Sequence
+new Uint16Array _1 |-->Sequence
+new Uint8Array _1 |-->Sequence
+new Uint8ClampedArray _1 |-->Sequence
+
+new Float32Array _1 |-->Sequence
+new Float64Array _1 |-->Sequence
+
+new Error _1 |-->OclException
+new EvalError _1 |-->OclException
+new AggregateError _1 |-->OclException
+new InternalError _1 |-->OclException
+new RangeError _1 |-->IndexingException
+new SyntaxError _1 |-->OclException 
+new TypeError _1 |-->OclException 
+new ReferenceError _1 |-->OclException 
+URIError _1 |--> IncorrectElementException
+
+new String _1 |-->String
+new BigInt _1 |-->long
+new RegExp _1 |-->OclRegex
+new WeakRef _1 |-->Ref
+
+new _1 _2 |-->_1    
+
+String _1 |-->String
+BigInt _1 |-->long
+RegExp _1 |-->OclRegex
+
+Set _1 |-->Set
+
+Array _1 |-->Sequence
+ArrayBuffer _1 |-->Sequence
+
+SharedArrayBuffer _1 |-->Sequence
+BigInt64Array _1 |-->Sequence
+
+Int32Array _1 |-->Sequence
+Int16Array _1 |-->Sequence
+Int8Array _1 |-->Sequence
+
+Uint32Array _1 |-->Sequence
+Uint16Array _1 |-->Sequence
+Uint8Array _1 |-->Sequence
+
+Float32Array _1 |-->Sequence
+Float64Array _1 |-->Sequence
+
+Error _1 |-->OclException
+EvalError _1 |-->OclException
+AggregateError _1 |-->OclException
+InternalError _1 |-->OclException
+RangeError _1 |-->IndexingException
+SyntaxError _1 |-->OclException 
+TypeError _1 |-->OclException 
+ReferenceError _1 |-->OclException 
+URIError _1 |-->IncorrectElementException
+            
+
+_1 -- |-->_1`ocltype
+_1 ++ |-->_1`ocltype
+
+parseFloat _1 |-->double
+parseInt _1 |-->int
+
+cos _1 |-->double
+sin _1 |-->double
+tan _1 |-->double
+acos _1 |-->double
+asin _1 |-->double
+atan _1 |-->double
+cosh _1 |-->double
+sinh _1 |-->double
+tanh _1 |-->double
+log _1 |-->double
+log10 _1 |-->double
+exp _1 |-->double
+sqrt _1 |-->double
+cbrt _1 |-->double
+abs _1 |-->double
+floor _1 |-->double
+ceil _1 |-->double
+round _1 |-->double
+fround _1 |-->double
+trunc _1 |-->int
+sign _1 |-->int
+log2 _1 |-->double
+acosh _1 |-->double
+asinh _1 |-->double
+atanh _1 |-->double
+pow _1 |-->double
+min _1 |-->double
+max _1 |-->double
+hypot _1 |-->double
+
+
+delete _1 |-->boolean
+void _1 |-->OclAny                                      
+typeof _1 |-->String
+++ _1 |-->_1`ocltype
+-- _1 |-->_1`ocltype
++ _1 |-->_1`ocltype 
+- _1 |-->_1`ocltype
+~ _1 |-->_1`ocltype
+! _1 |-->boolean
+await _1 |-->_1`ocltype
+
+_1 ** _2 |-->double 
+_1 * _2 |-->double<when> _2`ocltype double
+_1 * _2 |-->_1`ocltype
+
+_1 / _2 |-->double
+_1 % _2 |-->int
+_1 + _2 |-->double<when> _2`ocltype double
+_1 + _2 |-->_1`ocltype
+_1 - _2 |-->double<when> _2`ocltype double
+_1 - _2 |-->_1`ocltype
+_1 ?? _2 |-->_2`ocltype
+_1 << _2 |-->int
+_1 >> _2 |-->int
+_1 >>> _2 |-->int 
+_1 < _2 |-->boolean
+_1 > _2 |-->boolean
+_1 <= _2 |-->boolean
+_1 >= _2 |-->boolean
+_1 instanceof _2 |-->boolean
+
+_1 in _2 |-->boolean
+_1 == _2 |-->boolean
+_1 != _2 |-->boolean
+_1 === _2 |-->boolean
+_1 !== _2 |-->boolean
+_1 & _2 |-->_1`ocltype
+_1 ^ _2 |-->_1`ocltype
+_1 | _2 |-->_1`ocltype
+_1 && _2 |-->boolean
+_1 || _2 |-->boolean                                
+_1 ? _2 : _3 |-->_2`ocltype
+_1 = _2 |-->_2`ocltype
+_1 *= _2 |-->double<when> _2`ocltype double
+_1 *= _2 |-->_1`ocltype
+
+_1 /= _2 |-->double
+_1 %= _2 |-->int
+_1 += _2 |-->double<when> _2`ocltype double
+_1 += _2 |-->_1`ocltype
+_1 -= _2 |-->double<when> _2`ocltype double
+_1 -= _2 |-->_1`ocltype
+_1 <<= _2 |-->int
+_1 >>= _2 |-->int
+_1 >>>= _2 |-->int
+_1 &= _2 |-->int
+_1 ^= _2 |-->int
+_1 |= _2 |-->int
+_1 **= _2 |-->double
+_1 &&= _2 |-->boolean
+_1 ||= _2 |-->boolean
+
+( _1 ) |-->_1`ocltype
+
+_1 _2 |-->OclIterator<when> _1 generator, _2 arguments
+_1 _2 |-->_1`ocltype<when> _2 arguments
+_1 |-->int<when> _1 int
+_1 |-->Set<when> _1 Set
+_1 |-->Sequence<when> _1 Sequence
+_1 |-->Map<when> _1 Map
+_1 |-->String<when> _1 String
+_1 |-->double<when> _1 real
+
+_1 |-->OclAny
+
 updateForm::
+var _1 |-->_1<when> _1 variableDeclaration
+let _1 |-->_1<when> _1 variableDeclaration
+
 _1 , _* |-->_1`updateForm_*`updateForm
+
 _1 . forEach |-->  execute _1->forAll
+
 yield _1 ; |-->    if _yieldCount_ < _position_ then _1`updateForm  _yieldCount_ := _yieldCount_ + 1 else return _1 ;\n
 
 Atomics.add _1 |-->    _1`firstArg->at(_1`secondArg+1) := _1`firstArg->at(_1`secondArg+1) + _1`thirdArg ;\n 

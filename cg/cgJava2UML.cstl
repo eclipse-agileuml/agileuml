@@ -805,7 +805,9 @@ _1 _2 |-->_2`processVarDecs<action> _66 _1, _2`variableName _1,  _2`elemType _1`
 
 
 variableName::
+_1 |-->_1`variableName<when> _1 localVariableDeclaration
 _1 |-->_1`variableName<when> _1 variableDeclarator
+_1 _2 |-->_2`variableName<when> _2 variableDeclarators
 _1 , _2 |-->_1`variableName<when> _1 variableDeclarator
 _1 = _2 |-->_1
 _1 [ ] |-->_1
@@ -833,6 +835,10 @@ _1 |-->    var _1 : _1`getOclType<action> _1 _1`getOclType
 
 
 initialisationValue::
+_1 |-->_1`initialisationValue<when> _1 localVariableDeclaration
+_1 _2 |-->_2`initialisationValue<when> _2 variableDeclarators
+_1 |-->_1`initialisationValue<when> _1 variableDeclarator
+_1 , _2 |-->_1`initialisationValue<when> _1 variableDeclarator
 _1 = _2 |-->_2
 
 
@@ -4243,6 +4249,7 @@ if _1 _2 else _3 |-->    if _1 then _2 else _3 ;
 
 if _1 _2 |-->    if _1 then _2 else skip ; 
 
+for ( _1 ) _2 |-->  _1 _2`noSemiStatement _1`forIncrement ) ; <when> _2 statement 
 for ( _1 ) _2 |-->  _1 _2 _1`forIncrement ) ; 
  
 switch _1 { _2 _* } |-->\n    for _x : Integer.subrange(1,1) do\n      ( var _switchval : _1`type ;\n        _switchval := _1 ; \n_2\n_* )\n
@@ -4291,6 +4298,7 @@ if _1 _2 else _3 |-->    if _1 then _2 else _3
 
 if _1 _2 |-->    if _1 then _2 else skip
 
+for ( _1 ) _2 |-->  _1 _2`noSemiStatement _1`forIncrement )<when> _2 statement 
 for ( _1 ) _2 |-->  _1 _2 _1`forIncrement ) 
  
 switch _1 { _2 _* } |-->\n    for _x : Integer.subrange(1,1) do\n      ( var _switchval : _1`type ;\n        _switchval := _1 ; \n_2\n_* )\n
@@ -4339,6 +4347,8 @@ _1 |-->_1
 
 
 forIncrement::
+_1 ; _2 ; _3 |--> <when> _1`singleVariableDeclaration true, _3`singleVariableIncrement true, _1`variableName _3`incrementedVariable, _1`variableName _2`lowerBound
+
 _1 ; _2 ; _3 |--> ; _3`expressionListUpdateForm
 _1 ; ; _2 |--> ; _2`expressionListUpdateForm
 _1 ; ; |-->
@@ -4350,6 +4360,8 @@ _1 |-->
 
 
 forControl::
+_1 ; _2 ; _3 |-->  for _1`variableName : Integer.subrange(_1`initialisationValue, _2`upperBound) do ( <when> _1`singleVariableDeclaration true, _3`singleVariableIncrement true, _1`variableName _3`incrementedVariable, _1`variableName _2`lowerBound
+
 _1 ; _2 ; _3 |-->  _1 ; while _2 do (
 _1 ; ; _2 |-->  _1 ; while true do (
 _1 ; ; |-->  _1 ; while true do (
@@ -4363,6 +4375,59 @@ _1 |-->  for (_1) do (
 forInit::
 _1 |-->_1<when> _1 localVariableDeclaration
 _1 |-->_1`expressionListUpdateForm<when> _1 expressionList
+
+
+singleVariableDeclaration::
+_1 |-->_1`singleVariableDeclaration<when> _1 localVariableDeclaration
+int _2 |-->_2`singleVariableDeclaration<when> _2 variableDeclarators
+long _2 |-->_2`singleVariableDeclaration<when> _2 variableDeclarators
+short _2 |-->_2`singleVariableDeclaration<when> _2 variableDeclarators
+byte _2 |-->_2`singleVariableDeclaration<when> _2 variableDeclarators
+_1 _2 |-->false
+_1 |-->true<when> _1 variableDeclarator
+_1 , _2 |-->false
+_1 |-->false
+
+
+lowerBound::
+_1 < _2 |-->_1
+_1 <= _2 |-->_1
+_1 |-->_1`lowerBound<when> _1 expression
+_1 |-->Math_NINFINITY
+_* |-->Math_NINFINITY
+
+
+upperBound::
+_1 < _2 |-->(_2)-1
+_1 <= _2 |-->_2
+_1 |-->_1`upperBound<when> _1 expression
+_1 |-->Math_PINFINITY
+_* |-->Math_PINFINITY
+
+
+singleVariableIncrement::
+_1 |-->_1`singleVariableIncrement<when> _1 expression
+_1 ++ |-->true
+++ _1 |-->true
+_1 = _2 |-->true<when> _2`lhsOfPlusOne _1
+_1 = _2 |-->false
+_1 |-->false
+_* |-->false
+
+
+incrementedVariable::
+_1 |-->_1`incrementedVariable<when> _1 expression
+_1 ++ |-->_1
+++ _1 |-->_1
+_1 = _2 |-->_1<when> _2`lhsOfPlusOne _1
+_1 = _2 |-->
+_1 |-->
+_* |-->
+
+
+lhsOfPlusOne::
+_1 + 1 |-->_1
+_* |-->
 
 
 enhancedForControl::
