@@ -372,6 +372,7 @@ public abstract class ASTTerm
         if (ASTTerm.isSubterm(t1, subtrm))
         { return true; } 
       } 
+
       return false; 
     } 
 
@@ -389,6 +390,7 @@ public abstract class ASTTerm
       if (sublit.equals(trm.literalForm()))
       { return true; } 
     } 
+
     return false; 
   } 
       

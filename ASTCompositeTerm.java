@@ -9750,6 +9750,7 @@ public class ASTCompositeTerm extends ASTTerm
       Vector linit = loopInit.jscompleteUpdateForm(
                          vartypes,varelemtypes,types,
                          entities);
+
       ASTTerm loopTest = (ASTTerm) terms.get(4); 
       Expression ltest = loopTest.jsexpressionToKM3(
                          vartypes,varelemtypes,types,
@@ -9762,6 +9763,51 @@ public class ASTCompositeTerm extends ASTTerm
       Vector lbody = loopBody.jsstatementToKM3(                         
                          vartypes,varelemtypes,types,
                          entities);
+
+      boolean isSimpleFor = 
+        ((ASTCompositeTerm) loopInit).isJSforLoop(ltest,loopTest,lincr); 
+
+      // JOptionPane.showInputDialog("LOOP " + loopInit + " ; " + ltest + " ; " + lincr + " is for-loop: " + isSimpleFor); 
+
+      if (isSimpleFor)
+      { // for loopVar : Integer.subrange(initValue, upperBnd)
+        // do lbody
+
+        Expression loopVar = 
+          ((ASTCompositeTerm) loopInit).jsForLoopVar(); 
+        Expression initValue = 
+          ((ASTCompositeTerm) loopInit).jsForLoopInit(
+                             vartypes,
+                             varelemtypes,types,
+                             entities); 
+
+        BinaryExpression be = (BinaryExpression) ltest; 
+        Expression upperBnd = be.getRight();
+        if ("<".equals(be.getOperator()))
+        { upperBnd = 
+            new BinaryExpression("-", upperBnd, 
+              new BasicExpression(1)); 
+        } 
+ 
+        Vector forPars = new Vector(); 
+        forPars.add(initValue); 
+        forPars.add(upperBnd); 
+        Expression loopRange = 
+          BasicExpression.newFunctionBasicExpression(
+                 "subrange", "Integer", forPars);
+
+        Expression forTest = 
+          new BinaryExpression(":", loopVar, loopRange);  
+
+        WhileStatement fs = 
+          new WhileStatement(forTest,lbody);
+        fs.setLoopKind(Statement.FOR);
+        fs.setLoopVar(loopVar);   
+        fs.setLoopRange(loopRange); 
+        Vector res = new Vector(); 
+        res.add(fs); 
+        return res;   
+      } 
 
       // linit ; while ltest do (lbody; lincr)
 
@@ -10592,6 +10638,91 @@ public class ASTCompositeTerm extends ASTTerm
     return new Vector();  
   } 
 
+  public boolean isJSforLoop(Expression test, ASTTerm ltest,
+                             Vector incr)
+  { if (terms.size() == 2 && 
+        "var".equals(
+            ((ASTTerm) terms.get(0)).literalForm()) &&
+        "variableDeclaration".equals(
+            ((ASTTerm) terms.get(1)).getTag()))
+    { ASTTerm vdec = (ASTTerm) terms.get(1); 
+      if (vdec.size() == 3 && 
+          "=".equals(vdec.getTerm(1) + ""))
+      { ASTTerm vterm = (ASTTerm) vdec.getTerm(0); 
+        String loopVar = vterm.literalForm();
+ 
+        if (test instanceof BinaryExpression)
+        { BinaryExpression be = (BinaryExpression) test; 
+          if (loopVar.equals(be.getLeft() + "") && 
+              ("<".equals(be.getOperator()) || 
+               "<=".equals(be.getOperator())))
+          { // and loopVar not used in be.getRight()
+            ASTTerm lbound = (ASTTerm) ltest.getTerm(2); 
+            if (ASTTerm.isSubterm(vterm,lbound))
+            { return false; }
+
+            if (incr.size() == 1)
+            { Statement st = (Statement) incr.get(0); 
+              if (st instanceof AssignStatement)
+              { AssignStatement assign = 
+                  (AssignStatement) st; 
+                System.out.println(assign.getLhs()); 
+                System.out.println(assign.getRhs());
+                if (loopVar.equals(assign.getLhs() + "") && 
+                    (loopVar + " + 1").equals(
+                       (assign.getRhs() + "").trim()))
+                { return true; } 
+              }
+            } 
+          } 
+        } 
+      } 
+    } 
+
+    return false; 
+  } 
+
+  public Expression jsForLoopVar()
+  { if (terms.size() == 2 && 
+        "var".equals(
+           ((ASTTerm) terms.get(0)).literalForm()) &&
+        "variableDeclaration".equals(
+            ((ASTTerm) terms.get(1)).getTag()))
+    { ASTTerm vdec = (ASTTerm) terms.get(1); 
+      if (vdec.size() == 3 && 
+          "=".equals(vdec.getTerm(1) + ""))
+      { ASTTerm vterm = (ASTTerm) vdec.getTerm(0); 
+        String loopVar = vterm.literalForm(); 
+        BasicExpression res = 
+          BasicExpression.newVariableBasicExpression(loopVar,
+                                  new Type("int", null)); 
+        return res; 
+      }
+    }
+    return null; 
+  } 
+
+  public Expression jsForLoopInit(java.util.Map vartypes, 
+                            java.util.Map varelemtypes, 
+                            Vector types, Vector entities)
+  { if (terms.size() == 2 && 
+        "var".equals(
+            ((ASTTerm) terms.get(0)).literalForm()) &&
+        "variableDeclaration".equals(
+            ((ASTTerm) terms.get(1)).getTag()))
+    { ASTTerm vdec = (ASTTerm) terms.get(1); 
+      if (vdec.size() == 3 && 
+          "=".equals(vdec.getTerm(1) + ""))
+      { ASTTerm initerm = (ASTTerm) vdec.getTerm(2); 
+        Expression res = initerm.jsexpressionToKM3(vartypes,
+                             varelemtypes,types,
+                             entities);
+        return res; 
+      } 
+    }
+    return null; 
+  }
+
   public Vector jsfunctionDeclarationToKM3(java.util.Map vartypes, 
     java.util.Map varelemtypes, Vector types, Vector entities)
   { System.out.println(">> jsfunctionDeclarationToKM3 for " + tag + " with " + terms.size() + " terms"); 
@@ -10754,8 +10885,8 @@ public class ASTCompositeTerm extends ASTTerm
       varelemtypes.put(fname,bf.getReturnType()); 
       bf.setPost(trueExpression); 
 
-      System.out.println("Variable types = " + vartypes); 
-      System.out.println("Variable element types = " + varelemtypes); 
+      // System.out.println("Variable types = " + vartypes); 
+      // System.out.println("Variable element types = " + varelemtypes); 
 
       res.add(bf); 
       return res;    
@@ -10815,8 +10946,8 @@ public class ASTCompositeTerm extends ASTTerm
       vartypes.put(fname,bftype); 
       varelemtypes.put(fname,bf.getReturnType()); 
 
-      System.out.println("Variable types = " + vartypes); 
-      System.out.println("Variable element types = " + varelemtypes); 
+      // System.out.println("Variable types = " + vartypes); 
+      // System.out.println("Variable element types = " + varelemtypes); 
 
       res.add(bf); 
       return res;    
@@ -19990,6 +20121,218 @@ public class ASTCompositeTerm extends ASTTerm
     }  
     
     return toKM3();
+  } 
+
+  public boolean isKM3ForLoop()
+  { // There are 5 terms (ini ; bound ; incr)
+    // ini is a single int/long x variable decln
+    // bound is x < n or x <= n with x not occuring in n
+    // incr is x++ or ++x or x = x+1
+
+    if (tag.equals("forControl") && terms.size() > 4)
+    { ASTTerm decln = (ASTTerm) terms.get(0);
+      ASTTerm testf = (ASTTerm) terms.get(2);
+      ASTTerm incr = (ASTTerm) terms.get(4);
+
+      if (decln.getTag().equals("forInit") && 
+          decln.size() == 1)
+      { ASTTerm d1 = (ASTTerm) decln.getTerm(0); 
+        if (d1.getTag().equals("localVariableDeclaration"))
+        { Vector decterms = d1.getTerms(); 
+          ASTTerm typterm = (ASTTerm) decterms.get(0); 
+          ASTTerm decterm = (ASTTerm) decterms.get(1); 
+
+          String typ = typterm.literalForm(); 
+          if ("int".equals(typ) || "long".equals(typ) || 
+              "short".equals(typ) || "byte".equals(typ))
+          { } 
+          else 
+          { return false; } 
+
+          if (decterm.getTag().equals("variableDeclarators") && 
+              decterm.size() == 1) 
+          { ASTTerm vardec = (ASTTerm) decterm.getTerm(0); 
+            if (vardec.getTag().equals("variableDeclarator") &&
+                vardec.size() == 3) 
+            { // (variableDeclaratorId x) = (variableInitializer v)
+              ASTTerm varId = (ASTTerm) vardec.getTerm(0); 
+              String iterVar = varId.literalForm();
+ 
+              if (testf.getTag().equals("expression") && 
+                  testf.size() == 3) 
+              { ASTTerm lhs = (ASTTerm) testf.getTerm(0); 
+                ASTTerm oper = (ASTTerm) testf.getTerm(1); 
+                String op = oper.literalForm(); 
+                ASTTerm rhs = (ASTTerm) testf.getTerm(2); 
+                if (iterVar.equals(lhs.literalForm()) && 
+                    ("<".equals(op) || "<=".equals(op)) 
+                   )
+                { if (ASTTerm.isSubterm(varId,rhs))
+                  { return false; }
+                } 
+                else 
+                { return false; } 
+              } 
+
+              if (incr.getTag().equals("expressionList") && 
+                  incr.size() == 1) 
+              { ASTTerm expr = (ASTTerm) incr.getTerm(0); 
+                // must be iterVar++ or ++iterVar or 
+                // iterVar = iterVar + 1
+
+                String estring = expr.literalForm();
+
+                // JOptionPane.showInputDialog(">>> " + estring); 
+ 
+                if (estring.equals("++" + iterVar) || 
+                    estring.equals(iterVar + "++") || 
+                    estring.equals(iterVar + "=" + iterVar + "+1"))
+                { return true; } 
+              } 
+            } 
+          }
+          return false; 
+        } 
+      } 
+
+    }
+
+    return false; 
+  } 
+
+  public Expression simpleKM3ForLoopVariable()
+  { // There are 5 terms (ini ; bound ; incr)
+    // ini is a single int/long x variable decln
+    // bound is x < n or x <= n with x not occuring in n
+    // incr is x++ or ++x or x = x+1
+
+    if (tag.equals("forControl") && terms.size() > 4)
+    { ASTTerm decln = (ASTTerm) terms.get(0);
+      // ASTTerm testf = (ASTTerm) terms.get(2);
+      // ASTTerm incr = (ASTTerm) terms.get(4);
+
+      if (decln.getTag().equals("forInit") && 
+          decln.size() == 1)
+      { ASTTerm d1 = (ASTTerm) decln.getTerm(0); 
+        if (d1.getTag().equals("localVariableDeclaration"))
+        { Vector decterms = d1.getTerms(); 
+          ASTTerm typterm = (ASTTerm) decterms.get(0); 
+          ASTTerm decterm = (ASTTerm) decterms.get(1); 
+
+          Type oclType = null; 
+          String typ = typterm.literalForm(); 
+          if ("int".equals(typ) || 
+              "short".equals(typ) || "byte".equals(typ))
+          { oclType = new Type("int", null); } 
+          else if ("long".equals(typ))
+          { oclType = new Type("long", null); }
+          else
+          { return null; } 
+
+          if (decterm.getTag().equals("variableDeclarators") && 
+              decterm.size() == 1) 
+          { ASTTerm vardec = (ASTTerm) decterm.getTerm(0); 
+            if (vardec.getTag().equals("variableDeclarator") &&
+                vardec.size() == 3) 
+            { // (variableDeclaratorId x) = (variableInitializer v)
+
+              ASTTerm varId = (ASTTerm) vardec.getTerm(0); 
+              String iterVar = varId.literalForm();
+              BasicExpression res = 
+                BasicExpression.newVariableBasicExpression(
+                                             iterVar,oclType);
+              return res;   
+            } 
+          }
+
+          return null; 
+        } 
+      } 
+    }
+
+    return null; 
+  } 
+
+  public Expression simpleKM3ForLoopLowerBound()
+  { // There are 5 terms (ini ; bound ; incr)
+    // ini is a single int/long x variable decln
+    // bound is x < n or x <= n with x not occuring in n
+    // incr is x++ or ++x or x = x+1
+
+    if (tag.equals("forControl") && terms.size() > 4)
+    { ASTTerm decln = (ASTTerm) terms.get(0);
+      // ASTTerm testf = (ASTTerm) terms.get(2);
+      // ASTTerm incr = (ASTTerm) terms.get(4);
+
+      if (decln.getTag().equals("forInit") && 
+          decln.size() == 1)
+      { ASTTerm d1 = (ASTTerm) decln.getTerm(0); 
+        if (d1.getTag().equals("localVariableDeclaration"))
+        { Vector decterms = d1.getTerms(); 
+          ASTTerm typterm = (ASTTerm) decterms.get(0); 
+          ASTTerm decterm = (ASTTerm) decterms.get(1); 
+
+          Type oclType = null; 
+          String typ = typterm.literalForm(); 
+          if ("int".equals(typ) || 
+              "short".equals(typ))
+          { oclType = new Type("int", null); } 
+          else if ("long".equals(typ))
+          { oclType = new Type("long", null); }
+          else
+          { return null; } 
+
+          if (decterm.getTag().equals("variableDeclarators") && 
+              decterm.size() == 1) 
+          { ASTTerm vardec = (ASTTerm) decterm.getTerm(0); 
+            if (vardec.getTag().equals("variableDeclarator") &&
+                vardec.size() == 3) 
+            { // (variableDeclaratorId x) = (variableInitializer v)
+
+              ASTTerm initVal = (ASTTerm) vardec.getTerm(2); 
+              String ini = initVal.queryForm(); 
+              
+              return initVal.expression;   
+            } 
+          }
+
+          return null; 
+        } 
+      } 
+    }
+
+    return null; 
+  } 
+
+  public Expression simpleKM3ForLoopUpperBound()
+  { // There are 5 terms (ini ; bound ; incr)
+    // ini is a single int/long x variable decln
+    // bound is x < n or x <= n with x not occuring in n
+    // incr is x++ or ++x or x = x+1
+
+    if (tag.equals("forControl") && terms.size() > 4)
+    { // ASTTerm decln = (ASTTerm) terms.get(0);
+      ASTTerm testf = (ASTTerm) terms.get(2);
+      // ASTTerm incr = (ASTTerm) terms.get(4);
+
+      if (testf.getTag().equals("expression") && 
+          testf.size() == 3) 
+      { // ASTTerm lhs = (ASTTerm) testf.getTerm(0); 
+        ASTTerm oper = (ASTTerm) testf.getTerm(1); 
+        String op = oper.literalForm(); 
+        ASTTerm rhs = (ASTTerm) testf.getTerm(2); 
+        String rhsqf = rhs.queryForm(); 
+
+        if (rhs.expression != null && "<".equals(op))
+        { return new BinaryExpression("-", rhs.expression,
+                       new BasicExpression(1)); 
+        } 
+        else if ("<=".equals(op)) 
+        { return rhs.expression; } 
+      }
+    }
+
+    return null; 
   } 
 
   public String toKM3Test()
@@ -37401,11 +37744,48 @@ public class ASTCompositeTerm extends ASTTerm
         ASTTerm forIni = forControl.forInit(); 
         ASTTerm forInc = forControl.forIncr(); 
 
+        boolean isSimpleIteration = forControl.isKM3ForLoop();
+        // JOptionPane.showInputDialog(this + " is a KM3 for loop: " + isSimpleIteration); 
+
+        if (isSimpleIteration)
+        { Expression loopVar = 
+             forControl.simpleKM3ForLoopVariable(); 
+          Expression lowerBound = 
+             forControl.simpleKM3ForLoopLowerBound(); 
+          Expression upperBound = 
+             forControl.simpleKM3ForLoopUpperBound();
+
+          if (lowerBound != null && upperBound != null &&
+              terms.size() == 5)
+          { // for ( forControl ) code
+
+            Vector pars = new Vector(); 
+            pars.add(lowerBound); 
+            pars.add(upperBound);  
+            Expression loopRange = 
+              BasicExpression.newFunctionBasicExpression(
+                "subrange", "Integer", pars); 
+            Expression loopTst = 
+              new BinaryExpression(":", loopVar, loopRange); 
+            loopTst.setType(new Type("boolean", null)); 
+          
+            ASTTerm ttbody = (ASTTerm) terms.get(4); 
+            ttbody.toKM3(); 
+          
+            WhileStatement wfs = 
+              new WhileStatement(loopTst, ttbody.statement);
+            wfs.setLoopKind(Statement.FOR);  
+            wfs.setLoopVar(loopVar);
+            wfs.setLoopRange(loopRange);
+            statement = new SequenceStatement(); 
+            ((SequenceStatement) statement).addStatement(wfs);
+            return wfs + ""; 
+          } 
+        }
+
         String tst = forControl.toKM3Test(); 
         String init = forControl.toKM3Init(); 
         String incr = forControl.toKM3Incr();
-
-        // JOptionPane.showInputDialog("for test: " + forTst + " " + forTst.expression + " / " + forIni + " " + init + " / " + forInc + " " + incr); 
 
         if (forTst != null && forTst.expression == null) 
         { forTst.expression = new BasicExpression(true); } 

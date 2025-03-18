@@ -842,6 +842,10 @@ class BinaryExpression extends Expression
       lft = ((BinaryExpression) left).right;  
       out.println(id + ".variable = \"" + ((BinaryExpression) left).left + "\""); 
     } 
+    else if (operator.equals("->sortedBy"))
+    { op = "->sortedBy"; 
+      out.println(id + ".variable = \"self\""); 
+    } 
     else if (operator.equals("let"))
     { op = "let";
       String var = accumulator.getName();  
@@ -1796,10 +1800,14 @@ class BinaryExpression extends Expression
     res.left = lr; 
     if ("->select".equals(operator) || "->reject".equals(operator) || 
         "->collect".equals(operator) || "->closure".equals(operator) ||
-        "->selectMinimals".equals(operator) || "->selectMaximals".equals(operator) ||
-        "->isUnique".equals(operator) || "->sortedBy".equals(operator) || 
-        "->unionAll".equals(operator) || "->existsLC".equals(operator) ||
-        "->intersectAll".equals(operator) || "->concatenateAll".equals(operator) ||  
+        "->selectMinimals".equals(operator) || 
+        "->selectMaximals".equals(operator) ||
+        "->isUnique".equals(operator) || 
+        "->sortedBy".equals(operator) || 
+        "->unionAll".equals(operator) || 
+        "->existsLC".equals(operator) ||
+        "->intersectAll".equals(operator) || 
+        "->concatenateAll".equals(operator) ||  
         "->exists".equals(operator) || "->exists1".equals(operator) || 
         "->forAll".equals(operator))
     { res.right = right; } 
@@ -6424,7 +6432,9 @@ public void findClones(java.util.Map clones,
     { type = new Type("Sequence",null); } 
     else if (operator.equals("->sortedBy") || 
              operator.equals("|sortedBy"))
-    { type = new Type("Sequence",null); } 
+    { type = new Type("Sequence",null);
+      type.setSorted(false);
+    } 
     else if (Type.isMapType(tleft))
     { type = new Type("Map", null); }
     else if (Type.isSetType(tleft)) 
@@ -6938,7 +6948,8 @@ public boolean conflictsWithIn(String op, Expression el,
     if (operator.equals("->sortedBy") || 
         operator.equals("|sortedBy"))
     { String col = collectQueryForm(lqf,rqf,rprim,env,local); 
-      if (operator.equals("->sortedBy") && left.umlkind == CLASSID)
+      if (operator.equals("->sortedBy") && 
+          left.umlkind == CLASSID)
       { lqf = ((BasicExpression) left).classExtentQueryForm(env,local); }   // And pass lqf to collectQueryForm? 
       else if (operator.equals("|sortedBy") && ((BinaryExpression) left).right.umlkind == CLASSID)
       { BinaryExpression leftbe = (BinaryExpression) left; 
@@ -6947,7 +6958,8 @@ public boolean conflictsWithIn(String op, Expression el,
       else if (operator.equals("|sortedBy"))
       { BinaryExpression leftbe = (BinaryExpression) left; 
         lqf = leftbe.getRight().queryForm(env,local); 
-      }      
+      }   
+   
       return "Set.sortedBy(" + lqf + ", " + col + ")"; 
     } 
 
@@ -11926,7 +11938,7 @@ public boolean conflictsWithIn(String op, Expression el,
       collectleft = beleft.right; 
       collectvar = beleft.left + ""; 
       if (beleft.right == null || beleft.right.elementType == null)
-      { System.err.println("TYPE ERROR: no element type of: " + beleft);
+      { System.err.println("!! TYPE ERROR: no element type of: " + beleft);
         JOptionPane.showMessageDialog(null, "no element type for " + beleft + " in " + this, 
                                       "Design error", JOptionPane.ERROR_MESSAGE);
       }
@@ -12030,7 +12042,7 @@ public boolean conflictsWithIn(String op, Expression el,
       collectleft = beleft.right; 
       collectvar = beleft.left + ""; 
       if (beleft.right == null || beleft.right.elementType == null)
-      { System.err.println("TYPE ERROR: no element type of: " + beleft);
+      { System.err.println("!! TYPE ERROR: no element type of: " + beleft);
         JOptionPane.showMessageDialog(null, "no element type for " + beleft + " in " + this, 
                                       "Design error", JOptionPane.ERROR_MESSAGE);
       }
@@ -12144,7 +12156,7 @@ public boolean conflictsWithIn(String op, Expression el,
       collectleft = beleft.right; 
       collectvar = beleft.left + ""; 
       if (beleft.right == null || beleft.right.elementType == null)
-      { System.err.println("TYPE ERROR: no element type of: " + beleft);
+      { System.err.println("!! TYPE ERROR: no element type of: " + beleft);
         JOptionPane.showMessageDialog(null, "no element type for " + beleft + " in " + this, 
                                       "Design error", JOptionPane.ERROR_MESSAGE);
       }
@@ -12267,7 +12279,7 @@ public boolean conflictsWithIn(String op, Expression el,
       collectleft = beleft.right; 
       collectvar = beleft.left + ""; 
       if (beleft.right == null || beleft.right.elementType == null)
-      { System.err.println("TYPE ERROR: no element type of: " + beleft);
+      { System.err.println("!! TYPE ERROR: no element type of: " + beleft);
         JOptionPane.showMessageDialog(null, "no element type for " + beleft + " in " + this, 
                                       "Design error", JOptionPane.ERROR_MESSAGE);
       }

@@ -1666,14 +1666,14 @@ public class Compiler2
   } // should pair up the defined terms uses and definitions. 
 
   public Expression parse(JTextArea messageArea) 
-  { messageArea.append("LEXICALS: " + lexicals + "\n\r"); 
+  { messageArea.append(">> LEXICALS: " + lexicals + "\n\r"); 
     Vector env = new Vector(); 
     Expression ee = parse_expression(0,0,lexicals.size()-1,env,env); 
     finalexpression = ee;
     if (ee == null) 
     { messageArea.append("!! Not a valid OCL constraint. Trying to parse as an operation.\n\r"); } 
     else 
-    { messageArea.append("This is a valid OCL expression for a constraint.\n\r"); }  
+    { messageArea.append(">> This is a valid OCL expression for a constraint.\n\r"); }  
     return ee; 
   } 
 
@@ -1717,7 +1717,7 @@ public class Compiler2
         } 
       } 
     } 
-    System.err.println(">>> Invalid rule: " + rule); 
+    System.err.println("!! Invalid rule: " + rule); 
     return null; 
   } 
 
@@ -1761,7 +1761,7 @@ public class Compiler2
         } 
       } 
     } 
-    System.err.println(">>> Invalid rule: " + rule); 
+    System.err.println("!! Invalid rule: " + rule); 
     return null; 
   } 
 
@@ -1782,7 +1782,7 @@ public class Compiler2
           { variables.add(lex); } 
         } 
 
-        System.out.println("LHS variables = " + variables); 
+        System.out.println(">>> LHS variables = " + variables); 
 
         if (lhs != null) 
         { String rhs = rule.substring(i+4,rule.length());
@@ -1808,7 +1808,8 @@ public class Compiler2
         } 
       } 
     } 
-    System.err.println(">>> Invalid rule: " + rule); 
+
+    System.err.println("!! Invalid rule: " + rule); 
     return null; 
   } 
 
@@ -1854,7 +1855,8 @@ public class Compiler2
         } 
       } 
     } 
-    System.err.println(">>> Invalid rule: " + rule); 
+
+    System.err.println("!! Invalid rule: " + rule); 
     return null; 
   } 
 
@@ -1888,12 +1890,13 @@ public class Compiler2
           } 
           CGRule res = new CGRule(lhsexp,rhs);
 
-          System.out.println("Variables of rule " + res + " are: " + res.variables);  
+          System.out.println(">> Variables of rule " + res + " are: " + res.variables);  
           return res; 
         } 
       } 
     } 
-    System.err.println(">>> Invalid rule: " + rule); 
+
+    System.err.println("!! Invalid rule: " + rule); 
     return null; 
   } 
 
@@ -1937,7 +1940,8 @@ public class Compiler2
         } 
       } 
     } 
-    System.err.println(">>> Invalid rule: " + rule); 
+
+    System.err.println("!! Invalid rule: " + rule); 
     return null; 
   } 
 
@@ -2066,6 +2070,7 @@ public class Compiler2
         } 
       } 
     } 
+
     System.err.println("!! Invalid rule: " + rule); 
     return null; 
   } 
@@ -2173,6 +2178,7 @@ public class Compiler2
     // _v id ` g
     // _* any id
     // _* all id
+    // _v ` f _w ` g
     // etc
 
     CGCondition cg = new CGCondition(); 
@@ -2206,17 +2212,20 @@ public class Compiler2
         { cg.setVariable(se); }
       }  
       else if (se.equals("`") && 
-               i + 2 < lexs.size())
-      { String mt = "" + lexs.get(i+1); 
-        cg.setVariableMetafeature(mt);
+               i + 1 < lexs.size())
+      { String mt = "" + lexs.get(i+1);
+        if (cg.hasStereotype())
+        { cg.setStereotypeMetafeature(mt); } 
+        else  
+        { cg.setVariableMetafeature(mt); }
         i++;
       } // has variable but not stereo
-      else if (se.equals("`") && 
-               i + 2 == lexs.size())
-      { String mt = "" + lexs.get(i+1); 
-        cg.setStereotypeMetafeature(mt);
-        i++;
-      } // has variable and stereo
+      // else if (se.equals("`") && 
+      //          i + 2 == lexs.size())
+      // { String mt = "" + lexs.get(i+1); 
+      //   cg.setStereotypeMetafeature(mt);
+      //   i++;
+      // } // has variable and stereo
       else if (se.equals("not"))
       { cg.setNegative(); } 
       else if (se.equals("any"))
@@ -2343,7 +2352,7 @@ public class Compiler2
   }    
     
   public Expression parseCGRule() 
-  { System.out.println("LEXICALS: " + lexicals); 
+  { System.out.println(">> LEXICALS: " + lexicals); 
     Expression ee = parseCGRule(0,0,lexicals.size()-1); 
     finalexpression = ee; 
     return ee; 
@@ -2359,19 +2368,19 @@ public class Compiler2
         Vector env = new Vector(); 
         Expression lhs = parse_expression(bcount,pstart,i-1,env,env); 
         Expression rhs = null; 
-        System.out.println("LHS = " + rhs); 
+        System.out.println(">> LHS = " + rhs); 
 
         for (int j = i+2; j <= pend; j++) 
         { String lxj = lexicals.get(j) + ""; 
           if ("<".equals(lxj) && j+1 < pend && "when".equals(lexicals.get(j+1) + "") && 
               ">".equals(lexicals.get(j+2) + "")) 
           { rhs = parse_expression(bcount,i+2,j-1,env,env); 
-            System.out.println("RHS = " + rhs); 
+            System.out.println(">> RHS = " + rhs); 
           } 
         } 
         if (rhs == null) // no <when> 
         { rhs = parse_expression(bcount,i+2,pend,env,env); 
-          System.out.println("RHS = " + rhs); 
+          System.out.println(">> RHS = " + rhs); 
         } 
         return lhs; 
       } 
@@ -3289,7 +3298,7 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
             new BasicExpression(lexicals.get(i+3) + "",0);
           BinaryExpression be = 
             new BinaryExpression("|sortedBy",new BinaryExpression(":",bevar,ee2),ee1); 
-          System.out.println("Parsed ->sortedBy expression with variable: " + be); 
+          System.out.println(">>> Parsed ->sortedBy expression with variable: " + be); 
           return be; 
         } 
         else if ("any".equals(ss2) && 
@@ -3528,6 +3537,7 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
         } 
       }     
     } 
+
     return parse_basic_expression(bc,pstart,pend,entities,types); 
   } // reads left to right, not putting priorities on * above +
 
@@ -5261,8 +5271,11 @@ public Vector parseAttributeDecsInit(Vector entities, Vector types)
       { String ss2 = lexicals.get(i+1).toString(); // must exist
         if (i + 3 == pend &&
             ("any".equals(ss2) || "size".equals(ss2) || "isDeleted".equals(ss2) ||
-             "display".equals(ss2) || "min".equals(ss2) || "max".equals(ss2) ||
-             "sum".equals(ss2) || "sort".equals(ss2) || "asSet".equals(ss2) || "asOrderedSet".equals(ss2) || 
+             "display".equals(ss2) || 
+             "min".equals(ss2) || "max".equals(ss2) ||
+             "sum".equals(ss2) || "sort".equals(ss2) || 
+             "asSet".equals(ss2) || 
+             "asOrderedSet".equals(ss2) || 
              "sqrt".equals(ss2) || "sqr".equals(ss2) || 
              "asSequence".equals(ss2) ||
              "asArray".equals(ss2) ||
@@ -6186,10 +6199,10 @@ public Vector parseAttributeDecsInit(Vector entities, Vector types)
         return "arg->tail()"; 
       }
 
-      if ("->sort".startsWith(st))
-      { mess[0] = "arg->sort() operator on sets, sequences\n" + 
-          "Returns sorted sequence of arg elements"; 
-        return "arg->sort()"; 
+      if ("->sortedBy".startsWith(st)) // "->sort".startsWith(st))
+      { mess[0] = "arg->sort() and arg->sortedBy(x | expr) operators on sets, sequences\n" + 
+          "Return sorted sequence of arg elements"; 
+        return "arg->sort() and arg->sortedBy(x | expr)"; 
       }
 
       if ("->trim".startsWith(st))
@@ -11375,6 +11388,10 @@ private Vector parseUsingClause(int st, int en, Vector entities, Vector types)
   { // System.out.println(Double.MAX_VALUE); 
     Compiler2 c = new Compiler2();
 
+    Vector conds = c.parse_conditions("_1`variableName _3`incrementedVariable, _1`variableName _2`lowerBound"); 
+
+    System.out.println(conds); 
+
   /*  String testast = "(expression (logicalExpression (equalityExpression (additiveExpression (factorExpression C_{ (expression (logicalExpression (equalityExpression (additiveExpression (factorExpression (factor2Expression (basicExpression 2))))))) } ^{ (expression (logicalExpression (equalityExpression (additiveExpression (factorExpression (factor2Expression (basicExpression 4))))))) })))))"; */ 
 
     // ASTTerm asst = c.parseGeneralAST(testast); 
@@ -11406,9 +11423,9 @@ private Vector parseUsingClause(int st, int en, Vector entities, Vector types)
     // c.nospacelexicalanalysis("Map{ \"Name\" |-> Sequence{\"Braund, Mr. Owen Harris\"}->union(Sequence{\"Allen, Mr. William Henry\"}->union(Sequence{ \"Bonnell, Miss. Elizabeth\" })) }->union(Map{ \"Age\" |-> Sequence{22}->union(Sequence{35}->union(Sequence{ 58 })) }->union(Map{ \"Sex\" |-> Sequence{\"male\"}->union(Sequence{\"male\"}->union(Sequence{ \"female\" })) }->union(Map{ \"Fare\" |-> Sequence{102.0}->union(Sequence{99.0}->union(Sequence{ 250.0 })) }) ) )"); 
 
   
-c.nospacelexicalanalysis("arr[i].x"); 
-Expression zz = c.parseExpression(); 
-System.out.println(zz); 
+// c.nospacelexicalanalysis("arr[i].x"); 
+// Expression zz = c.parseExpression(); 
+// System.out.println(zz); 
 
  /* c.nospacelexicalanalysis("table->restrict(table > v)");  
  BinaryExpression zz = (BinaryExpression) c.parseExpression(); 

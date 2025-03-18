@@ -4002,21 +4002,21 @@ class BasicExpression extends Expression
       }          
     }
 
-    if (isFunction(data))
+    if (isFunction(data) && objectRef != null)
     { umlkind = FUNCTION;
-      if (objectRef == null) // error
-      { System.err.println("!! TYPE ERROR: OCL operator " + data +
-          " should have object ref: arg." + data + "(pars)");
+      // if (objectRef == null) // error
+      // { System.err.println("!! TYPE ERROR: OCL operator " + data +
+      //     " should have object ref: arg." + data + "(pars)");
    
-        if (parameters != null && parameters.size() > 0)
-        { objectRef = (Expression) parameters.get(0); 
-          parameters.remove(0); 
-        } 
-        else 
-        { type = null;
-          return false;
-        } 
-      }
+      //   if (parameters != null && parameters.size() > 0)
+      //   { objectRef = (Expression) parameters.get(0); 
+      //     parameters.remove(0); 
+      //   } 
+      //   else 
+      //   { type = null;
+      //     return false;
+      //   } 
+      // }
    
       entity = objectRef.entity; // default
       multiplicity = ModelElement.ONE; // default 
@@ -5777,9 +5777,10 @@ class BasicExpression extends Expression
 
     // JOptionPane.showInputDialog(this + " is function: " + isFunction(data)); 
 
-    if (isFunction(data))
+    if (isFunction(data) && objectRef != null)
     { umlkind = FUNCTION;
-      if (objectRef == null) // error
+
+      /* if (objectRef == null) // error
       { System.err.println("!! TYPE ERROR: OCL operator " + data +
                            " should have an argument: arg->" + data + "(pars)");
         if (parameters != null && parameters.size() > 0)
@@ -5790,7 +5791,8 @@ class BasicExpression extends Expression
         { type = null;
           return false;
         } 
-      }
+      } */
+
       entity = objectRef.entity; // default
       multiplicity = ModelElement.ONE; // default 
       modality = objectRef.modality; 
