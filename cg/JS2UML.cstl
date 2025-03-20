@@ -519,6 +519,12 @@ _1 . slice |-->_1.subrange
 
 _1 . union |-->_1->union
 _1 . difference |-->_1 - 
+_1 . intersection |-->_1->intersection
+_1 . symmetricDifference |-->_1->symmetricDifference
+_1 . isDisjointFrom |-->_1->excludesAll
+_1 . isSubsetOf |-->_1 <: 
+_1 . isSupersetOf |-->_1->includesAll
+
 
 _1 . add |-->_1 := _1->including
 _1 . delete |-->_1 := _1->excluding
@@ -883,6 +889,11 @@ _1 . slice |-->_1`ocltype
 
 _1 . union |-->Set
 _1 . difference |-->Set 
+_1 . intersection |-->Set
+_1 . symmetricDifference |-->Set
+_1 . isDisjointFrom |-->boolean
+_1 . isSubsetOf |-->boolean
+_1 . isSupersetOf |-->boolean
 
 _1 . entries |-->Sequence
 
