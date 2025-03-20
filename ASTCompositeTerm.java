@@ -11511,8 +11511,11 @@ public class ASTCompositeTerm extends ASTTerm
 
     if (terms.size() == 2 && 
         "singleExpression".equals(tag) && 
-        "alert".equals(
-           ((ASTTerm) terms.get(0)).literalForm())) 
+        ("alert".equals(
+           ((ASTTerm) terms.get(0)).literalForm()) ||
+         "window.alert".equals(
+           ((ASTTerm) terms.get(0)).literalForm()) 
+        )) 
     { ASTTerm arg = (ASTTerm) terms.get(1); 
       Expression expr = arg.jsexpressionToKM3(vartypes,
                                 varelemtypes,types,entities);
@@ -16056,6 +16059,81 @@ public class ASTCompositeTerm extends ASTTerm
       return res; 
     } 
 
+    if ("isSubsetOf".equals(feature) && 
+        obj.isSet() && 
+        pars.size() > 0)
+    { Expression par1 = (Expression) pars.get(0); 
+      Expression res = 
+        new BinaryExpression("->includesAll", par1, obj);  
+      res.setType(new Type("boolean", null)); 
+      return res; 
+    } 
+
+    if ("isSupersetOf".equals(feature) && 
+        obj.isSet() && 
+        pars.size() > 0)
+    { Expression par1 = (Expression) pars.get(0); 
+      Expression res = 
+        new BinaryExpression("->includesAll", obj, par1);  
+      res.setType(new Type("boolean", null)); 
+      return res; 
+    } 
+
+    if ("isDisjointFrom".equals(feature) && 
+        obj.isSet() && 
+        pars.size() > 0)
+    { Expression par1 = (Expression) pars.get(0); 
+      Expression res = 
+        new BinaryExpression("->excludesAll", obj, par1);  
+      res.setType(new Type("boolean", null)); 
+      return res; 
+    } 
+
+
+    if ("union".equals(feature) && 
+        obj.isSet() && 
+        pars.size() > 0)
+    { Expression par1 = (Expression) pars.get(0); 
+      Expression res = 
+        new BinaryExpression("->union", obj, par1);  
+      res.setType(obj.getType());
+      res.setElementType(obj.getElementType());  
+      return res; 
+    } 
+
+    if ("intersection".equals(feature) && 
+        obj.isSet() && 
+        pars.size() > 0)
+    { Expression par1 = (Expression) pars.get(0); 
+      Expression res = 
+        new BinaryExpression("->intersection", obj, par1);  
+      res.setType(obj.getType());
+      res.setElementType(obj.getElementType());  
+      return res; 
+    } 
+
+    if ("difference".equals(feature) && 
+        obj.isSet() && 
+        pars.size() > 0)
+    { Expression par1 = (Expression) pars.get(0); 
+      Expression res = 
+        new BinaryExpression("-", obj, par1);  
+      res.setType(obj.getType());
+      res.setElementType(obj.getElementType());  
+      return res; 
+    } 
+
+    if ("symmetricDifference".equals(feature) && 
+        obj.isSet() && 
+        pars.size() > 0)
+    { Expression par1 = (Expression) pars.get(0); 
+      Expression res = 
+        new BinaryExpression("->symmetricDifference", obj, par1);  
+      res.setType(obj.getType());
+      res.setElementType(obj.getElementType());  
+      return res; 
+    } 
+
     if ("get".equals(feature) && 
         obj.isMap() && 
         pars.size() > 0)
@@ -17740,6 +17818,8 @@ public class ASTCompositeTerm extends ASTTerm
 
         String cnme = oper.literalForm(); 
 
+        // JOptionPane.showInputDialog("Composing " + opexpr + " " + pars); 
+
         if ("eval".equals(cnme) && 
             lastTerm.arity() == 3 && 
             pars.size() > 0) 
@@ -18253,6 +18333,7 @@ public class ASTCompositeTerm extends ASTTerm
                                                     "self"));  
             return be; 
           }
+
           return jsfeatureAccess(be.objectRef,be.data,pars,
                                  vartypes,
                                  varelemtypes,types,entities); 
@@ -18916,6 +18997,21 @@ public class ASTCompositeTerm extends ASTTerm
         if (obj.isSet() && "get".equals(feature + ""))
         { Expression res = 
             BasicExpression.newBasicExpression(obj,"get");
+          // res.setType(new Type("int", null));  
+          return res; 
+        }
+
+        if (obj.isSet() && "union".equals(feature + ""))
+        { Expression res = 
+            BasicExpression.newBasicExpression(obj,"union");
+          // res.setType(new Type("int", null));  
+          return res; 
+        }
+
+        if (obj.isSet() && "intersection".equals(feature + ""))
+        { Expression res = 
+            BasicExpression.newBasicExpression(
+                                       obj,"intersection");
           // res.setType(new Type("int", null));  
           return res; 
         }
