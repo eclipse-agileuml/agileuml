@@ -327,6 +327,16 @@ public interface OCLListener extends ParseTreeListener {
 	 */
 	void exitFactor2Expression(OCLParser.Factor2ExpressionContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link OCLParser#arrowExpression}.
+	 * @param ctx the parse tree
+	 */
+	void enterArrowExpression(OCLParser.ArrowExpressionContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link OCLParser#arrowExpression}.
+	 * @param ctx the parse tree
+	 */
+	void exitArrowExpression(OCLParser.ArrowExpressionContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link OCLParser#setExpression}.
 	 * @param ctx the parse tree
 	 */

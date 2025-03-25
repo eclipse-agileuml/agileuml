@@ -399,6 +399,18 @@ public class OCLBaseListener implements OCLListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterArrowExpression(OCLParser.ArrowExpressionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitArrowExpression(OCLParser.ArrowExpressionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterSetExpression(OCLParser.SetExpressionContext ctx) { }
 	/**
 	 * {@inheritDoc}

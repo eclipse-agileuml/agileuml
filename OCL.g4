@@ -147,15 +147,15 @@ expression
 
 basicExpression
     : 'null' 
-    | basicExpression '.' ID 
+    | basicExpression '.' identifier 
     | basicExpression '(' expressionList? ')'  
     | basicExpression '[' expression ']' 
-    | ID '@pre'  
-    |	INT  
+    | identifier '@pre'  
+    | INT  
     | FLOAT_LITERAL
     | STRING1_LITERAL
     | STRING2_LITERAL
-    | ID   
+    | identifier   
     |	'(' expression ')'
     ; 
 
@@ -205,7 +205,7 @@ factorExpression
     ; 
 
 
-// factor2Expressions can appear on LHS of ->
+// arrowExpressions can appear on LHS of ->
 // ->subrange is used for ->substring and ->subSequence
 
 factor2Expression
@@ -213,97 +213,103 @@ factor2Expression
   | '+' factor2Expression 
   | '?' factor2Expression
   | '!' factor2Expression 
-  | factor2Expression '->size()' 
-  | factor2Expression '->copy()'  
-  | factor2Expression ('->isEmpty()' | 
+  | arrowExpression
+  ; 
+
+arrowExpression
+  : arrowExpression '->size()' 
+  | arrowExpression '->copy()'  
+  | arrowExpression ('->isEmpty()' | 
                        '->notEmpty()' | 
                        '->asSet()' | '->asBag()' | 
                        '->asOrderedSet()' | 
                        '->asSequence()' | 
                        '->sort()' ) 
-   | factor2Expression '->any()'   
-   | factor2Expression '->log()'  
-   | factor2Expression '->exp()' 
-   | factor2Expression '->sin()'  
-   | factor2Expression '->cos()' 
-   | factor2Expression '->tan()'  
-   | factor2Expression '->asin()'  
-   | factor2Expression '->acos()' 
-   | factor2Expression '->atan()'  
-   | factor2Expression '->log10()' 
-   | factor2Expression '->first()'  
-   | factor2Expression '->last()' 
-   | factor2Expression '->front()'  
-   | factor2Expression '->tail()' 
-   | factor2Expression '->reverse()'  
-   | factor2Expression '->tanh()'  
-   | factor2Expression '->sinh()' 
-   | factor2Expression '->cosh()' 
-   | factor2Expression '->floor()'  
-   | factor2Expression '->ceil()' 
-   | factor2Expression '->round()' 
-   | factor2Expression '->abs()' 
-   | factor2Expression '->oclType()' 
-   | factor2Expression '->allInstances()' 
-   | factor2Expression '->oclIsUndefined()' 
-   | factor2Expression '->oclIsInvalid()' 
-   | factor2Expression '->oclIsNew()' 
-   | factor2Expression '->sum()'  
-   | factor2Expression '->prd()'  
-   | factor2Expression '->max()'  
-   | factor2Expression '->min()'  
-   | factor2Expression '->sqrt()'  
-   | factor2Expression '->cbrt()'  
-   | factor2Expression '->sqr()' 
-   | factor2Expression '->characters()'  
-   | factor2Expression '->toInteger()'  
-   | factor2Expression '->toReal()' 
-   | factor2Expression '->toBoolean()' 
-   | factor2Expression '->display()' 
-   | factor2Expression '->toUpperCase()'  
-   | factor2Expression '->toLowerCase()' 
-   | factor2Expression ('->unionAll()' | '->intersectAll()' |
+   | arrowExpression '->any()'   
+   | arrowExpression '->log()'  
+   | arrowExpression '->exp()' 
+   | arrowExpression '->sin()'  
+   | arrowExpression '->cos()' 
+   | arrowExpression '->tan()'  
+   | arrowExpression '->asin()'  
+   | arrowExpression '->acos()' 
+   | arrowExpression '->atan()'  
+   | arrowExpression '->log10()' 
+   | arrowExpression '->first()'  
+   | arrowExpression '->last()' 
+   | arrowExpression '->front()'  
+   | arrowExpression '->tail()' 
+   | arrowExpression '->reverse()'  
+   | arrowExpression '->tanh()'  
+   | arrowExpression '->sinh()' 
+   | arrowExpression '->cosh()' 
+   | arrowExpression '->floor()'  
+   | arrowExpression '->ceil()' 
+   | arrowExpression '->round()' 
+   | arrowExpression '->abs()' 
+   | arrowExpression '->oclType()' 
+   | arrowExpression '->allInstances()' 
+   | arrowExpression '->oclIsUndefined()' 
+   | arrowExpression '->oclIsInvalid()' 
+   | arrowExpression '->oclIsNew()' 
+   | arrowExpression '->sum()'  
+   | arrowExpression '->prd()'  
+   | arrowExpression '->max()'  
+   | arrowExpression '->min()'  
+   | arrowExpression '->sqrt()'  
+   | arrowExpression '->cbrt()'  
+   | arrowExpression '->sqr()' 
+   | arrowExpression '->characters()'  
+   | arrowExpression '->toInteger()'  
+   | arrowExpression '->toReal()' 
+   | arrowExpression '->toBoolean()' 
+   | arrowExpression '->display()' 
+   | arrowExpression '->toUpperCase()'  
+   | arrowExpression '->toLowerCase()' 
+   | arrowExpression ('->unionAll()' | '->intersectAll()' |
                        '->concatenateAll()')
  
-   | factor2Expression ('->pow' | '->gcd') '(' expression ')' 
-   | factor2Expression ('->at' | '->union' | '->intersection' 
+   | arrowExpression ('->pow' | '->gcd') '(' expression ')' 
+   | arrowExpression ('->at' | '->union' | '->intersection' 
             | '->includes' | '->excludes' | '->including' 
-            | '->excluding' | '->excludingKey' | '->excludingValue' | '->includesAll'  
+            | '->excluding' | '->excludingKey' 
+            | '->excludingValue' | '->includesAll'  
             | '->symmetricDifference' 
             | '->excludesAll' | '->prepend' | '->append'  
             | '->count' | '->apply' ) 
                                    '(' expression ')' 
-   | factor2Expression ('->hasMatch' | '->isMatch' |
+   | arrowExpression ('->hasMatch' | '->isMatch' |
                        '->firstMatch' | '->indexOf' | 
                        '->lastIndexOf' | '->split' | 
                        '->hasPrefix' | 
                        '->hasSuffix' | 
                        '->equalsIgnoreCase' ) 
                                     '(' expression ')' 
-   | factor2Expression ('->oclAsType' | '->oclIsTypeOf' | 
+   | arrowExpression ('->oclAsType' | '->oclIsTypeOf' | 
                        '->oclIsKindOf' | 
                        '->oclAsSet') '(' expression ')' 
-   | factor2Expression '->collect' '(' identifier '|' expression ')' 
-   | factor2Expression '->select' '(' identifier '|' expression ')' 
-   | factor2Expression '->reject' '(' identifier '|' expression ')' 
-   | factor2Expression '->forAll' '(' identifier '|' expression ')' 
-   | factor2Expression '->exists' '(' identifier '|' expression ')' 
-   | factor2Expression '->exists1' '(' identifier '|' expression ')' 
-   | factor2Expression '->one' '(' identifier '|' expression ')' 
-   | factor2Expression '->any' '(' identifier '|' expression ')' 
-   | factor2Expression '->closure' '(' identifier '|' expression ')' 
-   | factor2Expression '->sortedBy' '(' identifier '|' expression ')' 
-   | factor2Expression '->isUnique' '(' identifier '|' expression ')' 
+   | arrowExpression '->collect' '(' ( identifier '|' )? expression ')' 
+   | arrowExpression '->select' '(' ( identifier '|' )? expression ')' 
+   | arrowExpression '->reject' '(' ( identifier '|' )? expression ')' 
+   | arrowExpression '->forAll' '(' ( identifier '|' )? expression ')' 
+   | arrowExpression '->exists' '(' ( identifier '|' )? expression ')' 
+   | arrowExpression '->exists1' '(' ( identifier '|' )? expression ')' 
+   | arrowExpression '->one' '(' ( identifier '|' )? expression ')' 
+   | arrowExpression '->any' '(' ( identifier '|' )? expression ')' 
+   | arrowExpression '->closure' '(' identifier '|' expression ')' 
+   | arrowExpression '->sortedBy' '(' ( identifier '|')? expression ')' 
+   | arrowExpression '->isUnique' '(' ( identifier '|')? expression ')' 
 
-   | factor2Expression '->subrange' '(' expression ',' expression ')'  
-   | factor2Expression '->replace' '(' expression ',' expression ')'  
-   | factor2Expression '->replaceAll' '(' expression ',' expression ')' 
-   | factor2Expression '->replaceAllMatches' '(' expression ',' expression ')'  
-   | factor2Expression '->replaceFirstMatch' '(' expression ',' expression ')'  
-   | factor2Expression '->insertAt' '(' expression ',' expression ')'  
-   | factor2Expression '->insertInto' '(' expression ',' expression ')'  
-   | factor2Expression '->setAt' '(' expression ',' expression ')' 
-   | factor2Expression '->iterate' '(' identifier ';' identifier '=' expression '|' expression ')'  
+   | arrowExpression '->subrange' '(' expression ',' expression ')'  
+   | arrowExpression '->replace' '(' expression ',' expression ')'  
+   | arrowExpression '->replaceAll' '(' expression ',' expression ')' 
+   | arrowExpression '->replaceAllMatches' '(' expression ',' expression ')'  
+   | arrowExpression '->replaceFirstMatch' '(' expression ',' expression ')'  
+   | arrowExpression '->insertAt' '(' expression ',' expression ')'  
+   | arrowExpression '->insertInto' '(' expression ',' expression ')'  
+   | arrowExpression '->setAt' '(' expression ',' expression ')' 
+   | arrowExpression '->iterate' '(' identifier ';' identifier '=' expression '|' expression ')'  
+   | arrowExpression '.' identifier ( '(' expressionList? ')' | '[' expression ']' )?  
    | setExpression 
    | basicExpression
    ; 
