@@ -52,6 +52,42 @@ public:
         }
     }
 
+   void unionSortedSequence(SortedSequence<_T>* sq)
+   { // addAll
+     vector<_T>* newelems = new vector<_T>();
+
+     int i = 0;
+     int j = 0;
+     while (i < elements->size() && j < sq->elements->size())
+     {
+       _T x = elements->at(i);
+       _T y = sq->elements->at(j); 
+       if (x == y)
+       {
+         newelems->push_back(x); newelems->push_back(y); i++; j++;
+       }
+       else if (x < y) {
+         newelems->push_back(x); i++;
+       }
+       else
+       {
+         newelems->push_back(y); j++;
+       }
+    }
+
+    while (i < elements->size())
+    {
+      newelems->push_back(elements->at(i)); i++;
+    }
+
+    while (j < sq->elements->size())
+    {
+      newelems->push_back(sq->elements->at(j)); j++;
+    }
+
+    elements = newelems;
+  }
+
     void unionSortedSequence(vector<_T>* b)
     {
         for (int i = 0; i < b->size(); i++)
@@ -66,6 +102,30 @@ public:
         {
             this->including(*iter);
         }
+    }
+
+    void intersection(SortedSequence<_T>* sq)
+    { // retainAll
+        vector<_T>* newelems = new vector<_T>(); 
+
+        int i = 0; 
+        int j = 0; 
+        while (i < elements->size() && j < sq->elements->size())
+        {
+           _T x = elements->at(i);
+           if (x == sq->elements->at(j))
+           {
+             newelems->push_back(x); i++; j++;
+           }
+           else if (x < sq->elements->at(j)) {
+                    i++;
+           }
+           else
+           {
+             j++;
+           }
+       }
+       elements = newelems; 
     }
 
     void intersection(vector<_T>* sq)
