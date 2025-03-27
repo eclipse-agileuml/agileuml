@@ -204,8 +204,8 @@ var _2 : Map ( OclAny  , OclAny  )   |-->let _2 = { } ;
 var _2 : double   |-->let _2 = 0.0 ; 
 var _2 : boolean   |-->let _2 = false ; 
 var _2 : String   |-->let _2 = "" ; 
-var _2 : Sequence   |-->let _2 = [ elementList ] ; 
-var _2 : Set   |-->let _2 = [ elementList ] ; 
+var _2 : Sequence   |-->let _2 = [ ] ; 
+var _2 : Set   |-->let _2 = [ ] ; 
 var _2 : OclAny   |-->let _2 = { } ; 
 ( _2 )  |-->{ _2`seq3subruleset77 } 
 return _2  |-->return _2 ; 
