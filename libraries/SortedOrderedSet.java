@@ -31,6 +31,14 @@ class SortedOrderedSet<T extends Comparable<T>> implements Set<T>, List<T>
     return sos;
   }
 
+  public void setElementSet(Set col)
+  { elementSet = new HashSet<T>(col); }
+
+  public void setElementSeq(SortedSequence<T> col)
+  { elementSeq = col; }
+ 
+    
+
   public boolean contains(Object x)
   { return elementSet.contains(x); } 
 
@@ -55,6 +63,12 @@ class SortedOrderedSet<T extends Comparable<T>> implements Set<T>, List<T>
     return elementSet.retainAll(col); 
   }      
 
+  public SortedOrderedSet<T> intersection(SortedOrderedSet<T> sq)
+  { SortedSequence<T> rseq = 
+      elementSeq.intersection(sq.elementSeq);
+    return rseq.asSortedOrderedSet(); 
+  } 
+
   public boolean addAll(Collection col)
   { boolean changed = false; 
     for (Object obj : col)
@@ -69,6 +83,12 @@ class SortedOrderedSet<T extends Comparable<T>> implements Set<T>, List<T>
 
   public boolean addAll(int i, Collection col)
   { return addAll(col); } // ignores i
+
+  public SortedOrderedSet<T> unionSortedOrderedSet(SortedOrderedSet<T> sq)
+  { SortedSequence<T> rseq = 
+      elementSeq.unionSortedSequence(sq.elementSeq);
+    return rseq.asSortedOrderedSet(); 
+  } 
 
   public boolean containsAll(Collection col)
   { return elementSet.containsAll(col); }
@@ -166,14 +186,11 @@ class SortedOrderedSet<T extends Comparable<T>> implements Set<T>, List<T>
     sos.add("aa"); sos.add("bb"); sos.add("aa"); 
     System.out.println(sos); 
 	
-    List<String> newelems = new ArrayList<String>(); 
+    SortedOrderedSet<String> newelems = new SortedOrderedSet<String>(); 
     newelems.add("dd"); newelems.add("cc"); 
     newelems.add("bb");
-    sos.addAll(newelems);  
-    System.out.println(sos); 
-	
-    sos.remove("bb"); 
-    System.out.println(sos); 
+
+    System.out.println(sos.intersection(newelems)); 
   } 
 }
 

@@ -172,33 +172,34 @@ class SortedSequence<T extends Comparable<T>> implements List<T>
   { boolean res = elements.addAll(col); 
     Collections.sort(elements);
     return res;  
-  } // More efficient to sort col and then merge.  
+  } // More efficient to sort col and then merge:  
 
-  public SortedSequence<T> merge(SortedSequence<T> sq)
+  public SortedSequence<T> unionSortedSequence(SortedSequence<T> sq)
   { ArrayList<T> res = new ArrayList<T>();
 
     int reached = 0; 
- 
-    for (int i = 0; i < elements.size(); i++) 
+    int i = 0;
+    
+    while (i < elements.size() && reached < sq.elements.size()) 
     { Comparable obj = (Comparable) elements.get(i);
       Comparable sqelem = 
-           (Comparable) sq.elements.get(reached);  
+           (Comparable) sq.elements.get(reached);
+  
       if (obj.compareTo(sqelem) < 0)
-      { res.add((T) obj); } 
+      { res.add((T) obj);
+        i++;
+      } 
       else 
       { res.add((T) sqelem); 
         reached++; 
-        while (reached < sq.elements.size() && 
-               obj.compareTo(sq.elements.get(reached)) >= 0)
-        { res.add((T) sq.elements.get(reached)); 
-          reached++; 
-        } 
-        res.add((T) obj); 
-      }
+      } 
     } 
 
-    for (int i = reached; i < sq.elements.size(); i++) 
-    { res.add((T) sq.elements.get(i)); } 
+    for (int j = i; j < elements.size(); j++) 
+    { res.add((T) elements.get(j)); } 
+
+    for (int k = reached; k < sq.elements.size(); k++) 
+    { res.add((T) sq.elements.get(k)); } 
  
     SortedSequence<T> newsq = new SortedSequence<T>(); 
     newsq.elements = res;   
@@ -230,6 +231,37 @@ class SortedSequence<T extends Comparable<T>> implements List<T>
     return res; 
   }
 
+  public SortedOrderedSet<T> asSortedOrderedSet()
+  { java.util.Set<T> rset = new java.util.HashSet<T>(); 
+    ArrayList<T> rseq = new ArrayList<T>(); 
+	
+    if (elements.size() == 0) 
+    { return new SortedOrderedSet<T>(); } 
+
+    T elem0 = elements.get(0); 
+    rset.add(elem0); 
+	rseq.add(elem0); 
+
+    T lastAdded = elem0;         
+
+    for (int i = 1; i < elements.size(); i++) 
+    { T elem = elements.get(i); 
+      if (elem.equals(lastAdded)) { } 
+      else 
+      { rset.add(elem);
+	    rseq.add(elem);  
+        lastAdded = elem; 
+      } 
+    } 
+
+    SortedSequence<T> rsseq = new SortedSequence<T>(); 
+	rsseq.elements = rseq; 
+	SortedOrderedSet<T> res = new SortedOrderedSet<T>(); 
+	res.setElementSet(rset); 
+	res.setElementSeq(rsseq); 
+    return res; 
+  }
+
   public boolean contains(Object x)
   { int insertionPoint = 
            Collections.binarySearch(elements, (T) x); 
@@ -243,6 +275,33 @@ class SortedSequence<T extends Comparable<T>> implements List<T>
   
   public boolean retainAll(Collection col)
   { return elements.retainAll(col); }   
+
+  public SortedSequence<T> intersection(SortedSequence<T> sq)
+  { ArrayList<T> res = new ArrayList<T>();
+
+    int reached = 0; 
+    int i = 0;
+    
+    while (i < elements.size() && reached < sq.elements.size()) 
+    { Comparable obj = (Comparable) elements.get(i);
+      Comparable sqelem = 
+           (Comparable) sq.elements.get(reached);
+  
+      if (obj.compareTo(sqelem) == 0)
+      { res.add((T) obj);
+        i++;
+        reached++; 
+      } 
+      else if (obj.compareTo(sqelem) < 0)
+      { i++; } 
+      else 
+      { reached++; } 
+    } 
+ 
+    SortedSequence<T> newsq = new SortedSequence<T>(); 
+    newsq.elements = res;   
+    return newsq; 
+  } 
 
   public int size()
   { return elements.size(); }   
@@ -318,18 +377,19 @@ class SortedSequence<T extends Comparable<T>> implements List<T>
      
     ss.add("bb", 2); ss.add("aa", 3); ss.add("cc", 1);  ss.add("bb", 6); 
     System.out.println(ss); 
-	System.out.println(ss.indexOf("aa")); 
-	System.out.println(ss.indexOf("cc"));
-	System.out.println(ss.getCount("aa")); 
-	System.out.println(ss.getCount("bb"));
+	// System.out.println(ss.indexOf("aa")); 
+	// System.out.println(ss.indexOf("cc"));
+	// System.out.println(ss.getCount("aa")); 
+	// System.out.println(ss.getCount("bb"));
 
     SortedSequence<String> tt = new SortedSequence<String>(); 
-    tt.add("aa"); tt.add("ee"); 
+    tt.add("aa", 2); tt.add("cc", 4); tt.add("ee", 2);  
 
-    SortedSequence<String> pp = ss.merge(tt); 
+    SortedSequence<String> pp = ss.unionSortedSequence(tt); 
     System.out.println(pp); 
 
-    System.out.println(pp.asSet()); 
+    SortedSequence<String> qq = ss.intersection(tt); 
+    System.out.println(qq); 
   }  
 }
 
