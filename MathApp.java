@@ -19,7 +19,7 @@ import javax.swing.event.*;
 import java.beans.XMLEncoder;
 import java.beans.XMLDecoder;
 
-/* K. Lano 2010-2024
+/* K. Lano 2010-2025
    
   Adapted from Oracle example of JTextPane
 

@@ -16,7 +16,7 @@
 grammar OCL;	
 	
 specification
-  : 'package' identifier '{' classifier* '}' EOF
+  : 'package' identifier '{' classifier* contextConstraint* '}' EOF
   ;
 
 classifier
@@ -26,6 +26,26 @@ classifier
     | datatypeDefinition
     | enumeration
     ;
+
+contextConstraint
+    : invConstraint
+    | defConstraint
+    | operationConstraint
+    ; 
+
+invConstraint
+    : 'context' (identifier ':')? identifier ('inv' identifier? ':' expression)+
+    ; 
+
+defConstraint
+    : 'context' identifier 'def:' identifier '(' parameterDeclarations? ')' ':' type '=' expression
+    ; 
+
+operationConstraint
+    : 'context' identifier '::' identifier '(' parameterDeclarations? ')' (':' type)? 
+      ('pre' identifier? ':' expression | 'post' identifier? ':' expression)+
+    ;
+
 
 interfaceDefinition
     :	'interface' identifier ('extends' identifier)? '{' classBody? '}'
@@ -54,7 +74,7 @@ attributeDefinition
 
 operationDefinition
       : ('static')? 'operation' identifier 
-        '(' parameterDeclarations? ')' ':' type 
+        '(' parameterDeclarations? ')' (':' type)? 
         'pre:' expression 'post:' expression 
         ('activity:' statementList)? ';'
       ;
@@ -150,7 +170,7 @@ basicExpression
     | basicExpression '.' identifier 
     | basicExpression '(' expressionList? ')'  
     | basicExpression '[' expression ']' 
-    | identifier '@pre'  
+    | basicExpression '@pre'  
     | INT  
     | FLOAT_LITERAL
     | STRING1_LITERAL
@@ -170,7 +190,7 @@ lambdaExpression
 // A let is just an application of a lambda:
 
 letExpression
-    : 'let' identifier ':' type '=' expression 'in' expression
+    : 'let' identifier (':' type)? '=' expression 'in' expression
     ; 
 
 logicalExpression
@@ -266,6 +286,8 @@ arrowExpression
    | arrowExpression '->display()' 
    | arrowExpression '->toUpperCase()'  
    | arrowExpression '->toLowerCase()' 
+   | arrowExpression '->char2byte()'
+   | arrowExpression '->byte2char()'    
    | arrowExpression ('->unionAll()' | '->intersectAll()' |
                        '->concatenateAll()')
  
@@ -308,7 +330,7 @@ arrowExpression
    | arrowExpression '->insertAt' '(' expression ',' expression ')'  
    | arrowExpression '->insertInto' '(' expression ',' expression ')'  
    | arrowExpression '->setAt' '(' expression ',' expression ')' 
-   | arrowExpression '->iterate' '(' identifier ';' identifier '=' expression '|' expression ')'  
+   | arrowExpression '->iterate' '(' identifier ';' identifier (':' type )? '=' expression '|' expression ')'  
    | arrowExpression '.' identifier ( '(' expressionList? ')' | '[' expression ']' )?  
    | setExpression 
    | basicExpression
@@ -329,15 +351,14 @@ statement
    | 'return' 
    | 'continue'  
    | 'break' 
-   | 'var' ID ':' type 
+   | 'var' identifier ':' type (':=' expression)? 
    | 'if' expression 'then' statement 'else' statement  
    | 'while' expression 'do' statement 
-   | 'for' ID ':' expression 'do' statement 
+   | 'for' identifier ':' expression 'do' statement 
    | 'repeat' statement 'until' expression 
    | 'return' expression 
-   | basicExpression ':=' expression 
+   | basicExpression (':=' expression)? 
    | 'execute' expression 
-   | 'call' basicExpression 
    | '(' statementList ')'
    ; 
 
@@ -345,32 +366,6 @@ statementList
    : statement (';' statement)*  
    ;  
 
-nlpscript 
-   : (nlpstatement ';')+ nlpstatement
-   ; 
-
-nlpstatement
-   : loadStatement 
-   | assignStatement 
-   | storeStatement 
-   | analyseStatement 
-   | displayStatement
-   ;
-
-loadStatement:
-  'load' expression 'into' basicExpression;
-
-assignStatement:
-  basicExpression ':=' expression; 
-
-storeStatement:
-  'store' expression 'in' identifier;
-
-analyseStatement:
-  'analyse' expression 'using' expression;
-
-displayStatement:
-  'display' expression 'on' identifier;
 
 
 identifier: ID ;
@@ -384,6 +379,8 @@ STRING2_LITERAL:     '\'' (~['\\\r\n] | EscapeSequence)* '\'';
 NULL_LITERAL:       'null';
 
 MULTILINE_COMMENT: '/*' .*? '*/' -> channel(HIDDEN);
+
+SINGLELINE_COMMENT: '--' ~[\r\n\u2028\u2029]* -> channel(HIDDEN);
 
 
 fragment EscapeSequence

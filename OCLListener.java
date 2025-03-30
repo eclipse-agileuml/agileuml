@@ -27,6 +27,46 @@ public interface OCLListener extends ParseTreeListener {
 	 */
 	void exitClassifier(OCLParser.ClassifierContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link OCLParser#contextConstraint}.
+	 * @param ctx the parse tree
+	 */
+	void enterContextConstraint(OCLParser.ContextConstraintContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link OCLParser#contextConstraint}.
+	 * @param ctx the parse tree
+	 */
+	void exitContextConstraint(OCLParser.ContextConstraintContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link OCLParser#invConstraint}.
+	 * @param ctx the parse tree
+	 */
+	void enterInvConstraint(OCLParser.InvConstraintContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link OCLParser#invConstraint}.
+	 * @param ctx the parse tree
+	 */
+	void exitInvConstraint(OCLParser.InvConstraintContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link OCLParser#defConstraint}.
+	 * @param ctx the parse tree
+	 */
+	void enterDefConstraint(OCLParser.DefConstraintContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link OCLParser#defConstraint}.
+	 * @param ctx the parse tree
+	 */
+	void exitDefConstraint(OCLParser.DefConstraintContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link OCLParser#operationConstraint}.
+	 * @param ctx the parse tree
+	 */
+	void enterOperationConstraint(OCLParser.OperationConstraintContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link OCLParser#operationConstraint}.
+	 * @param ctx the parse tree
+	 */
+	void exitOperationConstraint(OCLParser.OperationConstraintContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link OCLParser#interfaceDefinition}.
 	 * @param ctx the parse tree
 	 */
@@ -366,76 +406,6 @@ public interface OCLListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitStatementList(OCLParser.StatementListContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link OCLParser#nlpscript}.
-	 * @param ctx the parse tree
-	 */
-	void enterNlpscript(OCLParser.NlpscriptContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link OCLParser#nlpscript}.
-	 * @param ctx the parse tree
-	 */
-	void exitNlpscript(OCLParser.NlpscriptContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link OCLParser#nlpstatement}.
-	 * @param ctx the parse tree
-	 */
-	void enterNlpstatement(OCLParser.NlpstatementContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link OCLParser#nlpstatement}.
-	 * @param ctx the parse tree
-	 */
-	void exitNlpstatement(OCLParser.NlpstatementContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link OCLParser#loadStatement}.
-	 * @param ctx the parse tree
-	 */
-	void enterLoadStatement(OCLParser.LoadStatementContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link OCLParser#loadStatement}.
-	 * @param ctx the parse tree
-	 */
-	void exitLoadStatement(OCLParser.LoadStatementContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link OCLParser#assignStatement}.
-	 * @param ctx the parse tree
-	 */
-	void enterAssignStatement(OCLParser.AssignStatementContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link OCLParser#assignStatement}.
-	 * @param ctx the parse tree
-	 */
-	void exitAssignStatement(OCLParser.AssignStatementContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link OCLParser#storeStatement}.
-	 * @param ctx the parse tree
-	 */
-	void enterStoreStatement(OCLParser.StoreStatementContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link OCLParser#storeStatement}.
-	 * @param ctx the parse tree
-	 */
-	void exitStoreStatement(OCLParser.StoreStatementContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link OCLParser#analyseStatement}.
-	 * @param ctx the parse tree
-	 */
-	void enterAnalyseStatement(OCLParser.AnalyseStatementContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link OCLParser#analyseStatement}.
-	 * @param ctx the parse tree
-	 */
-	void exitAnalyseStatement(OCLParser.AnalyseStatementContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link OCLParser#displayStatement}.
-	 * @param ctx the parse tree
-	 */
-	void enterDisplayStatement(OCLParser.DisplayStatementContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link OCLParser#displayStatement}.
-	 * @param ctx the parse tree
-	 */
-	void exitDisplayStatement(OCLParser.DisplayStatementContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link OCLParser#identifier}.
 	 * @param ctx the parse tree
