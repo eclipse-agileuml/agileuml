@@ -1327,7 +1327,7 @@ public class ASTCompositeTerm extends ASTTerm
           varSpec.cdeclaratorToModelElements(
                   vartypes, varelemtypes, types, entities);
 
-        System.out.println(">> Model elements: " + mes); 
+        // System.out.println(">> Model elements: " + mes); 
 
         Vector res = new Vector(); 
         if (mes != null && mes.size() > 0) 
@@ -1335,7 +1335,7 @@ public class ASTCompositeTerm extends ASTTerm
           for (int j = 0; j < mes.size(); j++) 
           { ModelElement me = (ModelElement) mes.get(j); 
 
-            System.out.println(">>> Model element: " + me); 
+            // System.out.println(">>> Model element: " + me); 
 
             if (me != null && me instanceof Attribute) 
             { System.out.println(">> Global feature: " + me + " " + t + " " + me.getType());
@@ -1696,7 +1696,7 @@ public class ASTCompositeTerm extends ASTTerm
           varSpec.cdeclaratorToModelElements(
                   vartypes, varelemtypes, types, entities);
 
-        System.out.println(">> Model elements: " + mes); 
+        // System.out.println(">> Model elements: " + mes); 
 
         Vector res = new Vector(); 
         if (mes != null && mes.size() > 0) 
@@ -3584,7 +3584,7 @@ public class ASTCompositeTerm extends ASTTerm
       if (pst != null) 
       { ss.addStatement(pst); } 
 
-      System.out.println(">>> Statement for declaration " + this.literalForm() + " is " + ss); 
+      // System.out.println(">>> Statement for declaration " + this.literalForm() + " is " + ss); 
           
       return ss; 
     } 
@@ -3599,9 +3599,9 @@ public class ASTCompositeTerm extends ASTTerm
         typeSpec.cdeclaratorToModelElements(
            vartypes,varelemtypes,types,entities);
 
-      System.out.println(">>> " + typeSpec); 
+      // System.out.println(">>> " + typeSpec); 
 
-      System.out.println(">>> Model elements: " + mes + " type = " + typ); 
+      // System.out.println(">>> Model elements: " + mes + " type = " + typ); 
 
       if (mes == null) 
       { return null; } 
@@ -3666,7 +3666,7 @@ public class ASTCompositeTerm extends ASTTerm
         ss.addStatement(cs);
       } 
 
-      System.out.println(">>> Statement for " + this + " is " + ss); 
+      // System.out.println(">>> Statement for " + this + " is " + ss); 
 
       return ss;   
     } 
@@ -19754,7 +19754,7 @@ public class ASTCompositeTerm extends ASTTerm
         Type tt = 
           Expression.deduceType(oper,lhsexpr,rhsexpr); 
         expr.setType(tt); 
-        System.out.println(">> Type of " + expr + " inferred as " + tt); 
+        // System.out.println(">> Type of " + expr + " inferred as " + tt); 
         return expr; 
       }
 
@@ -25167,7 +25167,7 @@ public class ASTCompositeTerm extends ASTTerm
         { ASTTerm callarg1 = (ASTTerm) cargs.get(0); 
           String callp1 = callarg1.toKM3(); 
           
-          System.out.println(">>> enumeration of collection: " + this); 
+          // System.out.println(">>> enumeration of collection: " + this); 
 
           ASTTerm.setType(thisliteral,"OclIterator"); 
 
@@ -25181,7 +25181,7 @@ public class ASTCompositeTerm extends ASTTerm
         }  
         else if ("elements".equals(called) && arg.isMap())
         { 
-          System.out.println(">>> enumeration of map values: " + this); 
+          // System.out.println(">>> enumeration of map values: " + this); 
           
           ASTTerm.setType(thisliteral,"OclIterator"); 
           // With same element type as arg. 
@@ -27010,7 +27010,7 @@ public class ASTCompositeTerm extends ASTTerm
                  "nextElement".equals(called) || 
                  "nextToken".equals(called))
         { String tt = ASTTerm.getType(args); 
-          System.out.println(">>> Type of " + args + " is: " + tt);  
+          // System.out.println(">>> Type of " + args + " is: " + tt);  
 
           if ("OclIterator".equals(tt)) 
           { if (arg.expression != null) 
@@ -27056,7 +27056,7 @@ public class ASTCompositeTerm extends ASTTerm
                  "elementAt".equals(called)) 
         { ASTTerm callarg = (ASTTerm) callterms.get(2);
           String tt = ASTTerm.getType(args); 
-          System.out.println(">>> Type of " + args + " is: " + tt);  
+          // System.out.println(">>> Type of " + args + " is: " + tt);  
           String callp = callarg.toKM3();
 
           String elemType = ASTTerm.getElementType(arg); 
@@ -29667,8 +29667,8 @@ public class ASTCompositeTerm extends ASTTerm
           String callp = callarg.toKM3();
           String tt = ASTTerm.getType(args); 
           String pt = ASTTerm.getType(callarg); 
-          System.out.println(">>> Type of " + args + " is: " + tt);  
-          System.out.println(">>> Type of " + callp + " is: " + pt);  
+          // System.out.println(">>> Type of " + args + " is: " + tt);  
+          // System.out.println(">>> Type of " + callp + " is: " + pt);  
 
           if (arg.isSequence() && cargs.size() > 0)
           { ASTTerm carg1 = (ASTTerm) cargs.get(0); 
@@ -29691,8 +29691,8 @@ public class ASTCompositeTerm extends ASTTerm
           String callp = callarg.toKM3();
           String tt = ASTTerm.getType(args); 
           String pt = ASTTerm.getType(callarg); 
-          System.out.println(">>> Type of " + args + " is: " + tt);  
-          System.out.println(">>> Type of " + callp + " is: " + pt);  
+          // System.out.println(">>> Type of " + args + " is: " + tt);  
+          // System.out.println(">>> Type of " + callp + " is: " + pt);  
 
           if (arg.isSequence() && cargs.size() > 0)
           { ASTTerm carg1 = (ASTTerm) cargs.get(0); 
@@ -29828,8 +29828,8 @@ public class ASTCompositeTerm extends ASTTerm
           String callp = callarg.toKM3();
           String tt = ASTTerm.getType(args); 
           String pt = ASTTerm.getType(callarg); 
-          System.out.println(">>> Type of " + args + " is: " + tt);  
-          System.out.println(">>> Type of " + callp + " is: " + pt);  
+          // System.out.println(">>> Type of " + args + " is: " + tt);  
+          // System.out.println(">>> Type of " + callp + " is: " + pt);  
           ASTTerm.setType(thisliteral,"boolean"); 
 
           if ("Map".equals(tt))
@@ -33645,7 +33645,7 @@ public class ASTCompositeTerm extends ASTTerm
       String res = mainclass.toKM3type();
       ASTTerm.setType(this,res);
 
-      System.out.println(">>> Type of " + mainclass + " is " + res); 
+      // System.out.println(">>> Type of " + mainclass + " is " + res); 
 
       // if ("SortedSequence".equals(res))
       // { res = "Sequence"; } 
@@ -35048,17 +35048,17 @@ public class ASTCompositeTerm extends ASTTerm
         
 
     if ("literal".equals(tag))
-    { System.out.println(">> Literal with " + terms.size() + " terms " + terms);
+    { // System.out.println(">> Literal with " + terms.size() + " terms " + terms);
       String res = ""; 
       for (int y = 0; y < terms.size(); y++)
       { ASTTerm yt = (ASTTerm) terms.get(y); 
-        System.out.println(">>> Term " + y + ": " + yt);
+        // System.out.println(">>> Term " + y + ": " + yt);
         if (y < terms.size() - 1) 
         { res = res + yt.toKM3() + " "; } 
         else 
         { res = res + yt.toKM3(); }  
       }  
-      System.out.println();
+      // System.out.println();
 
       if (terms.size() == 1) 
       { ASTTerm tt = (ASTTerm) terms.get(0);
@@ -35072,13 +35072,13 @@ public class ASTCompositeTerm extends ASTTerm
     if ("variableInitializer".equals(tag))
     { ASTTerm t = (ASTTerm) terms.get(0); // An expression
 
-      System.out.println(">> Variable initializer with " + terms.size() + " terms"); 
+      // System.out.println(">> Variable initializer with " + terms.size() + " terms"); 
 
       for (int y = 0; y < terms.size(); y++)
       { ASTTerm yt = (ASTTerm) terms.get(y); 
-        System.out.println(">>> Term " + y + ": " + yt); 
+        // System.out.println(">>> Term " + y + ": " + yt); 
       }  
-      System.out.println(); 
+      // System.out.println(); 
 
       String initexpr = t.toKM3(); // updateForm
       ASTTerm.setType(this,ASTTerm.getType(t)); 
@@ -35430,7 +35430,7 @@ public class ASTCompositeTerm extends ASTTerm
  
      
     if ("parExpression".equals(tag) || "primary".equals(tag))
-    { System.out.println(">> parExpression with " + terms.size() + " terms " + terms);
+    { // System.out.println(">> parExpression with " + terms.size() + " terms " + terms);
       String res = ""; 
 
       if (terms.size() == 3 && "class".equals(((ASTTerm) terms.get(2)).literalForm()))
@@ -35569,19 +35569,21 @@ public class ASTCompositeTerm extends ASTTerm
     } 
 
     if ("expression".equals(tag))
-    { System.out.println(">> Expression with " + terms.size() + " terms " + terms);
-      for (int y = 0; y < terms.size(); y++)
-      { ASTTerm yt = (ASTTerm) terms.get(y); 
-        System.out.println(">>> Term " + y + ": " + yt); 
-      }  
-      System.out.println(); 
+    { // System.out.println(">> Expression with " + terms.size() + " terms " + terms);
+      // for (int y = 0; y < terms.size(); y++)
+      // { ASTTerm yt = (ASTTerm) terms.get(y); 
+        // System.out.println(">>> Term " + y + ": " + yt); 
+      // }  
+      // System.out.println(); 
 
       if (terms.size() == 1) // Identifier or literal
       { 
         ASTTerm t = (ASTTerm) terms.get(0); 
         String res = t.toKM3();
+
         // System.out.println(">>> Single-argument expression: " + this + " with term: " + t + " |--> " + res + " expression: " + t.expression); 
-        System.out.println(); 
+        // System.out.println(); 
+
         ASTTerm.setType(this,ASTTerm.getType(t));
         expression = t.expression;  
         statement = t.statement; 
@@ -36315,7 +36317,7 @@ public class ASTCompositeTerm extends ASTTerm
 
         if (".".equals(op + ""))
         { e1x = e1.queryForm(); 
-          System.out.println(">>> Feature access: " + e1 + "." + e2); 
+          // System.out.println(">>> Feature access: " + e1 + "." + e2); 
 
           String res = featureAccess(e1,e2,e1x,e2x);
 
@@ -36565,7 +36567,7 @@ public class ASTCompositeTerm extends ASTTerm
           // e1x := result of e1 ; 
           // post sideeffect of e1 -- the e1.toKM3()
 
-          System.out.println(">>> Expression with side effect: " + this); 
+          // System.out.println(">>> Expression with side effect: " + this); 
 
           String prese = e1.preSideEffect();
           Statement preStat = e1.statement; 
@@ -36649,14 +36651,14 @@ public class ASTCompositeTerm extends ASTTerm
         { if (e1.expression != null && e2.expression != null) 
           { statement = 
               new AssignStatement(e1.expression, e2.expression);
-            System.out.println(">> Valid assignment: " + statement);
+            // System.out.println(">> Valid assignment: " + statement);
             expression = e1.expression; 
-            System.out.println();  
+            // System.out.println();  
           }
           else if (e1.expression != null) 
           { statement = 
               new AssignStatement(e1.expression, new BasicExpression(e2x)); 
-            System.out.println(">> Invalid assignment: " + statement);
+            // System.out.println(">> Invalid assignment: " + statement);
             expression = e1.expression; 
             System.out.println();  
           } 
@@ -36671,7 +36673,7 @@ public class ASTCompositeTerm extends ASTTerm
           // e1x := e1x + (query form of e2) ; 
           // post sideeffect of e2 -- the e2.toKM3()
 
-          System.out.println(">>> Expression with side effect: " + this); 
+          // System.out.println(">>> Expression with side effect: " + this); 
 
           String prese = e2.preSideEffect();
           Statement preStat = e2.statement; 
@@ -36764,7 +36766,7 @@ public class ASTCompositeTerm extends ASTTerm
           // e1x := e1x - (query form of e2) ; 
           // post sideeffect of e2 -- the e2.toKM3()
 
-          System.out.println(">>> Expression with side effect: " + this); 
+          // System.out.println(">>> Expression with side effect: " + this); 
 
           String prese = e2.preSideEffect();
           Statement preStat = e2.statement; 
@@ -36861,7 +36863,7 @@ public class ASTCompositeTerm extends ASTTerm
           // e1x := e1x * (query form of e2) ; 
           // post sideeffect of e2 -- the e2.toKM3()
 
-          System.out.println(">>> Expression with side effect: " + this); 
+          // System.out.println(">>> Expression with side effect: " + this); 
 
           String prese = e2.preSideEffect();
           Statement preStat = e2.statement; 
@@ -37324,7 +37326,7 @@ public class ASTCompositeTerm extends ASTTerm
             "&&".equals(op.literalForm()) ||
             "||".equals(op.literalForm()))
         { ASTTerm.setType(this, "boolean");
-          System.out.println(">>> Type of " + this + " is boolean"); 
+          // System.out.println(">>> Type of " + this + " is boolean"); 
           System.out.println(); 
         }
           
@@ -37551,13 +37553,13 @@ public class ASTCompositeTerm extends ASTTerm
     } 
 
     if ("statement".equals(tag))
-    { System.out.println(">> toKM3 Statement with " + terms.size() + " terms "); 
+    { // System.out.println(">> toKM3 Statement with " + terms.size() + " terms "); 
 
       modelElements = new Vector(); // for inner classes. 
 
-      for (int h = 0; h < terms.size(); h++) 
-      { System.out.println("--- Term " + h + ": " + terms.get(h)); } 
-      System.out.println(); 
+      // for (int h = 0; h < terms.size(); h++) 
+      // { System.out.println("--- Term " + h + ": " + terms.get(h)); } 
+      // System.out.println(); 
 
       if (terms.size() >= 2 && "throw".equals(terms.get(0) + "")) 
       { ASTTerm t = (ASTTerm) terms.get(1);
@@ -37649,7 +37651,7 @@ public class ASTCompositeTerm extends ASTTerm
         for (int i = clausesStart; i < terms.size(); i++) 
         { ASTTerm tt = (ASTTerm) terms.get(i); 
           res = res + "    " + tt.toKM3();
-          System.out.println(">>> Statement of " + tt + " is: " + tt.statement); 
+          // System.out.println(">>> Statement of " + tt + " is: " + tt.statement); 
           System.out.println(); 
 
           if (statement != null && tt.statement != null)
@@ -38068,8 +38070,8 @@ public class ASTCompositeTerm extends ASTTerm
         if (texpr.modelElements != null)
         { modelElements.addAll(texpr.modelElements); } 
 
-        System.out.println(); 
-        System.out.println(">>> model elements of " + res + ": " + modelElements); 
+        // System.out.println(); 
+        // System.out.println(">>> model elements of " + res + ": " + modelElements); 
 
         return res; 
       } 
@@ -38145,7 +38147,7 @@ public class ASTCompositeTerm extends ASTTerm
       else if (terms.size() == 2) // expression statement
       { ASTTerm t = (ASTTerm) terms.get(0);
 
-        System.out.println(">>> Expression statement: execute " + t); 
+        // System.out.println(">>> Expression statement: execute " + t); 
 
         if (t.isAssignment()) 
         { String res = "  " + t.toKM3Assignment();
@@ -38169,8 +38171,8 @@ public class ASTCompositeTerm extends ASTTerm
         if (t.modelElements != null) 
         { modelElements.addAll(t.modelElements); }
 
-        System.out.println(">>> Statement of expression statement " + t.literalForm() + " is " + statement); 
-        System.out.println(">>> Modelelements of expression statement are " + modelElements); 
+        // System.out.println(">>> Statement of expression statement " + t.literalForm() + " is " + statement); 
+        // System.out.println(">>> Modelelements of expression statement are " + modelElements); 
         
         System.out.println();  
         return "  " + rs; 
@@ -38234,7 +38236,7 @@ public class ASTCompositeTerm extends ASTTerm
         res = "OclException";  
       } 
 
-      System.out.println(">>> Expression of " + this + " is " + expression); 
+      // System.out.println(">>> Expression of " + this + " is " + expression); 
 
       return res; 
     } 
@@ -38467,7 +38469,7 @@ public class ASTCompositeTerm extends ASTTerm
           } 
           sstatements.addStatement(cs); 
            
-          System.out.println(">> Type of " + varbe + " is " + varbe.getType());
+          // System.out.println(">> Type of " + varbe + " is " + varbe.getType());
           System.out.println(); 
 
           ASTTerm vInit = tv.varInit(); 
@@ -38499,8 +38501,8 @@ public class ASTCompositeTerm extends ASTTerm
             }
           }
 
-          System.out.println(">+++> Declaration statements: " + statement);
-          System.out.println(); 
+          /* System.out.println(">+++> Declaration statements: " + statement);
+          System.out.println(); */  
            
         } 
       }  
@@ -38591,7 +38593,7 @@ public class ASTCompositeTerm extends ASTTerm
       // but can be several attributes: 
       // (variableDeclarators (variableDeclarator ...) , ...) 
 
-          System.out.println(">> Type of " + km3var + " is " + fullType + " = " + km3init); 
+        //  System.out.println(">> Type of " + km3var + " is " + fullType + " = " + km3init); 
           System.out.println(">> Attribute = " + att + " " + att.getType() + " (" + att.getElementType() + ")"); 
           System.out.println(">> Initialisation = " + att.getInitialExpression());
         }  
@@ -38660,7 +38662,7 @@ public class ASTCompositeTerm extends ASTTerm
       // but can be several attributes: 
       // (variableDeclarators (variableDeclarator ...) , ...) 
 
-          System.out.println(">> Type of " + km3var + " is " + km3type + " = " + km3init); 
+         // System.out.println(">> Type of " + km3var + " is " + km3type + " = " + km3init); 
           System.out.println(">> Attribute = " + att + " " + att.getType() + " (" + att.getElementType() + ")"); 
           System.out.println(">> Initialisation = " + att.getInitialExpression());
         }  
@@ -38709,8 +38711,8 @@ public class ASTCompositeTerm extends ASTTerm
         String tt = typeTerm.toKM3type();
         modelElement = typeTerm.modelElement;
         expression = typeTerm.expression; 
-        System.out.println(">>> Model element of " + this + " is: " + modelElement); 
-        System.out.println(">>> Expression of " + this + " is: " + expression); 
+        // System.out.println(">>> Model element of " + this + " is: " + modelElement); 
+        // System.out.println(">>> Expression of " + this + " is: " + expression); 
         System.out.println(); 
         return tt; 
       } 
@@ -39147,15 +39149,15 @@ public class ASTCompositeTerm extends ASTTerm
         String res = tt.toKM3(); 
         statement = tt.statement; 
         modelElements = tt.modelElements; // for local decs
-        System.out.println(); 
-        System.out.println(">+>+> model elements of blockStatement " + res +
-                           ": " + modelElements); 
+        // System.out.println(); 
+        // System.out.println(">+>+> model elements of blockStatement " + res +
+        //                    ": " + modelElements); 
         return res; 
       } 
     } 
 
     if ("block".equals(tag))
-    { System.out.println(">> toKM3 Statement block with " + terms.size() + " terms " + terms); 
+    { // System.out.println(">> toKM3 Statement block with " + terms.size() + " terms " + terms); 
 
       if (terms.size() <= 2)
       { statement = new InvocationStatement("skip"); 
@@ -39221,9 +39223,9 @@ public class ASTCompositeTerm extends ASTTerm
         if (count > 1) 
         { res = " ( " + res + " )"; }
 
-        System.out.println(">>> Statement block: " + statement); 
-        System.out.println(); 
-        System.out.println(">>> model elements: " + modelElements); 
+        // System.out.println(">>> Statement block: " + statement); 
+        // System.out.println(); 
+        // System.out.println(">>> model elements: " + modelElements); 
  
         return res + " ";  
       } 
@@ -40188,7 +40190,7 @@ public class ASTCompositeTerm extends ASTTerm
       String km3Contents = contents.toKM3();
       if (contents.modelElements != null) 
       { newEnt.addModelElements(contents.modelElements);
-        System.out.println(">>> Model elements of " + newEnt + " are: " + contents.modelElements);
+        // System.out.println(">>> Model elements of " + newEnt + " are: " + contents.modelElements);
       } 
 
       Vector entPars = newEnt.getTypeParameters(); 

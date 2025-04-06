@@ -2598,15 +2598,15 @@ public class ASTBasicTerm extends ASTTerm
     expression = 
       BasicExpression.newValueBasicExpression(value,typ); 
 
-    System.out.println(">> Expression of " + this + " ==> " + expression); 
+    // System.out.println(">> Expression of " + this + " ==> " + expression); 
       
     if (typ != null) 
-    { System.out.println(">>> Type of " + value + " is " + typ);
+    { // System.out.println(">>> Type of " + value + " is " + typ);
       // expression.setType(new Type(typ, null)); 
     } 
     
     if (tag.equals("integerLiteral"))
-    { System.out.println(">>> Type of " + value + " is integer"); 
+    { // System.out.println(">>> Type of " + value + " is integer"); 
 
       value = Expression.removeUnderscores(value); 
 
@@ -2624,7 +2624,7 @@ public class ASTBasicTerm extends ASTTerm
       }  
     }
     else if (tag.equals("floatLiteral"))
-    { System.out.println(">>> Type of " + value + " is double"); 
+    { // System.out.println(">>> Type of " + value + " is double"); 
 
       value = Expression.removeUnderscores(value); 
 
@@ -2655,7 +2655,7 @@ public class ASTBasicTerm extends ASTTerm
     }
     else if (tag.equals("literal") && value.endsWith("\"") && 
              value.startsWith("\""))
-    { System.out.println(">>> Type of " + value + " is String"); 
+    { // System.out.println(">>> Type of " + value + " is String"); 
       expression.setType(new Type("String", null)); 
 
       ASTTerm.setType(this,"String"); 
@@ -2663,7 +2663,7 @@ public class ASTBasicTerm extends ASTTerm
     }
     else if (tag.equals("literal") && value.endsWith("\'") && 
              value.startsWith("\'"))
-    { System.out.println(">>> Type of " + value + " is String"); 
+    { // System.out.println(">>> Type of " + value + " is String"); 
       value = "\"" + value.substring(1,value.length()-1) + "\""; 
       expression.setType(new Type("String", null)); 
       ASTTerm.setType(this,"String"); 
@@ -2672,7 +2672,7 @@ public class ASTBasicTerm extends ASTTerm
     else if (tag.equals("literal") && 
              (value.equals("true") || value.equals("false"))
             )
-    { System.out.println(">>> Type of " + value + " is String"); 
+    { // System.out.println(">>> Type of " + value + " is String"); 
       expression.setType(new Type("boolean", null)); 
       ASTTerm.setType(this,"boolean"); 
       ASTTerm.setType(value,"boolean"); 

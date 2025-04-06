@@ -5684,13 +5684,15 @@ public class Entity extends ModelElement implements Comparable
     System.out.println("++++++++ Energy analysis of class " + ename + " ++++++++++++"); 
     System.out.println(); 
 
-    String cloneLimit = 
+    /* String cloneLimit = 
       JOptionPane.showInputDialog("Enter clone size limit (default 10): ");
     if (cloneLimit != null) 
     { try { UCDArea.CLONE_LIMIT = Integer.parseInt(cloneLimit); } 
       catch (Exception _ex) 
       { UCDArea.CLONE_LIMIT = 10; } 
-    } 
+    } */ 
+
+    UCDArea.CLONE_LIMIT = 10;
 
     int n = operations.size(); 
 

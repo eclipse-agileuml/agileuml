@@ -101,7 +101,7 @@ public void findPlugins()
       for (int j = 0; j < subfiles.length; j++)
       { if (subfiles[j].equals(dirfiles[i] + ".jar"))
         { plugins.add(dirfiles[i]);
-          System.out.println("Found plugin: " + dirfiles[i]); 
+          // System.out.println("Found plugin: " + dirfiles[i]); 
           continue;
         }
       }
@@ -1571,6 +1571,9 @@ public void findPlugins()
     helpMenu.add(helpMI); 
     helpMI.addActionListener(this);
   }
+
+  public UCDArea getArea()
+  { return ucdArea; } 
 
   public void setInvariants(Vector invs) 
   { invariants = invs; } 

@@ -20783,6 +20783,8 @@ public Statement existsLC(Vector preds, Expression eset, Expression etest,
     // c->reject(P)->size() > 0 
     // replaced by c->exists(not(P))
     
+    // c->size() > 0 replaced by c->notEmpty()
+    // c->size() = 0 replaced by c->isEmpty()
 
     Expression lexpr = left.simplifyOCL(); 
     Expression rexpr = right.simplifyOCL(); 
@@ -20794,6 +20796,17 @@ public Statement existsLC(Vector preds, Expression eset, Expression etest,
       SetExpression res = 
         SetExpression.mergeSetExpressions((SetExpression) lexpr,
                                           (SetExpression) rexpr); 
+      return res; 
+    } 
+
+    int synLeft = lexpr.syntacticComplexity();
+    int synRight = rexpr.syntacticComplexity();
+
+    if (("&".equals(operator) || "or".equals(operator)) && 
+        synLeft > synRight)
+    { BinaryExpression res = 
+        new BinaryExpression(operator, rexpr, lexpr); 
+      System.out.println(">> OCL efficiency smell (OES): Inefficient logical combination: " + this);
       return res; 
     } 
 
@@ -20850,6 +20863,15 @@ public Statement existsLC(Vector preds, Expression eset, Expression etest,
           return res; 
         } 
       }
+      else if ("->size".equals(leftop))
+      { // col->size() = 0 is col->isEmpty()
+        System.out.println(">> OCL efficiency smell (OES): Inefficient comparison: " + this);
+          
+        Expression col = arg.getArgument(); 
+        UnaryExpression res = 
+          new UnaryExpression("->isEmpty", col); 
+        return res; 
+      } 
     }
 
     if (operator.equals("=") && "0".equals(right + "") && 
@@ -20979,6 +21001,15 @@ public Statement existsLC(Vector preds, Expression eset, Expression etest,
           return res; 
         } 
       }
+      else if ("->size".equals(leftop)) 
+      { // col->size() > 0
+
+        System.out.println(">> OCL efficiency smell (OES): Inefficient comparison: " + this);
+        Expression col = arg.getArgument(); 
+        UnaryExpression res = 
+          new UnaryExpression("->notEmpty", col); 
+        return res; 
+      } 
     }
 
     if (operator.equals(">") && "0".equals(right + "") && 
@@ -21156,7 +21187,9 @@ public Statement existsLC(Vector preds, Expression eset, Expression etest,
     // s->count(x)->size() = 0
     // mp->keys()->includes(x)  
 
-    int syn = syntacticComplexity(); 
+    int synLeft = left.syntacticComplexity();
+    int synRight = right.syntacticComplexity();
+    int syn = synLeft + synRight + 1; 
     if (syn > TestParameters.syntacticComplexityLimit)
     { aUses.add("! Excessive expression size (MEL) in " + this + " : try to simplify OCL expression");
       int ascore = (int) res.get("amber"); 
@@ -21165,6 +21198,13 @@ public Statement existsLC(Vector preds, Expression eset, Expression etest,
 
     left.energyUse(res, rUses, aUses); 
     right.energyUse(res, rUses, aUses); 
+
+    if (("&".equals(operator) || "or".equals(operator)) && 
+        synLeft > synRight)
+    { aUses.add("! >> OCL efficiency smell (OES): Possibly inefficient execution order: " + this + "\n>> c(left) = " + synLeft + ", c(right) = " + synRight);
+      int ascore = (int) res.get("amber"); 
+      res.set("amber", ascore+1);
+    } 
 
     if (operator.equals("=") && "0".equals(right + "") && 
         left instanceof UnaryExpression)
@@ -21186,6 +21226,13 @@ public Statement existsLC(Vector preds, Expression eset, Expression etest,
           int ascore = (int) res.get("amber"); 
           res.set("amber", ascore+1);
         } 
+      }
+      else if ("->size".equals(leftop))
+      { // col->size() = 0 is col->isEmpty()
+
+        aUses.add("! >> OCL efficiency smell (OES): Inefficient comparison: " + this + "\n More efficient to use ->isEmpty");
+        int ascore = (int) res.get("amber"); 
+        res.set("amber", ascore+1);
       }
     }
     else if (operator.equals("=") && "0".equals(right + "") && 
@@ -21242,6 +21289,13 @@ public Statement existsLC(Vector preds, Expression eset, Expression etest,
           res.set("amber", ascore+1);
         } 
       }
+      else if ("->size".equals(leftop)) 
+      { // col->size() > 0
+
+        aUses.add("! >> OCL efficiency smell (OES): Inefficient comparison: " + this + "\n More efficient to use ->notEmpty");
+        int ascore = (int) res.get("amber"); 
+        res.set("amber", ascore+1);
+      } 
     }
     else if (operator.equals(">") && "0".equals(right + "") && 
              left instanceof BinaryExpression)

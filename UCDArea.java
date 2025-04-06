@@ -3664,13 +3664,13 @@ public class UCDArea extends JPanel
     java.util.Set lastfound = new java.util.HashSet(); 
     int n = res.maxPathLength(lastfound); 
 
-    System.out.println(">> Maximum call chain length is " + n); 
-    System.out.println(">> Operations in maximum chain are " + lastfound); 
+    // System.out.println(">> Operations in maximum chain are " + lastfound); 
 
     if (n >= 5) 
-    { System.err.println("!! Amber warning: long sequence of calls"); 
+    { System.out.println("!! Maximum call chain length is " + n); 
+      System.err.println("!! Amber warning: long sequence of calls"); 
       System.err.println("!! Try inline expansion of the end operation(s): replace call by definition"); 
-      amberFlags = amberFlags + (n - 4); 
+      amberFlags = amberFlags + 1; 
     }
 
     System.out.println(">> Red flag score: " + redFlags); 
@@ -7015,7 +7015,7 @@ public class UCDArea extends JPanel
     Vector pres = effect.allPreTerms(); 
     // System.out.println("All pre-expressions used: " + pres); 
     ent.setActivity(effect); 
-    System.out.println("Set activity for entity " + ent); 
+    // System.out.println("Set activity for entity " + ent); 
     updateActivities(ent,effect); 
     // activities.add(new Behaviour(ent,effect)); 
   }
@@ -7064,7 +7064,7 @@ public class UCDArea extends JPanel
     Vector pres = effect.allPreTerms(); 
     // System.out.println("All pre-expressions used: " + pres); 
     ent.setActivity(effect); 
-    System.out.println("Set activity for entity " + ent); 
+    // System.out.println("Set activity for entity " + ent); 
     updateActivities(ent, effect); 
     // activities.add(new Behaviour(ent,effect)); 
   }
@@ -7123,7 +7123,7 @@ public class UCDArea extends JPanel
 
     if (op != null)
     { op.setActivity(effect); 
-      System.out.println("Set activity for operation " + nme + " of entity " + ent); 
+      // System.out.println("Set activity for operation " + nme + " of entity " + ent); 
       updateActivities(ent, op, effect); 
       // activities.add(new Behaviour(ent,op,effect)); 
     }
@@ -7143,7 +7143,7 @@ public class UCDArea extends JPanel
   { String nme = op.getName(); 
     if (op != null)
     { op.setActivity(effect); 
-      System.out.println("Set activity for operation " + nme + " of entity " + ent); 
+      // System.out.println("Set activity for operation " + nme + " of entity " + ent); 
       updateActivities(ent, op, effect); 
       // activities.add(new Behaviour(ent,op,effect)); 
     }
@@ -7205,7 +7205,7 @@ public class UCDArea extends JPanel
 
     bf.setActivity(effect); 
     updateActivities(ent, bf, effect); 
-    System.out.println(">> Set activity for operation " + nme + " of entity " + ent); 
+    // System.out.println(">> Set activity for operation " + nme + " of entity " + ent); 
   }
 
   public void transformOperationActivity(Entity ent)
@@ -7252,7 +7252,7 @@ public class UCDArea extends JPanel
     
     bf.setActivity(effect); 
     updateActivities(ent, bf, effect); 
-    System.out.println(">> Set activity for operation " + nme + " of entity " + ent); 
+    // System.out.println(">> Set activity for operation " + nme + " of entity " + ent); 
   }
 
   public void makeOperationCached(Entity ent)
@@ -7300,7 +7300,7 @@ public class UCDArea extends JPanel
     
     bf.setActivity(effect); 
     updateActivities(ent, bf, effect); 
-    System.out.println(">> Set activity for operation " + nme + " of entity " + ent); 
+    // System.out.println(">> Set activity for operation " + nme + " of entity " + ent); 
   }
 
   public void reduceCodeNesting(Entity ent)
@@ -7336,7 +7336,7 @@ public class UCDArea extends JPanel
     
     bf.setActivity(effect); 
     updateActivities(ent, bf, effect); 
-    System.out.println(">> Set activity for operation " + nme + " of entity " + ent); 
+    // System.out.println(">> Set activity for operation " + nme + " of entity " + ent); 
   }
 
   public void replaceCallsByDefinitions(Entity ent)
@@ -7372,7 +7372,7 @@ public class UCDArea extends JPanel
     
     oper.setActivity(effect); 
     updateActivities(ent, oper, effect); 
-    System.out.println(">> Set activity for operation " + op + " of entity " + ent); 
+    // System.out.println(">> Set activity for operation " + op + " of entity " + ent); 
   }
 
   public void removeUnusedParameters(Entity ent)
@@ -7450,7 +7450,7 @@ public class UCDArea extends JPanel
     Vector pres = effect.allPreTerms(); 
     System.out.println("All pre-expressions used: " + pres); 
     uc.setActivity(effect); 
-    System.out.println("Set activity for use case " + ucname);
+    // System.out.println("Set activity for use case " + ucname);
 
     updateActivities(uc,effect); 
     // remove any existing behaviour for uc!
@@ -7505,7 +7505,7 @@ public class UCDArea extends JPanel
     Vector pres = effect.allPreTerms(); 
     System.out.println("All pre-expressions used: " + pres); 
     uc.setActivity(effect); 
-    System.out.println("Set activity for use case " + ucname);
+    // System.out.println("Set activity for use case " + ucname);
 
     updateActivities(uc,effect); 
   }
@@ -8042,16 +8042,16 @@ public class UCDArea extends JPanel
     effect.typeCheck(types,entities,contexts,vars); 
     if (op != null)
     { op.setActivity(effect); 
-      System.out.println(">> Set activity for operation " + pb.specification + 
-                         " of entity " + ent); 
+      // System.out.println(">> Set activity for operation " + pb.specification + 
+      //                   " of entity " + ent); 
     }
     else if (ent != null) 
     { ent.setActivity(effect); 
-      System.out.println(">> Set activity for entity " + ent); 
+      // System.out.println(">> Set activity for entity " + ent); 
     }
     else if (uc != null) 
     { uc.setActivity(effect); 
-      System.out.println(">> Set activity for use case " + uc.getName()); 
+      // System.out.println(">> Set activity for use case " + uc.getName()); 
     } 
 
 
@@ -16005,9 +16005,234 @@ public void produceCUI(PrintWriter out)
       out2.close(); 
     }
     catch (Throwable tt)
-    { System.err.println("Error generating C++"); } 
+    { System.err.println("!! Error generating C++"); } 
   } 
 
+  public void loadFromJavaAST(String sourcefile)
+  { BufferedReader br = null; 
+
+    try
+    { br = new BufferedReader(new FileReader(sourcefile)); }
+    catch (FileNotFoundException _e)
+    { System.err.println("!! File not found: " + sourcefile);
+      return; 
+    }
+
+    String jtext = ""; 
+    String sline = ""; 
+    boolean eof = false; 
+
+    while (!eof)
+    { try { sline = br.readLine(); }
+      catch (IOException _ex)
+      { System.err.println("!! Reading Java file " + sourcefile + " failed.");
+        return; 
+      }
+
+      if (sline == null) 
+      { eof = true; 
+        break; 
+      }
+      else 
+      { jtext = jtext + sline + " "; } 
+    }
+
+
+    Vector auxcstls = new Vector(); 
+    ASTTerm xx = null; 
+
+    String[] args = {"Java", "compilationUnit"}; 
+
+    try { 
+      org.antlr.v4.gui.AntlrGUI antlr = 
+          new org.antlr.v4.gui.AntlrGUI(args); 
+
+      antlr.setText(jtext); 
+
+      antlr.process(); 
+
+      String asttext = antlr.getResultText(); 
+        // messageArea.setText("" + asttext);
+        // System.out.println(asttext); 
+ 
+      Compiler2 cc = new Compiler2(); 
+      xx = cc.parseGeneralAST(asttext); 
+    } 
+    catch (Exception _expt) 
+    { _expt.printStackTrace(); } 
+
+    // CGSpec spec = loadCSTL("cgJava2UML.cstl",auxcstls); 
+
+    // if (spec == null) 
+    // { System.err.println("!! Error: No cg/cgJava2UML.cstl file defined!"); 
+    //   return; 
+    // } 
+
+    if (xx == null) 
+    { System.err.println("!! Invalid Java source text !!"); 
+      System.err.println(jtext); 
+      return; 
+    } 
+
+    xx.entities = new Vector(); 
+    xx.entities.addAll(entities); 
+    xx.enumtypes = new Vector(); 
+    xx.enumtypes.addAll(types); 
+
+    xx.toKM3();
+ 
+    // System.out.println(); 
+    // System.out.println(); 
+
+    // Date d1 = new Date(); 
+    // long time1 = d1.getTime(); 
+
+    // String tt = xx.cg(spec); 
+    // System.out.println(tt); 
+    // System.out.println(); 
+
+    // System.out.println(xx.toKM3()); 
+    // System.out.println(); 
+    // System.out.println(); 
+
+    // Date d2 = new Date(); 
+    // long time2 = d2.getTime(); 
+
+    // System.out.println(">>> Time for abstraction = " + (time2-time1)); 
+
+    // System.out.println(">>> System classes are: " + ASTTerm.entities); 
+
+    Vector newentities = new Vector(); 
+    String pname = ASTTerm.packageName; 
+    if (pname != null) 
+    { // System.out.println(">>> System name is: " + pname); 
+      systemName = pname; 
+    } 
+
+    if (xx.modelElement != null) 
+    { if (xx.modelElement instanceof Entity) 
+      { Entity newent = (Entity) xx.modelElement; 
+        if (newent.isInterface() || newent.hasConstructor()) 
+        { } 
+        else 
+        { newent.addDefaultConstructor(); } 
+
+        addEntity(newent, 100, 100); 
+        newentities.add(xx.modelElement); 
+      } 
+      else if (xx.modelElement instanceof Type) 
+      { addType((Type) xx.modelElement, 100, 100); } 
+      else if (xx.modelElement instanceof BehaviouralFeature)
+      { Entity e = new Entity("FromJava"); 
+        e.addOperation((BehaviouralFeature) xx.modelElement); 
+        addEntity(e, 100, 100); 
+      } 
+    } 
+    else if (xx.modelElements != null) 
+    { for (int i = 0; i < xx.modelElements.size(); i++) 
+      { ModelElement me = (ModelElement) xx.modelElements.get(i); 
+        if (me instanceof Entity) 
+        { Entity newent = (Entity) me; 
+          if (newent.isInterface() ||
+              newent.hasConstructor()) 
+          { } 
+          else 
+          { newent.addDefaultConstructor(); } 
+
+          addEntity(newent, 100+(i*50), 100 + (150*i % 600));
+          newentities.add(newent); 
+        } 
+        else if (me instanceof BehaviouralFeature)
+        { Entity e = new Entity("FromJava"); 
+          e.addOperation((BehaviouralFeature) me); 
+          addEntity(e, 100+(i*50), 100 + i*100); 
+        }
+        else if (me instanceof Type) 
+        { addType((Type) me, 100+(i*50), 100 + (i*150 % 600)); } 
+      } // and add inheritances. 
+    }
+
+    int entcount = newentities.size(); 
+
+    for (int i = 0; i < ASTTerm.entities.size(); i++) 
+    { Entity entx = (Entity) ASTTerm.entities.get(i); 
+      String entxname = entx.getName(); 
+      ModelElement mex = 
+         ModelElement.lookupByName(entxname,entities); 
+      if (mex != null) { continue; } 
+      mex = 
+         ModelElement.lookupByName(entxname,newentities); 
+      if (mex != null) { continue; } 
+      if (entx.isInterface() ||
+          entx.hasConstructor() || 
+          entx.isTypeParameter()) 
+      { } 
+      else 
+      { entx.addDefaultConstructor(); } 
+
+      if (entx.isTypeParameter()) { } 
+      else 
+      { addEntity(entx, 100+((i+entcount)*50), 100 + (150*(entcount+i) % 600));
+        newentities.add(entx);
+      }  
+    } 
+
+    repaint(); 
+
+    for (int k = 0; k < newentities.size(); k++) 
+    { Entity nent = (Entity) newentities.get(k);
+      // System.out.println(">>> Entity " + nent + " has attributes " + nent.allAttributes());    
+ 
+      if (nent.getSuperclass() != null) 
+      { Entity supc = nent.getSuperclass();
+        Entity actualSup = 
+          (Entity) ModelElement.lookupByName(supc.getName(), 
+                                             entities); 
+        if (actualSup != null)  
+        { Generalisation g = new Generalisation(actualSup,nent);
+          addInheritance(g,actualSup,nent);
+          nent.setSuperclass(actualSup); 
+
+          // System.out.println(">>> Entity " + nent + " inherits " + 
+          // actualSup + " attributes: " + actualSup.allAttributes() + " " + 
+          // nent.allAttributes() + " " + actualSup.getAttributes());
+        }  
+      } 
+
+      Vector itfs = nent.getInterfaces(); 
+      // System.out.println(">>> Interfaces of " + nent + " are: " + itfs); 
+
+      for (int q = 0; q < itfs.size(); q++) 
+      { Entity supi = (Entity) itfs.get(q);
+        // Entity supx = 
+        //   (Entity) ModelElement.lookupByName(
+        //                           supi.getName(),entities);
+        // System.out.println(">>> Interface " + supx);   
+        Generalisation gi = new Generalisation(supi,nent);
+        gi.setRealization(true); 
+        addInheritance(gi,supi,nent);
+      } 
+
+    }    
+
+    Vector globalInitialisers = new Vector(); 
+    SequenceStatement globalInit = new SequenceStatement(); 
+
+    for (int k = 0; k < newentities.size(); k++) 
+    { Entity nent = (Entity) newentities.get(k);
+      globalInitialisers.addAll(nent.globalInitialisers()); 
+      Vector ginitcode = nent.globalInitialisationCode(); 
+      globalInit.addStatements(ginitcode); 
+    } 
+
+    if (globalInitialisers.size() > 0) 
+    { UseCase uc = new UseCase("initialiseApp"); 
+      uc.setActivity(globalInit); 
+      addGeneralUseCase(uc);  
+    } 
+
+    repaint(); 
+  }
 
   // Load From Java AST
   public void loadGenericUseCase()
@@ -16226,7 +16451,6 @@ public void produceCUI(PrintWriter out)
     tags.add("primary"); 
 
     compareModel2Program(xx, tags); 
-
 
     repaint(); 
   }

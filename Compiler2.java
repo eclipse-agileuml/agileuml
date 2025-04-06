@@ -8029,7 +8029,7 @@ public Vector parseAttributeDecsInit(Vector entities, Vector types)
 
     int reached = start; // start of the next element to be parsed. reached <= i
 
-    System.out.println(">>> starting: " + lexicals.get(reached)); 
+    // System.out.println(">>> starting: " + lexicals.get(reached)); 
 
     for (int i = start + 1; i < en; i++) 
     { String lx2 = lexicals.get(i) + ""; 
