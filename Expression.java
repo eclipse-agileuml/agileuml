@@ -3269,7 +3269,14 @@ abstract class Expression
   public static Expression negate(Expression e)
   { if (e instanceof BinaryExpression)
     { BinaryExpression be = (BinaryExpression) e; 
-      String op = be.operator; 
+      String op = be.operator;
+ 
+      if (op.equals("->includes"))
+      { return new BinaryExpression("->excludes", be.left, be.right); } 
+
+      if (op.equals("->excludes"))
+      { return new BinaryExpression("->includes", be.left, be.right); }       
+
       if (op.equals("&"))
       { Expression nleft = negate(be.left); 
         Expression nright = negate(be.right); 
@@ -3278,7 +3285,8 @@ abstract class Expression
         res.setBrackets(true); 
         return res; 
       } 
-      else if (op.equals("or"))
+      
+      if (op.equals("or"))
       { Expression nleft = negate(be.left); 
         Expression nright = negate(be.right); 
         Expression res = 
@@ -3286,47 +3294,60 @@ abstract class Expression
         res.setBrackets(true); 
         return res; 
       } 
-      else if (op.equals("->exists"))
+      
+      if (op.equals("->exists"))
       { Expression nright = negate(be.right); 
         Expression res = 
             new BinaryExpression("->forAll", be.left, nright); 
         res.setBrackets(true); 
         return res; 
       } 
-      else if (op.equals("->forAll"))
+      
+      if (op.equals("->forAll"))
       { Expression nright = negate(be.right); 
         Expression res = 
            new BinaryExpression("->exists", be.left, nright); 
         res.setBrackets(true); 
         return res; 
       } 
-      else if (op.equals("#"))
+      
+      if (op.equals("#"))
       { Expression nright = negate(be.right); 
         Expression res = 
            new BinaryExpression("!", be.left, nright); 
         res.setBrackets(true); 
         return res; 
       } 
-      else if (op.equals("!"))
+      
+      if (op.equals("!"))
       { Expression nright = negate(be.right); 
         Expression res = 
            new BinaryExpression("#", be.left, nright); 
         res.setBrackets(true); 
         return res; 
       } 
-      else if (op.equals("->includesAll")) 
+      
+      if (op.equals("->includesAll")) 
       { return new BinaryExpression("/<:",be.right,be.left); } 
 
 
       String nop = negateOp(be.operator); 
       if (!(nop.equals(be.operator))) 
       { return new BinaryExpression(nop,be.left,be.right); } 
+
       return new UnaryExpression("not",e); 
     } 
     else if (e instanceof UnaryExpression) 
     { UnaryExpression ue = (UnaryExpression) e; 
+
       if (ue.operator.equals("not"))
       { return ue.argument; } 
+
+      if (ue.operator.equals("->isEmpty"))
+      { return new UnaryExpression("->notEmpty", ue.argument); } 
+
+      if (ue.operator.equals("->notEmpty"))
+      { return new UnaryExpression("->isEmpty", ue.argument); } 
     } 
     else if (e instanceof BasicExpression)
     { if (e.isTrueString())

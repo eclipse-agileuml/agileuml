@@ -321,7 +321,7 @@ public void findPlugins()
     fileMenu.addSeparator(); 
 
     JMenuItem loadGenericMI = 
-      new JMenuItem("From Java AST",openIcon);
+      new JMenuItem("From Java Source",openIcon);
     loadGenericMI.addActionListener(this);
     loadGenericMI.setToolTipText(
       "Creates UML/OCL from AST produced by ANTLR Java parser, in output/ast.txt");
@@ -1882,8 +1882,9 @@ public void findPlugins()
       { ucdArea.loadQVT();
          // saved = true; 
       }
-      else if (label.equals("From Java AST")) 
-      { ucdArea.loadGenericUseCase();
+      else if (label.equals("From Java Source")) 
+      { String fname = JOptionPane.showInputDialog("Enter Java file name: "); 
+        ucdArea.loadFromJavaAST(fname);
         saved = true; 
       }
       else if (label.equals("From C AST")) 

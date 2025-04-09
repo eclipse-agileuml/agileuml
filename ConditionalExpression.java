@@ -156,6 +156,7 @@ public class ConditionalExpression extends Expression
     Expression elsestat = elseExp.simplifyOCL();
 
     Expression testexpr = test.simplifyOCL(); 
+    testexpr.setBrackets(false); 
 
     if ((testexpr + "").equals("true"))
     { return ifstat; } 
@@ -168,16 +169,59 @@ public class ConditionalExpression extends Expression
     { BinaryExpression testbe = (BinaryExpression) testexpr; 
       BinaryExpression elsebe = (BinaryExpression) elsestat; 
 
+      Expression testbeLeft = testbe.getLeft(); 
+      Expression testbeRight = testbe.getRight(); 
+      testbeLeft.setBrackets(false); 
+      testbeRight.setBrackets(false); 
+
+      Expression elsebeLeft = elsebe.getLeft(); 
+      Expression elsebeRight = elsebe.getRight(); 
+      elsebeLeft.setBrackets(false); 
+      elsebeRight.setBrackets(false); 
+
+      ifstat.setBrackets(false); 
+
       if ("->includes".equals(testbe.getOperator()) && 
-          (testbe.getLeft() + "").equals(ifstat + "") && 
+          (testbeLeft + "").equals(ifstat + "") && 
           ifExp.hasSetType() && 
-          (testbe.getLeft() + "").equals(elsebe.getLeft() + "") && 
-          (testbe.getRight() + "").equals(elsebe.getRight() + ""))
+          (testbeLeft + "").equals(elsebeLeft + "") && 
+          (testbeRight + "").equals(elsebeRight + ""))
       { if (elsebe.getOperator().equals("->including") || 
             elsebe.getOperator().equals("->append"))
         { return elsebe; }
       } 
-    }  // redundant if-then-else-endif
+    }  // redundant if-then-else-endif, though not for OrderedSet
+
+    if (testexpr instanceof BinaryExpression && 
+        ifstat instanceof BinaryExpression)
+    { // if s->excludes(x) then s->including(x) else s endif
+      // if s->excludes(x) then s->append(x) else s endif
+
+      BinaryExpression testbe = (BinaryExpression) testexpr; 
+      BinaryExpression ifbe = (BinaryExpression) ifstat; 
+
+      Expression testbeLeft = testbe.getLeft(); 
+      Expression testbeRight = testbe.getRight(); 
+      testbeLeft.setBrackets(false); 
+      testbeRight.setBrackets(false); 
+
+      Expression ifbeLeft = ifbe.getLeft(); 
+      Expression ifbeRight = ifbe.getRight(); 
+      ifbeLeft.setBrackets(false); 
+      ifbeRight.setBrackets(false); 
+
+      elseExp.setBrackets(false); 
+
+      if ("->excludes".equals(testbe.getOperator()) && 
+          (testbeLeft + "").equals(elsestat + "") && 
+          elseExp.hasSetType() && 
+          (testbeLeft + "").equals(ifbeLeft + "") && 
+          (testbeRight + "").equals(ifbeRight + ""))
+      { if (ifbe.getOperator().equals("->including") || 
+            ifbe.getOperator().equals("->append"))
+        { return ifbe; } 
+      } 
+    } 
 
     return new ConditionalExpression(testexpr, ifstat, elsestat); 
   } 
@@ -195,27 +239,86 @@ public class ConditionalExpression extends Expression
     elseExp.energyUse(res,rUses,oUses);
 
     // if s->includes(x) then s else s->including(x) endif
+    // if s->includes(x) then s else s->append(x) endif
+
     // for s : Sequence is a potential issue. s : OrderedSet
     // or s : Set could be more efficient if uniqueness needed
 
-    if (test instanceof BinaryExpression && 
+    Expression testSimplified = test; 
+    if (test instanceof UnaryExpression && 
+        "not".equals(((UnaryExpression) test).getOperator()))
+    { testSimplified = 
+          Expression.negate(((UnaryExpression) test).getArgument()); 
+    } 
+
+    if (testSimplified instanceof BinaryExpression && 
         elseExp instanceof BinaryExpression)
-    { BinaryExpression testbe = (BinaryExpression) test; 
+    { BinaryExpression testbe = 
+                         (BinaryExpression) testSimplified; 
       BinaryExpression elsebe = (BinaryExpression) elseExp; 
 
+      Expression testbeLeft = testbe.getLeft(); 
+      Expression testbeRight = testbe.getRight(); 
+      testbeLeft.setBrackets(false); 
+      testbeRight.setBrackets(false); 
+
+      Expression elsebeLeft = elsebe.getLeft(); 
+      Expression elsebeRight = elsebe.getRight(); 
+      elsebeLeft.setBrackets(false); 
+      elsebeRight.setBrackets(false); 
+
+      ifExp.setBrackets(false); 
+
       if ("->includes".equals(testbe.getOperator()) && 
-          (testbe.getLeft() + "").equals(ifExp + "") && 
+          (testbeLeft + "").equals(ifExp + "") && 
           ifExp.hasSequenceType() && 
-          (testbe.getLeft() + "").equals(elsebe.getLeft() + "") && 
-          (testbe.getRight() + "").equals(elsebe.getRight() + ""))
+          (testbeLeft + "").equals(elsebeLeft + "") && 
+          (testbeRight + "").equals(elsebeRight + ""))
       { if (elsebe.getOperator().equals("->including") || 
             elsebe.getOperator().equals("->append"))
         { rUses.add("!! Using sequence " + ifExp + " as set in " + this + "\n>> Recommend declaring " + ifExp + " as a Set or SortedSet"); 
+
+          int oscore = (int) res.get("red"); 
+          res.set("red", oscore + 1); 
+        } 
+      }
+    } 
+    else if (testSimplified instanceof BinaryExpression && 
+             ifExp instanceof BinaryExpression)
+    { // if s->excludes(x) then s->including(x) else s endif
+      // if s->excludes(x) then s->append(x) else s endif
+
+      BinaryExpression testbe = 
+              (BinaryExpression) testSimplified; 
+      BinaryExpression ifbe = (BinaryExpression) ifExp; 
+
+      Expression testbeLeft = testbe.getLeft(); 
+      Expression testbeRight = testbe.getRight(); 
+      testbeLeft.setBrackets(false); 
+      testbeRight.setBrackets(false); 
+
+      Expression ifbeLeft = ifbe.getLeft(); 
+      Expression ifbeRight = ifbe.getRight(); 
+      ifbeLeft.setBrackets(false); 
+      ifbeRight.setBrackets(false); 
+
+      elseExp.setBrackets(false); 
+
+      if ("->excludes".equals(testbe.getOperator()) && 
+          (testbeLeft + "").equals(elseExp + "") && 
+          elseExp.hasSequenceType() && 
+          (testbeLeft + "").equals(ifbeLeft + "") && 
+          (testbeRight + "").equals(ifbeRight + ""))
+      { if (ifbe.getOperator().equals("->including") || 
+            ifbe.getOperator().equals("->append"))
+        { rUses.add("!! Using sequence " + elseExp + " as set in " + this + "\n>> Recommend declaring " + elseExp + " as a Set or SortedSet"); 
+
           int oscore = (int) res.get("red"); 
           res.set("red", oscore + 1); 
         } 
       } 
     } 
+
 
     return res; 
   } 

@@ -845,6 +845,9 @@ public void findClones(java.util.Map clones,
     if (operator.equals("->size"))
     { return Expression.simplifySize(arg); } 
 
+    if (operator.equals("not"))
+    { return Expression.negate(arg); }
+
     if (operator.equals("->notEmpty") && 
         argument instanceof BinaryExpression)
     { // ->select(P)->notEmpty()  is  ->exists(P)
