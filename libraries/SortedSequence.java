@@ -59,7 +59,7 @@ class SortedSequence<T extends Comparable<T>> implements List<T>
 
   public int lastIndexOf(Object x)
   { 
-	int insertPoint = Collections.binarySearch(elements, (T) x); 
+    int insertPoint = Collections.binarySearch(elements, (T) x); 
     
     if (insertPoint < 0)
     { return insertPoint; }
