@@ -20789,6 +20789,9 @@ public Statement existsLC(Vector preds, Expression eset, Expression etest,
     Expression lexpr = left.simplifyOCL(); 
     Expression rexpr = right.simplifyOCL(); 
 
+    if ("->at".equals(operator)) 
+    { return Expression.simplifyAt(lexpr, rexpr); } 
+
     if ("->union".equals(operator) && 
         lexpr instanceof SetExpression && 
         rexpr instanceof SetExpression)

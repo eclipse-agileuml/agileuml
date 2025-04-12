@@ -324,9 +324,18 @@ public void findPlugins()
       new JMenuItem("From Java Source",openIcon);
     loadGenericMI.addActionListener(this);
     loadGenericMI.setToolTipText(
-      "Creates UML/OCL from AST produced by ANTLR Java parser, in output/ast.txt");
+      "Creates UML/OCL from source Java code");
     // loadDataMI.setMnemonic(KeyEvent.VK_L);
     fileMenu.add(loadGenericMI);
+
+    JMenuItem fromPython = 
+      new JMenuItem("From Python Source",openIcon);
+    fromPython.addActionListener(this);
+    fromPython.setToolTipText(
+      "Creates UML/OCL from source Python code");
+    fileMenu.add(fromPython);
+
+    fileMenu.addSeparator(); 
 
     JMenuItem fromCMI = 
       new JMenuItem("From C AST",openIcon);
@@ -357,13 +366,6 @@ public void findPlugins()
     fromCobol.setToolTipText(
       "Creates UML/OCL from AST produced by ANTLR Cobol85 parser, in output/ast.txt");
     fileMenu.add(fromCobol);
-
-    JMenuItem fromPython = 
-      new JMenuItem("From Python AST",openIcon);
-    fromPython.addActionListener(this);
-    fromPython.setToolTipText(
-      "Creates UML/OCL from AST produced by ANTLR Python parser, in output/ast.txt");
-    fileMenu.add(fromPython);
 
     JMenuItem fromPascal = 
       new JMenuItem("From Pascal AST",openIcon);
@@ -1887,6 +1889,11 @@ public void findPlugins()
         ucdArea.loadFromJavaAST(fname);
         saved = true; 
       }
+      else if (label.equals("From Python Source")) 
+      { String fname = JOptionPane.showInputDialog("Enter Python file name: "); 
+        ucdArea.loadFromPython(fname);
+        saved = true; 
+      }
       else if (label.equals("From C AST")) 
       { ucdArea.fromCAST();
         saved = true; 
@@ -1901,10 +1908,6 @@ public void findPlugins()
       }
       else if (label.equals("From COBOL AST")) 
       { ucdArea.loadFromCobol();
-        saved = true; 
-      }
-      else if (label.equals("From Python AST")) 
-      { ucdArea.loadFromPython();
         saved = true; 
       }
       else if (label.equals("From Pascal AST")) 

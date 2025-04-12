@@ -15904,7 +15904,9 @@ public void produceCUI(PrintWriter out)
  
     ASTTerm.metafeatures = new java.util.HashMap(); 
 
-    loadFromPython();
+    // String sourcefile = 
+    //    JOptionPane.showInputDialog("Source Python file:"); 
+    loadFromPython(null);
     typeCheck(); 
     typeInference(); 
     typeCheck(); 
@@ -28749,58 +28751,105 @@ public void produceCUI(PrintWriter out)
     repaint(); 
   }
 
-  public void loadFromPython()
-  { BufferedReader br = null;
-    Vector res = new Vector();
-    String s;
-    boolean eof = false;
-    File sourcefile = new File("output/ast.txt");  
-      /* default */ 
-
-    try
-    { br = new BufferedReader(new FileReader(sourcefile)); }
-    catch (FileNotFoundException _e)
-    { System.out.println("File not found: " + sourcefile);
-      return; 
-    }
-
-    long t1 = (new java.util.Date()).getTime(); 
-
+  public void loadFromPython(String sourcefile)
+  { BufferedReader br = null; 
+    ASTTerm xx = null; 
+    String jtext = ""; 
     String sourcestring = ""; 
-    int noflines = 0; 
-
-    while (!eof)
-    { try { s = br.readLine(); }
-      catch (IOException _ex)
-      { System.err.println("!! Reading AST file output/ast.txt failed.");
+    
+    if (sourcefile != null)
+    { try
+      { br = new BufferedReader(new FileReader(sourcefile)); }
+      catch (FileNotFoundException _e)
+      { System.err.println("!! File not found: " + sourcefile);
         return; 
       }
-      if (s == null) 
-      { eof = true; 
-        break; 
+
+      String sline = ""; 
+      boolean eof = false; 
+
+      while (!eof)
+      { try { sline = br.readLine(); }
+        catch (IOException _ex)
+        { System.err.println("!! Reading Python file " + sourcefile + " failed.");
+          return; 
+        }
+
+        if (sline == null) 
+        { eof = true; 
+          break; 
+        }
+        else 
+        { jtext = jtext + sline + " "; } 
       }
-      else 
-      { sourcestring = sourcestring + s + " "; } 
-      noflines++; 
+
+
+      String[] args = {"Python", "file_input"}; 
+
+      try { 
+        org.antlr.v4.gui.AntlrGUI antlr = 
+          new org.antlr.v4.gui.AntlrGUI(args); 
+
+        antlr.setText(jtext); 
+
+        antlr.process(); 
+
+        String asttext = antlr.getResultText(); 
+  
+        Compiler2 cc = new Compiler2(); 
+        xx = cc.parseGeneralAST(asttext); 
+      } 
+      catch (Exception _expt) 
+      { _expt.printStackTrace(); } 
+    } 
+    else // take the AST from output/ast.txt
+    { BufferedReader br1 = null;
+      Vector res = new Vector();
+      String s;
+      boolean eof1 = false;
+      File astfile = new File("output/ast.txt");  
+      /* default */ 
+
+      try
+      { br1 = new BufferedReader(new FileReader(astfile)); }
+      catch (FileNotFoundException _e)
+      { System.out.println("File not found: " + astfile);
+        return; 
+      }
+
+      int noflines = 0; 
+
+      while (!eof1)
+      { try { s = br1.readLine(); }
+        catch (IOException _ex)
+        { System.err.println("!! Reading AST file output/ast.txt failed.");
+          return; 
+        }
+        if (s == null) 
+        { eof1 = true; 
+          break; 
+        }
+        else 
+        { sourcestring = sourcestring + s + " "; } 
+        noflines++; 
+      }
+
+      System.out.println(">>> Read " + noflines + " lines"); 
+
+      Compiler2 c1 = new Compiler2();    
+
+      xx =
+        c1.parseGeneralAST(sourcestring); 
     }
 
-    System.out.println(">>> Read " + noflines + " lines"); 
-
-    Compiler2 c = new Compiler2();    
-
-    ASTTerm xx =
-      c.parseGeneralAST(sourcestring); 
-
     if (xx == null) 
-    { System.err.println("!! Invalid text for general AST"); 
-      System.err.println(c.lexicals); 
+    { System.err.println("!! Invalid Python input: " + (jtext + sourcestring)); 
       return; 
     } 
    
     if (xx instanceof ASTCompositeTerm)  { } 
     else 
-    { System.err.println("!! Not a valid Python AST:"); 
-      System.err.println(c.lexicals); 
+    { System.err.println("!! Not a valid Python AST: " + xx); 
       return; 
     } 
 
@@ -28831,9 +28880,9 @@ public void produceCUI(PrintWriter out)
 
     loadKM3FromText("package app {\n " + arg1 + "\n}\n\n"); 
  
-    long t2 = (new java.util.Date()).getTime(); 
+    // long t2 = (new java.util.Date()).getTime(); 
 
-    System.out.println(">> Time taken = " + (t2 - t1)); 
+    // System.out.println(">> Time taken = " + (t2 - t1)); 
 
     // set all classes concrete
 
@@ -28847,10 +28896,10 @@ public void produceCUI(PrintWriter out)
 
     typeCheck(); 
 
-    Vector tags = new Vector(); 
-    tags.add("name"); // for Python
+    // Vector tags = new Vector(); 
+    // tags.add("name"); // for Python
 
-    compareModel2Program(xx, tags); 
+    // compareModel2Program(xx, tags); 
 
     repaint(); 
   }
