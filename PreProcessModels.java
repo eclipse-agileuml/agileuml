@@ -1,5 +1,5 @@
 /******************************
-* Copyright (c) 2003--2023 Kevin Lano
+* Copyright (c) 2003--2025 Kevin Lano
 * This program and the accompanying materials are made available under the
 * terms of the Eclipse Public License 2.0 which is available at
 * http://www.eclipse.org/legal/epl-2.0
@@ -43,6 +43,7 @@ public class PreProcessModels
     String classesr = "classDeclaration"; 
     String localdecsr = "localVariableDeclaration"; 
     String enumsr = "enumDeclaration"; 
+    String parsr = "formalParameter"; 
 
     boolean hasConfiguration = false; 
     boolean configeof = true; 
@@ -56,7 +57,7 @@ public class PreProcessModels
       configeof = false;  
     }
     catch (FileNotFoundException e)
-    { System.out.println("File not found: " + configFile); 
+    { System.out.println("!! File not found: " + configFile); 
       configeof = true; 
     }
 
@@ -95,6 +96,8 @@ public class PreProcessModels
           { localdecsr = configParValue; } 
           else if ("enumerationRule".equals(configPar))
           { enumsr = configParValue; } 
+          else if ("parameterRule".equals(configPar))
+          { parsr = configParValue; } 
         } 
       } 
     } 
@@ -133,7 +136,7 @@ public class PreProcessModels
     try {  
        bwout = new BufferedWriter(new FileWriter(outfile)); 
     } catch (Exception _e)
-      { System.err.println("!!No file: output/out.txt"); 
+      { System.err.println("!! No file: output/out.txt"); 
         return; 
       } 
     
@@ -168,8 +171,6 @@ public class PreProcessModels
       BufferedReader br = null;
       String s;
       boolean eof = false;
-    
-      
 
       br = new BufferedReader(new FileReader(tfile));
       
@@ -299,7 +300,7 @@ public class PreProcessModels
         String progEx = (String) programTypeExamples.get(i); 
         // bw.write(progEx + "\n");
         // bw.close();
-        Thread.sleep(50); 
+        Thread.sleep(20); 
 
         // type tmp.txt | java org.antlr.v4.gui.TestRig Java typeTypeOrVoid -tree >ast.txt
 
@@ -365,7 +366,6 @@ public class PreProcessModels
                        progModelString); 
 
     
-
 
     Vector expressionExamples = new Vector(); // Expression
     String oclExpressionModel = ""; 
@@ -551,7 +551,7 @@ public class PreProcessModels
         String progEx = (String) programExpressionExamples.get(i); 
         // bw.write(progEx + "\n");
         // bw.close();
-        Thread.sleep(50); 
+        Thread.sleep(20); 
         // Process p = proc.exec("parseProgramExpression.bat"); 
         // InputStream stdin = p.getInputStream(); 
         // StreamGobble igb = new StreamGobble(stdin); 
@@ -974,8 +974,9 @@ public class PreProcessModels
                   comp.parseKM3Enumeration(entities,types); 
         } 
         else if (":".equals(comp.getLexical(1)))
-        { tt = (ModelElement) 
-                  comp.parseParameterDeclaration(entities,types); 
+        { tt = 
+           (ModelElement) 
+              comp.parseParameterDeclaration(entities,types); 
         } 
         else 
         { System.err.println("!! Unrecognised UML/OCL keyword: " + keyword); } 
@@ -1140,7 +1141,6 @@ public class PreProcessModels
 
     String typeDecTargetRule = enumsr; 
 
-
     String opprogModelString = ""; 
     progid = ""; 
      
@@ -1169,9 +1169,9 @@ public class PreProcessModels
             (Attribute) operationExamples.get(i); 
 
           if (attr.isParameter())
-          { dec = "ProgramParameter"; } 
+          { dec = "ProgramParameter"; } // use parsr 
           else 
-          { dec = "ProgramAttribute"; } 
+          { dec = "ProgramAttribute"; } // declnsr
           p = proc.exec("java org.antlr.v4.gui.TestRig " + targetLanguage + " " + attTargetRule + " -tree");  
         } 
         else if (operationExamples.get(i) instanceof Type) 

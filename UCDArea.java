@@ -28780,22 +28780,51 @@ public void produceCUI(PrintWriter out)
           break; 
         }
         else 
-        { jtext = jtext + sline + " "; } 
+        { jtext = jtext + sline + "\n"; } 
       }
 
 
-      String[] args = {"Python", "file_input"}; 
+      /* String[] args = {"Python", "file_input"}; */  
 
       try { 
-        org.antlr.v4.gui.AntlrGUI antlr = 
+        // ClassLoader cl = Thread.currentThread().getContextClassLoader();
+	   // cl.loadClass("PythonLexerBase"); 
+
+        /* org.antlr.v4.gui.AntlrGUI antlr = 
           new org.antlr.v4.gui.AntlrGUI(args); 
 
         antlr.setText(jtext); 
 
         antlr.process(); 
 
-        String asttext = antlr.getResultText(); 
+        String asttext = antlr.getResultText(); */ 
+
+        Runtime proc = Runtime.getRuntime(); 
+
+        Process p2 = proc.exec("java org.antlr.v4.gui.TestRig Python file_input -tree"); 
+
+        OutputStream sout = p2.getOutputStream(); 
+        OutputStreamWriter outw = new OutputStreamWriter(sout); 
+        BufferedWriter brw = new BufferedWriter(outw);
+        brw.write(jtext + "\n"); 
+        brw.close();  
   
+        InputStream sin2 = p2.getInputStream(); 
+        InputStreamReader inr2 = new InputStreamReader(sin2); 
+        BufferedReader ibr2 = new BufferedReader(inr2); 
+        String stext = ""; 
+        String oline2 = ibr2.readLine(); 
+        // System.out.println(">>> parsing .... " + jtext);
+        while (oline2 != null) 
+        { stext = oline2; 
+          oline2 = ibr2.readLine();
+        }
+        String asttext = stext.trim();  
+        int exitjar2 = p2.waitFor(); 
+        // System.out.println(">>> Exit code: " + exitjar2);
+ 
+        System.out.println(asttext); 
+ 
         Compiler2 cc = new Compiler2(); 
         xx = cc.parseGeneralAST(asttext); 
       } 

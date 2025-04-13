@@ -443,7 +443,7 @@ abstract class Statement implements Cloneable
             ss.addStatement(asn1); 
             ss.addStatement(asn2);
 
-            JOptionPane.showInputDialog(">> Code reduction of " + st + " to: " + ss);
+            // JOptionPane.showInputDialog(">> Code reduction of " + st + " to: " + ss);
  
             return ss;    
           } 
@@ -480,7 +480,7 @@ abstract class Statement implements Cloneable
             ss.addStatement(asn1); 
             ss.addStatement(asn2);
 
-            JOptionPane.showInputDialog(">> Code reduction of " + st + " to: " + ss);
+            // JOptionPane.showInputDialog(">> Code reduction of " + st + " to: " + ss);
  
             return ss;    
           } 
@@ -515,7 +515,7 @@ abstract class Statement implements Cloneable
             ss.addStatement(asn1); 
             ss.addStatement(asn2);
 
-            JOptionPane.showInputDialog(">> Code reduction of " + st + " to: " + ss);
+            // JOptionPane.showInputDialog(">> Code reduction of " + st + " to: " + ss);
  
             return ss;    
           } 
@@ -553,7 +553,7 @@ abstract class Statement implements Cloneable
             ss.addStatement(asn1); 
             ss.addStatement(asn2);
 
-            JOptionPane.showInputDialog(">> Code reduction of " + st + " to: " + ss);
+            // JOptionPane.showInputDialog(">> Code reduction of " + st + " to: " + ss);
  
             return ss;    
           } 
@@ -587,7 +587,7 @@ abstract class Statement implements Cloneable
             ss.addStatement(asn1); 
             ss.addStatement(asn2);
 
-            JOptionPane.showInputDialog(">> Code reduction of " + st + " to: " + ss);
+            // JOptionPane.showInputDialog(">> Code reduction of " + st + " to: " + ss);
  
             return ss;    
           } 
@@ -622,7 +622,7 @@ abstract class Statement implements Cloneable
             ss.addStatement(asn1); 
             ss.addStatement(asn2);
 
-            JOptionPane.showInputDialog(">> Code reduction of " + st + " to: " + ss);
+            // JOptionPane.showInputDialog(">> Code reduction of " + st + " to: " + ss);
  
             return ss;    
           } 
@@ -632,6 +632,56 @@ abstract class Statement implements Cloneable
 
     return null; 
   }
+
+  public static boolean isAdditionToCollection(Statement stat, Expression x, Expression st)
+  { if (stat instanceof AssignStatement) 
+    { AssignStatement ifassign = (AssignStatement) stat; 
+      // ifassign is  st := st->including(x) or 
+      //              st := st->append(x)
+      
+      Expression ifvar = ifassign.getLhs(); 
+      ifvar.setBrackets(false); 
+ 
+      if (ifassign.getRhs() instanceof BinaryExpression) 
+      { BinaryExpression ifbe = 
+                  (BinaryExpression) ifassign.getRhs(); 
+        Expression ifbeLeft = ifbe.getLeft(); // st
+        Expression ifbeRight = ifbe.getRight(); // x
+
+        ifbeLeft.setBrackets(false);  
+        ifbeRight.setBrackets(false);  
+
+        if ((st + "").equals(ifvar + "") && 
+            (st + "").equals(ifbeLeft + "") && 
+            (x + "").equals(ifbeRight + ""))
+        { if (ifbe.getOperator().equals("->including") || 
+              ifbe.getOperator().equals("->append"))
+          { return true; } 
+        } 
+      } 
+    } 
+    else if (stat instanceof ImplicitInvocationStatement) 
+    { Expression callExpr = 
+        ((ImplicitInvocationStatement) stat).callExp;
+
+      if (callExpr instanceof BinaryExpression)
+      { BinaryExpression bexpr = (BinaryExpression) callExpr; 
+
+        Expression bleft = bexpr.getLeft(); 
+        Expression bright = bexpr.getRight(); 
+        bleft.setBrackets(false); 
+        bright.setBrackets(false); 
+
+        // it is x : st
+        if ((x + "").equals(bleft + "") && 
+            (st + "").equals(bright + ""))
+        { return true; } 
+      }  
+    } 
+
+    return false; 
+  } 
+
 
   public static boolean isCumulativeBody(Expression var,
                                          Statement st)
@@ -1076,7 +1126,9 @@ abstract class Statement implements Cloneable
  
     if (st instanceof SequenceStatement) 
     { SequenceStatement sq = (SequenceStatement) st; 
-      Vector stats = sq.getStatements(); 
+      Vector stats = sq.getStatements();
+      if (stats.size() == 0) 
+      { return false; } // just a skip 
       Statement stat = (Statement) stats.get(stats.size()-1); 
       return Statement.endsWithReturn(stat);
     } 
@@ -1127,6 +1179,8 @@ abstract class Statement implements Cloneable
     if (st instanceof SequenceStatement) 
     { SequenceStatement sq = (SequenceStatement) st; 
       Vector stats = sq.getStatements(); 
+      if (stats.size() == 0) 
+      { return false; } // just a skip 
       Statement stat = (Statement) stats.get(stats.size()-1); 
       return Statement.endsWithContinue(stat);
     } 
@@ -1177,6 +1231,8 @@ abstract class Statement implements Cloneable
     if (st instanceof SequenceStatement) 
     { SequenceStatement sq = (SequenceStatement) st; 
       Vector stats = sq.getStatements(); 
+      if (stats.size() == 0) 
+      { return false; } // just a skip 
       Statement stat = (Statement) stats.get(stats.size()-1); 
       return Statement.endsWithBreak(stat);
     } 
@@ -1227,6 +1283,8 @@ abstract class Statement implements Cloneable
     if (st instanceof SequenceStatement) 
     { SequenceStatement sq = (SequenceStatement) st; 
       Vector stats = sq.getStatements(); 
+      if (stats.size() == 0) 
+      { return false; } // just a skip 
       Statement stat = (Statement) stats.get(stats.size()-1); 
       return Statement.endsWithExit(stat);
     } 
@@ -15045,6 +15103,7 @@ class ConditionalStatement extends Statement
       cs.test = newexpr; 
       return cs; 
     } 
+
     Statement els = new InvocationStatement("skip"); 
     return new ConditionalStatement(tst,stat,els); 
   } 
@@ -15127,17 +15186,16 @@ class ConditionalStatement extends Statement
       return elsec; 
     } 
 
-    Statement elseStat = Statement.getFirstStatement(elsePart); 
+    Statement elseStat = 
+       Statement.getFirstStatement(elsePart); 
  
     // if st->includes(x) then skip else (st := st->including(x))
     // is just st := st->including(x) for set st
 
     if (testc instanceof BinaryExpression && 
-        elseStat instanceof AssignStatement && 
         Statement.hasSingleStatement(elsePart) &&
         ifPart.isSkip())
     { BinaryExpression testbe = (BinaryExpression) testc;
-      AssignStatement elseassign = (AssignStatement) elseStat; 
 
       Expression testbeLeft = testbe.getLeft(); // st
       Expression testbeRight = testbe.getRight(); // x
@@ -15145,28 +15203,13 @@ class ConditionalStatement extends Statement
       testbeLeft.setBrackets(false);  
       testbeRight.setBrackets(false);  
  
-      if (elseassign.getRhs() instanceof BinaryExpression) 
-      { BinaryExpression elsebe = 
-                  (BinaryExpression) elseassign.getRhs(); 
-        Expression elsebeLeft = elsebe.getLeft(); // st
-        Expression elsebeRight = elsebe.getRight(); // x
-
-        elsebeLeft.setBrackets(false);  
-        elsebeRight.setBrackets(false);  
-
-        if ("->includes".equals(testbe.getOperator()) && 
-            (testbeLeft + "").equals(
-                             elseassign.getLhs() + "") && 
-            testbeLeft.hasSetType() && 
-            (testbeLeft + "").equals(elsebeLeft + "") && 
-            (testbeRight + "").equals(elsebeRight + ""))
-        { if (elsebe.getOperator().equals("->including") || 
-              elsebe.getOperator().equals("->append"))
-          { System.out.println("! Removing redundant test for set addition: " + this); 
-            return elseassign; 
-          } // valid for Set and SortedSet, not OrderedSet
-        } 
-      } 
+      if (Statement.isAdditionToCollection(elseStat, 
+                        testbeRight, testbeLeft) && 
+          "->includes".equals(testbe.getOperator()) && 
+          testbeLeft.hasSetType())
+      { System.out.println("! Removing redundant test for set addition: " + this); 
+        return elseStat; 
+      } // valid for Set and SortedSet, not OrderedSet 
     } 
 
     Statement ifStat = Statement.getFirstStatement(ifPart); 
@@ -15175,40 +15218,23 @@ class ConditionalStatement extends Statement
     // is just st := st->including(x) for set st
 
     if (testc instanceof BinaryExpression && 
-        ifStat instanceof AssignStatement && 
         Statement.hasSingleStatement(ifPart) &&
         (elsePart == null || elsePart.isSkip()))
     { BinaryExpression testbe = (BinaryExpression) testc;
-      AssignStatement ifassign = (AssignStatement) ifStat; 
-
+    
       Expression testbeLeft = testbe.getLeft(); // st
       Expression testbeRight = testbe.getRight(); // x
 
       testbeLeft.setBrackets(false);  
       testbeRight.setBrackets(false);  
  
-      if (ifassign.getRhs() instanceof BinaryExpression) 
-      { BinaryExpression ifbe = 
-                  (BinaryExpression) ifassign.getRhs(); 
-        Expression ifbeLeft = ifbe.getLeft(); // st
-        Expression ifbeRight = ifbe.getRight(); // x
-
-        ifbeLeft.setBrackets(false);  
-        ifbeRight.setBrackets(false);  
-
-        if ("->excludes".equals(testbe.getOperator()) && 
-            (testbeLeft + "").equals(
-                             ifassign.getLhs() + "") && 
-            testbeLeft.hasSetType() && 
-            (testbeLeft + "").equals(ifbeLeft + "") && 
-            (testbeRight + "").equals(ifbeRight + ""))
-        { if (ifbe.getOperator().equals("->including") || 
-              ifbe.getOperator().equals("->append"))
-          { System.out.println("! Removing redundant test for set addition: " + this); 
-            return ifassign; 
-          } // valid for Set and SortedSet, not OrderedSet
-        } 
-      } 
+      if (Statement.isAdditionToCollection(ifStat, 
+                        testbeRight, testbeLeft) &&
+          "->excludes".equals(testbe.getOperator()) && 
+          testbeLeft.hasSetType())
+      { System.out.println("! Removing redundant test for set addition: " + this); 
+        return ifStat; 
+      } // valid for Set and SortedSet, not OrderedSet
     } 
 
     if (Statement.endsWithControlFlowBreak(ifc))
@@ -15237,6 +15263,7 @@ class ConditionalStatement extends Statement
     return uses; 
   } 
 
+ 
   public Map energyUse(Map uses, 
                                 Vector rUses, Vector oUses)
   { test.energyUse(uses, rUses, oUses); 
@@ -15254,7 +15281,8 @@ class ConditionalStatement extends Statement
     if (elsePart != null) 
     { elsePart.energyUse(uses, rUses, oUses); } 
 
-    Statement elseStat = Statement.getFirstStatement(elsePart); 
+    Statement elseStat = 
+                     Statement.getFirstStatement(elsePart); 
     Statement ifStat = Statement.getFirstStatement(ifPart); 
  
     // JOptionPane.showInputDialog("Code: " + elseStat + " " + test); 
@@ -15263,120 +15291,59 @@ class ConditionalStatement extends Statement
     if (test instanceof UnaryExpression && 
         "not".equals(((UnaryExpression) test).getOperator()))
     { testSimplified = 
-          Expression.negate(((UnaryExpression) test).getArgument()); 
+          Expression.negate(
+             ((UnaryExpression) test).getArgument()); 
     } 
 
-    if (testSimplified instanceof BinaryExpression && 
-        elseStat instanceof AssignStatement)
+    if (testSimplified instanceof BinaryExpression)
     { BinaryExpression testbe = 
           (BinaryExpression) testSimplified;
-      AssignStatement elseassign = (AssignStatement) elseStat; 
-      Expression testbeLeft = testbe.getLeft(); 
-      testbeLeft.setBrackets(false); 
-      Expression testbeRight = testbe.getRight(); 
-      testbeRight.setBrackets(false); 
 
-      if (elseassign.getRhs() instanceof BinaryExpression) 
-      { BinaryExpression elsebe = 
-                  (BinaryExpression) elseassign.getRhs(); 
-        Expression ifExp = elsebe.getLeft(); 
-        ifExp.setBrackets(false); 
-        Expression elsebeRight = elsebe.getRight(); 
-        elsebeRight.setBrackets(false); 
-
-        Expression elsevar = elseassign.getLhs(); 
-        elsevar.setBrackets(false); 
-
-        if ("->includes".equals(testbe.getOperator()) && 
-            (testbeLeft + "").equals(
-                             elsevar + "") && 
-            ifExp.hasSequenceType() && 
-            (testbeLeft + "").equals(ifExp + "") && 
-            (testbeRight + "").equals(elsebeRight + ""))
-        { if (elsebe.getOperator().equals("->including") || 
-              elsebe.getOperator().equals("->append"))
-          { rUses.add("!! Possibly using sequence " + ifExp + " as set in: " + this + 
-               "\n>> Recommend declaring " + ifExp + " as a Set or SortedSet"); 
-
-            int rscore = (int) uses.get("red"); 
-            uses.set("red", rscore + 1); 
-          }
-        } 
-        else 
-        { if (Statement.hasSingleStatement(elsePart) &&
-              ifPart.isSkip())
-          { if ("->includes".equals(testbe.getOperator()) && 
-                (testbeLeft + "").equals(elsevar + "") && 
-                 ifExp.hasSetType() && 
-                 (testbeLeft + "").equals(ifExp + "") && 
-                 (testbeRight + "").equals(elsebeRight + ""))
-            { if (elsebe.getOperator().equals("->including") || 
-                  elsebe.getOperator().equals("->append"))
-              { oUses.add("! Redundant test on set addition " + ifExp + " in: " + this); 
-
-                int oscore = (int) uses.get("amber"); 
-                uses.set("amber", oscore + 1); 
-              }
-            }
-          } 
-        } 
-      } 
-    } 
-    else if (testSimplified instanceof BinaryExpression && 
-             ifStat instanceof AssignStatement)
-    { // if sq->excludes(x) then sq := sq->including(x) else skip
-
-      BinaryExpression testbe = 
-             (BinaryExpression) testSimplified;
-      AssignStatement ifassign = (AssignStatement) ifStat; 
-      Expression testbeLeft = testbe.getLeft(); // sq
+      Expression testbeLeft = testbe.getLeft(); // st 
       testbeLeft.setBrackets(false); 
       Expression testbeRight = testbe.getRight(); // x
       testbeRight.setBrackets(false); 
 
-      if (ifassign.getRhs() instanceof BinaryExpression) 
-      { BinaryExpression ifbe = 
-                  (BinaryExpression) ifassign.getRhs(); 
-        Expression ifbeLeft = ifbe.getLeft(); // sq
-        ifbeLeft.setBrackets(false); 
-        Expression ifbeRight = ifbe.getRight(); // x
-        ifbeRight.setBrackets(false); 
+      if ("->includes".equals(testbe.getOperator()) && 
+          Statement.hasSingleStatement(elsePart) &&
+          ifPart.isSkip() &&                  
+          Statement.isAdditionToCollection(
+                         elseStat, testbeRight, testbeLeft)) 
+      { // adds to testbeLeft only if not in there already
 
-        Expression ifvar = ifassign.getLhs(); // sq
-        ifvar.setBrackets(false); 
+        if (testbeLeft.hasSequenceType())
+        { rUses.add("!! Possibly using sequence " + testbeLeft + " as set in: " + this + 
+               "\n>> Recommend declaring " + testbeLeft + " as a Set or SortedSet"); 
 
-        if ("->excludes".equals(testbe.getOperator()) && 
-            (testbeLeft + "").equals(
-                             ifvar + "") && 
-            testbeLeft.hasSequenceType() && 
-            (testbeLeft + "").equals(ifbeLeft + "") && 
-            (testbeRight + "").equals(ifbeRight + ""))
-        { if (ifbe.getOperator().equals("->including") || 
-              ifbe.getOperator().equals("->append"))
-          { rUses.add("!! Possibly using sequence " + ifvar + " as set in: " + this + 
-               "\n>> Recommend declaring " + ifvar + " as a Set or SortedSet"); 
-
-            int rscore = (int) uses.get("red"); 
-            uses.set("red", rscore + 1); 
-          }
+          int rscore = (int) uses.get("red"); 
+          uses.set("red", rscore + 1); 
         } 
-        else 
-        { if (Statement.hasSingleStatement(ifPart) &&
-              (elsePart == null || elsePart.isSkip()))
-          { if ("->excludes".equals(testbe.getOperator()) && 
-                (testbeLeft + "").equals(ifvar + "") && 
-                testbeLeft.hasSetType() && 
-                (testbeLeft + "").equals(ifbeLeft + "") && 
-                (testbeRight + "").equals(ifbeRight + ""))
-            { if (ifbe.getOperator().equals("->including") || 
-                  ifbe.getOperator().equals("->append"))
-              { oUses.add("! Redundant test on set addition " + ifvar + " in: " + this); 
+        else if (testbeLeft.hasSetType())
+        { oUses.add("! Redundant test on set addition " + testbeLeft + " in: " + this); 
 
-                int oscore = (int) uses.get("amber"); 
-                uses.set("amber", oscore + 1); 
-              }
-            }
-          } 
+          int oscore = (int) uses.get("amber"); 
+          uses.set("amber", oscore + 1); 
+        } 
+      } 
+      else if ("->excludes".equals(testbe.getOperator()) &&
+               Statement.hasSingleStatement(ifPart) &&
+               (elsePart == null || elsePart.isSkip()) &&                  
+               Statement.isAdditionToCollection(
+                         ifStat, testbeRight, testbeLeft)) 
+      { // adds to testbeLeft only if not in there already
+
+        if (testbeLeft.hasSequenceType())
+        { rUses.add("!! Possibly using sequence " + testbeLeft + " as set in: " + this + 
+             "\n>> Recommend declaring " + testbeLeft + " as a Set or SortedSet"); 
+
+          int rscore = (int) uses.get("red"); 
+          uses.set("red", rscore + 1); 
+        } 
+        else if (testbeLeft.hasSetType())
+        { oUses.add("! Redundant test on set addition " + testbeLeft + " in: " + this); 
+
+          int oscore = (int) uses.get("amber"); 
+          uses.set("amber", oscore + 1); 
         } 
       } 
     } 
