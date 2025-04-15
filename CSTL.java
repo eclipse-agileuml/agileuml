@@ -4,7 +4,7 @@ import javax.swing.*;
 import java.util.Vector; 
 
 /******************************
-* Copyright (c) 2003--2024 Kevin Lano
+* Copyright (c) 2003--2025 Kevin Lano
 * This program and the accompanying materials are made available under the
 * terms of the Eclipse Public License 2.0 which is available at
 * http://www.eclipse.org/legal/epl-2.0
@@ -64,7 +64,7 @@ public class CSTL
     { File sub = new File("./cg/" + dirfiles[i]);
       if (sub != null && dirfiles[i].endsWith(".cstl") && 
           !(dirfiles[i].equals("cg.cstl")))
-      { System.out.println(">>> Found CSTL template: " + dirfiles[i]); 
+      { System.err.println(">>> Found CSTL template: " + dirfiles[i]); 
         CGSpec cg = new CGSpec(entities,types); 
         CGSpec res = loadCSTL(cg, sub,types,entities); 
         if (res != null) 
@@ -81,7 +81,7 @@ public class CSTL
     { File sub = new File("./cg/" + dirfiles[i]);
       if (sub != null && dirfiles[i].endsWith(".cstl") && 
           !(dirfiles[i].equals(excluding)))
-      { System.out.println(">>> Loading CSTL template: " + dirfiles[i]); 
+      { System.err.println(">>> Loading CSTL template: " + dirfiles[i]); 
         CGSpec cg = new CGSpec(entities,types); 
         CGSpec res = loadCSTL(cg, sub,types,entities); 
         if (res != null) 
@@ -98,7 +98,7 @@ public class CSTL
     { File sub = new File("./cg/" + dirfiles[i]);
       if (sub != null && dirfiles[i].endsWith(".cstl") && 
           fileNames.contains(dirfiles[i]))
-      { System.out.println(">>> Found CSTL template: " + dirfiles[i]); 
+      { System.err.println(">>> Found CSTL template: " + dirfiles[i]); 
         CGSpec cg = new CGSpec(entities,types); 
         CGSpec res = loadCSTL(cg, sub,types,entities); 
         if (res != null) 
@@ -141,7 +141,7 @@ public class CSTL
       }         
     }
 
-    System.out.println(">>> Parsed: " + res); 
+    // System.err.println(">>> Parsed: " + res); 
     
     return res; 
   } 
@@ -166,7 +166,7 @@ public class CSTL
     while (!eof)
     { try { s = br.readLine(); }
       catch (IOException _ex)
-      { System.out.println("ERROR!!: Reading CSTL file failed.");
+      { System.err.println("ERROR!!: Reading CSTL file failed.");
         return null; 
       }
 
@@ -362,14 +362,15 @@ public class CSTL
         { alertRule("Could not parse category " + category + " rule", s); }  
       }         
     }
-    System.out.println(">>> Parsed: " + res); 
+
+    // System.err.println(">>> Parsed: " + res); 
     return res; 
   }
 
   private static void alertRule(String kind, String r)
   { System.err.println("!!! Unable to parse " + kind + " rule: " + r);
-    JOptionPane.showMessageDialog(null, "Warning!: Unable to parse " + kind + " rule: " + r, "", 
-                                  JOptionPane.ERROR_MESSAGE);
+    /* JOptionPane.showMessageDialog(null, "Warning!: Unable to parse " + kind + " rule: " + r, "", 
+                                  JOptionPane.ERROR_MESSAGE); */ 
   }
 
   public static void addTemplate(String filename, CGSpec cg) 

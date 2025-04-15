@@ -3240,6 +3240,113 @@ abstract class Expression
     return new UnaryExpression("->first", src); 
   } 
 
+  public static Expression simplifyFront(Expression src)
+  { // sq->front()->front()  is  sq.subrange(1, sq->size()-2)
+    // sq->tail()->front() is  sq.subrange(2,sq->size()-1)
+
+    if (src instanceof UnaryExpression && 
+        "->tail".equals(
+           ((UnaryExpression) src).getOperator()))
+    { UnaryExpression usrc = (UnaryExpression) src; 
+      Expression uarg = usrc.getArgument(); 
+      System.out.println("! OES: Inefficient ->front operation: " + src + "->front()"); 
+
+      Expression sze = Expression.simplifySize(uarg); 
+      Vector pars = new Vector(); 
+      pars.add(new BasicExpression(2)); 
+      pars.add(new BinaryExpression("-", sze, 
+                       new BasicExpression(1))); 
+      return BasicExpression.newFunctionBasicExpression(
+                                 "subrange", uarg, pars); 
+    } 
+
+    if (src instanceof UnaryExpression && 
+        "->front".equals(
+            ((UnaryExpression) src).getOperator()))
+    { UnaryExpression usrc = (UnaryExpression) src; 
+      Expression uarg = usrc.getArgument();
+      System.out.println("! OES: Inefficient ->front operation: " + src + "->front()"); 
+
+      Expression sze = Expression.simplifySize(uarg); 
+      Vector pars = new Vector(); 
+      pars.add(new BasicExpression(1)); 
+      pars.add(new BinaryExpression("-", sze, 
+                       new BasicExpression(2))); 
+      return BasicExpression.newFunctionBasicExpression(
+                                 "subrange", uarg, pars); 
+    } 
+       
+    if (src instanceof BinaryExpression && 
+        "->collect".equals(
+            ((BinaryExpression) src).getOperator()))
+    { BinaryExpression bsrc = (BinaryExpression) src; 
+      Expression bleft = bsrc.getLeft();
+      Expression bright = bsrc.getRight(); 
+
+      System.out.println("! OES: Inefficient ->front operation: " + src + "->tail()"); 
+
+      Expression newsrc = 
+                   Expression.simplifyFront(bleft);  
+      return 
+        new BinaryExpression("->collect", newsrc, bright); 
+    } 
+
+    return new UnaryExpression("->front", src); 
+  } 
+
+  public static Expression simplifyTail(Expression src)
+  { // sq->tail()->tail()  is  sq.subrange(3)
+    // sq->front()->tail() is  sq.subrange(2,sq->size()-1)
+    // sq->collect(e)->tail() is sq->tail()->collect(e)
+
+    if (src instanceof UnaryExpression && 
+        "->tail".equals(
+           ((UnaryExpression) src).getOperator()))
+    { UnaryExpression usrc = (UnaryExpression) src; 
+      Expression uarg = usrc.getArgument(); 
+      System.out.println("! OES: Inefficient ->tail operation: " + src + "->tail()"); 
+
+      Expression sze = Expression.simplifySize(uarg); 
+      Vector pars = new Vector(); 
+      pars.add(new BasicExpression(3)); 
+      pars.add(sze); 
+      return BasicExpression.newFunctionBasicExpression(
+                                 "subrange", uarg, pars); 
+    } 
+
+    if (src instanceof UnaryExpression && 
+        "->front".equals(
+            ((UnaryExpression) src).getOperator()))
+    { UnaryExpression usrc = (UnaryExpression) src; 
+      Expression uarg = usrc.getArgument();
+      System.out.println("! OES: Inefficient ->tail operation: " + src + "->tail()"); 
+
+      Expression sze = Expression.simplifySize(uarg); 
+      Vector pars = new Vector(); 
+      pars.add(new BasicExpression(2)); 
+      pars.add(new BinaryExpression("-", sze, 
+                       new BasicExpression(1))); 
+      return BasicExpression.newFunctionBasicExpression(
+                                 "subrange", uarg, pars); 
+    } 
+       
+    if (src instanceof BinaryExpression && 
+        "->collect".equals(
+            ((BinaryExpression) src).getOperator()))
+    { BinaryExpression bsrc = (BinaryExpression) src; 
+      Expression bleft = bsrc.getLeft();
+      Expression bright = bsrc.getRight(); 
+
+      System.out.println("! OES: Inefficient ->tail operation: " + src + "->tail()"); 
+
+      Expression newsrc = 
+                   Expression.simplifyTail(bleft);  
+      return 
+        new BinaryExpression("->collect", newsrc, bright); 
+    } 
+
+    return new UnaryExpression("->tail", src); 
+  } 
 
   public static Expression simplifySize(Expression arg)
   { // Integer.subrange(1,n)->size() is n

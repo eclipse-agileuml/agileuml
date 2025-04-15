@@ -1978,12 +1978,12 @@ public class Compiler2
           tokens.add(lex); 
         } 
 
-        System.out.println(">> Text rule " + rule + " LHS variables = " + variables); 
-        System.out.println(">> Text rule " + rule + " LHS tokens = " + tokens); 
+        // System.out.println(">> Text rule " + rule + " LHS variables = " + variables); 
+        // System.out.println(">> Text rule " + rule + " LHS tokens = " + tokens); 
 
         if (lhs != null) 
         { String rhs = rule.substring(i+4,rule.length());
-          System.out.println(">> Text rule " + rule + " RHS = " + rhs);
+          // System.out.println(">> Text rule " + rule + " RHS = " + rhs);
  
           for (int j = 0; j < rhs.length(); j++) 
           { char d = rhs.charAt(j); 
@@ -2008,7 +2008,7 @@ public class Compiler2
                 { String actions = 
                      rhs.substring(kk+8,rhs.length()); 
                   Vector acts = parse_rule_actions(actions); 
-                  System.out.println(">> Rule actions are: " + actions + " " + acts); 
+                  // System.out.println(">> Rule actions are: " + actions + " " + acts); 
                   String rhstext = rhs.substring(0,j); 
                   String conditions = rhs.substring(j+6,kk); 
                   Vector conds = parse_conditions(conditions); 
@@ -2017,9 +2017,9 @@ public class Compiler2
                                variables,conds); 
                   res.setLHSTokens(tokens); 
                   res.setActions(acts);
-                  System.out.println(">***> Rule with condition: " + conds + " and actions: " + acts); 
-                  System.out.println(">***> Rule variables are: " + res.variables); 
-                  System.out.println(">***> Rule metafeatures are: " + res.metafeatures); 
+                  // System.out.println(">***> Rule with condition: " + conds + " and actions: " + acts); 
+                  // System.out.println(">***> Rule variables are: " + res.variables); 
+                  // System.out.println(">***> Rule metafeatures are: " + res.metafeatures); 
  
                   return res; 
                 } 
@@ -2030,9 +2030,9 @@ public class Compiler2
               String rhstext = rhs.substring(0,j); 
               CGRule r = new CGRule(lhs,rhstext,variables,conds); 
               r.setLHSTokens(tokens);
-              System.out.println(">***> Rule with condition: " + conds); 
-              System.out.println(">***> Rule variables are: " + r.variables); 
-              System.out.println(">***> Rule metafeatures are: " + r.metafeatures); 
+              // System.out.println(">***> Rule with condition: " + conds); 
+              // System.out.println(">***> Rule variables are: " + r.variables); 
+              // System.out.println(">***> Rule metafeatures are: " + r.metafeatures); 
  
               return r; 
             } 
@@ -2046,7 +2046,7 @@ public class Compiler2
                 rhs.charAt(j+7) == '>') 
             { String actions = rhs.substring(j+8,rhs.length()); 
               Vector acts = parse_rule_actions(actions); 
-              System.out.println(">> Rule actions are: " + actions + " " + acts); 
+              // System.out.println(">> Rule actions are: " + actions + " " + acts); 
               String rhstext = rhs.substring(0,j); 
               CGRule res = 
                 new CGRule(lhs,rhstext,
@@ -2054,8 +2054,8 @@ public class Compiler2
               res.setLHSTokens(tokens); 
               res.setActions(acts); 
 
-              System.out.println(">***> Rule variables are: " + res.variables); 
-              System.out.println(">***> Rule metafeatures are: " + res.metafeatures); 
+              // System.out.println(">***> Rule variables are: " + res.variables); 
+              // System.out.println(">***> Rule metafeatures are: " + res.metafeatures); 
  
               return res; 
             }               
@@ -2063,8 +2063,8 @@ public class Compiler2
           CGRule res = new CGRule(lhs,rhs,variables,new Vector()); 
           res.setLHSTokens(tokens); 
  
-          System.out.println(">***> Rule variables are: " + res.variables); 
-          System.out.println(">***> Rule metafeatures are: " + res.metafeatures); 
+          // System.out.println(">***> Rule variables are: " + res.variables); 
+          // System.out.println(">***> Rule metafeatures are: " + res.metafeatures); 
  
           return res; 
         } 
@@ -2171,7 +2171,7 @@ public class Compiler2
     newc.nospacelexicalanalysis(str);
     Vector lexs = newc.lexicals;
 	
-    System.out.println("+++ Condition lexicals:: " + lexs); 
+    // System.out.println("+++ Condition lexicals:: " + lexs); 
     // _v id 
     // _v ` f id
     // _v not id
@@ -2257,7 +2257,7 @@ public class Compiler2
     Compiler2 newc = new Compiler2(); 
     newc.nospacelexicalanalysis(str);
     Vector lexs = newc.lexicals;
-    System.out.println("+++ Action lexicals:: " + lexs); 
+    // System.out.println("+++ Action lexicals:: " + lexs); 
 	
     CGCondition cg = new CGCondition(); 
 	 

@@ -923,7 +923,7 @@ public class CGSpec
       else if (op.equals("call") && trimmedlhs.equals("skip"))
       { InvocationStatement istat = (InvocationStatement) e;
         if (istat.isSkip() || "skip".equals(istat + ""))
-        { System.out.println(">>> skip call statement " + e + " matches rule " + r); 
+        { // System.out.println(">>> skip call statement " + e + " matches rule " + r); 
 		 
           return r; 
         }
@@ -1013,7 +1013,7 @@ public class CGSpec
     } // and for ->sortedBy, etc
     else if ("->iterate".equals(op))
     { args.add(e.getLeft());
-      System.out.println(">>>> Iterate expression: " + e); 
+      // System.out.println(">>>> Iterate expression: " + e); 
 	   
       String iter = "self"; 
       if (e.iteratorVariable != null) 
@@ -1298,8 +1298,8 @@ public class CGSpec
         if (prefix.length() == trimmedlhs.length() - 6 && 
             prefix.length() == brind) 
         { selected = r; 
-          System.out.println(">>> matched text rule: " + r + " for " + etext + " with prefix " + prefix); 
-          System.out.println(); 
+          // System.out.println(">>> matched text rule: " + r + " for " + etext + " with prefix " + prefix); 
+          // System.out.println(); 
           args.add(e);   // should be for _1 
           args.add(pars);
           matchedtextrules.add(r);
@@ -1313,8 +1313,8 @@ public class CGSpec
         if (prefix.length() == trimmedlhs.length() - 4 &&
             prefix.length() == brind) 
         { selected = r; 
-          System.out.println(">>> matched text rule: " + r + " for " + etext + " with prefix " + prefix); 
-          System.out.println(); 
+          // System.out.println(">>> matched text rule: " + r + " for " + etext + " with prefix " + prefix); 
+          // System.out.println(); 
           args.add(pars);
           matchedtextrules.add(r);
         }  
@@ -1325,8 +1325,8 @@ public class CGSpec
         int brind = etext.indexOf("("); 
         if (prefix.length() == trimmedlhs.length() - 4 && 
             prefix.length() == brind)
-        { System.out.println(">>> matched text rule: " + r + " for " + etext + " with prefix " + prefix); 
-          System.out.println(); 
+        { // System.out.println(">>> matched text rule: " + r + " for " + etext + " with prefix " + prefix); 
+          // System.out.println(); 
           selected = r; 
           args.add(e);
           matchedtextrules.add(r);
@@ -1538,11 +1538,11 @@ public class CGSpec
   { for (int x = 0; x < attributeRules.size(); x++)
     { CGRule r = (CGRule) attributeRules.get(x);
 	
-      System.out.println(">> Trying to match reference " + e + " with type " + e.getType()); 
-      System.out.println(">> Trying Rule: " + r); 
-      System.out.println(); 
-      System.out.println(">> Entities are: " + entities); 
-      System.out.println(); 
+      // System.out.println(">> Trying to match reference " + e + " with type " + e.getType()); 
+      // System.out.println(">> Trying Rule: " + r); 
+      // System.out.println(); 
+      // System.out.println(">> Entities are: " + entities); 
+      // System.out.println(); 
 
 	  
       if (r.lhs.startsWith("reference")) 

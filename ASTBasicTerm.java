@@ -295,7 +295,7 @@ public class ASTBasicTerm extends ASTTerm
 
         if (r.satisfiesAllConditions(args,eargs,ents,cgs)) 
              // r.satisfiesConditions(eargs,ents,cgs))
-        { System.out.println(">>>> Applying basic term " + tag + " rule " + r + " for " + this); 
+        { // System.out.println(">>>> Applying basic term " + tag + " rule " + r + " for " + this); 
           return r.applyRule(args,eargs,cgs); 
         }  
       }   
@@ -306,7 +306,7 @@ public class ASTBasicTerm extends ASTTerm
     { Vector tagrules = cgs.getRulesForCategory(tag);
       if (tagrules.equals(rules)) 
       { return toString(); }
-      System.out.println(">> Applying default rule _0 |-->_0 to " + this);  
+      // System.out.println(">> Applying default rule _0 |-->_0 to " + this);  
       return this.cgRules(cgs,tagrules); 
     } 
 

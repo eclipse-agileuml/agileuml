@@ -503,9 +503,9 @@ public abstract class ASTTerm
       } 
       newstereos.add(mf + "=" + val); 
       ASTTerm.metafeatures.put(lit,newstereos); 
-      System.out.println("*** Set " + lit + 
-                         " tagged values: " + 
-                         newstereos); 
+      // System.out.println("*** Set " + lit + 
+      //                    " tagged values: " + 
+      //                    newstereos); 
     } 
   }
 
@@ -528,8 +528,8 @@ public abstract class ASTTerm
       ASTTerm.metafeatures.put(lit,stereotypes);  
     } 
 
-    System.out.println(">>> " + lit + " metafeature values = " +
-                       ASTTerm.metafeatures.get(lit));  
+    // System.out.println(">>> " + lit + " metafeature values = " +
+    //                   ASTTerm.metafeatures.get(lit));  
   } 
 
   public static void removeStereo(String lit, String str) 
@@ -546,8 +546,8 @@ public abstract class ASTTerm
       stereotypes.removeAll(removed);
     }   
 
-    System.out.println("*** " + lit + " metafeature values= " +
-                       ASTTerm.metafeatures.get(lit));  
+    // System.out.println("*** " + lit + " metafeature values= " +
+    //                   ASTTerm.metafeatures.get(lit));  
   } 
 
   public boolean hasStereotype(String str) 
@@ -567,8 +567,8 @@ public abstract class ASTTerm
   public static String getStereotypeValue(String lit)
   { Object stereo = 
       ASTTerm.metafeatures.get(lit); 
-    System.out.println(">>>--- Global variable " +  lit + 
-                       " has value " + stereo);
+    // System.out.println(">>>--- Global variable " +  lit + 
+    //                    " has value " + stereo);
     System.out.println();   
     if (stereo == null) 
     { return ""; } 
@@ -577,9 +577,9 @@ public abstract class ASTTerm
   } 
 
   public static void setStereotypeValue(String lit, String val)
-  { System.out.println(">>>--- Global variable " +  lit + 
-                       " set to " + val);  
-    System.out.println(); 
+  { // System.out.println(">>>--- Global variable " +  lit + 
+    //                    " set to " + val);  
+    // System.out.println(); 
     ASTTerm.metafeatures.put(lit,val); 
   } 
 
@@ -597,8 +597,8 @@ public abstract class ASTTerm
 
   public static boolean hasTaggedValue(ASTTerm trm, String str) 
   { String lit = trm.literalForm();
-    System.out.println("*** " + lit + " has tagged values: " + 
-                       ASTTerm.metafeatures.get(lit)); 
+    // System.out.println("*** " + lit + " has tagged values: " + 
+    //                   ASTTerm.metafeatures.get(lit)); 
 
     if (ASTTerm.metafeatures.get(lit) instanceof Vector)
     { 
@@ -668,7 +668,7 @@ public abstract class ASTTerm
   } 
 
   public static String cgtlOperation(String opname, Vector eargs)
-  { System.out.println(">>> External operation: " + opname + " on " + eargs); 
+  { System.err.println(">>> External operation: " + opname + " on " + eargs); 
 
     /* System.out.println(">>> metafeatures: " + ASTTerm.metafeatures); 
     System.out.println(); */ 

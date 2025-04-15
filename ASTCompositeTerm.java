@@ -877,12 +877,12 @@ public class ASTCompositeTerm extends ASTTerm
         Vector ents = new Vector(); 
 
         if (r.satisfiesAllConditions(args,eargs,ents,cgs))
-        { System.out.println(">>>> Applying " + tag + 
-                             " rule " + r + " for " + this); 
+        { // System.out.println(">>>> Applying " + tag + 
+          //                   " rule " + r + " for " + this); 
           return r.applyRule(args,eargs,cgs); 
         }  
         else 
-        { System.out.println(">!!> Conditions failed of rule " + r + " for " + this); 
+        { // System.out.println(">!!> Conditions failed of rule " + r + " for " + this); 
         } 
       }
     }  
@@ -892,13 +892,13 @@ public class ASTCompositeTerm extends ASTTerm
     // try the ruleset named by the tag of this term 
     // and substitute the result for _0 in the RHS. 
 
-    System.out.println(); 
+    // System.out.println(); 
     if (CGRule.hasDefaultRule(rules))
     { Vector tagrules = cgs.getRulesForCategory(tag);
       if (tagrules.equals(rules)) 
       { return literalFormSpaces(); }
 
-      System.out.println(">> Applying default rule _0 |-->_0 to " + this);  
+      // System.out.println(">> Applying default rule _0 |-->_0 to " + this);  
       String res = this.cgRules(cgs,tagrules);
       return CGRule.applyDefaultRule(rules,res); 
     } 

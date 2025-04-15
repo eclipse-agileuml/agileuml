@@ -14905,7 +14905,7 @@ public void produceCUI(PrintWriter out)
       if (returnVal == JFileChooser.APPROVE_OPTION)
       { file = fc.getSelectedFile(); }
       else
-      { System.err.println("Load aborted");
+      { System.err.println("!! Load aborted");
         return res; 
       }
 	  
