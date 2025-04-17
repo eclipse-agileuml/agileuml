@@ -3657,7 +3657,7 @@ public class UCDArea extends JPanel
  
     if (selfcallsn > 0) 
     { System.err.println("!!! Red flag: " + selfcallsn + " recursive dependencies"); 
-      System.err.println("!!! Use Replace recursion by iteration (for tail recursions) to reduce energy cost\nOr make operation <<cached>>"); 
+      System.err.println("!!! Use Replace recursion by iteration (for tail recursions) to reduce energy cost\n    Or make operation <<cached>>"); 
       redFlags = redFlags + selfcallsn; 
     }
 
@@ -3675,7 +3675,6 @@ public class UCDArea extends JPanel
 
     System.out.println(">> Red flag score: " + redFlags); 
     System.out.println(">> Amber flag score: " + amberFlags); 
-
 
     return res;  
   }

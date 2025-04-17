@@ -5719,7 +5719,7 @@ public class Entity extends ModelElement implements Comparable
       } 
 
       if (actualClones.size() > 0)
-      { System.out.println("! Cloned expressions " + actualClones + " in " + op); 
+      { System.out.println("!! (DEV) flaw: Cloned expressions " + actualClones + " in " + op); 
         int redcount = (int) res1.get("red");
         redcount = redcount + actualClones.size(); 
         res1.put("red", redcount); 
@@ -5775,9 +5775,9 @@ public class Entity extends ModelElement implements Comparable
          // set or bag.  
 
           Vector maxops = (Vector) collOps.get(lev); 
-          System.out.println(">>> Level " + lev + 
-                             " operators are: " + 
-                             maxops + "\n");
+          // System.out.println(">>> Level " + lev + 
+          //                    " operators are: " + 
+          //                    maxops + "\n");
 
           for (int i = 0; i < maxops.size(); i++) 
           { Expression maxop = (Expression) maxops.get(i); 
@@ -5788,13 +5788,13 @@ public class Entity extends ModelElement implements Comparable
               Expression arg = ue.getArgument(); 
 
               if (Expression.isOclDistributedIteratorOperator(oper))
-              { System.err.println("! Warning: " + maxop + " is a >= O(S) operation\n" + 
+              { System.out.println("! Warning: " + maxop + " is a >= O(S) operation\n" + 
                   " in the sum S of sizes of the argument elements. \n"); 
               }
               else if ("->max".equals(oper) || 
                        "->min".equals(oper))
               { if (arg.isSequence())
-                { System.err.println("! Warning: " + oper + 
+                { System.out.println("! Warning: " + oper + 
                     " is an O(n) operation on Sequence " + arg + "\n" + 
                     " SortedSet or SortedBag can be more efficient if no indexing is needed\n"); 
                 }
@@ -5808,7 +5808,7 @@ public class Entity extends ModelElement implements Comparable
               String oper = be.getOperator(); 
 
               if (Expression.isOclDistributedIteratorOperator(oper))
-              { System.err.println("! Warning: " + maxop + " is a >= O(S) operation\n" + 
+              { System.out.println("! Warning: " + maxop + " is a >= O(S) operation\n" + 
                   " in the sum S of sizes of the argument elements. \n"); 
               }  
               else if (
@@ -5820,31 +5820,31 @@ public class Entity extends ModelElement implements Comparable
                   "<:".equals(oper) ||  
                   "->antirestrict".equals(oper) ||
                   "->iterate".equals(oper))
-              { System.err.println("! Warning: " + maxop + " is a >= O(n) operation in the size of the LHS collection/map. \n"); }  
+              { System.out.println("! Warning: " + maxop + " is a >= O(n) operation in the size of the LHS collection/map. \n"); }  
 
               if ("->union".equals(oper) || 
                   "->symmetricDifference".equals(oper))
-              { System.err.println("! Warning: " + maxop + " is an O(n) operation in the sum of sizes of the arguments. \n"); }  
+              { System.out.println("! Warning: " + maxop + " is an O(n) operation in the sum of sizes of the arguments. \n"); }  
 
               if ("->sortedBy".equals(oper) || 
                   "|sortedBy".equals(oper))
-              { System.err.println("! Warning: " + maxop + " is an O(n*log(n)) operation in the size of the LHS. \n"); }  
+              { System.out.println("! Warning: " + maxop + " is an O(n*log(n)) operation in the size of the LHS. \n"); }  
 
               if (be.getLeft().isSequence())
               { if ("->includes".equals(oper) ||
                     "->excludingFirst".equals(oper)) 
-                { System.err.println("! Warning: " + oper + 
+                { System.out.println("! Warning: " + oper + 
                     " is an O(n) operation on Sequence " + be.getLeft() + "\n" + 
                     " Set, Bag, SortedSet or SortedBag can be more efficient if no indexing is needed\n"); 
                 } 
                 else if ("->including".equals(oper))
-                { System.err.println("! Warning: " + oper + 
+                { System.out.println("! Warning: " + oper + 
                     " is an O(log n) operation on Sequence " + be.getLeft() + "\n" + 
                     " Set or Bag can be more efficient if no indexing is needed\n"); 
                 } 
                 else if ("->excluding".equals(oper) ||
                          "->count".equals(oper))
-                { System.err.println("! Warning: " + oper + 
+                { System.out.println("! Warning: " + oper + 
                     " is an O(n) operation on Sequence " + be.getLeft() + "\n" + 
                     " Set or SortedSet can be more efficient if no indexing or duplicates are needed\n"); 
                 } 
@@ -5866,7 +5866,7 @@ public class Entity extends ModelElement implements Comparable
           attr.hasIndexingOperation(collOps); 
 
         if (indexUse == false)
-        { System.err.println("! No use of indexes with sequence-valued attribute " + attr + "\n! It may be more efficient to use a SortedSet or Bag\n"); } 
+        { System.out.println("! No use of indexes with sequence-valued attribute " + attr + "\n! It may be more efficient to use a SortedSet or Bag\n"); } 
       } 
     }       
 

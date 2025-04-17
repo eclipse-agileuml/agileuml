@@ -17707,6 +17707,8 @@ public Statement generateDesignSubtract(Expression rhs)
 
   public Expression simplifyOCL() 
   { // Replaces energy-expensive processing by simpler. 
+    // sq.subrange(i,j) for j < 0 is 
+    //                      sq.subrange(i,sq->size() + j)
 
     Expression objR = objectRef; 
     if (objectRef != null) 
@@ -17725,6 +17727,19 @@ public Statement generateDesignSubtract(Expression rhs)
     } 
     else 
     { pars = parameters; } 
+
+    if ("subrange".equals(data) &&
+        arrayIndex == null && 
+        pars != null && 
+        pars.size() == 2 &&  
+        (objectRef.isSequence() || 
+         objectRef.isString()))
+    { Expression res = 
+        Expression.simplifySubrange(objR, 
+                                    (Expression) pars.get(0), 
+                                    (Expression) pars.get(1)); 
+      return res; 
+    } 
 
     BasicExpression res = (BasicExpression) clone(); 
     res.objectRef = objR; 
@@ -17784,7 +17799,7 @@ public Statement generateDesignSubtract(Expression rhs)
                 "setAttributeValue".equals(data) || 
                 "hasAttribute".equals(data) || 
                 "removeAttribute".equals(data)))
-      { rUses.add("!!! Reflection is expensive: " + this);
+      { rUses.add("!!! Reflection is energy-expensive: " + this);
         int rscore = (int) res.get("red"); 
         res.set("red", rscore+1); 
       } 
@@ -17811,8 +17826,8 @@ public Statement generateDesignSubtract(Expression rhs)
 
       Vector vuses = variablesUsedIn(vars); 
       if (level > 1 && vuses.size() == 0)
-      { JOptionPane.showInputDialog(">> The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
-          "Use Extract local variable to optimise.");
+      { System.out.println(">> The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
+          "    Use Extract local variable to optimise.");
         refactorELV = true;  
       }
  

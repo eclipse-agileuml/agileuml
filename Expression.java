@@ -2393,12 +2393,13 @@ abstract class Expression
   { needsBracket = brack; } 
 
   public Expression completeness(Entity ent)
-  { Expression res = new BasicExpression("true",0);
+  { Expression res = new BasicExpression(true);
     return res;
   }
 
   public static String evaluateString(String op, String le, String re) 
-  { if ("+".equals(op) || "-".equals(op) || "*".equals(op) || "/".equals(op))
+  { if ("+".equals(op) || "-".equals(op) || 
+        "*".equals(op) || "/".equals(op))
     { int li; 
       int ri;
       long ll; 
@@ -3243,6 +3244,7 @@ abstract class Expression
   public static Expression simplifyFront(Expression src)
   { // sq->front()->front()  is  sq.subrange(1, sq->size()-2)
     // sq->tail()->front() is  sq.subrange(2,sq->size()-1)
+    // sq->collect(x|e)->front() is sq->front()->collect(x|e)
 
     if (src instanceof UnaryExpression && 
         "->tail".equals(
@@ -3283,12 +3285,31 @@ abstract class Expression
       Expression bleft = bsrc.getLeft();
       Expression bright = bsrc.getRight(); 
 
-      System.out.println("! OES: Inefficient ->front operation: " + src + "->tail()"); 
+      System.out.println("! OES: Inefficient ->front operation: " + src + "->front()"); 
 
       Expression newsrc = 
                    Expression.simplifyFront(bleft);  
       return 
         new BinaryExpression("->collect", newsrc, bright); 
+    } 
+
+    if (src instanceof BinaryExpression && 
+        "|C".equals(
+            ((BinaryExpression) src).getOperator()))
+    { BinaryExpression bsrc = (BinaryExpression) src; 
+      BinaryExpression bleft = 
+          (BinaryExpression) bsrc.getLeft(); // x : col
+      Expression bright = bsrc.getRight();
+      Expression x = bleft.getLeft();  
+      Expression col = bleft.getRight(); 
+
+      System.out.println("! OES: Inefficient ->front operation: " + src + "->front()"); 
+
+      Expression newsrc = 
+                   Expression.simplifyFront(col);  
+      return 
+        new BinaryExpression("|C", 
+              new BinaryExpression(":", x, newsrc), bright); 
     } 
 
     return new UnaryExpression("->front", src); 
@@ -3345,6 +3366,25 @@ abstract class Expression
         new BinaryExpression("->collect", newsrc, bright); 
     } 
 
+    if (src instanceof BinaryExpression && 
+        "|C".equals(
+            ((BinaryExpression) src).getOperator()))
+    { BinaryExpression bsrc = (BinaryExpression) src; 
+      BinaryExpression bleft = 
+          (BinaryExpression) bsrc.getLeft(); // x : col
+      Expression bright = bsrc.getRight();
+      Expression x = bleft.getLeft();  
+      Expression col = bleft.getRight(); 
+
+      System.out.println("! OES: Inefficient ->tail operation: " + src + "->tail()"); 
+
+      Expression newsrc = 
+                   Expression.simplifyTail(col);  
+      return 
+        new BinaryExpression("|C", 
+              new BinaryExpression(":", x, newsrc), bright); 
+    } 
+
     return new UnaryExpression("->tail", src); 
   } 
 
@@ -3394,6 +3434,91 @@ abstract class Expression
 
     return new UnaryExpression("->size", arg); 
   } 
+
+  public static Expression simplifySubrange(Expression src, 
+                                      Expression arg1, 
+                                      Expression arg2)
+  { // sq.subrange(i,j)  for j < 0  is  
+    //      sq.subrange(i, sq->size() + j)
+    // sq.subrange(i,j)  for i < 0  is  
+    //      sq.subrange(sq->size() + i, j)
+
+      
+    arg1.setBrackets(false); 
+    arg2.setBrackets(false); 
+
+    Expression par1 = arg1; 
+    Expression par2 = arg2; 
+
+    if ((src.isSequence() || src.isString()) && 
+        Expression.isDecimalInteger(arg1 + ""))
+    { int val1 = Expression.convertInteger(arg1 + ""); 
+      if (val1 < 0) 
+      { Expression sze = 
+          Expression.simplifySize(src);
+        par1 = 
+          new BinaryExpression("-", sze, 
+                             new BasicExpression(-val1));
+      } 
+    } 
+
+    if ((src.isSequence() || src.isString()) && 
+        arg1 instanceof UnaryExpression && 
+        "-".equals(((UnaryExpression) arg1).getOperator()) )
+    { UnaryExpression marg = (UnaryExpression) arg1; 
+      Expression narg = marg.getArgument(); 
+      narg.setBrackets(false); 
+
+      if (Expression.isDecimalInteger(narg + ""))
+      { int val1 = Expression.convertInteger(narg + "");
+        if (val1 > 0)
+        { Expression sze = 
+            Expression.simplifySize(src);
+          par1 = 
+                new BinaryExpression("-", sze, 
+                         new BasicExpression(val1)); 
+        }
+      } 
+    } 
+
+    if ((src.isSequence() || src.isString()) && 
+        Expression.isDecimalInteger(arg2 + ""))
+    { int val2 = Expression.convertInteger(arg2 + ""); 
+
+      if (val2 < 0) 
+      { Expression sze = 
+          Expression.simplifySize(src);
+        par2 = 
+          new BinaryExpression("-", sze, 
+                             new BasicExpression(-val2));
+      } 
+    }
+
+    if ((src.isSequence() || src.isString()) && 
+        arg2 instanceof UnaryExpression && 
+        "-".equals(((UnaryExpression) arg2).getOperator()) )
+    { UnaryExpression marg = (UnaryExpression) arg2; 
+      Expression narg = marg.getArgument(); 
+      narg.setBrackets(false); 
+
+      if (Expression.isDecimalInteger(narg + ""))
+      { int val2 = Expression.convertInteger(narg + "");
+        if (val2 > 0)
+        { Expression sze = 
+            Expression.simplifySize(src);
+          par2 = 
+                new BinaryExpression("-", sze, 
+                         new BasicExpression(val2)); 
+        }
+      } 
+    } 
+        
+    Vector pars = new Vector(); 
+    pars.add(par1); 
+    pars.add(par2);  
+    return BasicExpression.newFunctionBasicExpression(
+                 "subrange", src, pars);   
+  }
 
   public static Expression simplifyAt(Expression src, 
                                       Expression arg)
