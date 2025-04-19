@@ -43,6 +43,7 @@ ArrayList |-->Sequence
 List |-->Sequence
 AbstractList |-->Sequence
 LinkedList |-->Sequence
+LinkedHashSet |-->Sequence
 Stack |-->Sequence
 Queue |-->Sequence
 Deque |-->Sequence
@@ -81,12 +82,13 @@ MultiSet |-->Sequence
 Bag |-->Sequence
 HashBag |-->Sequence
 TreeList |-->Sequence
+SequencedCollection |-->Sequence
+SequencedSet |-->Sequence
 
 Set |-->Set
 TreeSet |-->Set
 SortedSet |-->Set
 HashSet |-->Set
-LinkedHashSet |-->Set
 EnumSet |-->Set
 
 JsonString |-->String
@@ -289,6 +291,8 @@ ArrayList _1 |-->Sequence_1`collectionParameters
 List _1 |-->Sequence_1`collectionParameters
 Vector _1 |-->Sequence_1`collectionParameters
 LinkedList _1 |-->Sequence_1`collectionParameters
+
+LinkedHashSet _1 |-->Sequence_1`collectionParameters
 Stack _1 |-->Sequence_1`collectionParameters
 Queue _1 |-->Sequence_1`collectionParameters
 Deque _1 |-->Sequence_1`collectionParameters
@@ -303,6 +307,8 @@ PriorityQueue _1 |-->Sequence_1`collectionParameters
 Bag _1 |-->Sequence_1`collectionParameters
 TreeBag _1 |-->Sequence_1`collectionParameters
 
+SequencedCollection _1 |-->Sequence_1`collectionParameters
+SequencedSet _1 |-->Sequence_1`collectionParameters
 SetUniqueList _1 |-->Sequence_1`collectionParameters
 ListOrderedSet _1 |-->Sequence_1`collectionParameters
 Bag _1 |-->Sequence_1`collectionParameters
@@ -313,7 +319,6 @@ Set _1 |-->Set_1`collectionParameters
 TreeSet _1 |-->Set_1`collectionParameters
 HashSet _1 |-->Set_1`collectionParameters
 SortedSet _1 |-->Set_1`collectionParameters
-LinkedHashSet _1 |-->Set_1`collectionParameters
 EnumSet _1 |-->Set_1`collectionParameters
 
 Map . Entry |-->Map
@@ -1118,6 +1123,7 @@ add ( _1 ) |-->boolean
 addAll ( _1 ) |-->boolean
 push ( _1 ) |-->boolean
 
+reversed ( ) |-->Sequence
 removeElementAt ( _1 ) |-->Sequence
 removeElement ( _1 ) |-->Sequence
 remove ( ) |-->OclIterator
@@ -1175,6 +1181,7 @@ _1 ( _2 ) |-->._1(_2)
 collectionMethodCallSideEffect::
 pop ( ) |-->->front()
 take ( ) |-->->front()
+
 removeAll ( _1 ) |--> - _1
 retainAll ( _1 ) |-->->intersection(_1)
 removeIf ( _1 ) |-->->reject( _var | (_1)->apply(_var) )
@@ -1230,6 +1237,7 @@ _1 _2 |-->_2
 methodCallSideEffect::
 pop ( ) |-->->front()
 take ( ) |-->->front()
+
 put ( _1 ) |-->->union(Map{_1`first |-> _1`last})
 putAll ( _1 ) |-->->union(_1)
 removeAll ( _1 ) |--> - _1
@@ -1756,6 +1764,7 @@ removeLast ( ) |-->->last()
 set ( _1 ) |-->->at(_1`first+1)
 pop ( ) |-->->last()
 take ( ) |-->->last()
+reversed ( ) |-->->reverse()
 poll ( ) |-->->min()
 pollFirst ( ) |-->->first()
 pollLast ( ) |-->->last()
@@ -3596,10 +3605,14 @@ BitSet _1 |-->MathLib.toBitSequence_1
 
 Set _1 |-->Set{}_1`collectionCreationRest
 HashSet _1 |-->Set{}_1`collectionCreationRest
-LinkedHashSet _1 |-->Set{}_1`collectionCreationRest
+
 TreeSet _1 |-->Set{}_1`collectionCreationRest
 SortedSet |-->Set{}_1`collectionCreationRest
 EnumSet |-->Set{}_1`collectionCreationRest
+
+SequencedCollection |-->Sequence{}_1`collectionCreationRest
+SequencedSet |-->Sequence{}_1`collectionCreationRest
+LinkedHashSet _1 |-->Sequence{}_1`collectionCreationRest
 
 Vector _1 |-->Sequence{}_1`collectionCreationRest
 List _1 |-->Sequence{}_1`collectionCreationRest
@@ -3705,6 +3718,8 @@ HashSet _1 |-->true
 LinkedHashSet _1 |-->true
 TreeSet _1 |-->true
 SortedSet _1 |-->true
+SequencedCollection _1 |-->true
+SequencedSet _1 |-->true
 EnumSet _1 |-->true
 
 Vector _1 |-->true
@@ -3869,7 +3884,10 @@ TreeSet |-->Set
 SortedSet |-->Set
 HashSet |-->Set
 EnumSet |-->Set
-LinkedHashSet |-->Set
+
+LinkedHashSet |-->Sequence
+SequencedCollection |-->Sequence
+SequencedSet |-->Sequence
 
 JsonString |-->String
 Integer |-->int
@@ -4052,6 +4070,7 @@ ArrayList _1 |-->Sequence{}
 List _1 |-->Sequence{}
 Vector _1 |-->Sequence{}
 LinkedList _1 |-->Sequence{}
+LinkedHashSet _1 |-->Sequence{}
 Stack _1 |-->Sequence{}
 Queue _1 |-->Sequence{}
 BlockingQueue _1 |-->Sequence{}
@@ -4067,13 +4086,14 @@ HashBag _1 |-->Sequence{}
 TreeList _1 |-->Sequence{}
 
 Stream _1 |-->Sequence{}
+SequencedSet _1 |-->Sequence{}
+SequencedCollection _1 |-->Sequence{}
 
 Comparator _1 |-->OclComparator_1.newOclComparator
 
 Set _1 |-->Set{}
 TreeSet _1 |-->Set{}
 HashSet _1 |-->Set{}
-LinkedHashSet _1 |-->Set{}
 SortedSet _1 |-->Set{}
 EnumSet _1 |-->Set{}
 
