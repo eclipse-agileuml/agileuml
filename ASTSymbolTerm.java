@@ -578,6 +578,8 @@ public class ASTSymbolTerm extends ASTTerm
     } 
 
     if ("Collection".equals(symbol) || 
+        "SequencedCollection".equals(symbol) || 
+        "SequencedSet".equals(symbol) || 
         "Iterable".equals(symbol) || 
         "AbstractCollection".equals(symbol))
     { modelElement = new Type("Sequence", null); 
@@ -620,6 +622,7 @@ public class ASTSymbolTerm extends ASTTerm
  
     if ("Vector".equals(symbol) || "Stack".equals(symbol) ||
         "LinkedList".equals(symbol) || 
+        "LinkedHashSet".equals(symbol) || 
         "AbstractList".equals(symbol) ||
         "AbstractSequentialList".equals(symbol) ||
         "Queue".equals(symbol) ||
@@ -679,7 +682,7 @@ public class ASTSymbolTerm extends ASTTerm
     { modelElement = new Type("Set", null); 
       expression = new BasicExpression((Type) modelElement); 
       return "Set"; 
-    }
+    } // OrderedSet for LinkedHashSet
  
     if ("TreeSet".equals(symbol) || 
         "SortedSet".equals(symbol)) 
@@ -725,7 +728,7 @@ public class ASTSymbolTerm extends ASTTerm
     { modelElement = new Type("Map", null); 
       expression = new BasicExpression((Type) modelElement); 
       return "Map"; 
-    }
+    } // OrderedMap for LinkedHashMap
  
     if ("TreeMap".equals(symbol) || 
         "SortedMap".equals(symbol)) 

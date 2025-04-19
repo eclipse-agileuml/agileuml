@@ -65,6 +65,24 @@ class BinaryExpression extends Expression
   } 
 
   public static Expression newLetBinaryExpression(
+                         Expression var, 
+                         Type typ, Expression initexpr, 
+                         Expression expr)
+  { // let v : typ = initexpr in expr
+
+    String vname = var + ""; 
+    Attribute accum = 
+      new Attribute(vname, typ, ModelElement.INTERNAL); 
+    // accum.setElementType(typ); 
+  
+    BinaryExpression res = 
+      new BinaryExpression("let", initexpr, expr);
+    res.setAccumulator(accum);  
+    res.setBrackets(true); 
+    return res; 
+  } 
+
+  public static Expression newLetBinaryExpression(
                          Expression body, 
                          Type typ, Type etyp, 
                          Expression expr)
@@ -21188,7 +21206,8 @@ public Statement existsLC(Vector preds, Expression eset, Expression etest,
     // ->select(...)->any() is a red flag, likewise 
     // s->select(...)->size() = 0
     // s->count(x)->size() = 0
-    // mp->keys()->includes(x)  
+    // mp->keys()->includes(x)
+    // sq->collect(x|e)->at(i) or ->first() or ->last()  
 
     int synLeft = left.syntacticComplexity();
     int synRight = right.syntacticComplexity();
@@ -21366,6 +21385,16 @@ public Statement existsLC(Vector preds, Expression eset, Expression etest,
              left instanceof BasicExpression && 
              ((BasicExpression) left).isOperationCall())
     { // redundant results computation
+      aUses.add("! OCL efficiency smell (OES): Redundant results computation in: " + this);
+      int ascore = (int) res.get("amber"); 
+      res.set("amber", ascore+1); 
+    } 
+    else if ("->at".equals(operator) && 
+             left instanceof BinaryExpression && 
+             "|C".equals(
+                    ((BinaryExpression) left).getOperator()))
+    { // redundant results computation
+
       aUses.add("! OCL efficiency smell (OES): Redundant results computation in: " + this);
       int ascore = (int) res.get("amber"); 
       res.set("amber", ascore+1); 

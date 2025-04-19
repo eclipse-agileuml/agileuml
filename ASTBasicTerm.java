@@ -1181,6 +1181,8 @@ public class ASTBasicTerm extends ASTTerm
     }
 
     if ("Collection".equals(value) || 
+        "SequencedCollection".equals(value) || 
+        "SequencedSet".equals(value) || 
         "Iterable".equals(value) || 
         "AbstractCollection".equals(value))
     { modelElement = new Type("Sequence", null); 
@@ -1302,6 +1304,7 @@ public class ASTBasicTerm extends ASTTerm
         "LinkedBlockingDeque".equals(value) ||
         "ArrayBlockingQueue".equals(value) ||
         "BlockingQueue".equals(value) || 
+        "LinkedHashSet".equals(value) || 
         "ListOrderedSet".equals(value) ||
         "SetUniqueList".equals(value))
     { modelElement = new Type("Sequence", null); 
@@ -1399,7 +1402,7 @@ public class ASTBasicTerm extends ASTTerm
     { modelElement = new Type("Set", null); 
       expression = new BasicExpression((Type) modelElement); 
       return "Set"; 
-    }
+    } // OrderedSet for LinkedHashSet
  
     if ("SortedSet".equals(value) || "TreeSet".equals(value))
     { modelElement = new Type("Set", null); 
@@ -1420,7 +1423,7 @@ public class ASTBasicTerm extends ASTTerm
     { modelElement = new Type("Map", null); 
       expression = new BasicExpression((Type) modelElement); 
       return "Map"; 
-    } 
+    } // OrderedMap for LinkedHashMap
     
     if ("SortedMap".equals(value) || "TreeMap".equals(value))
     { modelElement = new Type("Map", null); 
@@ -2014,6 +2017,8 @@ public class ASTBasicTerm extends ASTTerm
       return "OclAny"; }
 
     if ("Collection".equals(value) || 
+        "SequencedCollection".equals(value) || 
+        "SequencedSet".equals(value) || 
         "Iterable".equals(value) || 
         "AbstractCollection".equals(value))
     { modelElement = new Type("Sequence", null); 
@@ -2115,7 +2120,8 @@ public class ASTBasicTerm extends ASTTerm
     }
  
     if ("LinkedList".equals(value) || "List".equals(value) ||
-        "Stack".equals(value) || 
+        "Stack".equals(value) ||
+        "LinkedHashSet".equals(value) ||  
         "Queue".equals(value) || "Deque".equals(value))
     { modelElement = new Type("Sequence", null); 
       expression = new BasicExpression((Type) modelElement); 
@@ -2195,11 +2201,12 @@ public class ASTBasicTerm extends ASTTerm
     } 
 
     if ("Set".equals(value) ||
-        "HashSet".equals(value) || "EnumSet".equals(value))
+        "HashSet".equals(value) || 
+        "EnumSet".equals(value))
     { modelElement = new Type("Set", null); 
       expression = new BasicExpression((Type) modelElement); 
       return "Set"; 
-    }
+    } // OrderedSet for LinkedHashSet
  
     if ("SortedSet".equals(value) || "TreeSet".equals(value))
     { modelElement = new Type("Set", null);
@@ -2220,7 +2227,7 @@ public class ASTBasicTerm extends ASTTerm
     { modelElement = new Type("Map", null); 
       expression = new BasicExpression((Type) modelElement); 
       return "Map"; 
-    }
+    } // OrderedMap for LinkedHashMap
  
     if ("SortedMap".equals(value) || "TreeMap".equals(value))
     { modelElement = new Type("Map", null); 

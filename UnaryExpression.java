@@ -834,6 +834,17 @@ public void findClones(java.util.Map clones,
       int ascore = (int) res.get("amber"); 
       res.set("amber", ascore+1); 
     } 
+    else if (("->last".equals(operator) || 
+              "->first".equals(operator)) && 
+             argument instanceof BinaryExpression && 
+             "|C".equals(
+                ((BinaryExpression) argument).getOperator()))
+    { // redundant results computation
+
+      aUses.add("! OCL efficiency smell (OES): Redundant results computation in: " + this);
+      int ascore = (int) res.get("amber"); 
+      res.set("amber", ascore+1); 
+    } 
 
     return res; 
   } 
@@ -962,7 +973,10 @@ public void findClones(java.util.Map clones,
     } 
     else if (operator.equals("->any") || 
              operator.equals("->first"))
-    { // ->select(P)->any() should be ->any(P), etc
+    { // col->select(P)->any() should be col->any(P), etc
+      // col->collect(x|e)->first() should be 
+      //                let x = col->first() in e
+           
 
       if (argument instanceof BinaryExpression) 
       { BinaryExpression lbe = (BinaryExpression) argument; 
@@ -1010,6 +1024,16 @@ public void findClones(java.util.Map clones,
           BinaryExpression res = 
             new BinaryExpression("->any", lbe.left, notR); 
 
+          System.out.println(">> OCL efficiency smell (OES): Inefficient " + operator + " expression: " + 
+            this + 
+            "\n! Replaced by " + res);
+  
+          return res; 
+        }
+        else if (lbe.operator.equals("|C") && 
+                 operator.equals("->first"))
+        { Expression res = Expression.simplifyFirst(lbe); 
+ 
           System.out.println(">> OCL efficiency smell (OES): Inefficient " + operator + " expression: " + 
             this + 
             "\n! Replaced by " + res);

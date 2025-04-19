@@ -21904,9 +21904,13 @@ public class ASTCompositeTerm extends ASTTerm
 
           return args + "->excludingAt(" + callp + " + 1)"; 
         } 
-        else if ("reverse".equals(called) && arg.isCollection())
+        else if (("reverse".equals(called) || 
+                  "reversed".equals(called)) && 
+                 arg.isCollection())
         { if (arg.expression != null) 
-          { expression = new UnaryExpression("->reverse", arg.expression); }
+          { expression = 
+              new UnaryExpression("->reverse", arg.expression); 
+          }
 
           ASTTerm.setType(this, ASTTerm.getType(arg)); 
           return args + "->reverse()"; 
@@ -27494,6 +27498,7 @@ public class ASTCompositeTerm extends ASTTerm
             expression = rev; 
             statement = new AssignStatement(arg.expression, rev); 
           }
+
           return args + " := " + args + "->reverse()"; 
         }  
         else if ("add".equals(called) && 
