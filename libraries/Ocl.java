@@ -916,25 +916,38 @@ class OclMaplet<K,T>
 
   public static <T> HashSet<T> tail(HashSet<T> a)
   { HashSet<T> res = new HashSet<T>(); 
+
+    if (a.isEmpty())
+    { return res; } 
+
     T fst = null; 
+
     for (T x : a)
     { res.add(x); 
-      if (fst == null) { fst = x; } 
+      if (fst == null) 
+      { fst = x; } 
     } 
+
     res.remove(fst); 
     return res; 
   }
 
   public static <T> TreeSet<T> tail(TreeSet<T> a)
   { TreeSet<T> res = new TreeSet<T>(); 
+
+    if (a.isEmpty())
+    { return res; } 
+
     T fst = null; 
     for (T x : a)
     { res.add(x); 
-      if (fst == null) { fst = x; } 
+      if (fst == null) 
+      { fst = x; } 
     } 
+
     res.remove(fst); 
     return res; 
-  }
+  } 
 
   public static <T extends Comparable> ArrayList<T> sort(Collection<T> a)
   { ArrayList<T> res = new ArrayList<T>();
@@ -1138,13 +1151,15 @@ class OclMaplet<K,T>
 
 
     public static <T> T any(Collection<T> v)
-    { for (T o : v) { return o; }
+    { for (T o : v) 
+      { return o; }
       return null;
     }
 
 
     public static <T> T first(Collection<T> v)
-    { for (T o : v) { return o; }
+    { for (T o : v) 
+      { return o; }
       return null;
     }
 
@@ -1154,13 +1169,20 @@ class OclMaplet<K,T>
       return v.get(v.size() - 1);
     }
 
-    public static <T> T last(Set<T> v)
+    public static <T> T last(HashSet<T> v)
     { int n = v.size(); 
       if (n == 0) { return null; }
       T res = null; 
       for (T o : v)
       { res = o; } 
       return res;
+    }
+
+    public static <T> T last(TreeSet<T> v)
+    { int n = v.size(); 
+      if (n == 0) 
+      { return null; }
+      return v.last();
     }
 
     public static <T> ArrayList<List<T>> subcollections(ArrayList<T> v)
