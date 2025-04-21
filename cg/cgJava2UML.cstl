@@ -26,6 +26,7 @@ TreeMap |-->Map
 HashMap |-->Map
 Hashtable |-->Map
 SortedMap |-->Map
+SequencedMap |-->Map
 Properties |-->Map
 JsonObject |-->Map
 JSONObject |-->Map
@@ -279,6 +280,7 @@ HashMap _1 |-->Map_1`collectionParameters
 TreeMap _1 |-->Map_1`collectionParameters
 Hashtable _1 |-->Map_1`collectionParameters
 SortedMap _1 |-->Map_1`collectionParameters
+SequencedMap _1 |-->Map_1`collectionParameters
 ImmutableMap _1 |-->Map_1`collectionParameters
 EnumMap _1  |-->Map_1`collectionParameters
 Pair _1 |-->Map(String,OclAny)
@@ -985,16 +987,24 @@ containsKey ( _1 ) |-->->includesKey(_1)
 containsValue ( _1 ) |-->->includesValue(_1)
 isEmpty ( ) |-->->isEmpty()
 clear ( ) |-->
+reversed ( ) |-->->reverse()
 clone ( ) |-->->union(Map{})
 
 keys ( ) |-->->keys()->iterator()
 values ( ) |-->->values()
+sequencedValues ( ) |-->->values()
 keySet ( ) |-->->keys()
+sequencedKeySet ( ) |-->->keys()
 entrySet ( ) |-->->asSet()
+sequencedEntrySet ( ) |-->->asSet()
 elements ( ) |-->->values()->iterator()
 
 getKey ( ) |-->->keys()->any()
 getValue ( ) |-->->values->any()
+firstEntry ( ) |-->->asSequence()->first()
+lastEntry ( ) |-->->asSequence()->last()
+pollFirstEntry ( ) |-->->asSequence()->first()
+pollLastEntry ( ) |-->->asSequence()->last()
 
 firstKey ( ) |-->->keys()->min()
 lastKey ( ) |-->->keys()->max()
@@ -1030,11 +1040,20 @@ containsValue ( _1 ) |-->boolean
 isEmpty ( ) |-->boolean
 clear ( ) |-->void
 clone ( ) |-->Map
+reversed ( ) |-->Map
+
+firstEntry ( ) |-->Map
+lastEntry ( ) |-->Map
+pollFirstEntry ( ) |-->Map
+pollLastEntry ( ) |-->Map
 
 keys ( ) |-->OclIterator
 values ( ) |-->Sequence
+sequencedValues ( ) |-->Sequence
 keySet ( ) |-->Set
+sequencedKeySet ( ) |-->Set
 entrySet ( ) |-->Set
+sequencedEntrySet ( ) |-->Set
 elements ( ) |-->OclIterator
 
 getKey ( ) |-->OclAny
@@ -1054,11 +1073,16 @@ _1 |-->OclAny
 mapMethodCallSideEffect::
 put ( _1 ) |-->->union(Map{_1`first |-> _1`last})
 putIfAbsent ( _1 ) |-->->union(Map{_1`first |-> _1`last})
+putFirst ( _1 ) |-->->prepend(Map{_1`first |-> _1`last})
+putLast ( _1 ) |-->->append(Map{_1`first |-> _1`last})
+
 setProperty ( _1 ) |-->->union(Map{_1`first |-> _1`last})
 putAll ( _1 ) |-->->union(_1)
 removeAll ( _1 ) |--> - _1
 retainAll ( _1 ) |-->->intersection(_1)
 remove ( _1 ) |-->->antirestrict(Set{_1})
+pollLastEntry ( ) |-->->front()
+pollFirstEntry ( ) |-->->tail()
 clear ( ) |-->->intersection(Map{})
 
 
@@ -1239,6 +1263,8 @@ pop ( ) |-->->front()
 take ( ) |-->->front()
 
 put ( _1 ) |-->->union(Map{_1`first |-> _1`last})
+putFirst ( _1 ) |-->->union(Map{_1`first |-> _1`last})
+putLast ( _1 ) |-->->union(Map{_1`first |-> _1`last})
 putAll ( _1 ) |-->->union(_1)
 removeAll ( _1 ) |--> - _1
 retainAll ( _1 ) |-->->intersection(_1)
@@ -1261,6 +1287,8 @@ take ( ) |-->->front()
 poll ( ) |-->->sort()->tail()
 pollFirst ( ) |-->->tail()
 pollLast ( ) |-->->front()
+pollFirstEntry ( ) |-->->tail()
+pollLastEntry ( ) |-->->front()
 
 replaceAll ( _1 ) |-->    _1`first := _1`first->collect( x1 | if x1 = _1`third then _1`last else x1 endif )
 
@@ -3652,6 +3680,7 @@ TreeMap _1 |-->Map{}_1`collectionCreationRest
 ImmutableMap _1 |-->Map{}_1`collectionCreationRest
 JsonObject _1 |-->Map{}_1`collectionCreationRest
 JSONObject _1 |-->Map{}_1`collectionCreationRest
+SequencedMap _1 |-->Map{}_1`collectionCreationRest
 LinkedHashMap _1 |-->Map{}_1`collectionCreationRest
 NavigableMap _1 |-->Map{}_1`collectionCreationRest
 ConcurrentNavigableMap _1 |-->Map{}_1`collectionCreationRest
@@ -3746,6 +3775,7 @@ Hashtable _1 |-->true
 HashMap _1 |-->true
 TreeMap _1 |-->true
 EnumMap _1 |-->true
+SequencedMap _1 |-->true
 LinkedHashMap _1 |-->true
 NavigableMap _1 |-->true
 ConcurrentNavigableMap _1 |-->true
@@ -3840,6 +3870,7 @@ TreeMap |-->Map
 HashMap |-->Map
 Hashtable |-->Map
 SortedMap |-->Map
+SequencedMap |-->Map
 Properties |-->Map
 JsonObject |-->Map
 JSONObject |-->Map
