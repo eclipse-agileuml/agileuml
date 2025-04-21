@@ -797,6 +797,12 @@ public void findClones(java.util.Map clones,
           int rscore = (int) res.get("red"); 
           res.set("red", rscore+1); 
         }
+        else if (lbe.operator.equals("|C"))
+        { rUses.add("!! OCL efficiency smell (OES): Inefficient col->collect(x | e)->any() expression in " + this + ", \n" + 
+            ">>> instead, use:  let x = col->any() in e");
+          int rscore = (int) res.get("red"); 
+          res.set("red", rscore+1); 
+        }
       } 
     }
     else if ("->sort".equals(operator))
@@ -1033,6 +1039,16 @@ public void findClones(java.util.Map clones,
         else if (lbe.operator.equals("|C") && 
                  operator.equals("->first"))
         { Expression res = Expression.simplifyFirst(lbe); 
+ 
+          System.out.println(">> OCL efficiency smell (OES): Inefficient " + operator + " expression: " + 
+            this + 
+            "\n! Replaced by " + res);
+  
+          return res; 
+        }
+        else if (lbe.operator.equals("|C") && 
+                 operator.equals("->any"))
+        { Expression res = Expression.simplifyAny(lbe); 
  
           System.out.println(">> OCL efficiency smell (OES): Inefficient " + operator + " expression: " + 
             this + 

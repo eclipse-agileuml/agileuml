@@ -223,6 +223,13 @@ abstract class Expression
     return false; 
   } 
 
+  public boolean isSortedMap() 
+  { if (type != null && type.getName().equals("Map") &&
+        type.isSorted())
+    { return true; } 
+    return false; 
+  } 
+
   public boolean isEmptyCollection() 
   { if ("Set{}".equals(this + "") || 
         "Sequence{}".equals(this + ""))
@@ -1953,6 +1960,11 @@ abstract class Expression
   public boolean isSet()
   { return type != null && type.isSet(); }
 
+  public boolean isSortedSet()
+  { return type != null && type.isSet() && 
+           type.isSorted(); 
+  }
+
   public boolean isSequence()
   { return type != null && type.isSequence(); }
 
@@ -3237,6 +3249,17 @@ abstract class Expression
     // sq->select(x | P)->first()  is  sq->any(x | P)
     // sq->reject(x | P)->first()  is  sq->any(x | not(P))
 
+   if (src instanceof SetExpression && 
+       src.isSequence() && 
+       ((SetExpression) src).size() >= 1)
+    { SetExpression usrc = (SetExpression) src; 
+      Expression uarg = usrc.getElement(0); 
+
+      System.out.println("! OES: Inefficient ->first operation: " + src + "->first()");
+ 
+      return uarg; 
+    } 
+
     if (src instanceof UnaryExpression && 
         "->tail".equals(
            ((UnaryExpression) src).getOperator()))
@@ -3292,6 +3315,45 @@ abstract class Expression
     } 
 
     return new UnaryExpression("->first", src); 
+  } 
+
+  public static Expression simplifyAny(Expression src)
+  { // sq->select(x | P)->any()  is  sq->any(x | P)
+    // sq->reject(x | P)->any()  is  sq->any(x | not(P))
+    // sq->collect(x | e)->any()  is  let x = sq->any(x) in e
+
+    if (src instanceof SetExpression && 
+        ((SetExpression) src).size() == 1)
+    { SetExpression usrc = (SetExpression) src; 
+      Expression uarg = usrc.getElement(0); 
+
+      System.out.println("! OES: Inefficient ->any operation: " + src + "->any()");
+ 
+      return uarg; 
+    } 
+
+    if (src instanceof BinaryExpression && 
+        "|C".equals(
+           ((BinaryExpression) src).getOperator()))
+    { BinaryExpression collexpr = (BinaryExpression) src; 
+      BinaryExpression indom = 
+            (BinaryExpression) collexpr.getLeft();
+      Expression valexpr = collexpr.getRight(); 
+
+      Expression varexpr = indom.getLeft();
+      Expression srccoll = indom.getRight(); 
+ 
+      Expression atexpr =  
+        Expression.simplifyAny(srccoll); 
+ 
+      System.out.println("! OES: Inefficient ->any operation: " + src + "->any()"); 
+
+      return BinaryExpression.newLetBinaryExpression(
+               varexpr, srccoll.getElementType(), 
+               atexpr, valexpr); 
+    } 
+
+    return new UnaryExpression("->any", src); 
   } 
 
   public static Expression simplifyFront(Expression src)
@@ -3495,7 +3557,8 @@ abstract class Expression
     //      sq.subrange(i, sq->size() + j)
     // sq.subrange(i,j)  for i < 0  is  
     //      sq.subrange(sq->size() + i, j)
-
+    // sq->collect(x|e).subrange(a,b) is 
+    //      sq.subrange(a,b)->collect(x|e)
       
     arg1.setBrackets(false); 
     arg2.setBrackets(false); 

@@ -1418,6 +1418,7 @@ public class ASTBasicTerm extends ASTTerm
     }
  
     if ("HashMap".equals(value) || 
+        "SequencedMap".equals(value) || 
         "LinkedHashMap".equals(value) || 
         "EnumMap".equals(value))
     { modelElement = new Type("Map", null); 
@@ -2029,19 +2030,26 @@ public class ASTBasicTerm extends ASTTerm
     if ("Class".equals(value))
     { modelElement = new Type("OclType", null); 
       expression = new BasicExpression((Type) modelElement); 
-      return "OclType"; }
+      return "OclType";
+    }
+
     if ("Comparable".equals(value))
     { modelElement = new Type("OclAny", null); 
       expression = new BasicExpression((Type) modelElement); 
-      return "OclAny"; }
+      return "OclAny";
+    }
+
     if ("Cloneable".equals(value))
     { modelElement = new Type("OclAny", null); 
       expression = new BasicExpression((Type) modelElement); 
-      return "OclAny"; }
+      return "OclAny"; 
+    }
+
     if ("Serializable".equals(value))
     { modelElement = new Type("OclAny", null); 
       expression = new BasicExpression((Type) modelElement); 
-      return "OclAny"; }
+      return "OclAny"; 
+    }
 
     if ("Runnable".equals(value))
     { modelElement = new Type("Runnable", null); 
@@ -2109,10 +2117,12 @@ public class ASTBasicTerm extends ASTTerm
     { modelElement = new Type("Sequence", null); 
       expression = new BasicExpression((Type) modelElement); 
       return "Sequence"; } 
+
     if ("AbstractList".equals(value))
     { modelElement = new Type("Sequence", null); 
       expression = new BasicExpression((Type) modelElement); 
       return "Sequence"; } 
+
     if ("Vector".equals(value))
     { modelElement = new Type("Sequence", null); 
       expression = new BasicExpression((Type) modelElement); 
@@ -2222,6 +2232,7 @@ public class ASTBasicTerm extends ASTTerm
     }
  
     if ("HashMap".equals(value) || 
+        "SequencedMap".equals(value) || 
         "LinkedHashMap".equals(value) || 
         "EnumMap".equals(value))
     { modelElement = new Type("Map", null); 

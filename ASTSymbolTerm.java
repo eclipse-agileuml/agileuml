@@ -103,7 +103,7 @@ public class ASTSymbolTerm extends ASTTerm
   { return symbol; } 
 
   public String cgRules(CGSpec cgs, Vector rules)
-  { System.out.println(">>> cgRules for " + this + " " + rules); 
+  { // System.out.println(">>> cgRules for " + this + " " + rules); 
 
     if (rules == null) 
     { return symbol; } 
@@ -113,7 +113,7 @@ public class ASTSymbolTerm extends ASTTerm
       Vector tokens = r.lhsTokens; 
       Vector vars = r.getVariables(); 
 
-      System.out.println("> Rule " + r + " has tokens " + tokens + " variables " + vars);
+      // System.out.println("> Rule " + r + " has tokens " + tokens + " variables " + vars);
 
       if (vars.size() > 1 || tokens.size() > 1)
       { // System.out.println("> Rule " + r + " has too many variables/tokens to match basic term " + this); 
@@ -435,7 +435,7 @@ public class ASTSymbolTerm extends ASTTerm
   public String toKM3type()
   { String res = toKM3();
 
-    System.out.println("+++ toKM3type on symbol " + symbol + " " + res + " " + modelElement); 
+    // System.out.println("+++ toKM3type on symbol " + symbol + " " + res + " " + modelElement); 
  
     if (modelElement == null) 
     { Entity ee = (Entity) ModelElement.lookupByName(symbol,
@@ -721,6 +721,7 @@ public class ASTSymbolTerm extends ASTTerm
     } 
 
     if ("HashMap".equals(symbol) || 
+        "SequencedMap".equals(symbol) || 
         "LinkedHashMap".equals(symbol) || 
         "EnumMap".equals(symbol) || 
         "Hashtable".equals(symbol) || 
