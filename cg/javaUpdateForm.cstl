@@ -24,6 +24,115 @@ UnaryExpression::
 _1->display() |-->System.out.println(_1 + "")
 _1->isDeleted() |-->_1 = null
 
+-_1 |-->-_1
++_1 |-->+_1
+?_1 |-->Ocl.newRef_1`type(_1)<when> _1 numeric
+?_1 |-->Ocl.newRef_1`type(_1)<when> _1 boolean
+?_1 |-->Ocl.newRef_1`type(_1)<when> _1 String
+?_1 |-->_1
+
+!_1 |-->_1`java8deref
+
+_1->log() |-->Math.log(_1)
+_1->log10() |-->Math.log10(_1)
+_1->exp() |-->Math.exp(_1)
+_1->sin() |-->Math.sin(_1)
+_1->cos() |-->Math.cos(_1)
+_1->tan() |-->Math.tan(_1)
+_1->asin() |-->Math.asin(_1)
+_1->acos() |-->Math.acos(_1)
+_1->atan() |-->Math.atan(_1)
+_1->sqr() |-->(_1)*(_1)
+_1->sqrt() |-->Math.sqrt(_1)
+_1->cbrt() |-->Math.cbrt(_1)
+_1->floor() |-->((int) Math.floor(_1))
+_1->ceil() |-->((int) Math.ceil(_1))
+_1->round() |-->((int) Math.round(_1))
+_1->abs() |-->Math.abs(_1)
+
+_1->size() |-->_1.length()<when> _1 String
+_1->size() |-->_1.size()
+
+_1->toInteger() |-->Integer.decode(_1).intValue()<when> _1 String
+_1->toInteger() |-->_1
+_1->toLong() |-->Long.decode(_1).longValue()<when> _1 String
+_1->toLong() |-->_1
+_1->toReal() |-->Double.parseDouble(_1)<when> _1 String
+_1->toReal() |-->_1
+_1->toBoolean() |-->Ocl.toBoolean(_1)
+
+_1->char2byte() |-->Ocl.char2byte(_1)
+_1->byte2char() |-->Ocl.byte2char(_1)
+
+_1->isInteger() |-->Ocl.isInteger(_1)
+_1->isLong() |-->Ocl.isLong(_1)
+_1->isReal() |-->Ocl.isReal(_1)
+
+_1->toUpper() |-->_1.toUpperCase()
+_1->toLower() |-->_1.toLowerCase()
+_1->toUpperCase() |-->_1.toUpperCase()
+_1->toLowerCase() |-->_1.toLowerCase()
+_1->trim() |-->_1.trim()
+_1->characters() |-->Ocl.characters(_1)
+
+_1->oclIsUndefined() |-->(_1 == null)
+_1->oclIsInvalid() |-->Double.isNaN(_1)
+
+_1->oclType() |-->new OclType(int.class)<when> _1 int
+_1->oclType() |-->new OclType(long.class)<when> _1 long
+_1->oclType() |-->new OclType(double.class)<when> _1 double
+_1->oclType() |-->new OclType(boolean.class)<when> _1 boolean
+_1->oclType() |-->new OclType(_1.getClass())
+
+_1->allInstances() |-->_1._1_allInstances
+
+_1->copy() |-->Ocl.copySequence(_1)<when> _1 Sequence
+_1->copy() |-->Ocl.copySortedSet(_1)<when> _1 SortedSet
+_1->copy() |-->Ocl.copySet(_1)<when> _1 Set
+_1->copy() |-->Ocl.copySortedMap(_1)<when> _1 SortedMap
+_1->copy() |-->Ocl.copyMap(_1)<when> _1 Map
+_1->copy() |-->_1.clone()<when> _1 object
+_1->copy() |-->_1
+
+_1->first() |-->Ocl.first(_1)
+_1->last() |-->Ocl.last(_1)
+_1->tail() |-->Ocl.tail(_1)
+_1->front() |-->Ocl.front(_1)
+_1->reverse() |-->Ocl.reverse(_1)
+_1->max() |-->Ocl.max(_1)
+_1->min() |-->Ocl.min(_1)
+_1->sum() |-->Ocl.sum_1`elementType(_1)
+_1->prd() |-->Ocl.prd_1`elementType(_1)
+_1->sort() |-->Ocl.sort(_1)
+_1->any() |-->Ocl.any(_1)
+_1->isEmpty() |-->(_1.size() == 0)
+_1->notEmpty() |-->(_1.size() > 0)
+
+_1->asSet() |-->Ocl.asSet(_1)
+_1->asSequence() |-->Ocl.asSequence(_1)
+_1->asOrderedSet() |-->Ocl.asOrderedSet(_1)
+_1->asBag() |-->Ocl.asBag(_1)
+
+_1->flatten() |-->Ocl.unionAll(_1)<when> _1 Set
+_1->flatten() |-->Ocl.concatenateAll(_1)<when> _1 Sequence
+/* Recursive Ocl.flatten is missing */
+
+_1->values() |-->_1.values()
+_1->keys() |-->Ocl.mapKeys(_1)
+
+
+not(_1) |-->!(_1)
+
+lambda _1 : _2 in _3 |-->(_1) -> { return _3; }
+
+_1->unionAll() |-->Ocl.unionAllMap(_1)<when> _1 MapCollection
+_1->unionAll() |-->Ocl.unionAll(_1)
+_1->intersectAll() |-->Ocl.intersectAllMap(_1)<when> _1 MapCollection
+_1->intersectAll() |-->Ocl.intersectAll(_1)
+_1->concatenateAll() |-->Ocl.concatenateAll(_1)
+
+
+
 
 
 BinaryExpression::
