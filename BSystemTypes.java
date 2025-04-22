@@ -4682,6 +4682,12 @@ public class BSystemTypes extends BComponent
       "    result.putAll(s);\n" + 
       "    return result;\n" + 
       "  }\n\n";
+    res = res + 
+      "  public static <K,T> TreeMap<K,T> copySortedMap(Map<K,T> s)\n" +
+      "  { TreeMap<K,T> result = new TreeMap<K,T>();\n" + 
+      "    result.putAll(s);\n" + 
+      "    return result;\n" + 
+      "  }\n\n";
 
     res = res + 
       "  public static <T> ArrayList<T> sequenceRange(T[] arr, int n)\n" + 
@@ -5891,7 +5897,8 @@ public class BSystemTypes extends BComponent
   }
 
   public static String generateFirstOpJava6()
-  { String res = "    public static Object first(Collection v)\n" +
+  { String res = 
+    "    public static Object first(Collection v)\n" +
     "    { for (Object o : v) { return o; }\n" +
     "      return null;\n" + 
     "    }\n";
@@ -5899,7 +5906,8 @@ public class BSystemTypes extends BComponent
   }
 
   public static String generateFirstOpJava7()
-  { String res = "    public static <T> T first(Collection<T> v)\n" +
+  { String res = 
+    "    public static <T> T first(Collection<T> v)\n" +
     "    { for (T o : v) { return o; }\n" +
     "      return null;\n" + 
     "    }\n";
@@ -7600,6 +7608,7 @@ public class BSystemTypes extends BComponent
     res = res + 
       "  public static HashSet front(HashSet a)\n" +
       "  { HashSet res = new HashSet(); \n" +
+      "    if (a.isEmpty()) { return res; }\n" + 
       "    Object lst = null; \n" +
       "    for (Object x : a)\n" +
       "    { res.add(x); \n" +
@@ -7623,6 +7632,7 @@ public class BSystemTypes extends BComponent
     res = res + 
       "  public static <T> HashSet<T> front(HashSet<T> a)\n" +
       "  { HashSet<T> res = new HashSet<T>();\n" + 
+      "    if (a.isEmpty()) { return res; }\n" + 
       "    T lst = null;\n" + 
       "    for (T x : a)\n" +
       "    { res.add(x); \n" +
@@ -7634,12 +7644,9 @@ public class BSystemTypes extends BComponent
 
     res = res + 
       "  public static <T> TreeSet<T> front(TreeSet<T> a)\n" +
-      "  { TreeSet<T> res = new TreeSet<T>();\n" + 
-      "    T lst = null;\n" + 
-      "    for (T x : a)\n" +
-      "    { res.add(x); \n" +
-      "      lst = x; \n" +
-      "    } \n" +
+      "  { TreeSet<T> res = (TreeSet<T>) a.clone();\n" + 
+      "    if (a.isEmpty()) { return res; }\n" + 
+      "    T lst = a.last();\n" + 
       "    res.remove(lst);\n" + 
       "    return res; \n" +
       "  }\n\n"; 
@@ -7686,7 +7693,8 @@ public class BSystemTypes extends BComponent
                  "  { List res = new Vector(); \n" + 
                  "    for (int i = 1; i < a.size(); i++)\n" + 
                  "    { res.add(a.get(i)); } \n" + 
-                 "    return res; }\n"; 
+                 "    return res;\n" + 
+                 "  }\n"; 
     return res; 
   }  
 
@@ -7700,7 +7708,8 @@ public class BSystemTypes extends BComponent
 
     res = res + 
     "  public static HashSet tail(HashSet a)\n" +
-    "  { HashSet res = new HashSet(); \n" +
+    "  { HashSet res = new HashSet(); \n" + 
+    "    if (a.isEmpty()) { return res; }\n" + 
     "    Object fst = null; \n" +
     "    for (Object x : a)\n" +
     "    { res.add(x); \n" +
@@ -7714,16 +7723,18 @@ public class BSystemTypes extends BComponent
   }  
 
   public static String generateTailOpJava7()
-  { String res = "  public static <T> ArrayList<T> tail(ArrayList<T> a)\n" + 
-                 "  { ArrayList<T> res = new ArrayList<T>(); \n" + 
-                 "    for (int i = 1; i < a.size(); i++)\n" + 
-                 "    { res.add(a.get(i)); } \n" + 
-                 "    return res;\n" + 
-                 "  }\n\n";
+  { String res = 
+    "  public static <T> ArrayList<T> tail(ArrayList<T> a)\n" + 
+    "  { ArrayList<T> res = new ArrayList<T>(); \n" + 
+    "    for (int i = 1; i < a.size(); i++)\n" + 
+    "    { res.add(a.get(i)); } \n" + 
+    "    return res;\n" + 
+    "  }\n\n";
 
     res = res + 
     "  public static <T> HashSet<T> tail(HashSet<T> a)\n" +
     "  { HashSet<T> res = new HashSet<T>(); \n" +
+    "    if (a.isEmpty()) { return res; }\n" + 
     "    T fst = null; \n" +
     "    for (T x : a)\n" +
     "    { res.add(x); \n" +
@@ -7735,12 +7746,9 @@ public class BSystemTypes extends BComponent
 
     res = res + 
     "  public static <T> TreeSet<T> tail(TreeSet<T> a)\n" +
-    "  { TreeSet<T> res = new TreeSet<T>(); \n" +
-    "    T fst = null; \n" +
-    "    for (T x : a)\n" +
-    "    { res.add(x); \n" +
-    "      if (fst == null) { fst = x; }\n" + 
-    "    } \n" +
+    "  { TreeSet<T> res = (TreeSet<T>) a.clone(); \n" +
+    "    if (a.isEmpty()) { return res; }\n" + 
+    "    T fst = a.first(); \n" +
     "    res.remove(fst);\n" + 
     "    return res; \n" +
     "  }\n\n"; 
@@ -10520,13 +10528,21 @@ public class BSystemTypes extends BComponent
     "    }\n\n";
 
     res = res + 
-    "    public static <T> T last(Set<T> v)\n" +
+    "    public static <T> T last(HashSet<T> v)\n" +
     "    { int n = v.size(); \n" +
     "      if (n == 0) { return null; }\n" +
     "      T res = null; \n" +
     "      for (T o : v) { res = o; }\n" + 
     "      return res;\n" +
-    "    }\n"; 
+    "    }\n\n";
+
+    res = res + 
+    "    public static <T> T last(TreeSet<T> v)\n" +
+    "    { int n = v.size(); \n" +
+    "      if (n == 0) \n" +
+    "      { return null; }\n" +
+    "      return v.last();\n" +
+    "    } \n\n"; 
 
     return res;
   }
@@ -11463,7 +11479,8 @@ public class BSystemTypes extends BComponent
       "    for (int x = 0; x < keys.size(); x++)\n" +
       "    { Object key = keys.get(x);\n" +
       "      if (ks.contains(key)) { }\n" +
-      "      else { res.put(key,m1.get(key)); }\n" +
+      "      else\n" + 
+      "      { res.put(key,m1.get(key)); }\n" +
       "    }    \n" +
       "    return res;\n" +
       "  }\n\n"; 
@@ -11817,7 +11834,43 @@ public class BSystemTypes extends BComponent
       "      result.put(k, _f.apply(value));\n" + 
       "    }\n" +
       "    return result;\n" + 
-      "  }\n\n";  
+      "  }\n\n";
+
+    res = res +   
+    "  public static <D,R> TreeMap<D,R> tail(TreeMap<D,R> m)\n" + 
+    "  { TreeMap<D,R> res = (TreeMap<D,R>) m.clone();\n" +
+    "    if (res.isEmpty()) { return res; }\n" +
+    "    D k = m.firstKey(); \n" +
+    "    res.remove(k);\n" +
+    "    return res;\n" +
+    "  }\n\n"; 
+
+    res = res + 
+    "  public static <D,R> TreeMap<D,R> front(TreeMap<D,R> m)\n" +
+    "  { TreeMap<D,R> res = (TreeMap<D,R>) m.clone();\n" +
+    "    if (res.isEmpty()) { return res; }\n" +
+    "    D k = m.lastKey(); \n" +
+    "    res.remove(k);\n" +
+    "    return res;\n" +
+    "  }\n\n"; 
+
+    res = res + 
+    "  public static <D,R> TreeMap<D,R> first(TreeMap<D,R> m)\n" +
+    "  { TreeMap<D,R> res = new TreeMap<D,R>();\n" +
+    "    if (m.isEmpty()) { return res; }\n" +
+    "    D k = m.firstKey(); \n" +
+    "    res.put(k, m.get(k));\n" +
+    "    return res;\n" +
+    "  }\n\n"; 
+
+    res = res + 
+    "  public static <D,R> TreeMap<D,R> last(TreeMap<D,R> m)\n" +
+    "  { TreeMap<D,R> res = new TreeMap<D,R>();\n" +
+    "    if (m.isEmpty()) { return res; }\n" +
+    "    D k = m.lastKey(); \n" +
+    "    res.put(k, m.get(k));\n" +
+    "    return res;\n" +
+    "  }\n\n";   
 
     /* No need for includesKey, excludesKey, includesValue, excludesValue as these are operations of java.util.Map */ 
 
