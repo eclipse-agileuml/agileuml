@@ -1,7 +1,6 @@
 using System;
+using System.Collections;
 
 class SortedOrderedSet {
-    static void Main() {
-        Console.Writeline("Hello World");
-    }
+    public SortedOrderedSet() {}
 }
