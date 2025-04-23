@@ -265,7 +265,8 @@ ThreadGroup |-->OclProcessGroup
 
 Predicate _1 |-->Function(_1,boolean)
 Function _1 |-->Function_1
-Comparator _1 |-->Function(_1,(_1,boolean))
+BiFunction _1 |-->Function(_1`second, Function(_1`fourth, _1`sixth))
+Comparator _1 |-->Function(_1, Function(_1,boolean))
 AtomicReference _1 |-->_1
 Consumer _1 |-->Function(_1, void)
 
@@ -1737,6 +1738,7 @@ charValue ( ) |-->+""
 
 test ( _1 ) |-->->apply(_1)
 accept ( _1 ) |-->->apply(_1)
+apply ( _1 ) |-->->apply(_1`first)->apply(_1`last)<when> _1 multiple
 apply ( _1 ) |-->->apply(_1)
 
 toString ( ) |-->+""
@@ -2713,13 +2715,18 @@ _1 ( _2 ) |-->_1(_2)
 
 
 lambdaParameters::
-( _1 ) |-->lambda _1 : OclAny in 
-( _* ) |-->_*`lambdaParameter
-_1 |-->lambda _1 : OclAny in
+( _1 ) |-->lambda _1`first : OclAny in lambda _1`last : OclAny in <when> _1 multiple
+( _1 ) |-->lambda _1 : OclAny in
+( _1 _* ) |-->lambda _1 : OclAny in _*`lambdaParameter
+_1 _* |-->_1`lambdaParameter _*`lambdaParameter
+_1 |-->lambda _1`tag : OclAny in _1`lambdaParameter
 
 
 lambdaParameter::
 , |-->
+( |-->
+) |-->
+_1 _* |-->_*`lambdaParameter
 _1 |-->lambda _1 : OclAny in
 
 
@@ -2728,7 +2735,7 @@ _1 |-->_1
 
 
 lambdaExpression::
-_1 -> _2 |-->lambda _1 in (_2`updateForm & _2`queryForm)<when> _2`isAssignment true
+_1 -> _2 |-->_1`lambdaParameters (_2`updateForm & _2`queryForm)<when> _2`isAssignment true
 _1 -> _2 |-->_1 (_2)
 
 
