@@ -2756,6 +2756,7 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
 
     boolean res = argument.typeCheck(typs,ents,contexts,env); 
     multiplicity = ModelElement.ONE; 
+    Type argumentType = argument.getType(); 
 
     if (operator.equals("->size") || 
         operator.equals("->toInteger") ||
@@ -2772,7 +2773,7 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
 
     if (operator.equals("->succ") || 
         operator.equals("->pred"))
-    { type = argument.getType(); 
+    { type = argumentType; 
       elementType = argument.getElementType(); 
       return res; 
     } 
@@ -2785,7 +2786,7 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
     } 
 
     if (operator.equals("!"))
-    { Type argtype = argument.getType(); 
+    { Type argtype = argumentType; 
       if (argtype != null && "Ref".equals(argtype.getName()))
       { type = argtype.getElementType(); } 
       else 
@@ -2794,14 +2795,14 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
     } 
 
     if (operator.equals("?"))
-    { Type argtype = argument.getType(); 
+    { Type argtype = argumentType; 
       type = new Type("Ref", null); 
       type.setElementType(argtype);
       return res;   
     } 
     
     if (operator.equals("->copy"))
-    { type = argument.type; 
+    { type = argumentType; 
       elementType = argument.elementType; 
       multiplicity = argument.multiplicity;
       isSorted = argument.isSorted;  
@@ -2820,8 +2821,17 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
     
     if (operator.equals("->last") || 
         operator.equals("->first"))
-    { type = argument.elementType; 
-      if (type != null && type.isCollectionType())
+    { if (argumentType != null && 
+          (argumentType.isMapType() || 
+           argumentType.isStringType()))
+      { type = argumentType; } 
+      else 
+      { type = argument.elementType; }
+ 
+      if (type != null && 
+          (type.isCollectionType() || 
+           type.isMapType()) 
+         )
       { multiplicity = ModelElement.MANY; 
         elementType = type.getElementType(); 
       } 
@@ -3108,7 +3118,7 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
     if (operator.equals("->reverse") || 
         operator.equals("->tail") || 
         operator.equals("->front"))  
-    { type = argument.getType(); 
+    { type = argumentType; 
       modality = argument.modality; 
       elementType = argument.elementType;
 
@@ -3126,24 +3136,20 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
         multiplicity = ModelElement.ONE; 
         return res;  
       }
-      else 
-      { /* if (type == null) // objectRef is multiple but an attribute
-        { type = argument.getElementType();
-          Entity e = argument.getEntity();
-          if (type == null && e != null) 
-          { type = e.getFeatureType(((BasicExpression) argument).data); } 
-          // System.out.println("Element type of " + this + ": " + e + " " + type);
-          if (type == null)
-          { System.err.println("!! TYPE ERROR: Can't determine element type of " + this); 
-            type = new Type("void",null);
-            elementType = type; 
-          }  // hack
-        }  */ 
+      else if (argument.isSortedSet() || 
+               argument.isSortedMap())
+      { type = argumentType;
+        entity = argument.entity;
+        multiplicity = ModelElement.MANY;
+      }
+      else
+      {  
         type = new Type("Sequence", null); 
         type.setElementType(elementType); 
         entity = argument.entity;
         multiplicity = ModelElement.MANY; 
       }
+
       // and case where it is an extension operator
       System.out.println(">>>*** Type of " + this + " is " + type);
       return res;

@@ -1335,10 +1335,10 @@ public class CGCondition
 	  boolean hasall = true;  
 	  for (int i = 0; i < subterms.size(); i++) 
 	  { ASTTerm sb = (ASTTerm) subterms.get(i); 
-	    if (stereotype.equals(sb.getTag())) 
-		{ hasany = true; } 
-		else 
-		{ hasall = false; }
+         if (stereotype.equals(sb.getTag())) 
+         { hasany = true; } 
+         else 
+         { hasall = false; }
 	  } 
 	  
 	  if (quantifier.equals("all") && positive)

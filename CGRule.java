@@ -652,6 +652,9 @@ public class CGRule
     if ("hashCode".equals(mffeat))
     { return "" + term.hashCode(); }   
 
+    if ("tag".equals(mffeat))
+    { return "" + term.getTag(); }   
+
     if ("trimQuotes".equals(mffeat)) 
     { String rep = term.cg(cgs); 
       if (rep.endsWith("\""))
@@ -1071,7 +1074,7 @@ public class CGRule
       // Actually the argument corresponding to _k
 
       // System.out.println(">***> Trying to apply metafeature " + mffeat + " to " + eargs + "[" + k + "]"); 
-      System.out.println(); 
+      // System.out.println(); 
 
       // The variable is a normal LHS variable: 
 
@@ -1177,6 +1180,11 @@ public class CGRule
           String repl = e + ""; 
           res = replaceByMetafeatureValue(res,mf,repl);
         }
+        else if ("tag".equals(mffeat) && 
+                 obj instanceof ASTTerm)
+        { String repl = "" + ((ASTTerm) obj).getTag(); 
+          res = replaceByMetafeatureValue(res,mf,repl);
+        }   
         else if ("name".equals(mffeat) && 
                  obj instanceof ASTTerm)
         { ASTTerm tt = (ASTTerm) obj; 
