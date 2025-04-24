@@ -181,4 +181,64 @@ class SortedSequence<T>: List<T>, IComparable<T> {
         elements.Sort();
         return true;
     }
+
+    public SortedSequence<T> unionSortedSequence(SortedSequence<T> sq) {
+        List<T> res = new List<T>();
+
+        int reached = 0;
+        int i = 0;
+
+        while (i < elements.Count && reached < sq.elements.Count) {
+            IComparable<T> obj = (IComparable<T>) elements[i];
+            IComparable<T> sqelem = (IComparable<T>) sq.elements[reached];
+
+            if (obj.CompareTo(sqelem) < 0) {
+                res.Add((T) obj);
+                i++;
+            } else {
+                res.Add((T) sqelem);
+                reached++;
+            }
+        }
+
+        for (int j = i; j < elements.Count; j++) {
+            res.Add((T) elements[j]);
+        }
+
+        for (int k = reached; k < sq.elements.Count; k++) {
+            res.Add((T) sq.elements[k]);
+        }
+
+        SortedSequence<T> newsq = new SortedSequence<T>();
+        newsq.elements = res;
+        return newsq;
+    }
+
+    public ISet<T> uniqueSet() {
+        return asSet();
+    }
+
+    public ISet<T> asSet() {
+        SortedSet<T> res = new SortedSet<T>();
+
+        if (elements.Count == 0) {
+            return res;
+        }
+
+        T elem0 = elements[0];
+        res.Add(elem0);
+
+        T lastAdded = elem0;
+
+        for (int i = 1; i < elements.Count; i++) {
+            T elem = elements[i];
+            if (!elem.Equals(lastAdded)) {
+                res.Add(elem);
+                lastAdded = elem;
+            }
+        }
+
+        return res;
+    }
+
 }
