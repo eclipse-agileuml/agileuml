@@ -12,6 +12,12 @@ class SortedSequence<T>: List<T>, IComparable<T> {
         elements.Sort();
     }
 
+    public SortedSequence(ICollection<T> col) {
+        elements = new List<T>();
+        elements.AddRange(col);
+        elements.Sort();
+    }
+
     public SortedSequence<T> clone() {
         List<T> elems = (List<T>) elements.MemberwiseClone()
         SortedSequence<T> ss = new SortedSequence<T>();
