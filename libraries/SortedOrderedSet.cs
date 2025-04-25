@@ -74,4 +74,20 @@ class SortedOrderedSet<T>: List<T>, ISet<T>, IComparable<T> {
         SortedSequence<T> rseq = elementSeq.intersection(sq.elementSeq);
         return rseq.asSortedOrderedSet();
     }
+
+    public bool addAll(ICollection<T> col) {
+        bool changed = false;
+        foreach (Object obj in col) {
+            bool added = elementSet.Add((T) obj);
+            if (added) {
+                changed = true;
+                elementSeq.Add((T) obj);
+            }
+        }
+        return changed;
+    }
+
+    public bool addAll(int i, ICollection<T> col) {
+        return addAll(col); // ignores i
+    }
 }
