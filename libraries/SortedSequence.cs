@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-class SortedSequence<T>: List<T>, IComparable<T> {
+class SortedSequence<T>: List<T> where T: IComparable<T> {
     List<T> elements = new List<T>();
     
     public SortedSequence() {}
@@ -186,7 +186,7 @@ class SortedSequence<T>: List<T>, IComparable<T> {
         bool res = elements.AddRange(col);
         elements.Sort();
         return true;
-    }
+    } // More efficient to sort col and then merge
 
     public SortedSequence<T> unionSortedSequence(SortedSequence<T> sq) {
         List<T> res = new List<T>();
@@ -247,4 +247,189 @@ class SortedSequence<T>: List<T>, IComparable<T> {
         return res;
     }
 
+    public SortedOrderedSet<T> asSortedOrderedSet() {
+        ISet<T> rset = new HashSet<T>();
+        List<T> rseq = new List<T>();
+
+        if (elements.Count == 0) {
+            return new SortedOrderedSet<T>();
+        }
+
+        T elem0 = elements[0];
+        rset.Add(elem0);
+        rseq.Add(elem0);
+
+        T lastAdded = elem0;
+
+        for (int i = 1; i < elements.Count; i++) {
+            T elem = elements[i];
+            if (elem.Equals(lastAdded)) {
+                continue
+            }
+            rset.Add(elem);
+            rseq.Add(elem);
+            lastAdded = elem;
+        }
+
+        SortedSequence<T> rsseq = new SortedSequence<T>();
+        rsseq.elements = rseq;
+
+        SortedOrderedSet<T> res = new SortedOrderedSet<T>();
+        res.setElementSet(rset);
+        res.setElementSeq(rsseq);
+        return res;
+    }
+
+    public bool contains(Object x) {
+        int insertionPoint = elements.BinarySearch((T) x);
+        return !(insertionPoint < 0);
+    }
+
+    public bool retainAll(ICollection<T> col) {
+        oldElements = elements;
+        elements.RemoveAll(!col.Contains);
+        return elementSet != oldElementSet;
+    }
+
+    public SortedSequence<T> intersection(SortedSequence<T> sq) {
+        List<T> res = new List<T>();
+
+        int reached = 0;
+        int i = 0;
+
+        while (i < elements.Count && reached < sq.elements.Count) {
+            IComparable<T> obj = (IComparable<T>) elements[i];
+            IComparable<T> sqelem = (IComparable<T>) sq.elements[reached];
+
+            if (obj.CompareTo(seqlem) == 0) {
+                res.Add((T) obj);
+                i++;
+                reached++;
+            } else if (obj.CompareTo(sqelem) < 0) {
+                i++;
+            } else {
+                reached++;
+            }
+        }
+
+        SortedSequence<T> newsq = new SortedSequence<T>();
+        newsq.elements = res;
+        return newsq;
+    }
+
+    public int size() {
+        return elements.Count;
+    }
+
+    public bool isEmpty() {
+        return elements.Count == 0;
+    }
+
+    public string toString() {
+        return elements.ToString();
+    }
+
+    public bool removeAll(ICollection<T> col) {
+        oldElements = elements;
+        elements.RemoveAll(col.Contains);
+        return oldElements != elements;
+    }
+
+    public bool addAll(ICollection<T> col) {
+        return this.AddAll(0, col);
+    }
+
+    public bool containsAll(ICollection<T> col) {
+        // Using BinarySearch repeatedly as an optimisation
+        foreach (T element in col) {
+            if (elements.BinarySearch(element) < 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public Object[] toArray() {
+        return elements.ToArray();
+    }
+
+    public T[] toArray(T[] arr) {
+        T[] newArr = new T[elements.Count + arr.Length];
+        for (int i = 0; i < elements.Count; i++) {
+            newArr[i] = elements[i];
+        }
+        for (int i = 0; i < arr.Length; i++) {
+            newArr[elements.Count + i] = arr[i];
+        }
+        return newArr;
+    }
+
+    public T min() {
+        return elements[0];
+    }
+
+    public T max() {
+        return elements[elements.Count - 1];
+    }
+
+    public int getCount(T x) {
+        // Math.Log((double) elements.Count) time complexity
+        int insertionPoint = this.lastIndexOf(x);
+
+        if (insertionPoint < 0) {
+            return 0;
+        } else {
+            int cnt = 0;
+            for (int i = insertionPoint; i >= 0; i--) {
+                if (x.Equals(elements[i])) {
+                    cnt++;
+                }
+            }
+            return cnt;
+        }
+    }
+
+    public bool equals(Object col) {
+        if (col is SortedSequence<T>) {
+            SortedSequence<T> ss = (SortedSequence<T>) col;
+            if (col.Count != ss.elements.Count) {
+                return false;
+            }
+            for (int i = 0; i < col.Count; i++) {
+                if (col[i] != ss.elements[i]) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
+    // Skipping implementation of spliterator() (for now)
+
+    static void Main(string[] args) {
+        SortedSequence<string> ss = new SortedSequence<string>();
+
+        ss.add("bb", 2);
+        ss.add("aa", 3);
+        ss.add("cc", 1);
+        ss.add("bb", 6);
+
+        Console.WriteLine(ss);
+        Console.WriteLine(ss.indexOf("aa"));
+        Console.WriteLine(ss.indexOf("cc"));
+        Console.WriteLine(ss.getCount("aa"));
+        Console.WriteLine(ss.getCount("bb"));
+
+        SortedSequence<string> tt = new SortedSequence<string>();
+        tt.add("aa", 2);
+        tt.add("cc", 4);
+        tt.add("ee", 2);
+
+        SortedSequence<string> pp = ss.unionSortedSequence(tt);
+        Console.WriteLine(pp);
+
+        SortedSequence<string> qq = ss.intersection(tt);
+        Console.WriteLine(qq);
+    }
 }
