@@ -1,0 +1,9 @@
+class LT
+{ public void op() { 
+    int x = 2;
+    Object lam1 = x->(x*x);
+    Function<int,int> lam4 = (int x) -> (x*x); 
+    Object lam2 = (x,y)->(x*x*y);
+    BiFunction<int,int,int> lam3 = (int x, int y)->(x*x*y);
+  }
+}

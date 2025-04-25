@@ -39109,6 +39109,14 @@ public class ASTCompositeTerm extends ASTTerm
             Type etype = (Type) targs.get(1); 
             ((Type) modelElement).setKeyType(ktype); 
             ((Type) modelElement).setElementType(etype);
+
+            if (targs.size() == 3) 
+            { Type rtype = (Type) targs.get(2); 
+              Type ftype = new Type("Function", null); 
+              ftype.setKeyType(etype); 
+              ftype.setElementType(rtype); 
+              ((Type) modelElement).setElementType(ftype);
+            }
           }  
           else if (targs.size() > 0 && 
                    modelElement instanceof Type && 
@@ -42171,9 +42179,9 @@ public class ASTCompositeTerm extends ASTTerm
         Vector targs = 
           ((ASTCompositeTerm) typepars).getTypeParameterTypes(); 
 
-        System.out.println(); 
+        // System.out.println(); 
 
-        // System.out.println("+++ Parameterised type with parameters " + pars + " " + targs); 
+        System.out.println("+++ Parameterised type " + baseType + " with parameters " + pars + " " + targs); 
         // System.out.println(); 
  
         String btype = baseType.toKM3type();
@@ -42189,20 +42197,21 @@ public class ASTCompositeTerm extends ASTTerm
 
         if (modelElement == null) 
         { modelElement = 
-            ModelElement.lookupByName(btype,ASTTerm.entities); 
+            ModelElement.lookupByName(btype, ASTTerm.entities); 
         } 
 
-        // System.out.println(">+++> Base type with parameters " + btype + " " + modelElement);
+        System.out.println(">+++> Base type with parameters " + btype + " " + modelElement);
         // System.out.println(); 
 
+        String baseLiteral = baseType.literalForm(); 
 
-        if ("Class".equals(baseType.literalForm()))
+        if ("Class".equals(baseLiteral))
         { modelElement = new Type("OclType", null); 
           return "OclType";
         } 
 
-        if ("Pair".equals(baseType.literalForm()) ||
-            "Triple".equals(baseType.literalForm()))
+        if ("Pair".equals(baseLiteral) ||
+            "Triple".equals(baseLiteral))
         { modelElement = new Type("Map", null);
           Type ktype = new Type("String", null);  
           Type etype = (Type) targs.get(1); 
@@ -42211,6 +42220,88 @@ public class ASTCompositeTerm extends ASTTerm
           return "Map(String," + etype + ")"; 
         } 
 
+        if ("DoubleFunction".equals(baseLiteral))
+        { modelElement = new Type("Function", null);
+          Type ktype = new Type("double", null);  
+          Type etype = (Type) targs.get(0); 
+          ((Type) modelElement).setKeyType(ktype); 
+          ((Type) modelElement).setElementType(etype);
+          return "Function(double, " + etype + ")"; 
+        } 
+
+        if ("IntFunction".equals(baseLiteral))
+        { modelElement = new Type("Function", null);
+          Type ktype = new Type("int", null);  
+          Type etype = (Type) targs.get(0); 
+          ((Type) modelElement).setKeyType(ktype); 
+          ((Type) modelElement).setElementType(etype);
+          return "Function(int, " + etype + ")"; 
+        }
+
+        if ("LongFunction".equals(baseLiteral))
+        { modelElement = new Type("Function", null);
+          Type ktype = new Type("long", null);  
+          Type etype = (Type) targs.get(0); 
+          ((Type) modelElement).setKeyType(ktype); 
+          ((Type) modelElement).setElementType(etype);
+          return "Function(long, " + etype + ")"; 
+        }
+
+        if ("Consumer".equals(baseLiteral))
+        { modelElement = new Type("Function", null);
+          Type rtype = new Type("void", null);  
+          Type etype = (Type) targs.get(0); 
+          ((Type) modelElement).setKeyType(etype); 
+          ((Type) modelElement).setElementType(rtype);
+          return "Function(" + etype + ", void)"; 
+        }
+
+        if ("BiConsumer".equals(baseLiteral) && 
+            targs.size() > 1)
+        { modelElement = new Type("Function", null);
+          Type rtype = new Type("void", null);  
+          Type e1type = (Type) targs.get(0);
+          Type e2type = (Type) targs.get(1);
+          Type ftype = new Type("Function", null); 
+          ftype.setKeyType(e2type); 
+          ftype.setElementType(rtype);  
+          ((Type) modelElement).setKeyType(e1type); 
+          ((Type) modelElement).setElementType(ftype);
+          return "Function(" + e1type + ", Function(" + e2type + ", void))"; 
+        }
+
+        if ("BinaryOperator".equals(baseLiteral) && 
+            targs.size() == 1)
+        { modelElement = new Type("Function", null);
+          Type etype = (Type) targs.get(0);
+          Type ftype = new Type("Function", null); 
+          ftype.setKeyType(etype); 
+          ftype.setElementType(etype);  
+          ((Type) modelElement).setKeyType(etype); 
+          ((Type) modelElement).setElementType(ftype);
+          return "Function(" + etype + ", Function(" + etype + ", " + etype + "))"; 
+        }
+
+        if ("UnaryOperator".equals(baseLiteral))
+        { modelElement = new Type("Function", null);
+          Type etype = (Type) targs.get(0); 
+          ((Type) modelElement).setKeyType(etype); 
+          ((Type) modelElement).setElementType(etype);
+          return "Function(" + etype + ", " + etype + ")"; 
+        } 
+
+        if ("BiPredicate".equals(baseLiteral) && 
+            targs.size() == 2)
+        { modelElement = new Type("Function", null);
+          Type e1type = (Type) targs.get(0);
+          Type e2type = (Type) targs.get(1);
+          Type ftype = new Type("Function", null); 
+          ftype.setKeyType(e1type); 
+          ftype.setElementType(new Type("boolean", null));  
+          ((Type) modelElement).setKeyType(e2type); 
+          ((Type) modelElement).setElementType(ftype);
+          return "Function(" + e1type + ", Function(" + e2type + ", boolean))"; 
+        }
 
         if (modelElement == null && 
             Entity.validEntityName(btype)) 
@@ -42241,7 +42332,18 @@ public class ASTCompositeTerm extends ASTTerm
             Type etype = (Type) targs.get(1); 
             ((Type) modelElement).setKeyType(ktype); 
             ((Type) modelElement).setElementType(etype);
-            res = btype + "(" + ktype + "," + etype + ")"; 
+            res = btype + "(" + ktype + "," + etype + ")";
+
+            if (targs.size() == 3) 
+            { Type rtype = (Type) targs.get(2); 
+              Type ftype = new Type("Function", null); 
+              ftype.setKeyType(etype); 
+              ftype.setElementType(rtype); 
+              ((Type) modelElement).setElementType(ftype);
+              res = btype + "(" + ktype + ", Function(" + 
+                                  etype + ", " + rtype + "))"; 
+            }
+ 
             expression = new BasicExpression(
                                   (Type) modelElement); 
           }  

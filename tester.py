@@ -28,7 +28,6 @@ MAXOBJECTS = 500
 
 
 
-person_count = len(app.Person.person_instances)
 cc_count = len(app.CC.cc_instances)
 
 

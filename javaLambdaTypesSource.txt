@@ -1,0 +1,11 @@
+class LT
+{ public void op() { 
+    IntUnaryOperator lam1 = x->(x*x);
+    LongUnaryOperator lam4 = (long x) -> (x*x); 
+    DoubleBinaryOperator lam2 = (x,y)->(x*x*y);
+    IntBinaryOperator lam3 = (int x, int y)->(x*x*y);
+
+    IntPredicate p = (int x) -> (x > 0); 
+    DoubleFunction<Long> f = (d) -> ((long) d); 
+  }
+}

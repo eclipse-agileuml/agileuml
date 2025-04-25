@@ -748,7 +748,7 @@ public class ASTSymbolTerm extends ASTTerm
     if ("Predicate".equals(symbol)) 
     { modelElement = new Type("Function", null);
       ((Type) modelElement).keyType = 
-                               new Type("String", null);   
+                               new Type("OclAny", null);   
       ((Type) modelElement).elementType = 
                                new Type("boolean", null);  
       expression = new BasicExpression((Type) modelElement); 
@@ -756,12 +756,293 @@ public class ASTSymbolTerm extends ASTTerm
       return "Function"; 
     }
 
+    if ("Consumer".equals(symbol)) 
+    { modelElement = new Type("Function", null);
+      ((Type) modelElement).keyType = 
+                               new Type("OclAny", null);   
+      ((Type) modelElement).elementType = 
+                               new Type("void", null);  
+      expression = new BasicExpression((Type) modelElement); 
+ 
+      return "Function"; 
+    }
+
+    if ("BiConsumer".equals(symbol)) 
+    { modelElement = new Type("Function", null);
+      ((Type) modelElement).keyType = 
+                               new Type("OclAny", null);
+      Type rangeType = new Type("Function", null);    
+      ((Type) modelElement).elementType = rangeType; 
+      expression = new BasicExpression((Type) modelElement); 
+      return "Function"; 
+    }
+
     if ("Function".equals(symbol)) 
     { modelElement = new Type("Function", null);
       ((Type) modelElement).keyType = 
-                               new Type("String", null);   
+                               new Type("OclAny", null);   
       ((Type) modelElement).elementType = 
                                new Type("OclAny", null);   
+      expression = new BasicExpression((Type) modelElement); 
+      return "Function"; 
+    }
+
+    if ("BiFunction".equals(symbol)) 
+    { modelElement = new Type("Function", null);
+      ((Type) modelElement).keyType = 
+                               new Type("OclAny", null);
+      Type rangeType = new Type("Function", null);    
+      ((Type) modelElement).elementType = rangeType; 
+      expression = new BasicExpression((Type) modelElement); 
+      return "Function"; 
+    }
+
+    if ("BinaryOperator".equals(symbol) || 
+        "BiPredicate".equals(symbol)) 
+    { modelElement = new Type("Function", null);
+      ((Type) modelElement).keyType = 
+                               new Type("OclAny", null);
+      Type rangeType = new Type("Function", null);    
+      ((Type) modelElement).elementType = rangeType; 
+      expression = new BasicExpression((Type) modelElement); 
+      return "Function"; 
+    }
+
+    if ("UnaryOperator".equals(symbol)) 
+    { modelElement = new Type("Function", null);
+      ((Type) modelElement).keyType = 
+                               new Type("OclAny", null);
+      Type rangeType = new Type("OclAny", null);    
+      ((Type) modelElement).elementType = rangeType; 
+      expression = new BasicExpression((Type) modelElement); 
+      return "Function"; 
+    }
+
+    if ("DoubleBinaryOperator".equals(symbol)) 
+    { modelElement = new Type("Function", null);
+      ((Type) modelElement).keyType = 
+                               new Type("double", null);
+      Type rangeType = new Type("Function", null);
+      rangeType.keyType = new Type("double", null);
+      rangeType.elementType = new Type("double", null);    
+      ((Type) modelElement).elementType = rangeType; 
+      expression = new BasicExpression((Type) modelElement); 
+      return "Function"; 
+    }
+
+    if ("DoubleConsumer".equals(symbol)) 
+    { modelElement = new Type("Function", null);
+      ((Type) modelElement).keyType = 
+                               new Type("double", null);
+      Type rangeType = new Type("void", null);
+      ((Type) modelElement).elementType = rangeType; 
+      expression = new BasicExpression((Type) modelElement); 
+      return "Function"; 
+    }
+
+    if ("DoublePredicate".equals(symbol)) 
+    { modelElement = new Type("Function", null);
+      ((Type) modelElement).keyType = 
+                               new Type("double", null);
+      Type rangeType = new Type("boolean", null);
+      ((Type) modelElement).elementType = rangeType; 
+      expression = new BasicExpression((Type) modelElement); 
+      return "Function"; 
+    }
+
+    if ("DoubleToIntFunction".equals(symbol)) 
+    { modelElement = new Type("Function", null);
+      ((Type) modelElement).keyType = 
+                               new Type("double", null);
+      Type rangeType = new Type("int", null);
+      ((Type) modelElement).elementType = rangeType; 
+      expression = new BasicExpression((Type) modelElement); 
+      return "Function"; 
+    }
+
+    if ("DoubleToLongFunction".equals(symbol)) 
+    { modelElement = new Type("Function", null);
+      ((Type) modelElement).keyType = 
+                               new Type("double", null);
+      Type rangeType = new Type("long", null);
+      ((Type) modelElement).elementType = rangeType; 
+      expression = new BasicExpression((Type) modelElement); 
+      return "Function"; 
+    }
+
+    if ("DoubleUnaryOperator".equals(symbol)) 
+    { modelElement = new Type("Function", null);
+      ((Type) modelElement).keyType = 
+                               new Type("double", null);
+      Type rangeType = new Type("double", null);
+      ((Type) modelElement).elementType = rangeType; 
+      expression = new BasicExpression((Type) modelElement); 
+      return "Function"; 
+    }
+
+    if ("DoubleFunction".equals(symbol)) 
+    { modelElement = new Type("Function", null);
+      ((Type) modelElement).keyType = 
+                               new Type("double", null);
+      Type rangeType = new Type("OclAny", null);
+      ((Type) modelElement).elementType = rangeType; 
+      expression = new BasicExpression((Type) modelElement); 
+      return "Function"; 
+    }
+
+
+    if ("IntBinaryOperator".equals(symbol)) 
+    { modelElement = new Type("Function", null);
+      ((Type) modelElement).keyType = 
+                               new Type("int", null);
+      Type rangeType = new Type("Function", null);
+      rangeType.keyType = new Type("int", null);
+      rangeType.elementType = new Type("int", null);    
+      ((Type) modelElement).elementType = rangeType; 
+      expression = new BasicExpression((Type) modelElement); 
+      return "Function"; 
+    }
+
+    if ("IntConsumer".equals(symbol)) 
+    { modelElement = new Type("Function", null);
+      ((Type) modelElement).keyType = 
+                               new Type("int", null);
+      Type rangeType = new Type("void", null);
+      ((Type) modelElement).elementType = rangeType; 
+      expression = new BasicExpression((Type) modelElement); 
+      return "Function"; 
+    }
+
+    if ("IntPredicate".equals(symbol)) 
+    { modelElement = new Type("Function", null);
+      ((Type) modelElement).keyType = 
+                               new Type("int", null);
+      Type rangeType = new Type("boolean", null);
+      ((Type) modelElement).elementType = rangeType; 
+      expression = new BasicExpression((Type) modelElement); 
+      return "Function"; 
+    }
+
+    if ("IntToLongFunction".equals(symbol)) 
+    { modelElement = new Type("Function", null);
+      ((Type) modelElement).keyType = 
+                               new Type("int", null);
+      Type rangeType = new Type("long", null);
+      ((Type) modelElement).elementType = rangeType; 
+      expression = new BasicExpression((Type) modelElement); 
+      return "Function"; 
+    }
+
+    if ("IntToDoubleFunction".equals(symbol)) 
+    { modelElement = new Type("Function", null);
+      ((Type) modelElement).keyType = 
+                               new Type("int", null);
+      Type rangeType = new Type("double", null);
+      ((Type) modelElement).elementType = rangeType; 
+      expression = new BasicExpression((Type) modelElement); 
+      return "Function"; 
+    }
+
+    if ("IntUnaryOperator".equals(symbol)) 
+    { modelElement = new Type("Function", null);
+      ((Type) modelElement).keyType = 
+                               new Type("int", null);
+      Type rangeType = new Type("int", null);
+      ((Type) modelElement).elementType = rangeType; 
+      expression = new BasicExpression((Type) modelElement); 
+      return "Function"; 
+    }
+
+    if ("IntBinaryOperator".equals(symbol)) 
+    { modelElement = new Type("Function", null);
+      ((Type) modelElement).keyType = 
+                               new Type("int", null);
+      Type rangeType = new Type("Function", null);
+      rangeType.keyType = new Type("int", null);
+      rangeType.elementType = new Type("int", null);    
+      ((Type) modelElement).elementType = rangeType; 
+      expression = new BasicExpression((Type) modelElement); 
+      return "Function"; 
+    }
+
+    if ("IntFunction".equals(symbol)) 
+    { modelElement = new Type("Function", null);
+      ((Type) modelElement).keyType = 
+                               new Type("int", null);
+      Type rangeType = new Type("OclAny", null);
+      ((Type) modelElement).elementType = rangeType; 
+      expression = new BasicExpression((Type) modelElement); 
+      return "Function"; 
+    }
+
+    if ("LongBinaryOperator".equals(symbol)) 
+    { modelElement = new Type("Function", null);
+      ((Type) modelElement).keyType = 
+                               new Type("long", null);
+      Type rangeType = new Type("Function", null);
+      rangeType.keyType = new Type("long", null);
+      rangeType.elementType = new Type("long", null);    
+      ((Type) modelElement).elementType = rangeType; 
+      expression = new BasicExpression((Type) modelElement); 
+      return "Function"; 
+    }
+
+    if ("LongConsumer".equals(symbol)) 
+    { modelElement = new Type("Function", null);
+      ((Type) modelElement).keyType = 
+                               new Type("long", null);
+      Type rangeType = new Type("void", null);
+      ((Type) modelElement).elementType = rangeType; 
+      expression = new BasicExpression((Type) modelElement); 
+      return "Function"; 
+    }
+
+    if ("LongPredicate".equals(symbol)) 
+    { modelElement = new Type("Function", null);
+      ((Type) modelElement).keyType = 
+                               new Type("long", null);
+      Type rangeType = new Type("boolean", null);
+      ((Type) modelElement).elementType = rangeType; 
+      expression = new BasicExpression((Type) modelElement); 
+      return "Function"; 
+    }
+
+    if ("LongToDoubleFunction".equals(symbol)) 
+    { modelElement = new Type("Function", null);
+      ((Type) modelElement).keyType = 
+                               new Type("long", null);
+      Type rangeType = new Type("double", null);
+      ((Type) modelElement).elementType = rangeType; 
+      expression = new BasicExpression((Type) modelElement); 
+      return "Function"; 
+    }
+
+    if ("LongToIntFunction".equals(symbol)) 
+    { modelElement = new Type("Function", null);
+      ((Type) modelElement).keyType = 
+                               new Type("long", null);
+      Type rangeType = new Type("int", null);
+      ((Type) modelElement).elementType = rangeType; 
+      expression = new BasicExpression((Type) modelElement); 
+      return "Function"; 
+    }
+
+    if ("LongUnaryOperator".equals(symbol)) 
+    { modelElement = new Type("Function", null);
+      ((Type) modelElement).keyType = 
+                               new Type("long", null);
+      Type rangeType = new Type("long", null);
+      ((Type) modelElement).elementType = rangeType; 
+      expression = new BasicExpression((Type) modelElement); 
+      return "Function"; 
+    }
+
+    if ("LongFunction".equals(symbol)) 
+    { modelElement = new Type("Function", null);
+      ((Type) modelElement).keyType = 
+                               new Type("long", null);
+      Type rangeType = new Type("OclAny", null);
+      ((Type) modelElement).elementType = rangeType; 
       expression = new BasicExpression((Type) modelElement); 
       return "Function"; 
     }

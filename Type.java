@@ -5571,11 +5571,13 @@ public class Type extends ModelElement
 
     if ("Map".equals(nme) || "Function".equals(nme))
     { String kt = keyType + ""; 
-      String et = elementType + ""; 
+      String et = "OclAny"; 
       if (keyType == null) 
       { kt = "String"; } 
-      if (elementType == null)
+      if (elementType == null || elementType == this)
       { et = "OclAny"; } 
+      else 
+      { et = elementType + ""; } 
 
       if (isSorted())
       { nme = "Sorted" + nme; } 
