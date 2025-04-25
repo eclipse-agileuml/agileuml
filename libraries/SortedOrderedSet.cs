@@ -90,4 +90,34 @@ class SortedOrderedSet<T>: List<T>, ISet<T>, IComparable<T> {
     public bool addAll(int i, ICollection<T> col) {
         return addAll(col); // ignores i
     }
+
+    public SortedOrderedSet<T> unionSortedOrderedSet(SortedOrderedSet<T> sq) {
+        SortedSequence<T> rseq = elementSeq.unionSortedSequence(sq.elementSeq);
+        return rseq.asSortedOrderedSet();
+    }
+
+    public bool containsAll(ICollection<T> col) {
+        foreach (T item in col) {
+            if (!elementSet.Contains(item)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public bool remove(Object x) {
+        bool removed = elementSet.Remove((T) x);
+        if (removed) {
+            elementSeq.Remove((T) x);
+        }
+        return removed;
+    }
+
+    public bool add(T x) {
+        bool added = elementSet.Add(x);
+        if (added) {
+            elementSeq.Add(x);
+        }
+        return added;
+    }
 }
