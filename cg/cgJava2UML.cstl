@@ -263,12 +263,41 @@ Process |-->OclProcess
 Runtime |-->OclProcess
 ThreadGroup |-->OclProcessGroup
 
+DoubleBinaryOperator |-->Function(double, Function(double, double))
+DoubleConsumer |-->Function(double, void)
+DoublePredicate |-->Function(double, boolean)
+DoubleToIntFunction |-->Function(double, int)
+DoubleToLongFunction |-->Function(double, long)
+DoubleUnaryOperator |-->Function(double, double)
+
+IntBinaryOperator |-->Function(int, Function(int, int))
+IntConsumer |-->Function(int, void)
+IntPredicate |-->Function(int, boolean)
+IntToDoubleFunction |-->Function(int, double)
+IntToLongFunction |-->Function(int, long)
+IntUnaryOperator |-->Function(int, int)
+
+LongBinaryOperator |-->Function(long, Function(long, long))
+LongConsumer |-->Function(long, void)
+LongPredicate |-->Function(long, boolean)
+LongToDoubleFunction |-->Function(long, double)
+LongToIntFunction |-->Function(long, int)
+LongUnaryOperator |-->Function(long, long)
+
+DoubleFunction _1 |-->Function(double, _1`second)
+IntFunction _1 |-->Function(int, _1`second)
+LongFunction _1 |-->Function(long, _1`second)
+
 Predicate _1 |-->Function(_1,boolean)
-Function _1 |-->Function_1
+Function _1 |-->Function(_1`second, _1`fourth)
 BiFunction _1 |-->Function(_1`second, Function(_1`fourth, _1`sixth))
 Comparator _1 |-->Function(_1, Function(_1,boolean))
 AtomicReference _1 |-->_1
 Consumer _1 |-->Function(_1, void)
+BiConsumer _1 |-->Function(_1`second, Function(_1`fourth, void))
+BinaryOperator _1 |-->Function(_1`second, Function(_1`second, _1`second))
+BiPredicate _1 |-->Function(_1`second, Function(_1`fourth, boolean))
+UnaryOperator _1 |-->Function(_1`second, _1`second)
 
 Collection _1 |-->Sequence_1`collectionParameters
 Iterable _1 |-->Sequence_1`collectionParameters
@@ -2715,11 +2744,15 @@ _1 ( _2 ) |-->_1(_2)
 
 
 lambdaParameters::
+( _1 ) |-->lambda _1`first in lambda _1`last in <when> _1 multiple, _1 formalParameterList
+( _1 ) |-->lambda _1`first in <when> _1 formalParameterList
+
 ( _1 ) |-->lambda _1`first : OclAny in lambda _1`last : OclAny in <when> _1 multiple
 ( _1 ) |-->lambda _1 : OclAny in
-( _1 _* ) |-->lambda _1 : OclAny in _*`lambdaParameter
-_1 _* |-->_1`lambdaParameter _*`lambdaParameter
-_1 |-->lambda _1`tag : OclAny in _1`lambdaParameter
+/* ( _1 _* ) |-->lambda _1 : OclAny in _*`lambdaParameter */
+/* _1 _* |-->_1`lambdaParameter _*`lambdaParameter */
+_1 |-->lambda _1`tag : OclAny in _1`lambdaParameter<when> _1 multiple
+_1 |-->lambda _1 : OclAny in
 
 
 lambdaParameter::
