@@ -2519,6 +2519,16 @@ public class ASTBasicTerm extends ASTTerm
       return "OclComparator"; 
     }
 
+    if ("Predicate".equals(value)) 
+    { modelElement = new Type("Function", null);
+      ((Type) modelElement).keyType = 
+                               new Type("OclAny", null);
+      Type rangeType = new Type("boolean", null);
+      ((Type) modelElement).elementType = rangeType; 
+      expression = new BasicExpression((Type) modelElement); 
+      return "Function"; 
+    }
+
     if ("BiFunction".equals(value)) 
     { modelElement = new Type("Function", null);
       ((Type) modelElement).keyType = 

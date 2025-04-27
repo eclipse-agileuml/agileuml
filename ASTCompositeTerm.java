@@ -42290,6 +42290,14 @@ public class ASTCompositeTerm extends ASTTerm
           return "Function(" + etype + ", " + etype + ")"; 
         } 
 
+        if ("Predicate".equals(baseLiteral))
+        { modelElement = new Type("Function", null);
+          Type etype = (Type) targs.get(0); 
+          ((Type) modelElement).setKeyType(etype); 
+          ((Type) modelElement).setElementType(booleanType);
+          return "Function(" + etype + ", boolean)"; 
+        } 
+
         if ("BiPredicate".equals(baseLiteral) && 
             targs.size() == 2)
         { modelElement = new Type("Function", null);
