@@ -347,6 +347,19 @@ package mathlib {
    pre: true
    post: result = m1->collect( row | MathLib.intRowMult(row, m2) );
 
+   static query frequencyCount(col : Sequence) : Sequence
+   pre: true 
+   post: true
+   activity: 
+     var ss : Sequence := col->sortedBy( x | col->count(x)); 
+     var os : Sequence := ss->asOrderedSet(); 
+     var rs : Sequence := os->reverse(); 
+     var res : Sequence := Sequence{} ; 
+     for elem : rs 
+     do 
+       res := res->append(Sequence{elem, col->count(elem)}); 
+     return res; 
+     
    static query differential(f : Function(double,double)) : Function(double,double)
    pre: true 
    post: 

@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.Map; 
 import java.util.HashMap; 
 
+import java.util.Collections; 
 import java.util.function.Function;
 
 
@@ -532,8 +533,8 @@ class MathLib
     double v = (f).apply(r);
  
     double lowerBound = rl; 
-	double upperBound = ru; 
-	double midPoint = (rl + ru)/2; 
+    double upperBound = ru; 
+    double midPoint = (rl + ru)/2; 
 	
 	while (v >= tol || v <= -tol)
 	{ double oldr = r; 
@@ -601,6 +602,38 @@ class MathLib
     result = Ocl.collectSequence(m1,(row)->{return MathLib.intRowMult(row, m2);});
     return result;
   }
+
+  public static ArrayList frequencyCount(Collection col)
+  { HashMap<Object,Integer> countMap = new HashMap<Object,Integer>(); 
+    for (Object c : col) 
+    { countMap.put(c, Collections.frequency(col, c)); } 
+
+    ArrayList<Object> elems = new ArrayList<Object>(); 
+    ArrayList<Integer> counts = new ArrayList<Integer>();
+    Set<Object> kset = countMap.keySet(); 
+
+    for (Object x : kset)
+    { elems.add(x); 
+      counts.add((int) countMap.get(x)); 
+    } 
+
+    ArrayList<Object> selems = 
+      Ocl.sortedBy(elems, counts); 
+  
+    Collections.reverse(selems); 
+
+    ArrayList res = new ArrayList(); 
+
+    for (int i = 0; i < selems.size(); i++) 
+    { Object elem = selems.get(i); 
+      ArrayList pair = new ArrayList(); 
+      pair.add(elem); 
+      pair.add(countMap.get(elem)); 
+      res.add(pair); 
+    }  
+    
+    return res; 
+  } 
 
   public static Function<Double,Double> differential(Function<Double,Double> f)
   {
@@ -703,7 +736,7 @@ class MathLib
 	// print(MathLib.rotleft(10000000000,2))
     // System.out.println(MathLib.bitwiseRotateLeft(1000000000,2)); 
  
-	Map<String,ArrayList> table = new HashMap<String,ArrayList>(); 
+	/* Map<String,ArrayList> table = new HashMap<String,ArrayList>(); 
 	ArrayList names = new ArrayList(); 
 	names.add("Jim"); names.add("Sara"); 
 	ArrayList ages = new ArrayList(); 
@@ -716,7 +749,7 @@ class MathLib
 	System.out.println(res); 
 	
 	Map mapres = MathLib.dataTableFromRows(res); 
-	System.out.println(mapres); 
+	System.out.println(mapres); */ 
 	
 	 
 	
@@ -748,6 +781,14 @@ class MathLib
     mat2.add(row3); mat2.add(row4); 
 
     System.out.println(MathLib.intMatrixMultiplication(mat1, mat2)); */   
+
+    ArrayList<String> tst = new ArrayList<String>(); 
+    tst.add("a"); tst.add("b"); tst.add("r"); 
+    tst.add("a"); tst.add("c"); tst.add("a");
+    tst.add("d"); tst.add("a"); tst.add("b"); tst.add("r"); 
+ 
+    ArrayList res = MathLib.frequencyCount(tst); 
+    System.out.println(res); 
   }  
 
 }

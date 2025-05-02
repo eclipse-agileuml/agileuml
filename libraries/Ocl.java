@@ -1678,7 +1678,7 @@ class OclMaplet<K,T>
   public static <D,R> TreeMap<D,R> tail(TreeMap<D,R> m)
   { 
     TreeMap<D,R> res = (TreeMap<D,R>) m.clone();
-	if (res.isEmpty()) { return res; }
+	if (m.isEmpty()) { return res; }
 	D k = m.firstKey(); 
     res.remove(k);
     return res;
@@ -1687,7 +1687,7 @@ class OclMaplet<K,T>
   public static <D,R> TreeMap<D,R> front(TreeMap<D,R> m)
   { 
     TreeMap<D,R> res = (TreeMap<D,R>) m.clone();
-	if (res.isEmpty()) { return res; }
+	if (m.isEmpty()) { return res; }
 	D k = m.lastKey(); 
     res.remove(k);
     return res;

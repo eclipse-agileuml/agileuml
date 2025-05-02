@@ -158,6 +158,15 @@ def asBag(sq) :
 #  return res
   return sortSequence(sq)
 
+def mapAsBag(mp) :
+  # mp of type Map(T,int)
+  res = [] 
+  for k in mp : 
+    n = mp[k]
+    for i in range(0,n) : 
+      res.append(k)
+  return res
+    
 def asOrderedSet(sq) :
   elems = set([])
   res = []
@@ -425,6 +434,38 @@ def tail(sq) :
   if len(sq) == 0 : 
     return sq 
   return sq[1:]
+
+def firstSortedMap(mm) : 
+  if len(mm) == 0 : 
+    return None
+  itm = mm.peekitem(0)
+  lst = []
+  lst.append(itm)
+  res = SortedDict(lst)
+  return res
+  
+def lastSortedMap(mm) : 
+  if len(mm) == 0 : 
+    return None
+  itm = mm.peekitem(-1)
+  lst = []
+  lst.append(itm)
+  res = SortedDict(lst)
+  return res
+  
+def frontSortedMap(mm) :
+  if len(mm) == 0 : 
+    return mm
+  res = mm.copy()
+  res.popitem(-1) 
+  return res
+
+def tailSortedMap(mm) :
+  if len(mm) == 0 : 
+    return mm
+  res = mm.copy()
+  res.popitem(0) 
+  return res
 
 
 def trim(str) : 
@@ -1157,5 +1198,13 @@ def values(m) :
 
 # print(excludesValue(mp,2))
 # print(excludesValue(mp,4))
+
+# mp = dict({"c" : 1, "b": 4, "a": 2})
+# ms = sortMap(mp)
+# print(ms)
+
+# bg = mapAsBag(mp)
+# print(bg)
+
 
 

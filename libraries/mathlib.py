@@ -3,6 +3,7 @@ import math
 import struct
 
 from ocldate import *
+from collections import *
 
 
 def free(x):
@@ -479,6 +480,10 @@ class MathLib:
       result.append( MathLib.intRowMult(row, m2) )
     return result
 
+  def frequencyCount(sq) : 
+    cntr = Counter(sq)
+    return cntr.most_common()
+
   def differential(f) :
     result = lambda x : ((1.0/(2.0*MathLib.defaultTolerance)) * ((f)(x + MathLib.defaultTolerance) - (f)(x - MathLib.defaultTolerance)))
     return result
@@ -919,3 +924,6 @@ class FinanceLib :
 
 # print(MathLib.rotleft(10,2))
 # print(MathLib.bitwiseRotateLeft(10,2))
+
+# sq = ['a', 'b', 'c', 'a', 'r', 'a', 'd', 'b', 'r', 'a']
+# print(MathLib.frequencyCount(sq))
