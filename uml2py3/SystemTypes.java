@@ -1149,7 +1149,8 @@ public interface SystemTypes
   { List res = new Vector(); 
     for (int i = 1; i < a.size(); i++)
     { res.add(a.get(i)); } 
-    return res; }
+    return res;
+  }
 
 
     public static Object first(List v)
@@ -1956,7 +1957,8 @@ public interface SystemTypes
     for (int x = 0; x < keys.size(); x++)
     { Object key = keys.get(x);
       if (ks.contains(key)) { }
-      else { res.put(key,m1.get(key)); }
+      else
+      { res.put(key,m1.get(key)); }
     }    
     return res;
   }

@@ -4342,7 +4342,7 @@ class UnaryExpression
  
   }  else
       {   if (((String) operator).equals("->asBag")) 
-  {   result = "ocl.sortSequence(" + arg + ")";
+  {   result = "ocl.mapAsBag(" + arg + ")";
  
   }  else
       {   if (((String) operator).equals("->unionAll") && ((String) type.getname()).equals("Sequence")) 
@@ -4386,19 +4386,19 @@ class UnaryExpression
  
   }  else
       {   if (((String) operator).equals("->front")) 
-  {   result = "(" + arg + ")[0:-1]";
+  {   result = "ocl.frontSortedMap(" + arg + ")";
  
   }  else
       {   if (((String) operator).equals("->tail")) 
-  {   result = "(" + arg + ")[1:]";
+  {   result = "ocl.tailSortedMap(" + arg + ")";
  
   }  else
       {   if (((String) operator).equals("->first")) 
-  {   result = "(" + arg + ")[0]";
+  {   result = "ocl.firstSortedMap(" + arg + ")";
  
   }  else
       {   if (((String) operator).equals("->last")) 
-  {   result = "(" + arg + ")[-1]";
+  {   result = "ocl.lastSortedMap(" + arg + ")";
  
   }  else
       {   if (((String) operator).equals("->sort")) 
@@ -19737,7 +19737,6 @@ public void setisStatic(BehaviouralFeature behaviouralfeaturex, boolean isStatic
 
   }
 
-
    public static void main(String[] args)
   { Controller c = Controller.inst();
 
@@ -19758,6 +19757,7 @@ public void setisStatic(BehaviouralFeature behaviouralfeaturex, boolean isStatic
     System.err.println(">>> Time for model load = " + (t1-t0) + " Time for transformation: " + (t2-t1));  
   }  
 
+ 
 }
 
 
