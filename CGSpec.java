@@ -928,9 +928,9 @@ public class CGSpec
           return r; 
         }
       }
-   }
+    }
 
-   return null;
+    return null;
   } 
 
   public CGRule matchedBinaryExpressionRule(BinaryExpression e, String etext)
@@ -1002,8 +1002,10 @@ public class CGSpec
     else if ("->collect".equals(op) || 
              "->reject".equals(op) || "->any".equals(op) || 
              "->select".equals(op) || "->exists".equals(op) || 
-             "->exists1".equals(op) || "->forAll".equals(op) ||
-             "->isUnique".equals(op) || "->sortedBy".equals(op))
+             "->exists1".equals(op) || 
+             "->forAll".equals(op) ||
+             "->isUnique".equals(op) || 
+             "->sortedBy".equals(op))
     { args.add(e.getLeft());
       BasicExpression v = new BasicExpression("v"); 
       v.setType(e.getLeft().getElementType()); 
@@ -1067,6 +1069,7 @@ public class CGSpec
                                        entities,this))
       { return selected; } 
     }
+
     return null;
   } // _1 binds to left, _2 to right
 
@@ -1273,7 +1276,7 @@ public class CGSpec
       { selected = r; 
         args.add(obj); 
         args.add(cl); 
-        System.out.println("^^^^ " + cl + " is static: " + cl.isStatic); 
+        // System.out.println("^^^^ " + cl + " is static: " + cl.isStatic); 
       }
       else if (obj != null && ind == null && pars != null && trimmedlhs.equals("_1._2(_3)"))
       { selected = r; 
@@ -1393,6 +1396,17 @@ public class CGSpec
       } 
       else if (etext.startsWith("Map{") && etext.endsWith("}") && 
                trimmedlhs.startsWith("Map{") && trimmedlhs.endsWith("}"))
+      { if (elems.size() == 0 && r.variables.size() == 0) 
+        { selected = r; }  // empty map
+        else if (elems.size() > 0 && r.variables.size() > 0) 
+        { args.add(elems); 
+          selected = r; 
+        } 
+      } 
+      else if (etext.startsWith("SortedMap{") && 
+               etext.endsWith("}") && 
+               trimmedlhs.startsWith("SortedMap{") && 
+               trimmedlhs.endsWith("}"))
       { if (elems.size() == 0 && r.variables.size() == 0) 
         { selected = r; }  // empty map
         else if (elems.size() > 0 && r.variables.size() > 0) 

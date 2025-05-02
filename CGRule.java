@@ -1355,7 +1355,7 @@ public class CGRule
         else if (CSTL.hasTemplate(mffeat + ".cstl")) 
         { CGSpec template = CSTL.getTemplate(mffeat + ".cstl"); 
           if (template != null) 
-          { System.err.println(">>> Applying CSTL template " + mffeat + ".cstl to " + obj); 
+          { System.err.println(">**> Applying CSTL template " + mffeat + ".cstl to " + obj); 
 
             String repl = null; 
             if (obj instanceof ModelElement)
@@ -1912,7 +1912,7 @@ public class CGRule
           // System.out.println(">> Applied vector rule: " + res); 
         }   
         else 
-        { System.err.println("!! Warning: could not apply metafeature " + mffeat + " to " + obj); } 
+        { System.err.println("!! Warning: cannot find ruleset or definition to apply metafeature " + mffeat + " to " + obj); } 
       } 
     }
 

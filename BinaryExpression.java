@@ -4065,7 +4065,7 @@ public void findClones(java.util.Map clones,
       type.setElementType(scope.elementType); 
       elementType = scope.elementType; 
       multiplicity = ModelElement.MANY; 
-    }    
+    } // but maps can be sorted, also   
     else if (operator.equals("->collect"))   
     { if (left.isCollection() || left.isMap()) { } 
       else 
@@ -5397,30 +5397,31 @@ public void findClones(java.util.Map clones,
              "|sortedBy".equals(operator) || 
              "|selectMinimals".equals(operator) || 
              "|selectMaximals".equals(operator))
-    { BinaryExpression lexp = (BinaryExpression) left; 
+    { BinaryExpression lexp = (BinaryExpression) left;
+      Expression scope = lexp.right; 
+ 
       boolean lrt = 
-        lexp.right.typeCheck(types,entities,contexts,env); 
+        scope.typeCheck(types,entities,contexts,env); 
 
-      // lexp.right must be multiple 
+      // scope must be multiple 
 
-      Type et = lexp.right.elementType;
+      Type et = scope.elementType;
 
-      // but if lexp.right.isMap, actually the keyType
+      // but if scope.isMap, actually the keyType
 
       if (et == null) 
-      { Type tt = lexp.right.getType(); 
+      { Type tt = scope.getType(); 
         if (tt != null) 
         { et = tt.getElementType(); } 
       }  
 
-      System.out.println(">> *** Type of " + lexp.right + " = " + lexp.right.type + "(" + et + ")"); 
+      System.out.println(">> *** Type of " + scope + " = " + scope.type + "(" + et + ")"); 
 
       if (et == null)
-      { System.err.println("!! Warning: no element type for " + lexp.right + " in " + this + " in environment " + env); 
-        // JOptionPane.showMessageDialog(null, "no element type for " + lexp.right + " in " + this, 
-        //      "Type error", JOptionPane.ERROR_MESSAGE);
+      { System.err.println("!! Warning: no element type for " + scope + " in " + this + " in environment " + env); 
+
         Attribute attr = 
-          (Attribute) ModelElement.lookupByName(lexp.right + "", env); 
+          (Attribute) ModelElement.lookupByName(scope + "", env); 
 
         if (attr != null && 
             !Type.isVacuousType(attr.getElementType()))
@@ -5444,15 +5445,15 @@ public void findClones(java.util.Map clones,
       lexp.typeCheck(types,entities,contexts,env1); 
       boolean rtc = 
         right.typeCheck(types,entities,context,env1);
-      Type stleft = lexp.right.getType(); 
+      Type stleft = scope.getType(); 
       Type stright = right.getType();
-      Entity seleft = lexp.right.getEntity();
+      Entity seleft = scope.getEntity();
       tcSelect(stleft,stright,seleft); 
 
       if (operator.equals("|") || operator.equals("|R") || 
           operator.equals("|selectMinimals") || 
           operator.equals("|selectMaximals"))
-      { isSorted = lexp.right.isSorted; } 
+      { isSorted = scope.isSorted; } 
 
       return true; 
     }        
@@ -6445,7 +6446,7 @@ public void findClones(java.util.Map clones,
       { type.setSorted(true); } 
 
       return; 
-    } 
+    } // sorting a map
     else if (Type.isSequenceType(tleft))
     { type = new Type("Sequence",null); } 
     else if (operator.equals("->sortedBy") || 
@@ -6458,9 +6459,8 @@ public void findClones(java.util.Map clones,
     else if (Type.isSetType(tleft)) 
     { type = new Type("Set",null); } 
     else 
-    { System.err.println("!!TYPE ERROR!!: LHS of select/reject must be a collection! " + this); 
-      // JOptionPane.showMessageDialog(null, "LHS of " + this + " must be a collection", 
-      //                                    "Type error", JOptionPane.ERROR_MESSAGE);
+    { System.err.println("!!TYPE ERROR!!: LHS of select/reject must be a collection or map! " + this);
+ 
       type = new Type("Set",null); 
       // return; 
     } 
@@ -6979,7 +6979,7 @@ public boolean conflictsWithIn(String op, Expression el,
       }   
    
       return "Set.sortedBy(" + lqf + ", " + col + ")"; 
-    } 
+    } // only a single sorting criteria, not a sequence
 
     if (operator.equals("->count"))
     { return "Set.count(" + lqf + "," + rw + ")"; } 

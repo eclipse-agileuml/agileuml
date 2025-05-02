@@ -6188,14 +6188,14 @@ public Vector parseAttributeDecsInit(Vector entities, Vector types)
       }
 
       if ("->front".startsWith(st))
-      { mess[0] = "arg->front() operator on strings, sequences\n" + 
-          "Returns  arg.subrange(1,(arg->size())-1)"; 
+      { mess[0] = "arg->front() operator on strings, sequences, sorted sets/maps\n" + 
+          "Returns arg elements, omitting the last"; 
         return "arg->front()"; 
       }
 
       if ("->tail".startsWith(st))
-      { mess[0] = "arg->tail() operator on strings, sequences\n" + 
-          "Returns  arg.subrange(2,arg->size())"; 
+      { mess[0] = "arg->tail() operator on strings, sequences, sorted sets/maps\n" + 
+          "Returns arg elements, omitting the first"; 
         return "arg->tail()"; 
       }
 
@@ -6249,14 +6249,14 @@ public Vector parseAttributeDecsInit(Vector entities, Vector types)
       }
 
       if ("->first".startsWith(st))
-      { mess[0] = "arg->first() operator on non-empty strings, sequences\n" + 
-          "Returns  arg->at(1)"; 
+      { mess[0] = "arg->first() operator on non-empty strings, sequences, sorted sets/maps\n" + 
+          "Returns first element of arg"; 
         return "arg->first()"; 
       }
 
       if ("->last".startsWith(st))
-      { mess[0] = "arg->last() operator on non-empty strings, sequences\n" + 
-          "Returns  arg->at(arg->size())"; 
+      { mess[0] = "arg->last() operator on non-empty strings, sequences, sorted sets/maps\n" + 
+          "Returns last element of arg"; 
         return "arg->last()"; 
       }
 

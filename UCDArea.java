@@ -14929,6 +14929,7 @@ public void produceCUI(PrintWriter out)
     // System.out.println(">>> Parsed: " + res);
  
     CSTL.loadTemplates(fnames,types,entities); 
+    CSTL.addTemplate(fname, res); // recursion. 
     return res; 
   }
 

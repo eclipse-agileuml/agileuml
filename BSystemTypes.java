@@ -7595,7 +7595,7 @@ public class BSystemTypes extends BComponent
                  "    { res.add(a.get(i)); } \n" + 
                  "    return res; }\n"; 
     return res; 
-  }  
+  } // also need front for maps 
 
   public static String generateFrontOpJava6()
   { String res = "  public static ArrayList front(ArrayList a)\n" + 
@@ -7619,7 +7619,7 @@ public class BSystemTypes extends BComponent
       "  }\n\n"; 
  
     return res; 
-  }  
+  }  // and for maps
 
   public static String generateFrontOpJava7()
   { String res = "  public static <T> ArrayList<T> front(ArrayList<T> a)\n" + 
@@ -7651,6 +7651,15 @@ public class BSystemTypes extends BComponent
       "    return res; \n" +
       "  }\n\n"; 
  
+    /* res = res + 
+      "  public static <D,R> TreeMap<D,R> front(TreeMap<D,R> a)\n" +
+      "  { TreeMap<D,R> res = (TreeMap<D,R>) a.clone();\n" + 
+      "    if (a.isEmpty()) { return res; }\n" + 
+      "    D lst = a.lastKey();\n" + 
+      "    res.remove(lst);\n" + 
+      "    return res; \n" +
+      "  }\n\n"; */ 
+
     return res; 
   }  
 
@@ -7696,7 +7705,7 @@ public class BSystemTypes extends BComponent
                  "    return res;\n" + 
                  "  }\n"; 
     return res; 
-  }  
+  }  // and for maps
 
   public static String generateTailOpJava6()
   { String res = "  public static ArrayList tail(ArrayList a)\n" + 
@@ -7720,7 +7729,7 @@ public class BSystemTypes extends BComponent
     "  }\n\n"; 
  
     return res; 
-  }  
+  }  // and for maps
 
   public static String generateTailOpJava7()
   { String res = 
@@ -7752,6 +7761,15 @@ public class BSystemTypes extends BComponent
     "    res.remove(fst);\n" + 
     "    return res; \n" +
     "  }\n\n"; 
+
+  /*  res = res + 
+    "  public static <D,R> TreeMap<D,R> tail(TreeMap<D,R> a)\n" +
+    "  { TreeMap<D,R> res = (TreeMap<D,R>) a.clone(); \n" +
+    "    if (a.isEmpty()) { return res; }\n" + 
+    "    T fst = a.firstKey(); \n" +
+    "    res.remove(fst);\n" + 
+    "    return res; \n" +
+    "  }\n\n"; */ 
  
     return res; 
   }  // more efficient just to remove the first element
@@ -11839,7 +11857,7 @@ public class BSystemTypes extends BComponent
     res = res +   
     "  public static <D,R> TreeMap<D,R> tail(TreeMap<D,R> m)\n" + 
     "  { TreeMap<D,R> res = (TreeMap<D,R>) m.clone();\n" +
-    "    if (res.isEmpty()) { return res; }\n" +
+    "    if (m.isEmpty()) { return res; }\n" +
     "    D k = m.firstKey(); \n" +
     "    res.remove(k);\n" +
     "    return res;\n" +
@@ -11848,7 +11866,7 @@ public class BSystemTypes extends BComponent
     res = res + 
     "  public static <D,R> TreeMap<D,R> front(TreeMap<D,R> m)\n" +
     "  { TreeMap<D,R> res = (TreeMap<D,R>) m.clone();\n" +
-    "    if (res.isEmpty()) { return res; }\n" +
+    "    if (m.isEmpty()) { return res; }\n" +
     "    D k = m.lastKey(); \n" +
     "    res.remove(k);\n" +
     "    return res;\n" +

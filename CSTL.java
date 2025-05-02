@@ -359,7 +359,7 @@ public class CSTL
         if (r != null) 
         { res.addCategoryRule(category,r); }
         else 
-        { alertRule("Could not parse category " + category + " rule", s); }  
+        { alertRule("!! Could not parse category " + category + " rule", s); }  
       }         
     }
 
