@@ -3288,46 +3288,47 @@ _1 |-->_1
 
 
 sortStatement::
-SORT _1 _2 _3 _4 |-->    _1 := _3 ;\n    _1 := _1->sortedBy( _sortvar | _2) ;\n    _4 := _1 ;\n<when> _2 sortOnKeyClause, _3 sortUsing, _4 sortGivingPhrase 
+SORT _1 _2 _3 _4 |-->    _1 := _3 ;\n    _1 := _1_2 ;\n    _4 := _1 ;\n<when> _2 sortOnKeyClause, _3 sortUsing, _4 sortGivingPhrase 
 
-SORT _1 _2 _3 _4 _5 |-->    _1 := _4 ;\n    _1 := _1->sortedBy( _sortvar | Sequence{_2, _3}) ;\n    _5 := _1 ;\n<when> _2 sortOnKeyClause, _3 sortOnKeyClause, _4 sortUsing, _5 sortGivingPhrase 
+SORT _1 _2 _3 _4 _5 |-->    _1 := _4 ;\n    _1 := _1_3_2 ;\n    _5 := _1 ;\n<when> _2 sortOnKeyClause, _3 sortOnKeyClause, _4 sortUsing, _5 sortGivingPhrase 
 
-SORT _1 _2 _3 _4 _5 _6 |-->    _1 := _5 ;\n    _1 := _1->sortedBy( _sortvar | Sequence{_2, _3, _4}) ;\n    _6 := _1 ;\n<when> _2 sortOnKeyClause, _3 sortOnKeyClause, _4 sortOnKeyClause, _5 sortUsing, _6 sortGivingPhrase 
+SORT _1 _2 _3 _4 _5 _6 |-->    _1 := _5 ;\n    _1 := _1_4_3_2 ;\n    _6 := _1 ;\n<when> _2 sortOnKeyClause, _3 sortOnKeyClause, _4 sortOnKeyClause, _5 sortUsing, _6 sortGivingPhrase 
 
-SORT _1 _2 _3 _4 |-->    self._3_Call() ;\n    _1 := _1->sortedBy( _sortvar | _2) ;\n    _4 := _1 ;\n<when> _2 sortOnKeyClause, _3 sortInputProcedurePhrase, _4 sortGivingPhrase
+SORT _1 _2 _3 _4 |-->    self._3_Call() ;\n    _1 := _1_2 ;\n    _4 := _1 ;\n<when> _2 sortOnKeyClause, _3 sortInputProcedurePhrase, _4 sortGivingPhrase
 
-SORT _1 _2 _3 _4 _5 |-->    self._4_Call() ;\n    _1 := _1->sortedBy( _sortvar | Sequence{_2, _3}) ;\n    _5 := _1 ;\n<when> _2 sortOnKeyClause, _3 sortOnKeyClause, _4 sortInputProcedurePhrase, _5 sortGivingPhrase
+SORT _1 _2 _3 _4 _5 |-->    self._4_Call() ;\n    _1 := _1_3_2 ;\n    _5 := _1 ;\n<when> _2 sortOnKeyClause, _3 sortOnKeyClause, _4 sortInputProcedurePhrase, _5 sortGivingPhrase
 
-SORT _1 _2 _3 _4 _5 _6 |-->    self._5_Call() ;\n    _1 := _1->sortedBy( _sortvar | Sequence{_2, _3, _4}) ;\n    _6 := _1 ;\n<when> _2 sortOnKeyClause, _3 sortOnKeyClause, _4 sortOnKeyClause, _5 sortInputProcedurePhrase, _6 sortGivingPhrase
+SORT _1 _2 _3 _4 _5 _6 |-->    self._5_Call() ;\n    _1 := _1_4_3_2 ;\n    _6 := _1 ;\n<when> _2 sortOnKeyClause, _3 sortOnKeyClause, _4 sortOnKeyClause, _5 sortInputProcedurePhrase, _6 sortGivingPhrase
  
 
-SORT _1 _2 _3 _4 |-->    _1 := _3 ;\n    _1 := _1->sortedBy( _sortvar | _2) ;\n    self._4_Call() ;\n<when> _2 sortOnKeyClause, _3 sortUsing, _4 sortOutputProcedurePhrase 
+SORT _1 _2 _3 _4 |-->    _1 := _3 ;\n    _1 := _1_2 ;\n    self._4_Call() ;\n<when> _2 sortOnKeyClause, _3 sortUsing, _4 sortOutputProcedurePhrase 
 
-SORT _1 _2 _3 _4 _5 |-->    _1 := _4 ;\n    _1 := _1->sortedBy( _sortvar | Sequence{_2, _3}) ;\n    self._5_Call() ;\n<when> _2 sortOnKeyClause, _3 sortOnKeyClause, _4 sortUsing, _5 sortOutputProcedurePhrase 
+SORT _1 _2 _3 _4 _5 |-->    _1 := _4 ;\n    _1 := _1_3_2 ;\n    self._5_Call() ;\n<when> _2 sortOnKeyClause, _3 sortOnKeyClause, _4 sortUsing, _5 sortOutputProcedurePhrase 
 
-SORT _1 _2 _3 _4 |-->    self._3_Call() ;\n    _1 := _1->sortedBy( _sortvar | _2) ;\n    self._4_Call() ;\n<when> _2 sortOnKeyClause, _3 sortInputProcedurePhrase, _4 sortOutputProcedurePhrase
+SORT _1 _2 _3 _4 |-->    self._3_Call() ;\n    _1 := _1_2 ;\n    self._4_Call() ;\n<when> _2 sortOnKeyClause, _3 sortInputProcedurePhrase, _4 sortOutputProcedurePhrase
 
-SORT _1 _2 _3 _4 _5 |-->    self._4_Call() ;\n    _1 := _1->sortedBy( _sortvar | Sequence{_2, _3}) ;\n    self._5_Call() ;\n<when> _2 sortOnKeyClause, _3 sortOnKeyClause, _4 sortInputProcedurePhrase, _5 sortOutputProcedurePhrase
+SORT _1 _2 _3 _4 _5 |-->    self._4_Call() ;\n    _1 := _1_3_2 ;\n    self._5_Call() ;\n<when> _2 sortOnKeyClause, _3 sortOnKeyClause, _4 sortInputProcedurePhrase, _5 sortOutputProcedurePhrase
 
 
 
 sortOnKeyClause::
-ON ASCENDING KEY _1 _* |-->_sortvar.subrange(_1`startPosition, _1`endPosition)
-ON ASCENDING KEY _1 |-->_sortvar.subrange(_1`startPosition, _1`endPosition)
-ASCENDING KEY _1 _* |-->_sortvar.subrange(_1`startPosition, _1`endPosition)
-ASCENDING KEY _1 |-->_sortvar.subrange(_1`startPosition, _1`endPosition)
-ON ASCENDING _1 _* |-->_sortvar.subrange(_1`startPosition, _1`endPosition)
-ON ASCENDING _1 |-->_sortvar.subrange(_1`startPosition, _1`endPosition)
-ASCENDING _1 _* |-->_sortvar.subrange(_1`startPosition, _1`endPosition)
-ASCENDING _1 |-->_sortvar.subrange(_1`startPosition, _1`endPosition)
-ON DESCENDING KEY _1 _* |-->-(_sortvar.subrange(_1`startPosition, _1`endPosition)->toReal())
-ON DESCENDING KEY _1 |-->-(_sortvar.subrange(_1`startPosition, _1`endPosition)->toReal())
-DESCENDING KEY _1 _* |-->-(_sortvar.subrange(_1`startPosition, _1`endPosition)->toReal())
-DESCENDING KEY _1 |-->-(_sortvar.subrange(_1`startPosition, _1`endPosition)->toReal())
-ON DESCENDING _1 _* |-->-(_sortvar.subrange(_1`startPosition, _1`endPosition)->toReal())
-ON DESCENDING _1 |-->-(_sortvar.subrange(_1`startPosition, _1`endPosition)->toReal())
-DESCENDING _1 _* |-->-(_sortvar.subrange(_1`startPosition, _1`endPosition)->toReal())
-DESCENDING _1 |-->-(_sortvar.subrange(_1`startPosition, _1`endPosition)->toReal())
+ON ASCENDING KEY _1 _* |-->->sortedBy( _sortvar | _sortvar.subrange(_1`startPosition, _1`endPosition))
+ON ASCENDING KEY _1 |-->->sortedBy( _sortvar | _sortvar.subrange(_1`startPosition, _1`endPosition))
+ASCENDING KEY _1 _* |-->->sortedBy( _sortvar | _sortvar.subrange(_1`startPosition, _1`endPosition))
+ASCENDING KEY _1 |-->->sortedBy( _sortvar | _sortvar.subrange(_1`startPosition, _1`endPosition))
+ON ASCENDING _1 _* |-->->sortedBy( _sortvar | _sortvar.subrange(_1`startPosition, _1`endPosition))
+ON ASCENDING _1 |-->->sortedBy( _sortvar | _sortvar.subrange(_1`startPosition, _1`endPosition))
+ASCENDING _1 _* |-->->sortedBy( _sortvar | _sortvar.subrange(_1`startPosition, _1`endPosition))
+ASCENDING _1 |-->->sortedBy( _sortvar | _sortvar.subrange(_1`startPosition, _1`endPosition))
+
+ON DESCENDING KEY _1 _* |-->->reverse()->sortedBy( _sortvar | _sortvar.subrange(_1`startPosition, _1`endPosition))->reverse()
+ON DESCENDING KEY _1 |-->->reverse()->sortedBy( _sortvar | _sortvar.subrange(_1`startPosition, _1`endPosition))->reverse()
+DESCENDING KEY _1 _* |-->->reverse()->sortedBy( _sortvar | _sortvar.subrange(_1`startPosition, _1`endPosition))->reverse()
+DESCENDING KEY _1 |-->->reverse()->sortedBy( _sortvar | _sortvar.subrange(_1`startPosition, _1`endPosition))->reverse()
+ON DESCENDING _1 _* |-->->reverse()->sortedBy( _sortvar | _sortvar.subrange(_1`startPosition, _1`endPosition))->reverse()
+ON DESCENDING _1 |-->->reverse()->sortedBy( _sortvar | _sortvar.subrange(_1`startPosition, _1`endPosition))->reverse()
+DESCENDING _1 _* |-->->reverse()->sortedBy( _sortvar | _sortvar.subrange(_1`startPosition, _1`endPosition))->reverse()
+DESCENDING _1 |-->->reverse()->sortedBy( _sortvar | _sortvar.subrange(_1`startPosition, _1`endPosition))->reverse()
 
 
 sortCollatingSequencePhrase::

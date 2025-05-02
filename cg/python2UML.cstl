@@ -188,7 +188,7 @@ await asyncio _1 |-->_1`asyncioTrailer<when> _1 trailer
 await _1 |-->_1.join()
 bool _1 |-->_1->toBoolean()
 
-Counter _1 |-->_1`counterarguments
+Counter _1 |-->_1`counterarguments->asBag()
 dict _1 |-->_1`dictarguments
 set _1 |-->Set{}->union(_1)
 set _1 _2 |-->Set{}->union(_1)_2
@@ -332,6 +332,8 @@ _1 _2 |-->MatrixLib.shape(_1)->prd()<when> _2 matches .size
 _1 _2 |-->MatrixLib.flattenMatrix(_1)->first()->oclType()<when> _2 matches .dtype
 _1 _2 |-->_1<when> _1 atom, _2 matches .head\(\)
 
+_1 _2 |-->MathLib.frequencyCount(_1)<when> _1 atom, _2 matches .most_common\(\)
+
 _1 _2 |-->OclIterator.newOclIterator_Function(lambda _i : int in self._1(_i))<when> _1 generator, _2 trailer
 
 _1 _2 |-->(_1.new_1()).initialise_2<when> _1 Class, _2 trailer
@@ -367,6 +369,9 @@ dictarguments::
 { } |-->Map{}
 { _1 } |-->_1
 
+_1 = _2 |-->Map{"_1" |-> _2}
+_1 , _* |-->_1`dictarguments->union(_*`recurse)<when> _1 argument
+
 _1 |-->_1`dictarguments<when> _1 arguments
 _1 |-->_1`dictarguments<when> _1 arglist
 _1 |-->_1`dictarguments<when> _1 argument
@@ -381,8 +386,13 @@ counterarguments::
 ( ) |-->Bag{}
 ( _1 ) |-->(_1`counterarguments)
 { } |-->Bag{}
-{ _1 } |-->_1->asBag()
-_1 |-->_1->characters()->asBag()<when> _1 String
+{ _1 } |-->_1
+[ _1 ] |-->Sequence{_1}
+
+_1 = _2 |-->Map{"_1" |-> _2}
+_1 , _* |-->_1`counterarguments->union(_*`recurse)<when> _1 argument
+
+_1 |-->_1->characters()<when> _1 String
 
 _1 |-->_1`counterarguments<when> _1 arguments
 _1 |-->_1`counterarguments<when> _1 arglist
@@ -983,7 +993,7 @@ trailer::
 
 . deque _1 |-->_1
 . OrderedDict _1 |-->_1
-. Counter _1 |-->_1`counterarguments
+. Counter _1 |-->_1`counterarguments->asBag()
 
 . gauss _1 |-->.nextNormal(_1`firstArg, (_1`secondArg)->sqr())
 . normalvariate _1 |-->.nextNormal(_1`firstArg, (_1`secondArg)->sqr())
@@ -1137,7 +1147,7 @@ bagQueryForm::
 . elements _1 |-->->asSequence()
 . subtract _1 |--> - _1
 . total _1 |-->->size()
-. most_common _1 |-->->frequencyCount()->reverse()
+. most_common _1 |-->->frequencyCount()
 
 . _1 |-->._1
 . _1 _* |-->._1_*
@@ -1149,7 +1159,7 @@ bagTrailerType::
 . elements _1 |-->Sequence
 . subtract _1 |-->Bag
 . total _1 |-->int
-. most_common _1 |-->Map
+. most_common _1 |-->Sequence
 
 . _1 |-->OclAny
 . _1 _* |-->OclAny
@@ -1904,6 +1914,8 @@ _1 |-->false
 
 argument::
 _1 |-->_1
+_1 = _2 |-->_1
+
 
 arglist::
 _1 |-->_1
@@ -2552,6 +2564,8 @@ R _1 |-->String
 f _1 |-->String
 
 _1 _2 |-->Sequence<when> _2 matches .shape
+
+_1 _2 |-->Sequence<when> _1 atom, _2 matches .most_common\(\)
 
 _1 _2 |-->OclIterator<when> _1 generator, _2 trailer
 
