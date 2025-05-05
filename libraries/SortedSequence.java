@@ -390,6 +390,27 @@ class SortedSequence<T extends Comparable<T>> implements List<T>
 
     SortedSequence<String> qq = ss.intersection(tt); 
     System.out.println(qq); 
+	
+	/* SortedSequence<Person> pers = new SortedSequence<Person>(); 
+	Person p1 = new Person(); 
+	p1.name = "Tom"; p1.age = 55; 
+	Person p2 = new Person(); 
+	p2.name = "Tom"; p2.age = 35;
+	pers.add(p1); pers.add(p2); 
+	System.out.println(pers);  
+	
+	SortedSequence<Person> pers1 = new SortedSequence<Person>(); 
+	pers1.add(p2); pers1.add(p1); 
+	System.out.println(pers1); */   
   }  
 }
 
+/* class Person implements Comparable<Person>
+{ String name; 
+  double age; 
+  
+  public int compareTo(Person p) 
+  { Person pp = (Person) p; 
+	return name.compareTo(pp.name); 
+  }
+} */ 

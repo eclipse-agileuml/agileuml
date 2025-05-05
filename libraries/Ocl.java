@@ -228,25 +228,36 @@ class OclMaplet<K,T>
     } 
 
     public static <S> ArrayList<S> selectMaximals(ArrayList<S> _s, Function<S,Comparable> _f)
-    { ArrayList<S> result = new ArrayList<S>(); 
+    { ArrayList<S> result = new ArrayList<S>();
+
+      if (_s.size() == 0) { return result; } 
+ 
+      Comparable oldval = _f.apply(_s.get(0)); 
       
       for (int i = 0; i < _s.size(); i++)  
       { S _x = (S) _s.get(i); 
         Comparable val = _f.apply(_x); 
+
         if (result.size() == 0) 
-        { result.add(_x); }
+        { result.add(_x);
+          oldval = val; 
+        }
         else 
-        { S oldx = (S) result.get(0);
-          Comparable oldval = _f.apply(oldx);
+        { // S oldx = (S) result.get(0);
+          // Comparable oldval = _f.apply(oldx);
   
           if (val.compareTo(oldval) == 0) 
-          { result.add(_x); } 
+          { result.add(_x); 
+            // oldval = val; 
+          } 
           else if (val.compareTo(oldval) > 0) 
           { result.clear(); 
             result.add(_x); 
+            oldval = val; 
           } 
         } 
       }  
+
       return result; 
     } 
 
