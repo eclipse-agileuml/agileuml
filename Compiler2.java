@@ -3107,7 +3107,9 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
     
     for (int i = pend-1; pstart < i; i--) 
     { String ss = lexicals.get(i).toString(); 
-      if (ss.equals("->") && i+2 < lexicals.size() && "(".equals(lexicals.get(i+2) + "") && 
+      if (ss.equals("->") && 
+          i+2 < lexicals.size() && 
+          "(".equals(lexicals.get(i+2) + "") && 
           ")".equals(lexicals.get(pend) + ""))
       { String ss2 = lexicals.get(i+1).toString(); // must exist
         if (i + 3 == pend &&
@@ -3120,7 +3122,7 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
              "asOrderedSet".equals(ss2) || 
              "sqrt".equals(ss2) || "sqr".equals(ss2) || 
              "asSequence".equals(ss2) ||
-             "asArray".equals(ss2) ||
+             "asArray".equals(ss2) || // "asMap" also
              "last".equals(ss2) || "first".equals(ss2) || 
              "closure".equals(ss2) ||
              "subcollections".equals(ss2) || 
@@ -3164,19 +3166,22 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
              "succ".equals(ss2) || "pred".equals(ss2) ||
              "ord".equals(ss2) ||
              extensionOperators.contains(ss2) ) )
-        { Expression ee2 = parse_factor_expression(bc,pstart,i-1,entities,types); 
+        { Expression ee2 = parse_factor_expression(bc,pstart,i-1,entities,types);
+ 
           if (ee2 == null) 
           { // System.err.println("!! Invalid unary -> expression at: " + showLexicals(pstart,pend)); 
             continue; 
           }
+
           UnaryExpression ue = new UnaryExpression(ss+ss2,ee2);
           // System.out.println(">> Parsed unary expression: " + ue); 
           return ue;   // This excludes additional operators to the ones listed above.  
         } 
         else if ("exists".equals(ss2) && 
-                 i+5 < pend && // "(".equals(lexicals.get(i+2) + "") &&
-                               "|".equals(lexicals.get(i+4) + "") &&
-                               ")".equals(lexicals.get(pend) + ""))
+                 i+5 < pend && 
+                 // "(".equals(lexicals.get(i+2) + "") &&
+                 "|".equals(lexicals.get(i+4) + "") &&
+                 ")".equals(lexicals.get(pend) + ""))
         { // It is ->exists(v|...)
           Expression ee1 = parse_expression(bc+1,i+5,pend-1,entities,types);
           if (ee1 == null) { continue; } 
@@ -3190,9 +3195,10 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
           return be; 
         } 
         else if (("exists1".equals(ss2) || "one".equals(ss2)) && 
-                 i+5 < pend && "|".equals(lexicals.get(i+4) + "") &&
-                               // "(".equals(lexicals.get(i+2) + "") &&
-                               ")".equals(lexicals.get(pend) + ""))
+                 i+5 < pend && 
+                 "|".equals(lexicals.get(i+4) + "") &&
+                 // "(".equals(lexicals.get(i+2) + "") &&
+                 ")".equals(lexicals.get(pend) + ""))
         { // It is ->exists1(v|...)
           Expression ee1 = parse_expression(bc+1,i+5,pend-1,entities,types);
           if (ee1 == null) { continue; } 
@@ -3206,9 +3212,10 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
           return be; 
         } 
         else if ("existsLC".equals(ss2) && 
-                 i+5 < pend && "|".equals(lexicals.get(i+4) + "") &&
-                               // "(".equals(lexicals.get(i+2) + "") &&
-                               ")".equals(lexicals.get(pend) + ""))
+                 i+5 < pend && 
+                 "|".equals(lexicals.get(i+4) + "") &&
+                 // "(".equals(lexicals.get(i+2) + "") &&
+                 ")".equals(lexicals.get(pend) + ""))
         { // It is ->existsLC(v|...)
           Expression ee1 = parse_expression(bc+1,i+5,pend-1,entities,types);
           if (ee1 == null) { continue; } 
@@ -3222,9 +3229,10 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
           return be; 
         } 
         else if ("forAll".equals(ss2) && 
-                 i+5 < pend && "|".equals(lexicals.get(i+4) + "") &&
-                               // "(".equals(lexicals.get(i+2) + "") &&
-                               ")".equals(lexicals.get(pend) + ""))
+                 i+5 < pend && 
+                 "|".equals(lexicals.get(i+4) + "") &&
+                 // "(".equals(lexicals.get(i+2) + "") &&
+                 ")".equals(lexicals.get(pend) + ""))
         { // It is ->forAll(v|...)
           Expression ee1 = parse_expression(bc+1,i+5,pend-1,entities,types);
           if (ee1 == null) { continue; } 
@@ -3238,9 +3246,10 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
           return be; 
         } 
         else if ("select".equals(ss2) && 
-                 i+5 < pend && "|".equals(lexicals.get(i+4) + "") &&
-                               // "(".equals(lexicals.get(i+2) + "") &&
-                               ")".equals(lexicals.get(pend) + ""))
+                 i+5 < pend && 
+                 "|".equals(lexicals.get(i+4) + "") &&
+                 // "(".equals(lexicals.get(i+2) + "") &&
+                 ")".equals(lexicals.get(pend) + ""))
         { // It is ->select(v|...)
           Expression ee1 = parse_expression(bc+1,i+5,pend-1,entities,types);
           if (ee1 == null) { continue; } 
@@ -3254,9 +3263,10 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
           return be; 
         } 
         else if ("reject".equals(ss2) && 
-                 i+5 < pend && "|".equals(lexicals.get(i+4) + "") &&
-                               // "(".equals(lexicals.get(i+2) + "") &&
-                               ")".equals(lexicals.get(pend) + ""))
+                 i+5 < pend && 
+                 "|".equals(lexicals.get(i+4) + "") &&
+                 // "(".equals(lexicals.get(i+2) + "") &&
+                 ")".equals(lexicals.get(pend) + ""))
         { // It is ->reject(v|...)
           Expression ee1 = parse_expression(bc+1,i+5,pend-1,entities,types);
           if (ee1 == null) { continue; } 
@@ -3270,9 +3280,10 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
           return be; 
         } 
         else if ("collect".equals(ss2) && 
-                 i+5 < pend && "|".equals(lexicals.get(i+4) + "") &&
-                               // "(".equals(lexicals.get(i+2) + "") &&
-                               ")".equals(lexicals.get(pend) + ""))
+                 i+5 < pend && 
+                 "|".equals(lexicals.get(i+4) + "") &&
+                 // "(".equals(lexicals.get(i+2) + "") &&
+                 ")".equals(lexicals.get(pend) + ""))
         { // It is ->collect(v|...)
           Expression ee1 = parse_expression(bc+1,i+5,pend-1,entities,types);
           if (ee1 == null) { continue; } 
@@ -3286,9 +3297,10 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
           return be; 
         } 
         else if ("sortedBy".equals(ss2) && 
-                 i+5 < pend && "|".equals(lexicals.get(i+4) + "") &&
-                               // "(".equals(lexicals.get(i+2) + "") &&
-                               ")".equals(lexicals.get(pend) + ""))
+                 i+5 < pend && 
+                 "|".equals(lexicals.get(i+4) + "") &&
+                 // "(".equals(lexicals.get(i+2) + "") &&
+                 ")".equals(lexicals.get(pend) + ""))
         { // It is ->sortedBy(v|...)
           Expression ee1 = parse_expression(bc+1,i+5,pend-1,entities,types);
           if (ee1 == null) { continue; } 
@@ -3298,13 +3310,48 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
             new BasicExpression(lexicals.get(i+3) + "",0);
           BinaryExpression be = 
             new BinaryExpression("|sortedBy",new BinaryExpression(":",bevar,ee2),ee1); 
-          System.out.println(">>> Parsed ->sortedBy expression with variable: " + be); 
+          // System.out.println(">>> Parsed ->sortedBy expression with variable: " + be); 
+          return be; 
+        } 
+        else if ("selectMaximals".equals(ss2) && 
+                 i+5 < pend && 
+                 "|".equals(lexicals.get(i+4) + "") &&
+                 // "(".equals(lexicals.get(i+2) + "") &&
+                 ")".equals(lexicals.get(pend) + ""))
+        { // It is ->selectMaximals(v|...)
+          Expression ee1 = parse_expression(bc+1,i+5,pend-1,entities,types);
+          if (ee1 == null) { continue; } 
+          Expression ee2 = parse_factor_expression(bc,pstart,i-1,entities,types); 
+          if (ee2 == null) { continue; } 
+          BasicExpression bevar = 
+            new BasicExpression(lexicals.get(i+3) + "",0);
+          BinaryExpression be = 
+            new BinaryExpression("|selectMaximals",new BinaryExpression(":",bevar,ee2),ee1); 
+          // System.out.println(">>> Parsed ->selectMaximals expression with variable: " + be); 
+          return be; 
+        } 
+        else if ("selectMinimals".equals(ss2) && 
+                 i+5 < pend && 
+                 "|".equals(lexicals.get(i+4) + "") &&
+                 // "(".equals(lexicals.get(i+2) + "") &&
+                 ")".equals(lexicals.get(pend) + ""))
+        { // It is ->selectMinimals(v|...)
+          Expression ee1 = parse_expression(bc+1,i+5,pend-1,entities,types);
+          if (ee1 == null) { continue; } 
+          Expression ee2 = parse_factor_expression(bc,pstart,i-1,entities,types); 
+          if (ee2 == null) { continue; } 
+          BasicExpression bevar = 
+            new BasicExpression(lexicals.get(i+3) + "",0);
+          BinaryExpression be = 
+            new BinaryExpression("|selectMinimals",new BinaryExpression(":",bevar,ee2),ee1); 
+          // System.out.println(">>> Parsed ->selectMinimals expression with variable: " + be); 
           return be; 
         } 
         else if ("any".equals(ss2) && 
-                 i+5 < pend && "|".equals(lexicals.get(i+4) + "") &&
-                               // "(".equals(lexicals.get(i+2) + "") &&
-                               ")".equals(lexicals.get(pend) + ""))
+                 i+5 < pend && 
+                 "|".equals(lexicals.get(i+4) + "") &&
+                 // "(".equals(lexicals.get(i+2) + "") &&
+                 ")".equals(lexicals.get(pend) + ""))
         { // It is ->any(v|...)
           Expression ee1 = parse_expression(bc+1,i+5,pend-1,entities,types);
           if (ee1 == null) { continue; } 
@@ -5444,9 +5491,10 @@ public Vector parseAttributeDecsInit(Vector entities, Vector types)
           return be; 
         } 
         else if ("sortedBy".equals(ss2) && 
-                 i+5 < pend && "|".equals(lexicals.get(i+4) + "") &&
-                               // "(".equals(lexicals.get(i+2) + "") &&
-                               ")".equals(lexicals.get(pend) + ""))
+                 i+5 < pend && 
+                 "|".equals(lexicals.get(i+4) + "") &&
+                 // "(".equals(lexicals.get(i+2) + "") &&
+                 ")".equals(lexicals.get(pend) + ""))
         { // It is ->sortedBy(v|...)
 
           Expression ee1 = parse_ATLexpression(bc+1,i+5,pend-1,entities,types);
@@ -5457,13 +5505,14 @@ public Vector parseAttributeDecsInit(Vector entities, Vector types)
             new BasicExpression(lexicals.get(i+3) + "",0);
           BinaryExpression be = 
             new BinaryExpression("|sortedBy",new BinaryExpression(":",bevar,ee2),ee1); 
-          // System.out.println("Parsed: " + be); 
+          // System.out.println(">>>> Parsed: " + be); 
           return be; 
         } 
         else if ("selectMaximals".equals(ss2) && 
-                 i+5 < pend && "|".equals(lexicals.get(i+4) + "") &&
-                               // "(".equals(lexicals.get(i+2) + "") &&
-                               ")".equals(lexicals.get(pend) + ""))
+                 i+5 < pend && 
+                 "|".equals(lexicals.get(i+4) + "") &&
+                 // "(".equals(lexicals.get(i+2) + "") &&
+                 ")".equals(lexicals.get(pend) + ""))
         { // It is ->collect(v|...)
           Expression ee1 = parse_ATLexpression(bc+1,i+5,pend-1,entities,types);
           if (ee1 == null) { continue; } 
@@ -5473,7 +5522,7 @@ public Vector parseAttributeDecsInit(Vector entities, Vector types)
             new BasicExpression(lexicals.get(i+3) + "",0);
           BinaryExpression be = 
             new BinaryExpression("|selectMaximals",new BinaryExpression(":",bevar,ee2),ee1); 
-          // System.out.println("Parsed: " + be); 
+          System.out.println(">>> Parsed: " + be); 
           return be; 
         } 
         else if ("selectMinimals".equals(ss2) && 

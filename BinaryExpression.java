@@ -2850,11 +2850,15 @@ class BinaryExpression extends Expression
         { res.addAll(expr.allPreTerms()); } 
       } 
     } // and "let"
-    else if ("!".equals(operator) || "#".equals(operator) || "|A".equals(operator) || 
-        "#1".equals(operator) || "|".equals(operator) || operator.equals("#LC") ||
+    else if ("!".equals(operator) || "#".equals(operator) || 
+             "|A".equals(operator) || 
+        "#1".equals(operator) || "|".equals(operator) || 
+        operator.equals("#LC") ||
         "|R".equals(operator) || "|C".equals(operator) || 
-        "|selectMinimals".equals(operator) || "|selectMaximals".equals(operator) || 
-        "|unionAll".equals(operator) || "|intersectAll".equals(operator) ||
+        "|selectMinimals".equals(operator) || 
+        "|selectMaximals".equals(operator) || 
+        "|unionAll".equals(operator) || 
+        "|intersectAll".equals(operator) ||
         "|concatenateAll".equals(operator))
     { // discard pre-terms of features of the left.left
       // because these are invalid
@@ -3006,11 +3010,15 @@ class BinaryExpression extends Expression
       return VectorUtil.union(ss1,ss2);
     } 
 
-    if (operator.equals("!") || operator.equals("#") || operator.equals("#LC") ||
-        operator.equals("#1") || operator.equals("|") || operator.equals("|R") ||
+    if (operator.equals("!") || operator.equals("#") || 
+        operator.equals("#LC") ||
+        operator.equals("#1") || operator.equals("|") || 
+        operator.equals("|R") ||
         operator.equals("|A") || operator.equals("|C") ||
-        "|selectMinimals".equals(operator) || "|selectMaximals".equals(operator) || 
-        "|unionAll".equals(operator) || "|intersectAll".equals(operator) ||
+        "|selectMinimals".equals(operator) || 
+        "|selectMaximals".equals(operator) || 
+        "|unionAll".equals(operator) || 
+        "|intersectAll".equals(operator) ||
         "|concatenateAll".equals(operator))
     { Vector ss = right.getBaseEntityUses(); 
       if (left instanceof BinaryExpression)
@@ -5415,7 +5423,7 @@ public void findClones(java.util.Map clones,
         { et = tt.getElementType(); } 
       }  
 
-      System.out.println(">> *** Type of " + scope + " = " + scope.type + "(" + et + ")"); 
+      // System.out.println(">> *** Type of " + scope + " = " + scope.type + "(" + et + ")"); 
 
       if (et == null)
       { System.err.println("!! Warning: no element type for " + scope + " in " + this + " in environment " + env); 
@@ -7998,7 +8006,8 @@ public boolean conflictsWithIn(String op, Expression el,
     { return collectQueryFormJava7(lqf,rqf,rprim,env,local); } 
 
     if (operator.equals("|A") || operator.equals("->any"))   
-    { String getany = anyQueryFormJava7(lqf,rqf,rprim,env,local); 
+    { String getany = 
+                anyQueryFormJava7(lqf,rqf,rprim,env,local); 
       if (Type.isPrimitiveType(type))
       { return unwrapJava7(getany); } 
       return "((" + typ + ") " + getany + ")"; 
@@ -8029,7 +8038,7 @@ public boolean conflictsWithIn(String op, Expression el,
       return "((" + jType + ") Ocl.maximalElements(" + lqf + ", ((ArrayList<Comparable>) " + col + ")))"; 
     } 
 
-    if (operator.equals("|selectMinimals"))
+    if (operator.equals("|selectMaximals"))
     { String col = 
         collectQueryFormJava7(lqf,rqf,rprim,env,local); 
       BinaryExpression leftbe = (BinaryExpression) left; 
@@ -11827,9 +11836,10 @@ public boolean conflictsWithIn(String op, Expression el,
   } 
 
 
-  private String collectQueryForm(String lqf, String rqf, boolean rprim,
-                                 java.util.Map env, 
-                                 boolean local) 
+  private String collectQueryForm(String lqf, String rqf, 
+                                  boolean rprim,
+                                  java.util.Map env, 
+                                  boolean local) 
   { // collect_ind(lqf) where ind is a unique index for left and right
     Vector uses = right.getVariableUses(); 
     Vector pars = new Vector(); 
@@ -11844,14 +11854,14 @@ public boolean conflictsWithIn(String op, Expression el,
     // Should only have one element, the owner of the operation in which 
     // this occurs. Others are localentity and its superclasses.
 
-
-
     java.util.Map env1 = (java.util.Map) ((java.util.HashMap) env).clone(); 
 
     if (operator.equals("|C") || 
         operator.equals("|unionAll") || 
         operator.equals("|intersectAll") || 
         operator.equals("|concatenateAll") || 
+        operator.equals("|selectMinimals") || 
+        operator.equals("|selectMaximals") || 
         operator.equals("|sortedBy") || 
         operator.equals("|isUnique")) 
     { BinaryExpression beleft = (BinaryExpression) left; 
@@ -11860,8 +11870,8 @@ public boolean conflictsWithIn(String op, Expression el,
       collectvar = beleft.left + ""; 
       if (beleft.right == null || beleft.right.elementType == null)
       { System.err.println("!! DESIGN ERROR: no element type for: " + beleft);
-        JOptionPane.showMessageDialog(null, "no element type for " + beleft + " in " + this, 
-                                      "Design error", JOptionPane.ERROR_MESSAGE);
+        /* JOptionPane.showMessageDialog(null, "no element type for " + beleft + " in " + this, 
+             "Design error", JOptionPane.ERROR_MESSAGE); */
       }
       else  
       { localentity = beleft.right.elementType.getEntity(); }  
@@ -11869,8 +11879,8 @@ public boolean conflictsWithIn(String op, Expression el,
     else 
     { if (left.elementType == null) 
       { System.err.println("!! DESIGN ERROR: no element type for: " + left);                
-	    JOptionPane.showMessageDialog(null, "no element type for " + left + " in " + this, 
-                                      "Design error", JOptionPane.ERROR_MESSAGE);
+	   /* JOptionPane.showMessageDialog(null, "no element type for " + left + " in " + this, 
+             "Design error", JOptionPane.ERROR_MESSAGE); */ 
       } 
       else
       { localentity = left.elementType.getEntity(); }  
@@ -11949,6 +11959,8 @@ public boolean conflictsWithIn(String op, Expression el,
         operator.equals("|unionAll") || 
         operator.equals("|intersectAll") || 
         operator.equals("|concatenateAll") || 
+        operator.equals("|selectMinimals") || 
+        operator.equals("|selectMaximals") || 
         operator.equals("|sortedBy") || 
         operator.equals("|isUnique")) 
     { BinaryExpression beleft = (BinaryExpression) left; 
@@ -11957,17 +11969,17 @@ public boolean conflictsWithIn(String op, Expression el,
       collectvar = beleft.left + ""; 
       if (beleft.right == null || beleft.right.elementType == null)
       { System.err.println("!! TYPE ERROR: no element type of: " + beleft);
-        JOptionPane.showMessageDialog(null, "no element type for " + beleft + " in " + this, 
-                                      "Design error", JOptionPane.ERROR_MESSAGE);
+        /* JOptionPane.showMessageDialog(null, "no element type for " + beleft + " in " + this, 
+             "Design error", JOptionPane.ERROR_MESSAGE); */ 
       }
       else  
       { localentity = beleft.right.elementType.getEntity(); }  
     }  
     else 
     { if (left.elementType == null) 
-      { System.err.println("DESIGN ERROR: no element type for: " + left); 
-        JOptionPane.showMessageDialog(null, "no element type for " + left + " in " + this, 
-                                      "Design error", JOptionPane.ERROR_MESSAGE);
+      { System.err.println("!! DESIGN ERROR: no element type for: " + left); 
+        /* JOptionPane.showMessageDialog(null, "no element type for " + left + " in " + this, 
+             "Design error", JOptionPane.ERROR_MESSAGE); */ 
       } 
       else
       { localentity = left.elementType.getEntity(); }  
@@ -12048,11 +12060,15 @@ public boolean conflictsWithIn(String op, Expression el,
     String collectvar = null; 
     Expression collectleft = left;
 
-    Entity localentity = left.entity; // left.elementType.getEntity();
+    Entity localentity = left.entity; 
+        // left.elementType.getEntity();
+
     if (operator.equals("|C") || 
         operator.equals("|unionAll") || 
         operator.equals("|intersectAll") || 
         operator.equals("|concatenateAll") || 
+        operator.equals("|selectMinimals") || 
+        operator.equals("|selectMaximals") || 
         operator.equals("|sortedBy") || 
         operator.equals("|isUnique")) 
     { BinaryExpression beleft = (BinaryExpression) left; 
@@ -12060,10 +12076,7 @@ public boolean conflictsWithIn(String op, Expression el,
       collectleft = beleft.right; 
       collectvar = beleft.left + ""; 
       if (beleft.right == null || beleft.right.elementType == null)
-      { System.err.println("!! TYPE ERROR: no element type of: " + beleft);
-        JOptionPane.showMessageDialog(null, "no element type for " + beleft + " in " + this, 
-                                      "Design error", JOptionPane.ERROR_MESSAGE);
-      }
+      { System.err.println("!! TYPE ERROR: no element type of: " + beleft); }
       else  
       { localentity = beleft.right.elementType.getEntity(); } // May be null if primitive, String, etc
 
@@ -12075,8 +12088,8 @@ public boolean conflictsWithIn(String op, Expression el,
     else 
     { if (left.elementType == null) 
       { System.err.println("DESIGN ERROR: no element type for: " + left); 
-        JOptionPane.showMessageDialog(null, "no element type for " + left + " in " + this, 
-                                      "Design error", JOptionPane.ERROR_MESSAGE);
+        /* JOptionPane.showMessageDialog(null, "no element type for " + left + " in " + this, 
+                                      "Design error", JOptionPane.ERROR_MESSAGE); */ 
       } 
       else
       { localentity = left.elementType.getEntity(); }  
@@ -12167,6 +12180,8 @@ public boolean conflictsWithIn(String op, Expression el,
         operator.equals("|unionAll") || 
         operator.equals("|intersectAll") || 
         operator.equals("|concatenateAll") || 
+        operator.equals("|selectMinimals") || 
+        operator.equals("|selectMaximals") || 
         operator.equals("|sortedBy") || 
         operator.equals("|isUnique")) 
     { BinaryExpression beleft = (BinaryExpression) left; 
@@ -12175,8 +12190,8 @@ public boolean conflictsWithIn(String op, Expression el,
       collectvar = beleft.left + ""; 
       if (beleft.right == null || beleft.right.elementType == null)
       { System.err.println("!! TYPE ERROR: no element type of: " + beleft);
-        JOptionPane.showMessageDialog(null, "no element type for " + beleft + " in " + this, 
-                                      "Design error", JOptionPane.ERROR_MESSAGE);
+        /* JOptionPane.showMessageDialog(null, "no element type for " + beleft + " in " + this, 
+              "Design error", JOptionPane.ERROR_MESSAGE); */ 
       }
       else  
       { localentity = beleft.right.elementType.getEntity(); }  
@@ -12190,9 +12205,9 @@ public boolean conflictsWithIn(String op, Expression el,
     }  
     else 
     { if (left.elementType == null) 
-      { System.err.println("DESIGN ERROR: no element type for: " + left); 
-        JOptionPane.showMessageDialog(null, "no element type for " + left + " in " + this, 
-           "Design error", JOptionPane.ERROR_MESSAGE);
+      { System.err.println("DESIGN ERROR!!: no element type for: " + left); 
+        /* JOptionPane.showMessageDialog(null, "no element type for " + left + " in " + this, 
+           "Design error", JOptionPane.ERROR_MESSAGE); */ 
       } 
       else
       { localentity = left.elementType.getEntity(); }  
@@ -12235,7 +12250,7 @@ public boolean conflictsWithIn(String op, Expression el,
     for (int i = 0; i < uses.size(); i++) 
     { BasicExpression use = (BasicExpression) uses.get(i);
 
-      System.out.println(">> Variable use: " + use + " " + use.getType() + " " + use.arrayType + " " + use.getElementType()); 
+      // System.out.println(">> Variable use: " + use + " " + use.getType() + " " + use.arrayType + " " + use.getElementType()); 
  
       if (parnames.contains(use.data) || (use.data + "").equals(collectvar) || 
           (collectvar == null && (use.data + "").equals("self"))) 
@@ -12290,6 +12305,8 @@ public boolean conflictsWithIn(String op, Expression el,
         operator.equals("|unionAll") || 
         operator.equals("|intersectAll") || 
         operator.equals("|concatenateAll") || 
+        operator.equals("|selectMinimals") || 
+        operator.equals("|selectMaximals") || 
         operator.equals("|sortedBy") || 
         operator.equals("|isUnique")) 
     { BinaryExpression beleft = (BinaryExpression) left; 
@@ -12298,8 +12315,8 @@ public boolean conflictsWithIn(String op, Expression el,
       collectvar = beleft.left + ""; 
       if (beleft.right == null || beleft.right.elementType == null)
       { System.err.println("!! TYPE ERROR: no element type of: " + beleft);
-        JOptionPane.showMessageDialog(null, "no element type for " + beleft + " in " + this, 
-                                      "Design error", JOptionPane.ERROR_MESSAGE);
+        /* JOptionPane.showMessageDialog(null, "no element type for " + beleft + " in " + this, 
+             "Design error", JOptionPane.ERROR_MESSAGE); */ 
       }
       else  
       { localentity = beleft.right.elementType.getEntity(); }  
@@ -12317,8 +12334,8 @@ public boolean conflictsWithIn(String op, Expression el,
     else 
     { if (left.elementType == null) 
       { System.err.println("DESIGN ERROR: no element type for: " + left);
-        JOptionPane.showMessageDialog(null, "no element type for " + left + " in " + this, 
-                                      "Design error", JOptionPane.ERROR_MESSAGE);
+        /* JOptionPane.showMessageDialog(null, "no element type for " + left + " in " + this, 
+             "Design error", JOptionPane.ERROR_MESSAGE); */
       } 
       else
       { localentity = left.elementType.getEntity(); }  

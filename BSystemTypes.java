@@ -5918,7 +5918,20 @@ public class BSystemTypes extends BComponent
   { String res = "    public static object first(ArrayList v)\n" +
     "    { if (v.Count == 0) { return null; }\n" +
     "      return v[0];\n" +
-    "    }\n";
+    "    }\n\n";
+
+    res = res + 
+    "    public static Hashtable first(Hashtable m)\n" +
+    "    {\n" +
+    "      Hashtable res = new Hashtable();\n" + 
+    "      foreach (DictionaryEntry pair in m)\n" +
+    "      {\n" +
+    "        res[pair.Key] = pair.Value;\n" + 
+    "        return res;\n" +
+    "      }\n" +
+    "      return res;\n" +
+    "    }\n\n"; 
+
     return res;
   }
 
@@ -5927,9 +5940,9 @@ public class BSystemTypes extends BComponent
     "    { if (v->size() == 0) { return 0; }\n" +
     "      return v->at(0);\n" +
     "    }\n\n" +
-    "  static _T first(std::set<_T>* v)\n" +
+    "    static _T first(std::set<_T>* v)\n" +
     "    { if (v->size() == 0) { return 0; }\n" +
-    "      std::set<_T>::iterator _pos = v->begin();\n" + 
+    "      auto _pos = v->begin();\n" + 
     "      return *_pos;\n" +
     "    }\n\n";
     return res;
@@ -7668,7 +7681,24 @@ public class BSystemTypes extends BComponent
                  "  { ArrayList res = new ArrayList(); \n" + 
                  "    for (int i = 0; i < a.Count - 1; i++)\n" + 
                  "    { res.Add(a[i]); } \n" + 
-                 "    return res; }\n"; 
+                 "    return res; }\n\n"; 
+
+    res = res + 
+        "  public static Hashtable front(Hashtable m)\n" +
+        "  {\n" +
+        "    Hashtable res = new Hashtable();\n" +
+        "    int cnt = 1;\n" +
+        "    int sze = m.Count;\n" + 
+        "    foreach (DictionaryEntry pair in m)\n" +
+        "    {\n" +
+        "      if (cnt < sze)\n" + 
+        "      { res[pair.Key] = pair.Value; }\n" +
+        "      cnt++;\n" +
+        "    }\n" +
+        "    return res;\n" +
+        "  }\n\n"; 
+
+
     return res; 
   }  
 
@@ -7694,6 +7724,17 @@ public class BSystemTypes extends BComponent
     "    return res;\n" +
     "  }\n\n"; 
  
+    res = res + 
+    "  static map<string,_T>* front(map<string,_T>* a)\n" +
+    "  {\n" +
+    "    map<string,_T>* res = new map<string,_T>();\n" +
+    "    if (a->size() == 0) { return res; }\n" +
+    "    auto _pos = a->end();\n" +
+    "    _pos--;\n" +
+    "    res->insert(a->begin(), _pos);\n" +
+    "    return res;\n" +
+    "  }\n\n";
+
     return res; 
   }  
 
@@ -7779,7 +7820,20 @@ public class BSystemTypes extends BComponent
                  "  { ArrayList res = new ArrayList(); \n" + 
                  "    for (int i = 1; i < a.Count; i++)\n" + 
                  "    { res.Add(a[i]); } \n" + 
-                 "    return res; }\n"; 
+                 "    return res; }\n\n";
+    res = res + 
+        "  public static Hashtable tail(Hashtable m)\n" +
+        "  {\n" +
+        "    Hashtable res = new Hashtable();\n" +
+        "    int cnt = 0;\n" +
+        "    foreach (DictionaryEntry pair in m)\n" +
+        "    {\n" +
+        "      if (cnt > 0) { res[pair.Key] = pair.Value; }\n" +
+        "      cnt++;\n" +
+        "    }\n" +
+        "    return res;\n" +
+        "  }\n\n"; 
+ 
     return res; 
   }  
 
@@ -7805,6 +7859,17 @@ public class BSystemTypes extends BComponent
     "    return res;\n" +
     "  }\n\n"; 
  
+    res = res + 
+    "  static map<string,_T>* tail(map<string,_T>* a)\n" +
+    "  {\n" +
+    "    map<string,_T>* res = new map<string,_T>();\n" +
+    "    if (a->size() == 0) { return res; }\n" +
+    "    auto _pos = a->begin();\n" +
+    "    _pos++;\n" +
+    "    res->insert(_pos, a->end());\n" +
+    "    return res;\n" +
+    "  }\n\n"; 
+
     return res; 
   }  
 
@@ -10570,6 +10635,22 @@ public class BSystemTypes extends BComponent
     "    { if (v.Count == 0) { return null; }\n" +
     "      return v[v.Count - 1];\n" +
     "    }\n\n";
+
+    res = res +
+    "    public static Hashtable last(Hashtable m)\n" +
+    "    {\n" +
+    "      Hashtable res = new Hashtable();\n" +
+    "      int cnt = 1;\n" +
+    "      int sze = m.Count;\n" +
+    "      foreach (DictionaryEntry pair in m)\n" +
+    "      {\n" +
+    "        if (cnt < sze) { }\n" +
+    "        else { res[pair.Key] = pair.Value; return res; }\n" +
+    "        cnt++;\n" +
+    "      }\n" +
+    "      return res;\n" +
+    "    }\n\n";
+
     return res;
   }
 
@@ -10580,7 +10661,7 @@ public class BSystemTypes extends BComponent
     "  }\n\n" + 
     "  static _T last(std::set<_T>* v)\n" +
     "  { if (v->size() == 0) { return 0; }\n" +
-    "    std::set<_T>::iterator _pos = v->end();\n" +
+    "    auto _pos = v->end();\n" +
     "    _pos--;\n" + 
     "    return *_pos;\n" + 
     "  }\n\n";

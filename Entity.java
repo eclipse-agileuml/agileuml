@@ -2161,6 +2161,29 @@ public class Entity extends ModelElement implements Comparable
     return dups; 
   } 
 
+
+  public boolean hasComparatorOperation()
+  { Vector allops = getOperations(); 
+
+    for (int i = 0; i < allops.size(); i++) 
+    { BehaviouralFeature op = 
+               (BehaviouralFeature) allops.get(i);
+      Vector pars = op.getParameters(); 
+      Type rt = op.getResultType();  
+
+      if ("compareTo".equals(op.getName()) && 
+          pars != null && pars.size() == 1 && 
+          "int".equals(rt + ""))
+      { Attribute par = (Attribute) pars.get(0); 
+        String nme = getName(); 
+        if (nme.equals(par.getType() + ""))
+        { return true; } 
+      } 
+    } 
+
+    return false; 
+  } 
+
   public void checkOperationVariableUse()
   { 
     Vector allops = getOperations(); 
@@ -8103,7 +8126,7 @@ System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
       return getName().compareTo(e2.getName());
     }
     else // throw exception really
-    { System.err.println("Error: can't compare " + this +
+    { System.err.println("!! Error: can't compare " + this +
                          " and " + obj);
       return 0;
     }
@@ -9473,6 +9496,9 @@ System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
       out.print(", " + iname); 
     }
 
+    // if it has an operation compareTo(x : name) : int
+    // then add Comparable<name>
+
     if (isActive())
     { out.print(", Runnable"); 
       BehaviouralFeature bf = getOperation("run"); 
@@ -9695,6 +9721,12 @@ System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
       String iname = intf.getCompleteName(); 
       out.print(", " + iname); 
     }
+
+    if (this.hasComparatorOperation())
+    { out.print(", Comparable<" + nme + ">"); } 
+    // it has an operation compareTo(x : name) : int
+    // then add Comparable<name>
+
 
     if (isActive())
     { out.print(", Runnable"); 
