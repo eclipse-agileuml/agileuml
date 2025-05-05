@@ -182,6 +182,8 @@ _* |-->( _*`seq3ruleset62 )
 OclStatement::
 var _2 : Map ( String  , OclAny  )   |-->var _2 : Map 
 var _2 : Function ( String  , OclAny  )   |-->var _2 : Fun 
+var _2 : int   |-->var _2 : Int 
+var _2 : long   |-->var _2 : Long 
 var _2 : double   |-->var _2 : Double 
 var _2 : boolean   |-->var _2 : Boolean 
 var _2 : String   |-->var _2 : String 
@@ -189,7 +191,6 @@ var _2 : Sequence   |-->var _2 : List
 var _2 : Set   |-->var _2 : Set 
 ( _2 )  |-->{ _2`seqtreerule66 } 
 return _2  |-->return _2 
-var _2 : _4  |-->var _2 : _4 <when> _4 Integer
 while _2 do _4  |-->while ( _2 ) { _4 } 
 _1 := _3  |-->_1 = _3 
 _1 _2  |-->_2 

@@ -1,0 +1,190 @@
+BasicExpression::
+null |-->nil
+
+self |-->self
+
+Math_NaN |-->Double.nan
+Math_PINFINITY |-->Double.infinity
+Math_NINFINITY |-->-Double.infinity
+
+_1 |-->_1`typename._1<when> _1 enumerationLiteral
+
+_1.allInstances |-->_1_allInstances
+
+_1.insertAt(_2,_3) |-->Ocl.insertAtString(s1: _1`cgSwift, s2: _3`cgSwift, ind: _2`cgSwift)<when> _1 String
+_1.insertAt(_2,_3) |-->Ocl.insertAt(s1: _1`cgSwift, s2: _3`cgSwift, ind: _2`cgSwift)
+_1.insertInto(_2,_3) |-->Ocl.insertInto(s1: _1`cgSwift, s2: _3`cgSwift, ind: _2`cgSwift)
+_1.setAtString(_2,_3) |-->Ocl.setAtString(str: _1`cgSwift, ind: _2`cgSwift, value: _3`cgSwift)<when> _1 String
+_1.setAt(_2,_3) |-->Ocl.setAt(sq: _1`cgSwift, ind: _2`cgSwift, value: _3`cgSwift)
+
+Integer.subrange(_1,_2) |-->Ocl.integerSubrange(st: _1`cgSwift, en: _2`cgSwift)
+Integer.Sum(_1,_2,_3,_4) |-->Ocl.sum(s: (Ocl.integerSubrange(st: _1`cgSwift, en: _2`cgSwift)).map({_3`cgSwift in _4`cgSwift}))
+Integer.Prd(_1,_2,_3,_4) |-->Ocl.prd(s: (Ocl.integerSubrange(st: _1`cgSwift, en: _2`cgSwift)).map({_3`cgSwift in _4`cgSwift}))
+
+_1.subrange(_2,_3) |-->Ocl.stringSubrange(str: _1`cgSwift, st: _2`cgSwift, en: _3`cgSwift)<when> _1 String
+_1.subrange(_2,_3) |-->Ocl.subrange(s: _1`cgSwift, st: _2`cgSwift, en: _3`cgSwift)
+
+_1.excludingSubrange(_2,_3) |-->Ocl.excludingSubrange(s: _1`cgSwift, ind1: _2`cgSwift, ind2: _3`cgSwift)
+
+_1.replace(_2,_3) |-->Ocl.replace(str: _1`cgSwift, delim: _2`cgSwift, s2: _3`cgSwift)
+_1.replaceAll(_2,_3) |-->Ocl.replaceAll(str: _1`cgSwift, pattern: _2`cgSwift, rep: _3`cgSwift)
+_1.replaceAllMatches(_2,_3) |-->Ocl.replaceAll(str: _1`cgSwift, pattern: _2`cgSwift, rep: _3`cgSwift)
+_1.replaceFirstMatch(_2,_3) |-->Ocl.replaceFirstMatch(str: _1`cgSwift, pattern: _2`cgSwift, rep: _3`cgSwift)
+
+
+_1[_2] |-->Ocl.at(str: _1`cgSwift, ind: _2`cgSwift)<when> _1 String
+_1[_2] |-->(_1`cgSwift)[_2`cgSwift - 1]<when> _1 Sequence
+_1[_2] |-->_1.getByPK_1(index: _2`cgSwift)!<when> _1 classId
+_1[_2] |-->(_1`cgSwift)[_2`cgSwift]
+
+displayString(_1) |-->displayString(s: _1`cgSwift)
+displayint(_1) |-->displayint(s: _1`cgSwift)
+displaylong(_1) |-->displaylong(s: _1`cgSwift)
+displaydouble(_1) |-->displaydouble(s: _1`cgSwift)
+displayboolean(_1) |-->displayboolean(s: _1`cgSwift)
+createByPK_1(_2) |-->createByPK_1(key: _2`cgSwift)
+persist_1(_2) |-->persist_1(_x: _2`cgSwift)
+retrieve_1(_2) |-->retrieve_1(_val: _2`cgSwift)
+
+
+_1._2(_3) |-->_1._2(_3`cgSwift)
+_1._2 |-->_1._2
+_1(_2) |-->_1(_2`cgSwift)
+
+
+
+
+
+UnaryExpression::
+_1->display() |-->    print(String(describing: _1`cgSwift) + "\n")
+_1->isDeleted() |-->    _1 = nil
+
+-_1 |-->-_1`cgSwift
++_1 |-->+_1`cgSwift
+?_1 |-->Ocl.createRef(p: &_1`cgSwift)
+!_1 |-->_1`cgSwift[0]
+
+_1->log() |-->log(_: Double(_1`cgSwift))
+_1->log10() |-->log10(_: Double(_1`cgSwift))
+_1->exp() |-->exp(_: Double(_1`cgSwift))
+_1->sin() |-->sin(_: Double(_1`cgSwift))
+_1->cos() |-->cos(_: Double(_1`cgSwift))
+_1->tan() |-->tan(_: Double(_1`cgSwift))
+_1->asin() |-->asin(_: Double(_1`cgSwift))
+_1->acos() |-->acos(_: Double(_1`cgSwift))
+_1->atan() |-->atan(_: Double(_1`cgSwift))
+_1->sqr() |-->(_1`cgSwift)*(_1`cgSwift)
+_1->sqrt() |-->sqrt(_: Double(_1`cgSwift))
+_1->cbrt() |-->cbrt(_: Double(_1`cgSwift))
+_1->floor() |-->Int(floor(_: _1`cgSwift))
+_1->ceil() |-->Int(ceil(_: _1`cgSwift))
+_1->round() |-->Int(round(_: _1`cgSwift))
+_1->abs() |-->abs(_: _1`cgSwift)
+
+_1->size() |-->_1.count
+
+_1->toInteger() |-->Ocl.toInteger(str: _1`cgSwift)
+_1->toLong() |-->Ocl.toLong(str: _1`cgSwift)
+_1->toReal() |-->Ocl.toReal(str: _1`cgSwift)
+_1->isInteger() |-->Ocl.isInteger(str: _1`cgSwift)
+_1->isLong() |-->Ocl.isLong(str: _1`cgSwift)
+_1->isReal() |-->Ocl.isReal(str: _1`cgSwift)
+_1->toBoolean() |-->Ocl.toBoolean(x : _1`cgSwift)
+
+_1->toUpper() |-->_1.uppercased()
+_1->toLower() |-->_1.lowercased()
+_1->toUpperCase() |-->_1.uppercased()
+_1->toLowerCase() |-->_1.lowercased()
+_1->trim() |-->Ocl.trim(str: _1)
+_1->characters() |-->Ocl.characters(str: _1)
+_1->byte2char() |-->Ocl.byte2char(n: _1)
+_1->char2byte() |-->Ocl.char2byte(ch: _1)
+
+_1->oclIsUndefined() |-->(_1`cgSwift == nil)
+_1->oclIsInvalid() |-->Double(_1`cgSwift).isNaN
+
+_1->oclType() |-->getByPKOclType(index: String(describing: type(of: _1`cgSwift)))!<when> _1 object
+_1->oclType() |-->getByPKOclType(index: "_1`typename")
+
+
+_1->allInstances() |-->_1_allInstances
+
+_1->first() |-->Ocl.at(str: _1`cgSwift, ind: 1)<when>_1 String
+_1->first() |-->_1`cgSwift[0]
+
+_1->last() |-->_1[_1`cgSwift.count - 1]
+_1->tail() |-->Ocl.tail(s: _1`cgSwift)
+_1->front() |-->Ocl.front(s: _1`cgSwift)
+
+_1->reverse() |-->Ocl.reverseString(str: _1`cgSwift)<when> _1 String
+_1->reverse() |-->Ocl.reverse(s: _1`cgSwift)
+
+_1->max() |-->Ocl.max(s: _1`cgSwift)
+_1->min() |-->Ocl.min(s: _1`cgSwift)
+_1->sum() |-->Ocl.sum(s: _1`cgSwift)
+_1->prd() |-->Ocl.prd(s: _1`cgSwift)
+_1->sort() |-->_1.sorted()
+_1->any() |-->Ocl.any(s: _1`cgSwift)
+_1->isEmpty() |-->(_1.count == 0)
+_1->notEmpty() |-->(_1.count > 0)
+_1->asSet() |-->Ocl.toSet(s: _1`cgSwift)
+_1->asSequence() |-->Ocl.toSequence(s: _1`cgSwift)
+_1->asOrderedSet() |-->Ocl.toOrderedSet(s: _1`cgSwift)
+_1->asBag() |-->_1.sorted()
+
+_1->flatten() |-->Ocl.unionAll(s: _1`cgSwift)
+_1->keys() |-->Ocl.mapKeys(m: _1`cgSwift)
+_1->values() |-->Ocl.mapRange(m: _1`cgSwift)
+
+
+not(_1) |-->!(_1`cgSwift)
+
+lambda _1 : _2 in _3 |-->{ (_1 : _2`cgSwift) -> _3`type in _3`cgSwift }
+
+_1->unionAll() |-->Ocl.unionAll(s: _1`cgSwift)
+_1->intersectAll() |-->Ocl.intersectAll(s: _1`cgSwift)
+_1->concatenateAll() |-->Ocl.concatenateAll(s: _1`cgSwift)
+
+_1->copy() |-->_1.copy()<when> _1 object
+_1->copy() |-->_1`cgSwift
+
+
+BinaryExpression::
+_1 & _2 |-->_1\n    _2 
+_1 or _2 |--> 
+_1 xor _2 |-->
+
+_1 = _2 |-->_1 = _2`cgSwift
+
+_1 : _2 |-->_2`cgSwift.append(_1`cgSwift)<when> _2 Sequence
+_1 : _2 |-->_2`cgSwift.insert(_1`cgSwift)
+
+_1 /: _2 |-->_2.remove(_1)
+_1 <: _2 |-->_2.addAll(_1)
+_1 /<: _2 |-->_2.removeAll(_1)
+
+_1->forAll(_2 | _3) |-->for _2 in _1_allInstances\n    {\n  _3 }\n<when> _1 classId
+_1->forAll(_2 | _3) |-->for _2 in _1`cgSwift\n    {\n  _3 }\n
+
+_1->exists(_2 | _3) |-->var _2 : _1 = _1`defaultSubclass.defaultInstance_1`defaultSubclass()\n    _3<when> _1 classId
+_1->exists(_2 | _3) |-->var _2 : _2`type = Ocl.any(s: _1`cgSwift, f: { _2 in _3`cgSwift })
+
+_1->iterate(_2; _3 = _4 | _5) |-->Ocl.iterate(s: _1, ini: _4`cgSwift, f: { (_2 : _1`elementType) in { (_3 : _4`type) in (_5`cgSwift) } } )
+
+
+SetExpression::
+Set{} |-->[]
+Set{_1} |-->[_1`cgSwift] 
+Sequence{} |-->[]
+Sequence{_1} |-->[_1`cgSwift]
+Map{} |-->[:]
+Map{_1} |-->[_1`cgSwift]
+Ref(_1){_2} |-->Ocl.createArray(n: _2`cgSwift, value: _1`defaultSubclass.defaultInstance_1`defaultSubclass())<when> _1 Class
+Ref(_1){_2} |-->Ocl.createArray(n: _2`cgSwift, value: _1`defaultValue)
+Ref{} |-->UnsafeMutableBufferPointer<Any>(_empty: ())
+
+ConditionalExpression::
+if _1 then _2 else _3 endif |-->((_1`cgSwift) ? _2`cgSwift : _3`cgSwift)
+
+ 
+

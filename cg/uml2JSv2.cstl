@@ -201,6 +201,8 @@ enumeration _2 { _4 }  |-->const _2 = _4`seq3subruleset152 <EOF>
 
 OclStatement::
 var _2 : Map ( OclAny  , OclAny  )   |-->let _2 = { } ; 
+var _2 : int   |-->let _2 = 0 ; 
+var _2 : long   |-->let _2 = 0 ; 
 var _2 : double   |-->let _2 = 0.0 ; 
 var _2 : boolean   |-->let _2 = false ; 
 var _2 : String   |-->let _2 = "" ; 
@@ -210,7 +212,6 @@ var _2 : OclAny   |-->let _2 = { } ;
 ( _2 )  |-->{ _2`seq3subruleset77 } 
 return _2  |-->return _2 ; 
 call _2  |-->_2 ; 
-var _2 : _4  |-->let _2 = 0 ; <when> _4 Integer
 while _2 do _4  |-->while ( _2 ) { _4 } 
 _1 := _3  |-->_1 = _3 ; 
 if _2 then _4 else _6  |-->if ( _2 ) { _4 } else { _6 } 
