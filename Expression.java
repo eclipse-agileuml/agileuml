@@ -3356,6 +3356,24 @@ abstract class Expression
     return new UnaryExpression("->any", src); 
   } 
 
+  public static Expression simplifyReverse(Expression src)
+  { // sq->reverse()->reverse()  is  sq
+    // sq->sortedBy(x | e)->reverse() is sq->sortedBy(x | -e)
+    //   when e is numeric
+    
+    if (src instanceof UnaryExpression && 
+        "->reverse".equals(
+           ((UnaryExpression) src).getOperator()))
+    { UnaryExpression usrc = (UnaryExpression) src; 
+      Expression uarg = usrc.getArgument(); 
+      System.out.println("! OES: Inefficient ->reverse operation: " + src + "->reverse()"); 
+ 
+      return uarg; 
+    } 
+
+    return new UnaryExpression("->reverse", src); 
+  }
+
   public static Expression simplifyFront(Expression src)
   { // sq->front()->front()  is  sq.subrange(1, sq->size()-2)
     // sq->tail()->front() is  sq.subrange(2,sq->size()-1)

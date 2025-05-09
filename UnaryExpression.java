@@ -878,6 +878,9 @@ public void findClones(java.util.Map clones,
     if (operator.equals("->tail"))
     { return Expression.simplifyTail(arg); } 
 
+    if (operator.equals("->reverse"))
+    { return Expression.simplifyReverse(arg); } 
+
     if (operator.equals("->notEmpty") && 
         argument instanceof BinaryExpression)
     { // ->select(P)->notEmpty()  is  ->exists(P)
