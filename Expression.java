@@ -3317,6 +3317,97 @@ abstract class Expression
     return new UnaryExpression("->first", src); 
   } 
 
+  public static Expression simplifyCollect(Expression var, 
+                                Expression src, Expression expr)
+  { // Integer.subrange(a,b)->collect(x | sq[x]) is 
+    //    sq.subrange(a,b)
+    // Integer.subrange(a,b)->collect(x | sq[x+1]) is 
+    //    sq.subrange(a+1,b+1)
+    // Likewise for sq->at(i)
+
+    if (src instanceof BasicExpression &&
+        expr instanceof BasicExpression && 
+        ((BasicExpression) src).getData().equals("subrange") &&
+        "Integer".equals(
+           ((BasicExpression) src).getObjectRef() + ""))
+    { BasicExpression arr = (BasicExpression) expr; 
+      BasicExpression lcol = (BasicExpression) src; 
+      Vector pars = lcol.getParameters(); 
+  
+      if (arr.isSequenceApplication(var))  
+      { BasicExpression res = 
+          BasicExpression.newFunctionBasicExpression("subrange", 
+                  arr.getData(), pars); 
+        return res; 
+      }
+      
+      if (arr.isSequenceApplicationIncrement(var))
+      { Expression par1 = (Expression) pars.get(0); 
+        Expression par2 = (Expression) pars.get(1); 
+
+        Vector newpars = new Vector(); 
+        newpars.add(new BinaryExpression("+", par1, 
+                      new BasicExpression(1))); 
+        newpars.add(new BinaryExpression("+", par2, 
+                      new BasicExpression(1))); 
+
+        BasicExpression res = 
+          BasicExpression.newFunctionBasicExpression("subrange", 
+                  arr.getData(), newpars); 
+        return res; 
+      }
+    } 
+
+    if (src instanceof BasicExpression &&
+        expr instanceof BinaryExpression && 
+        ((BasicExpression) src).getData().equals("subrange") &&
+        "Integer".equals(
+           ((BasicExpression) src).getObjectRef() + ""))
+    { BinaryExpression arr = (BinaryExpression) expr; 
+      BasicExpression lcol = (BasicExpression) src; 
+      Vector pars = lcol.getParameters(); 
+  
+      if ("->at".equals(arr.getOperator()) && 
+          arr.isSequenceApplication(var))  
+      { BasicExpression res = 
+          BasicExpression.newFunctionBasicExpression("subrange", 
+                  arr.getLeft(), pars); 
+        return res; 
+      }
+      
+      if ("->at".equals(arr.getOperator()) &&
+          arr.isSequenceApplicationIncrement(var))
+      { Expression par1 = (Expression) pars.get(0); 
+        Expression par2 = (Expression) pars.get(1); 
+
+        Vector newpars = new Vector(); 
+        newpars.add(new BinaryExpression("+", par1, 
+                      new BasicExpression(1))); 
+        newpars.add(new BinaryExpression("+", par2, 
+                      new BasicExpression(1))); 
+
+        BasicExpression res = 
+          BasicExpression.newFunctionBasicExpression("subrange", 
+                  arr.getLeft(), newpars); 
+        return res; 
+      }
+    } 
+
+    return new BinaryExpression("|C", 
+              new BinaryExpression(":", var, src), expr); 
+  } 
+
+  public static Expression simplifySum(Expression src)
+  { // Integer.subrange(a,b)->collect(x | sq[x])->sum() is 
+    //    sq.subrange(a,b)->sum()
+    // Integer.subrange(a,b)->collect(x | sq[x+1])->sum() is 
+    //    sq.subrange(a+1,b+1)->sum()
+    // sq->collect(x|e)->sum() is (sq->size())*e when e
+    //    independent of x
+
+    return new UnaryExpression("->sum", src); 
+  } 
+
   public static Expression simplifyAny(Expression src)
   { // sq->select(x | P)->any()  is  sq->any(x | P)
     // sq->reject(x | P)->any()  is  sq->any(x | not(P))

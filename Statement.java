@@ -63,9 +63,13 @@ abstract class Statement implements Cloneable
   { if (st == null) 
     { return null; }
 
+    System.out.println(">> Converting cumulative code: " + var + 
+                       " : " + rng + " @ " + st); 
+
     if (st instanceof AssignStatement)
     { // patterns are s := s + var
       // s := s * var, s := s - var, s := s / var
+      // s := s & var, s := s or var
       // Also same with expr instead of var,
       // not involving var or s. 
 
@@ -5400,7 +5404,17 @@ class WhileStatement extends Statement
   { return loopTest; } 
 
   public void setTest(Expression tst)
-  { loopTest = tst; } 
+  { loopTest = tst;
+
+    if (loopRange == null &&
+        loopTest != null && 
+        loopTest instanceof BinaryExpression)
+    { BinaryExpression bexpr = (BinaryExpression) loopTest; 
+      if (bexpr.getOperator().equals(":") && 
+          (loopVar + "").equals(bexpr.getLeft() + ""))
+      { loopRange = bexpr.getRight(); } 
+    } // only meaningful for FOR loops. 
+  } 
 
   public void setBody(Statement stat)
   { body = stat; } 
@@ -5417,7 +5431,7 @@ class WhileStatement extends Statement
   public void setLoopVar(Expression lv)
   { loopVar = lv; }
 
-  public void setLoopRange(Expression expr)
+  public void setLoopRangeVarFromTest(Expression expr)
   { if (expr != null && 
         expr instanceof BinaryExpression)
     { BinaryExpression binexpr = (BinaryExpression) expr; 
@@ -5698,15 +5712,18 @@ class WhileStatement extends Statement
   { Vector newexcls = new Vector(); 
     newexcls.addAll(excl); 
     Expression lv = null; 
+
     if (loopVar != null) 
     { lv = (Expression) loopVar.clone();
       newexcls.add(lv + ""); 
     }  
+
     Expression lr = null; 
     if (loopRange != null) 
     { lr = loopRange.addContainerReference(
                                ref,var,newexcls); 
     }  
+
     Expression lt = null; 
     if (loopTest != null) 
     { lt = loopTest.addContainerReference(ref,var,newexcls); }
@@ -5733,15 +5750,24 @@ class WhileStatement extends Statement
   } 
 
   public Statement optimiseOCL()
-  { Expression lv = null; 
+  { Expression lv = loopVar; 
     if (loopVar != null) 
     { lv = (Expression) loopVar.clone(); }
+
+    // System.out.println(">>> Loop statement with " + loopVar + " " + loopRange + " " + loopTest); 
   
-    Expression lr = null; 
+    Expression lr = loopRange; 
     if (loopRange != null) 
     { lr = loopRange.simplifyOCL(); }
+    else if (loopTest != null && 
+             loopTest instanceof BinaryExpression)
+    { BinaryExpression bexpr = (BinaryExpression) loopTest; 
+      if (bexpr.getOperator().equals(":") && 
+          (lv + "").equals(bexpr.getLeft() + ""))
+      { lr = bexpr.getRight(); } 
+    } 
   
-    Expression lt = null; 
+    Expression lt = loopTest; 
     if (loopTest != null) 
     { lt = loopTest.simplifyOCL(); }
 
@@ -15237,7 +15263,8 @@ class ConditionalStatement extends Statement
       } // valid for Set and SortedSet, not OrderedSet
     } 
 
-    if (Statement.endsWithControlFlowBreak(ifc))
+    if (elsec != null && elsec.isSkip()) { } 
+    else if (Statement.endsWithControlFlowBreak(ifc))
     { Statement skipstat = new InvocationStatement("skip");
  
       SequenceStatement ss = new SequenceStatement(); 

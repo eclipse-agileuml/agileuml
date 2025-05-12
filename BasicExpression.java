@@ -372,6 +372,38 @@ class BasicExpression extends Expression
   public void setArrayType(Type tt) 
   { arrayType = tt; } 
 
+  public boolean isSequenceApplication(Expression var)
+  { // It is data[var] 
+
+    arrayIndex.setBrackets(false); 
+
+    if (arrayType != null && arrayType.isSequence())
+    { return (var + "").equals(arrayIndex + ""); } 
+ 
+    return false; 
+  } 
+
+  public boolean isSequenceApplicationIncrement(Expression var)
+  { // It is data[var+1]
+
+    if (arrayType != null && arrayType.isSequence() && 
+        arrayIndex instanceof BinaryExpression && 
+        "+".equals(((BinaryExpression) arrayIndex).getOperator())
+       )
+    { BinaryExpression bexpr = (BinaryExpression) arrayIndex; 
+      Expression bleft = bexpr.getLeft(); 
+      Expression bright = bexpr.getRight(); 
+      bleft.setBrackets(false); 
+      bright.setBrackets(false); 
+
+      // System.out.println(arrayIndex + ""); 
+ 
+      return (var + " + 1").equals(arrayIndex + "");  
+    } 
+
+    return false; 
+  } 
+
   public static BasicExpression newASTBasicExpression(ASTTerm t)
   { BasicExpression res = new BasicExpression(""); 
     if (t instanceof ASTBasicTerm)
@@ -1353,7 +1385,8 @@ class BasicExpression extends Expression
     { BehaviouralFeature bf = entity.getDefinedOperation(data);  
       if (bf == null) { return false; } 
       Attribute p1 = bf.getParameter(0); 
-      if (Type.isSequenceType(p1.getType()) && !Type.isCollectionType(type))
+      if (Type.isSequenceType(p1.getType()) && 
+          !Type.isCollectionType(type))
       { return true; } 
     } 
     return false; 

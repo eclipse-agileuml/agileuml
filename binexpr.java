@@ -1322,7 +1322,7 @@ class BinaryExpression extends Expression
     if (operator.equals("#") && left instanceof BinaryExpression)
     { Expression range = ((BinaryExpression) left).right; 
       String rangestring = "" + range; 
-      if (range != null && range.needsBracket)
+      if (range.needsBracket)
       { rangestring = "(" + rangestring + ")"; } 
 
       basicString = rangestring + "->exists( " + 
@@ -1331,45 +1331,41 @@ class BinaryExpression extends Expression
     else if ("#LC".equals(operator) && left instanceof BinaryExpression)
     { Expression range = ((BinaryExpression) left).right; 
       String rangestring = "" + range; 
-      if (range != null && range.needsBracket)
+      if (range.needsBracket)
       { rangestring = "(" + rangestring + ")"; } 
 
       basicString = rangestring + "->existsLC( " + 
              ((BinaryExpression) left).left + " | " + right + " )";
     }
-    else if (operator.equals("#1") && 
-             left instanceof BinaryExpression)
+    else if (operator.equals("#1") && left instanceof BinaryExpression)
     { Expression range = ((BinaryExpression) left).right; 
       String rangestring = "" + range; 
-      if (range != null && range.needsBracket)
+      if (range.needsBracket)
       { rangestring = "(" + rangestring + ")"; } 
       basicString = rangestring + "->exists1( " + 
              ((BinaryExpression) left).left + " | " + right + " )";
     } 
-    else if (operator.equals("!") && 
-             left instanceof BinaryExpression)
+    else if (operator.equals("!") && left instanceof BinaryExpression)
     { Expression range = ((BinaryExpression) left).right; 
       String rangestring = "" + range; 
-      if (range != null && range.needsBracket)
+      if (range.needsBracket)
       { rangestring = "(" + rangestring + ")"; } 
       basicString = rangestring + "->forAll( " + 
              ((BinaryExpression) left).left + " | " + right + " )";
     } 
-    else if (operator.equals("|") && 
-             left instanceof BinaryExpression)
+    else if (operator.equals("|") && left instanceof BinaryExpression)
     { Expression range = ((BinaryExpression) left).right; 
       String rangestring = "" + range; 
-      if (range != null && range.needsBracket)
+      if (range.needsBracket)
       { rangestring = "(" + rangestring + ")"; } 
 
       basicString = rangestring + "->select( " + 
              ((BinaryExpression) left).left + " | " + right + " )";
     }
-    else if (operator.equals("|C") && 
-             left instanceof BinaryExpression)
+    else if (operator.equals("|C") && left instanceof BinaryExpression)
     { Expression range = ((BinaryExpression) left).right; 
       String rangestring = "" + range; 
-      if (range != null && range.needsBracket)
+      if (range.needsBracket)
       { rangestring = "(" + rangestring + ")"; } 
 
       basicString = rangestring + "->collect( " + 
@@ -1378,97 +1374,87 @@ class BinaryExpression extends Expression
     else if (operator.equals("|A") && left instanceof BinaryExpression)
     { Expression range = ((BinaryExpression) left).right; 
       String rangestring = "" + range; 
-      if (range != null && range.needsBracket)
+      if (range.needsBracket)
       { rangestring = "(" + rangestring + ")"; } 
 
       basicString = rangestring + "->any( " + 
              ((BinaryExpression) left).left + " | " + right + " )";
     }
-    else if (operator.equals("|R") && 
-             left instanceof BinaryExpression)
+    else if (operator.equals("|R") && left instanceof BinaryExpression)
     { Expression range = ((BinaryExpression) left).right; 
       String rangestring = "" + range; 
-      if (range != null && range.needsBracket)
+      if (range.needsBracket)
       { rangestring = "(" + rangestring + ")"; } 
 
       basicString = rangestring + "->reject( " + 
              ((BinaryExpression) left).left + " | " + right + " )";
     }
-    else if (operator.equals("|selectMinimals") && 
-             left instanceof BinaryExpression)
+    else if (operator.equals("|selectMinimals") && left instanceof BinaryExpression)
     { Expression range = ((BinaryExpression) left).right; 
       String rangestring = "" + range; 
-      if (range != null && range.needsBracket)
+      if (range.needsBracket)
       { rangestring = "(" + rangestring + ")"; } 
 
       basicString = rangestring + "->selectMinimals( " + 
              ((BinaryExpression) left).left + " | " + right + " )";
     }
-    else if (operator.equals("|selectMaximals") && 
-             left instanceof BinaryExpression)
+    else if (operator.equals("|selectMaximals") && left instanceof BinaryExpression)
     { Expression range = ((BinaryExpression) left).right; 
       String rangestring = "" + range; 
-      if (range != null && range.needsBracket)
+      if (range.needsBracket)
       { rangestring = "(" + rangestring + ")"; } 
 
       basicString = rangestring + "->selectMaximals( " + 
              ((BinaryExpression) left).left + " | " + right + " )";
     }
-    else if (operator.equals("|unionAll") && 
-             left instanceof BinaryExpression)
+    else if (operator.equals("|unionAll") && left instanceof BinaryExpression)
     { Expression range = ((BinaryExpression) left).right; 
       String rangestring = "" + range; 
-      if (range != null && range.needsBracket)
+      if (range.needsBracket)
       { rangestring = "(" + rangestring + ")"; } 
 
       basicString = rangestring + "->unionAll( " + 
              ((BinaryExpression) left).left + " | " + right + " )";
     }
-    else if (operator.equals("|intersectAll") && 
-             left instanceof BinaryExpression)
+    else if (operator.equals("|intersectAll") && left instanceof BinaryExpression)
     { Expression range = ((BinaryExpression) left).right; 
       String rangestring = "" + range; 
-      if (range != null && range.needsBracket)
+      if (range.needsBracket)
       { rangestring = "(" + rangestring + ")"; } 
 
       basicString = rangestring + "->intersectAll( " + 
              ((BinaryExpression) left).left + " | " + right + " )";
     }
-    else if (operator.equals("|concatenateAll") && 
-             left instanceof BinaryExpression)
+    else if (operator.equals("|concatenateAll") && left instanceof BinaryExpression)
     { Expression range = ((BinaryExpression) left).right; 
       String rangestring = "" + range; 
-      if (range != null && range.needsBracket)
+      if (range.needsBracket)
       { rangestring = "(" + rangestring + ")"; } 
 
       basicString = rangestring + "->concatenateAll( " + 
              ((BinaryExpression) left).left + " | " + right + " )";
     }
-    else if (operator.equals("|sortedBy") && 
-             left instanceof BinaryExpression)
+    else if (operator.equals("|sortedBy") && left instanceof BinaryExpression)
     { Expression range = ((BinaryExpression) left).right; 
       String rangestring = "" + range; 
-      if (range != null && range.needsBracket)
+      if (range.needsBracket)
       { rangestring = "(" + rangestring + ")"; } 
 
       basicString = rangestring + "->sortedBy( " + 
              ((BinaryExpression) left).left + " | " + right + " )";
     }
-    else if (operator.equals("|isUnique") && 
-             left instanceof BinaryExpression)
+    else if (operator.equals("|isUnique") && left instanceof BinaryExpression)
     { Expression range = ((BinaryExpression) left).right; 
       String rangestring = "" + range; 
-      if (range != null && range.needsBracket)
+      if (range.needsBracket)
       { rangestring = "(" + rangestring + ")"; } 
 
       basicString = rangestring + "->isUnique( " + 
              ((BinaryExpression) left).left + " | " + right + " )";
     }
-    else if (operator.equals("->including") && 
-             keyValue != null) 
+    else if (operator.equals("->including") && keyValue != null) 
     { basicString = left + "->including(" + keyValue + ", " + right + ")"; } 
-    else if (operator.equals("->excluding") && 
-             keyValue != null) 
+    else if (operator.equals("->excluding") && keyValue != null) 
     { basicString = left + "->excluding(" + keyValue + ", " + right + ")"; } 
     else if (operator.equals("->includesAll") || 
              operator.equals("->collect") || 

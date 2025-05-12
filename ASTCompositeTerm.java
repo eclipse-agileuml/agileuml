@@ -9803,7 +9803,7 @@ public class ASTCompositeTerm extends ASTTerm
           new WhileStatement(forTest,lbody);
         fs.setLoopKind(Statement.FOR);
         fs.setLoopVar(loopVar);   
-        fs.setLoopRange(loopRange); 
+        fs.setIterationRange(loopRange); 
         Vector res = new Vector(); 
         res.add(fs); 
         return res;   
@@ -31722,7 +31722,7 @@ public class ASTCompositeTerm extends ASTTerm
             WhileStatement ws = 
                new WhileStatement(loopTest, asgn); 
             ws.setLoopKind(Statement.FOR); 
-            ws.setLoopRange(loopRange); 
+            ws.setIterationRange(loopRange); 
             ws.setLoopVar(xExpr); 
             statement = ws;      
             return "for _x : " + loopRange + " do " + 
@@ -37966,7 +37966,7 @@ public class ASTCompositeTerm extends ASTTerm
               new WhileStatement(loopTst, ttbody.statement);
             wfs.setLoopKind(Statement.FOR);  
             wfs.setLoopVar(loopVar);
-            wfs.setLoopRange(loopRange);
+            wfs.setIterationRange(loopRange);
             statement = new SequenceStatement(); 
             ((SequenceStatement) statement).addStatement(wfs);
             return wfs + ""; 
@@ -38072,7 +38072,7 @@ public class ASTCompositeTerm extends ASTTerm
           WhileStatement ws = 
               new WhileStatement(forTst.expression, lBody);
           ws.setLoopKind(Statement.FOR);  
-          ws.setLoopRange(forTst.expression);
+          ws.setLoopRangeVarFromTest(forTst.expression);
           ((SequenceStatement) statement).addStatement(ws); 
         } 
         else // no initialisation or test statement
@@ -38092,7 +38092,7 @@ public class ASTCompositeTerm extends ASTTerm
           statement = 
               new WhileStatement(forTst.expression, lBody); 
           ((WhileStatement) statement).setLoopKind(Statement.FOR);  
-          ((WhileStatement) statement).setLoopRange(forTst.expression);
+          ((WhileStatement) statement).setLoopRangeVarFromTest(forTst.expression);
         } 
 
         // JOptionPane.showInputDialog(">>*** for body: " + statement); 

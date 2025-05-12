@@ -6776,7 +6776,10 @@ private BExpression subcollectionsBinvariantForm(BExpression bsimp)
   } 
 
   public String toString()  // RSDS version of expression
-  { if (operator.equals("lambda") && accumulator != null)
+  { if (operator == null)
+    { return argument + " /* Unknown unary operator */"; } 
+
+    if (operator.equals("lambda") && accumulator != null)
     { String res = "lambda " + accumulator.getName() + " : " + accumulator.getType() + " in " + argument;
       return "(" + res + ")";
     } 
@@ -6804,7 +6807,6 @@ private BExpression subcollectionsBinvariantForm(BExpression bsimp)
       { return "(" + res + ")"; }
       return res; 
     } 
-
 
     return operator + "(" + argument + ")";  
   } 
