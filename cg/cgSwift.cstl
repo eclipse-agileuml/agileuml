@@ -4,6 +4,8 @@
 /* cgprotocol.cstl, catchTestSwift.cstl,                  */
 /* swiftCopyOperation.cstl. Depends on Ocl.swift          */
 /*                                                        */
+/* Sorted collections are coming in future Swift versions */
+/*                                                        */
 /* Please note that newlines in output are written        */
 /* as \n                                                  */
 
@@ -41,11 +43,13 @@ Set |-->Set<Any>
 Map |-->Dictionary<String,Any>
 
 Sequence(_1) |-->[_1]
+SortedSet(_1) |-->SortedSet<_1>
 Set(_1) |-->Set<_1>
 
 Ref(_1) |-->_1<when> _1 Function
 Ref(_1) |-->UnsafeMutableBufferPointer<_1>
 
+SortedMap(_1,_2) |-->SortedDictionary<_1,_2>
 Map(_1,_2) |-->Dictionary<_1,_2>
 Function(_1,_2) |-->(_1)->_2
 

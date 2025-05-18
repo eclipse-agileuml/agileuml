@@ -24,6 +24,7 @@ Map(_1,_2) |-->HashMap<_1`jwrap,_2`jwrap>
 Function(_1,_2) |-->Function<_1`jwrap,_2`jwrap>
 Ref(_1) |-->_1[]
 
+SortedSequence |-->SortedSequence
 Sequence |-->ArrayList
 SortedSet |-->TreeSet
 Set |-->HashSet
