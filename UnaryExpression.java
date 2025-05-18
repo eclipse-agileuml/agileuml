@@ -869,6 +869,14 @@ public void findClones(java.util.Map clones,
         arg instanceof UnaryExpression)
     { return Expression.simplifyFirst(arg); } 
 
+    if (operator.equals("->first") && 
+        arg instanceof SetExpression)
+    { return Expression.simplifyFirst(arg); } 
+
+    if (operator.equals("->first") && 
+        arg instanceof BasicExpression)
+    { return Expression.simplifyFirst(arg); } 
+
     if (operator.equals("not"))
     { return Expression.negate(arg); }
 

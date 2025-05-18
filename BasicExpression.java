@@ -17036,18 +17036,27 @@ public Statement generateDesignSubtract(Expression rhs)
 
   public Vector allOperationsUsedIn()
   { Vector res = new Vector();
-    if (umlkind == UPDATEOP || umlkind == QUERY || isEvent)
+
+    /* System.out.println(">>> KIND of " + this + " is " + 
+                       Expression.ofKind(umlkind)); */ 
+
+    if (umlkind == UPDATEOP || umlkind == QUERY || 
+        isEvent)
     { res.add(entity + "::" + data); }
+
     if (objectRef != null)
     { res.addAll(objectRef.allOperationsUsedIn()); }
+
     if (arrayIndex != null) 
     { res.addAll(arrayIndex.allOperationsUsedIn()); } 
+
     if (parameters != null) 
     { for (int i = 0; i < parameters.size(); i++) 
       { Expression par = (Expression) parameters.get(i); 
         res.addAll(par.allOperationsUsedIn()); 
       } 
     } 
+
     return res;
   } 
 
@@ -17763,15 +17772,22 @@ public Statement generateDesignSubtract(Expression rhs)
 
     if ("subrange".equals(data) &&
         arrayIndex == null && 
-        pars != null && 
-        pars.size() == 2 &&  
+        pars != null &&  
         (objectRef.isSequence() || 
          objectRef.isString()))
-    { Expression res = 
-        Expression.simplifySubrange(objR, 
+    { if (pars.size() == 2)
+      { Expression res = 
+          Expression.simplifySubrange(objR, 
                                     (Expression) pars.get(0), 
                                     (Expression) pars.get(1)); 
-      return res; 
+        return res;
+      } 
+      else if (pars.size() == 1)
+      { Expression res = 
+          Expression.simplifySubrange(objR, 
+                                    (Expression) pars.get(0)); 
+        return res;
+      }  
     } 
 
     BasicExpression res = (BasicExpression) clone(); 

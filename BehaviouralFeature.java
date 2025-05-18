@@ -4281,9 +4281,11 @@ public class BehaviouralFeature extends ModelElement
 
   public void simplifyOCL() 
   { if (pre != null) 
-    { pre = pre.simplifyOCL(); } 
+    { pre = pre.simplifyOCL(); }
+ 
     if (post != null) 
     { post = post.simplifyOCL(); } 
+
     if (activity != null) 
     { activity = activity.optimiseOCL(); }  
   } 

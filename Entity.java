@@ -5688,7 +5688,8 @@ public class Entity extends ModelElement implements Comparable
   { int n = operations.size(); 
 
     for (int i = 0; i < n; i++) 
-    { BehaviouralFeature op = (BehaviouralFeature) operations.get(i); 
+    { BehaviouralFeature op = 
+          (BehaviouralFeature) operations.get(i); 
       op.simplifyOCL(); 
     } 
   } 
@@ -5908,10 +5909,14 @@ System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
     int n = operations.size(); 
 
     for (int i = 0; i < n; i++) 
-    { BehaviouralFeature op = (BehaviouralFeature) operations.get(i); 
+    { BehaviouralFeature op = 
+         (BehaviouralFeature) operations.get(i); 
       String opname = op.getName(); 
 
-      Vector opuses = op.operationsUsedIn(); 
+      Vector opuses = op.operationsUsedIn();
+
+      System.out.println(">>> Operations " + opuses + " are used in " + opname); 
+ 
       Vector vuses = new Vector(); 
       Vector newopuses = VectorUtil.union(vuses,opuses); 
 

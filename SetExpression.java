@@ -4,7 +4,7 @@ import javax.swing.*;
 
 
 /******************************
-* Copyright (c) 2003--2024 Kevin Lano
+* Copyright (c) 2003--2025 Kevin Lano
 * This program and the accompanying materials are made available under the
 * terms of the Eclipse Public License 2.0 which is available at
 * http://www.eclipse.org/legal/epl-2.0
@@ -299,6 +299,20 @@ public class SetExpression extends Expression
   { if (i < 0 || i >= elements.size())
     { return new BasicExpression("Invalid"); } 
     return (Expression) elements.get(i); 
+  }
+
+  public Expression first()
+  { int sze = elements.size(); 
+    if (sze <= 0)
+    { return new BasicExpression("Invalid"); } 
+    return (Expression) elements.get(0); 
+  }
+
+  public Expression last()
+  { int sze = elements.size(); 
+    if (sze <= 0)
+    { return new BasicExpression("Invalid"); } 
+    return (Expression) elements.get(sze-1); 
   }
 
   public Vector getElements()
@@ -989,13 +1003,67 @@ public class SetExpression extends Expression
   } // For maps???
 
   public SetExpression subrange(int i, int j)
-  { SetExpression res = new SetExpression();
-     for (int k = i-1; k < elements.size() && k < j; k++)
-     { Expression e = (Expression) elements.get(k);
-       res.addElement(e);
-     }
-     res.setOrdered(isOrdered());
-     return res;
+  { // OCL indexing i : 1..elements.size()
+
+    SetExpression res = new SetExpression();
+    for (int k = i-1; k < elements.size() && k < j; k++)
+    { Expression e = (Expression) elements.get(k);
+      res.addElement(e);
+    }
+ 
+    res.setType(type); 
+    res.setElementType(elementType); 
+
+    res.setOrdered(isOrdered());
+    return res;
+  }
+
+  public SetExpression subrange(int i)
+  { // OCL indexing i : 1..elements.size()
+
+    SetExpression res = new SetExpression();
+    for (int k = i-1; k < elements.size(); k++)
+    { Expression e = (Expression) elements.get(k);
+      res.addElement(e);
+    }
+ 
+    res.setType(type); 
+    res.setElementType(elementType); 
+
+    res.setOrdered(isOrdered());
+    return res;
+  }
+
+  public SetExpression tail()
+  { // OCL indexing i : 1..elements.size()
+
+    SetExpression res = new SetExpression();
+    for (int k = 1; k < elements.size(); k++)
+    { Expression e = (Expression) elements.get(k);
+      res.addElement(e);
+    }
+ 
+    res.setType(type); 
+    res.setElementType(elementType); 
+
+    res.setOrdered(isOrdered());
+    return res;
+  }
+
+  public SetExpression front()
+  { // OCL indexing i : 1..elements.size()
+
+    SetExpression res = new SetExpression();
+    for (int k = 0; k < elements.size()-1; k++)
+    { Expression e = (Expression) elements.get(k);
+      res.addElement(e);
+    }
+ 
+    res.setType(type); 
+    res.setElementType(elementType); 
+
+    res.setOrdered(isOrdered());
+    return res;
   }
 
   public String updateForm(java.util.Map env,boolean local)

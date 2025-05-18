@@ -1053,7 +1053,9 @@ abstract class Statement implements Cloneable
 
   public static boolean endsWithSelfCall(
             BehaviouralFeature bf, String nme, Statement st)
-  { if (st == null) 
+  { // if every branch ends with a self-call
+
+    if (st == null) 
     { return false; }
  
     if (st instanceof SequenceStatement) 
@@ -1082,15 +1084,18 @@ abstract class Statement implements Cloneable
  
       if (expr != null && expr.isSelfCall(bf))
       { return true; } 
+    
       return false; 
     } 
 
     if (st instanceof ConditionalStatement) 
     { ConditionalStatement cs = (ConditionalStatement) st; 
+    
       if (Statement.endsWithSelfCall(bf,nme,cs.ifPart()))
       { return Statement.endsWithSelfCall(
                                  bf,nme,cs.elsePart()); 
       } 
+    
       return false; 
     } 
 
@@ -1115,8 +1120,11 @@ abstract class Statement implements Cloneable
         }  
       }
       else 
-      { return false; }  
-      if (ts.getEndStatement() == null) { return false; } 
+      { return false; }
+  
+      if (ts.getEndStatement() == null) 
+      { return false; } 
+
       return Statement.endsWithSelfCall(
                                bf,nme,ts.getEndStatement()); 
     } 
