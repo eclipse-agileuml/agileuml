@@ -8039,16 +8039,41 @@ System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 
   public Vector allFeatures()
   { Vector res = new Vector();
+
     for (int i = 0; i < attributes.size(); i++)
     { Attribute at = (Attribute) attributes.get(i);
       res.add(at.getName()); 
     }
+
     for (int j = 0; j < associations.size(); j++) 
     { Association ast = (Association) associations.get(j); 
       res.add(ast.getRole2()); 
     } 
+
     return res;
   }  // and operation names? 
+
+  public Vector allFeatureNames()
+  { Vector res = new Vector();
+
+    for (int i = 0; i < attributes.size(); i++)
+    { Attribute at = (Attribute) attributes.get(i);
+      res.add(at.getName()); 
+    }
+
+    for (int j = 0; j < associations.size(); j++) 
+    { Association ast = (Association) associations.get(j); 
+      res.add(ast.getRole2()); 
+    } 
+
+    for (int j = 0; j < operations.size(); j++) 
+    { BehaviouralFeature bf = 
+               (BehaviouralFeature) operations.get(j); 
+      res.add(bf.getName()); 
+    } 
+
+    return res;
+  }  
 
   public Vector allDefinedFeatures()
   { Vector res = allFeatures(); 
@@ -8058,6 +8083,17 @@ System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
     { res.addAll(superclass.allDefinedFeatures()); }  
     return res;
   }  // and operation names? 
+
+  public Vector allDefinedFeatureNames()
+  { Vector res = allFeatureNames(); 
+
+    if (superclass == null)
+    { return res; } 
+    else 
+    { res.addAll(superclass.allDefinedFeatureNames()); }
+  
+    return res;
+  }  
 
   public Vector allActIntFeatures()
   { Vector res = new Vector();

@@ -16858,7 +16858,8 @@ public Statement generateDesignSubtract(Expression rhs)
   { Vector res = new Vector(); // of Expression
 
     if (("Sum".equals(data) || "Prd".equals(data)) && 
-        "Integer".equals(objectRef + "") && parameters != null && parameters.size() > 3)
+        "Integer".equals(objectRef + "") && 
+        parameters != null && parameters.size() > 3)
     { Expression par1 = (Expression) parameters.get(0); 
       Expression par2 = (Expression) parameters.get(1);
       Expression par3 = (Expression) parameters.get(2); 
@@ -16904,7 +16905,8 @@ public Statement generateDesignSubtract(Expression rhs)
   { Vector res = new Vector(); // of String
 
     if (("Sum".equals(data) || "Prd".equals(data)) && 
-        "Integer".equals(objectRef + "") && parameters != null && parameters.size() > 3)
+        "Integer".equals(objectRef + "") && 
+        parameters != null && parameters.size() > 3)
     { Expression par1 = (Expression) parameters.get(0); 
       Expression par2 = (Expression) parameters.get(1);
       Expression par3 = (Expression) parameters.get(2); 
@@ -16928,7 +16930,9 @@ public Statement generateDesignSubtract(Expression rhs)
     { res.addAll(objectRef.allVariableNames()); }
 
     if (arrayIndex != null)
-    { res = VectorUtil.union(res,arrayIndex.allVariableNames()); }
+    { res = VectorUtil.union(res,
+                          arrayIndex.allVariableNames()); 
+    }
 
     if (parameters != null) 
     { for (int i = 0; i < parameters.size(); i++) 
@@ -17526,12 +17530,15 @@ public Statement generateDesignSubtract(Expression rhs)
   public Vector variablesUsedIn(final Vector vars)
   { Vector res = new Vector();
     String s = toString();
+
     if (vars.contains(s))
     { res.add(s); }  // eg, att, or sig1.sig
     else if (vars.contains(data))
     { res.add(data); } 
     else if (objectRef != null) 
     { res.addAll(objectRef.variablesUsedIn(vars)); } 
+    else if (arrayIndex != null) // Added 22.5.2025 
+    { res.addAll(arrayIndex.variablesUsedIn(vars)); } 
 
     if (parameters != null) 
     { for (int i = 0; i < parameters.size(); i++) 
@@ -17542,7 +17549,7 @@ public Statement generateDesignSubtract(Expression rhs)
     }  
 
     return res;
-  }
+  } // Not just variables, any kind of identifiers. 
 
   public boolean selfConsistent(final Vector vars)
   { return true; }

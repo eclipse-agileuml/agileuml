@@ -2,6 +2,8 @@ import java.util.Vector;
 import java.util.List; 
 import java.io.*;
 
+import javax.swing.JOptionPane; 
+
 /******************************
 * Copyright (c) 2003--2025 Kevin Lano
 * This program and the accompanying materials are made available under the
@@ -3202,6 +3204,8 @@ abstract class Expression
     // sq->tail()->last() is  sq->last()
     // sq->append(x)->last() is x
     // Sequence{x1, ..., xn}->last()  is  xn
+    // s->sortedBy(x | e)->last()  is 
+    //     s->selectMaximals(x | e)->any()
 
    if (src instanceof SetExpression && 
        src.isSequence())
@@ -3283,11 +3287,30 @@ abstract class Expression
       Expression atexpr =  
         Expression.simplifyLast(srccoll); 
  
-      System.out.println("! OES: Inefficient ->last operation: " + src + "->first()"); 
+      System.out.println("! OES: Inefficient ->last operation: " + src + "->last()"); 
 
       return BinaryExpression.newLetBinaryExpression(
                varexpr, srccoll.getElementType(), 
                atexpr, valexpr); 
+    } 
+
+    if (src instanceof BinaryExpression && 
+        "|sortedBy".equals(
+           ((BinaryExpression) src).getOperator()))
+    { BinaryExpression collexpr = (BinaryExpression) src; 
+      BinaryExpression indom = 
+            (BinaryExpression) collexpr.getLeft();
+      Expression valexpr = collexpr.getRight(); 
+
+      Expression varexpr = indom.getLeft();
+      Expression srccoll = indom.getRight(); 
+ 
+      Expression atexpr =  
+        new BinaryExpression("|selectMaximals", indom, valexpr); 
+ 
+      System.out.println("! OES: Inefficient ->last operation: " + src + "->last()"); 
+
+      return Expression.simplifyAny(atexpr); 
     } 
 
     return new UnaryExpression("->last", src); 
@@ -3302,9 +3325,11 @@ abstract class Expression
     // sq->reject(x | P)->first()  is  sq->any(x | not(P))
     // Sequence{x1, ...}->first()  is  x1
     // "text"->first() is "t"
+    // s->sortedBy(x | e)->first()  is 
+    //    s->selectMinimals(x | e)->any()
 
-   if (src instanceof SetExpression && 
-       src.isSequence())
+    if (src instanceof SetExpression && 
+        src.isSequence())
     { SetExpression usrc = (SetExpression) src; 
       Expression uarg = usrc.first(); 
 
@@ -3376,6 +3401,25 @@ abstract class Expression
       return BinaryExpression.newLetBinaryExpression(
                varexpr, srccoll.getElementType(), 
                atexpr, valexpr); 
+    } 
+
+    if (src instanceof BinaryExpression && 
+        "|sortedBy".equals(
+           ((BinaryExpression) src).getOperator()))
+    { BinaryExpression collexpr = (BinaryExpression) src; 
+      BinaryExpression indom = 
+            (BinaryExpression) collexpr.getLeft();
+      Expression valexpr = collexpr.getRight(); 
+
+      Expression varexpr = indom.getLeft();
+      Expression srccoll = indom.getRight(); 
+ 
+      Expression atexpr =  
+        new BinaryExpression("|selectMinimals", indom, valexpr); 
+ 
+      System.out.println("! OES: Inefficient ->first operation: " + src + "->first()"); 
+
+      return Expression.simplifyAny(atexpr); 
     } 
 
     return new UnaryExpression("->first", src); 
@@ -3468,8 +3512,137 @@ abstract class Expression
     //    sq.subrange(a+1,b+1)->sum()
     // sq->collect(x|e)->sum() is (sq->size())*e when e
     //    independent of x
+    // sq->collect(e)->sum() is (sq->size())*e when e
+    //    independent of sq elements
+
+    if (src instanceof BinaryExpression &&
+        "|C".equals(((BinaryExpression) src).getOperator()))
+    { BinaryExpression colexpr = 
+              (BinaryExpression) src; 
+      BinaryExpression inrange = 
+              (BinaryExpression) colexpr.getLeft(); 
+
+      BasicExpression var = (BasicExpression) inrange.getLeft(); 
+      Expression col = inrange.getRight(); 
+      Expression expr = colexpr.getRight();
+      Vector vset = new Vector(); 
+      vset.add(var + ""); 
+ 
+      Vector vnames = expr.allVariableNames();
+      Vector vuses = expr.variablesUsedIn(vset); 
+ 
+      if (vnames.contains(var + "") || 
+          vuses.size() > 0) { } 
+      else 
+      { System.out.println("OES flaw: " + var + " not used in " + expr);
+        return new BinaryExpression("*", 
+                     Expression.simplifySize(col), expr);  
+      } 
+    } 
+
+    if (src instanceof BinaryExpression &&
+        "->collect".equals(
+             ((BinaryExpression) src).getOperator()))
+    { BinaryExpression colexpr = 
+              (BinaryExpression) src; 
+      Expression col = 
+              colexpr.getLeft(); 
+      Vector vset = new Vector(); 
+      vset.add("self"); 
+
+      Type etyp = col.getElementType(); 
+      if (etyp != null && etyp.isEntity())
+      { Entity ent = etyp.getEntity(); 
+        Vector ffs = ent.allDefinedFeatureNames(); 
+        vset.addAll(ffs); 
+      } 
+
+      Expression expr = colexpr.getRight();
+ 
+      Vector vnames = expr.allVariableNames(); 
+      Vector vuses = expr.variablesUsedIn(vset); 
+      
+      if (vnames.contains("self") || 
+          vuses.size() > 0) { } 
+      else 
+      { System.out.println("OES flaw: " + vset + " not used in " + expr);
+        return new BinaryExpression("*", 
+                     Expression.simplifySize(col), expr);  
+      } 
+    } 
 
     return new UnaryExpression("->sum", src); 
+  } 
+
+  public static Expression simplifyPrd(Expression src)
+  { // Integer.subrange(a,b)->collect(x | sq[x])->prd() is 
+    //    sq.subrange(a,b)->prd()
+    // Integer.subrange(a,b)->collect(x | sq[x+1])->prd() is 
+    //    sq.subrange(a+1,b+1)->prd()
+    // sq->collect(x|e)->prd() is (e)->pow(sq->size()) when e
+    //    independent of x
+
+    if (src instanceof BinaryExpression &&
+        "|C".equals(((BinaryExpression) src).getOperator()))
+    { BinaryExpression colexpr = 
+              (BinaryExpression) src; 
+      BinaryExpression inrange = 
+              (BinaryExpression) colexpr.getLeft(); 
+
+      BasicExpression var = (BasicExpression) inrange.getLeft(); 
+      Expression col = inrange.getRight(); 
+      Expression expr = colexpr.getRight();
+ 
+      Vector vset = new Vector(); 
+      vset.add(var + ""); 
+ 
+      Vector vnames = expr.allVariableNames();
+      Vector vuses = expr.variablesUsedIn(vset); 
+ 
+      if (vnames.contains(var + "") || 
+          vuses.size() > 0) { } 
+      else 
+      { System.out.println("OES flaw: " + var + " not used in " + expr);
+        expr.setBrackets(true); 
+        return new BinaryExpression("->pow", 
+                     expr, Expression.simplifySize(col));  
+      } 
+    } 
+
+    if (src instanceof BinaryExpression &&
+        "->collect".equals(
+             ((BinaryExpression) src).getOperator()))
+    { BinaryExpression colexpr = 
+              (BinaryExpression) src; 
+      Expression col = 
+              colexpr.getLeft(); 
+
+      Expression expr = colexpr.getRight();
+
+      Vector vset = new Vector(); 
+      vset.add("self"); 
+
+      Type etyp = col.getElementType(); 
+      if (etyp != null && etyp.isEntity())
+      { Entity ent = etyp.getEntity(); 
+        Vector ffs = ent.allDefinedFeatureNames(); 
+        vset.addAll(ffs); 
+      } 
+ 
+      Vector vnames = expr.allVariableNames(); 
+      Vector vuses = expr.variablesUsedIn(vset); 
+      
+      if (vnames.contains("self") || 
+          vuses.size() > 0) { } 
+      else 
+      { System.out.println("OES flaw: " + vset + " not used in " + expr);
+        expr.setBrackets(true); 
+        return new BinaryExpression("->pow", expr, 
+                     Expression.simplifySize(col));  
+      } 
+    } 
+
+    return new UnaryExpression("->prd", src); 
   } 
 
   public static Expression simplifyAny(Expression src)
