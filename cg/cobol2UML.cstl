@@ -2184,7 +2184,7 @@ _1 |-->_1`oclType<when> _1 identifier
 _1 |-->OclAny
 
 evaluateAlsoSelect::
-ALSO _1 |-->
+ALSO _1 |-->  var _selectAlso : boolean := (_1);\n
 
 evaluateWhenPhrase::
 _1 _* |-->     if _1 then (_*   skip) else\n<when> _* all statement
@@ -2196,7 +2196,7 @@ evaluateWhenOther::
 WHEN OTHER _* |-->  (_*    skip);\n
 
 evaluateWhen::
-WHEN _1 _* |-->_1
+WHEN _1 _2 |-->_1 & _2
 WHEN _1 |-->_1
 
 evaluateCondition::
@@ -2214,6 +2214,10 @@ _1 |-->_1
 evaluateThrough::
 THROUGH _1 |-->_1
 THRU _1 |-->_1
+
+evaluateAlsoCondition::
+ALSO TRUE |--> _selectAlso
+ALSO _1 |--> _1
 
 
 execSqlStatement::
