@@ -677,7 +677,8 @@ abstract class Statement implements Cloneable
         bright.setBrackets(false); 
 
         // it is x : st
-        if ((x + "").equals(bleft + "") && 
+        if (":".equals(bexpr.getOperator()) && 
+            (x + "").equals(bleft + "") && 
             (st + "").equals(bright + ""))
         { return true; } 
       }  
