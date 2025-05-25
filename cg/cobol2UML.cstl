@@ -2179,6 +2179,8 @@ evaluateSelect::
 _1 |-->_1
 
 evaluateSelectType::
+TRUE |-->boolean
+FALSE |-->boolean
 _1 |-->_1`type<when> _1 literal
 _1 |-->_1`oclType<when> _1 identifier
 _1 |-->OclAny
@@ -2203,9 +2205,9 @@ evaluateCondition::
 ANY |-->true
 TRUE |-->true
 FALSE |-->false
-NOT _1 |-->_selectVar /= _1
-_1 |-->_selectVar = _1
-_1 _2 |-->_selectVar >= _1 & _selectVar <= _2<when> _2 evaluateThrough
+NOT _1 |-->(_selectVar /= _1)
+_1 |-->(_selectVar = _1)
+_1 _2 |-->(_selectVar >= _1 & _selectVar <= _2)<when> _2 evaluateThrough
 NOT _1 _2 |-->(_selectVar < _1 or _selectVar > _2)<when> _2 evaluateThrough
 
 evaluateValue::
