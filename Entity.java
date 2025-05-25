@@ -5915,7 +5915,7 @@ System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 
       Vector opuses = op.operationsUsedIn();
 
-      System.out.println(">>> Operations " + opuses + " are used in " + opname); 
+      // System.out.println(">>> Operations " + opuses + " are used in " + opname); 
  
       Vector vuses = new Vector(); 
       Vector newopuses = VectorUtil.union(vuses,opuses); 

@@ -360,7 +360,9 @@ public class BehaviouralFeature extends ModelElement
         tt = new Type(entpar); 
         pars.add(tt); 
       } 
-      System.out.println(">> Added type parameter " + tt); 
+
+      System.out.println(">> Added type parameter " + tt + 
+                         " to operation " + this); 
     } 
 
     typeParameters = pars;  
@@ -4369,6 +4371,50 @@ public class BehaviouralFeature extends ModelElement
       res.set("amber", ascore);
     } 
 
+    Vector opuses = this.operationsUsedIn();
+
+    System.out.println(">>> Operations " + opuses + " are used in " + name); 
+
+    if (opuses.contains(entity + "::" + name) && 
+        activity != null)
+    { boolean tailrec = Statement.isTailRecursive(this, name, 
+                                                  activity); 
+      System.err.println(); 
+
+      if (tailrec) 
+      { System.err.println("!! Tail recursive operation! " + 
+            name + "\n" +  
+            "!! Use 'Replace recursion by loop' refactoring"); 
+      } 
+      else 
+      { System.err.println("!!! Non-tail-recursion in " + 
+            name + "\n" +  
+            "!!! Use 'Make operation cached' refactoring"); 
+      } 
+
+      System.err.println(); 
+    }
+    else if (opuses.contains(entity + "::" + name) && 
+             activity == null && post != null)  
+    { Vector cases = Expression.caselist(post); 
+      boolean istailrec = 
+         isTailRecursive(cases); 
+
+      System.err.println(); 
+      if (istailrec)
+      { System.err.println("!! Tail recursive operation! " + 
+            name + "\n" +  
+            "!! Use 'Replace recursion by loop' refactoring"); 
+      } 
+      else 
+      { System.err.println("!!! Non-tail-recursion in " + 
+            name + "\n" +  
+            "!!! Use 'Make operation cached' refactoring"); 
+      } 
+
+      System.err.println(); 
+    }	 
+
     return res; 
   } 
 
@@ -5765,7 +5811,8 @@ public class BehaviouralFeature extends ModelElement
         pre = pre.substitute(use,repl);   
       }  // union, subtract?
       
-      Expression inexp = new BinaryExpression(":",exbe,use.objectRef); 
+      Expression inexp = 
+         new BinaryExpression(":",exbe,use.objectRef); 
       pre = new BinaryExpression("=>",inexp,pre);
     } // or exbe /: objs & this
     uses.remove(0); 
@@ -7815,6 +7862,44 @@ public class BehaviouralFeature extends ModelElement
     return designBasicCase(postcond, resT, env0, types, entities, atts); 
   } */
 
+  public boolean isTailRecursive(Vector postconds)
+  { if (postconds.size() == 0)
+    { return true; } 
+
+    Expression postcond = (Expression) postconds.get(0); 
+    boolean fst = isTailRecursiveBasicCase(postcond);
+
+    if (postconds.size() == 1) 
+    { return fst; } 
+
+    Vector ptail = new Vector(); 
+    ptail.addAll(postconds); 
+    ptail.remove(0); 
+ 
+    if ((postcond instanceof BinaryExpression) &&  
+        "=>".equals(((BinaryExpression) postcond).operator))
+    { Expression next = (Expression) postconds.get(1); 
+
+      if ((next instanceof BinaryExpression) &&
+          "=>".equals(((BinaryExpression) next).operator)) 
+      { boolean elsepart = 
+           isTailRecursive(ptail);
+        return elsepart;    
+      } 
+      else 
+      { boolean res = 
+           isTailRecursive(ptail); 
+        return res; 
+      } 
+    }      
+    else 
+    { boolean istailrec = 
+         isTailRecursive(ptail); 
+      return istailrec;
+    }  // sequencing of fst and ptail
+  } 
+
+
   private Statement designBasicCase(Expression pst,
                   String resT, java.util.Map env0,
                   Vector types, Vector entities, Vector atts)
@@ -7875,8 +7960,9 @@ public class BehaviouralFeature extends ModelElement
             "result".equals(be.left + ""))
         { 
           if (be.right.isSelfCall(this))
-          { // recursive call to operation, replace by 
-            // parameter assignements and continue
+          { // Direct recursive call to operation, replace by 
+            // parameter assignments ; continue
+
             ContinueStatement ctn = new ContinueStatement(); 
             Statement assgns = 
                          parameterAssignments(be.right); 
@@ -7926,7 +8012,44 @@ public class BehaviouralFeature extends ModelElement
         } 
       } 
     }
+
     return pst.generateDesign(env0, true);
+  }
+
+  private boolean isTailRecursiveBasicCase(Expression pst)
+  { Vector names = new Vector(); 
+    names.add(name); 
+
+    if (pst instanceof BinaryExpression) 
+    { BinaryExpression be = (BinaryExpression) pst; 
+      if ("=>".equals(be.operator))
+      { Expression test = be.left; 
+
+        Vector vars1 =
+          test.variablesUsedIn(names);
+
+        if (vars1.size() > 0)
+        { System.err.println("!! Error: operation called in test expression -- not tail recursive"); 
+          return false; 
+        } 
+
+        boolean ifpart = 
+           isTailRecursiveBasicCase(be.right); 
+
+        return ifpart; 
+      } 
+      else if ("=".equals(be.operator))
+      { Expression beleft = be.left;
+        Expression beright = be.right;
+        Vector vars2 =
+            beright.variablesUsedIn(names);
+
+        if ("result".equals(beleft + ""))
+        { return beright.isTailRecursion(this); } 
+      } 
+    }
+
+    return pst.isTailRecursion(this); 
   }
 
   // assume it is a conjunction of implications

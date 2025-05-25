@@ -17066,6 +17066,9 @@ public Statement generateDesignSubtract(Expression rhs)
 
   public boolean isSelfCall(BehaviouralFeature bf)
   { String nme = bf.getName();
+
+    if (arrayIndex != null) 
+    { return false; } 
  
     if (isSelfCall(nme))
     { return true; } 
@@ -17097,6 +17100,31 @@ public Statement generateDesignSubtract(Expression rhs)
     { return true; } 
     return false;  
   }
+
+  public boolean isTailRecursion(BehaviouralFeature bf)
+  { // either bfname does not occur in this, or 
+    // this is a self call of bfname. 
+
+    String bfname = bf.getName(); 
+
+    Vector names = new Vector(); 
+    names.add(bfname); 
+    Vector vars = variablesUsedIn(names); 
+
+    if (vars.size() == 0)
+    { return true; } 
+
+    if (parameters != null)
+    { for (int i = 0; i < parameters.size(); i++) 
+      { Expression par = (Expression) parameters.get(i); 
+        Vector pvars = par.variablesUsedIn(names); 
+        if (pvars.size() > 0) 
+        { return false; } // bf cannot occur in any parameter
+      } 
+    } 
+
+    return isSelfCall(bf); 
+  } 
 
   public Vector equivalentsUsedIn()
   { Vector res = new Vector();

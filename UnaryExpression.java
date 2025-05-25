@@ -445,6 +445,21 @@ public class UnaryExpression extends Expression
   public boolean isLambdaExpression()
   { return "lambda".equals(operator); } 
 
+  public boolean isTailRecursion(BehaviouralFeature bf)
+  { // bfname does not occur in this 
+
+    String bfname = bf.getName(); 
+
+    Vector names = new Vector(); 
+    names.add(bfname); 
+    Vector vars = variablesUsedIn(names); 
+
+    if (vars.size() == 0)
+    { return true; } 
+
+    return false; 
+  } 
+
   public Expression definedness()
   { Expression res = argument.definedness();
     if ("->last".equals(operator) || 

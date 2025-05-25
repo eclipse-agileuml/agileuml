@@ -151,6 +151,26 @@ public class ConditionalExpression extends Expression
     return new ConditionalStatement(test, ifstat, elsestat); 
   } 
 
+  public boolean isTailRecursion(BehaviouralFeature bf)
+  { // bfname does not occur in test
+    // and both limbs of conditional are tail recursions 
+
+    String bfname = bf.getName(); 
+
+    Vector names = new Vector(); 
+    names.add(bfname); 
+    Vector vars = test.variablesUsedIn(names); 
+
+    if (vars.size() > 0)
+    { System.err.println("!! Error: recursive call of " + bf + " in " + test); 
+      return false; 
+    } 
+
+    return ifExp.isTailRecursion(bf) && 
+           elseExp.isTailRecursion(bf); 
+  } 
+
+
   public Expression simplifyOCL()
   { Expression ifstat = ifExp.simplifyOCL(); 
     Expression elsestat = elseExp.simplifyOCL();

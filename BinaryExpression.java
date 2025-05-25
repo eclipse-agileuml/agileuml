@@ -238,6 +238,27 @@ class BinaryExpression extends Expression
     return false; 
   } 
 
+  public boolean isTailRecursion(BehaviouralFeature bf)
+  { // bfname does not occur in this 
+    // or it is result = expr where expr is a tail recursion
+    // basic expression
+
+    String bfname = bf.getName(); 
+
+    Vector names = new Vector(); 
+    names.add(bfname); 
+    Vector vars = variablesUsedIn(names); 
+
+    if (vars.size() == 0)
+    { return true; } 
+
+    if ("=".equals(operator) && 
+        "result".equals(left + ""))
+    { return right.isTailRecursion(bf); } 
+
+    return false; 
+  } 
+
   public Expression definedness()
   { Expression dl = left.definedness();
     Expression dr = right.definedness();

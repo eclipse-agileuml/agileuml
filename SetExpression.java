@@ -186,6 +186,21 @@ public class SetExpression extends Expression
     return false; 
   } 
 
+  public boolean isTailRecursion(BehaviouralFeature bf)
+  { // bfname does not occur in this 
+
+    String bfname = bf.getName(); 
+
+    Vector names = new Vector(); 
+    names.add(bfname); 
+    Vector vars = variablesUsedIn(names); 
+
+    if (vars.size() == 0)
+    { return true; } 
+
+    return false; 
+  } 
+
   public int size()
   { return elements.size(); } 
 

@@ -218,6 +218,8 @@ abstract class Expression
   public static boolean isComparator(String opx)
   { return comparitors.contains(opx); } 
 
+  public abstract boolean isTailRecursion(BehaviouralFeature bf);
+
   public void setStatic(boolean s)
   { isStatic = s; } 
 

@@ -1052,6 +1052,128 @@ abstract class Statement implements Cloneable
   // collection operation uses at each nesting level
   // level |-> [expr1, expr2, ...] with iterators vars
 
+  public static boolean isTailRecursive(
+            BehaviouralFeature bf, String nme, Statement st)
+  { // if all calls of bf are direct calls in invocation 
+    // statements or return statements. 
+
+    if (st == null) 
+    { return true; }
+ 
+    if (st instanceof SequenceStatement) 
+    { SequenceStatement sq = (SequenceStatement) st; 
+      Vector stats = sq.getStatements();
+
+      for (int i = 0; i < stats.size(); i++) 
+      { Statement stat = (Statement) stats.get(i); 
+        if (stat.isTailRecursive(bf,nme,stat)) { } 
+        else 
+        { return false; } 
+      } 
+
+      return true; 
+    } 
+
+    Vector names = new Vector(); 
+    names.add(nme); 
+
+    if (st instanceof InvocationStatement)
+    { InvocationStatement invok = 
+        (InvocationStatement) st;
+      
+      Expression expr = invok.getCallExp();
+      Vector vars1 =
+        expr.variablesUsedIn(names);
+    
+      if (expr != null && expr.isSelfCall(bf))
+      { return true; } 
+      else if (expr != null && vars1.size() > 0)
+      { return false; } // call to bf within an expression
+
+      return true; // null expression or no occurrence of bf 
+    } 
+
+    if (st instanceof ImplicitInvocationStatement)
+    { ImplicitInvocationStatement invok = 
+        (ImplicitInvocationStatement) st;
+      
+      Expression expr = invok.getCallExp();
+      Vector vars1 =
+        expr.variablesUsedIn(names);
+    
+      if (expr != null && expr.isSelfCall(bf))
+      { return true; } 
+      else if (expr != null && vars1.size() > 0)
+      { return false; } // call to bf within an expression
+
+      return true; // null expression or no occurrence of bf 
+    } 
+
+    if (st instanceof ReturnStatement)
+    { ReturnStatement retstat = (ReturnStatement) st; 
+      
+      Expression expr = retstat.getReturnValue();
+
+      if (expr == null) { return true; } 
+
+      Vector vars1 =
+        expr.variablesUsedIn(names);
+ 
+      System.out.println(">> " + expr.isSelfCall(bf) + " " + vars1); 
+
+      if (expr.isSelfCall(bf))
+      { return true; } 
+      
+      if (vars1.size() > 0)
+      { return false; } // call to bf within an expression
+
+      return true; // no occurrence of bf 
+    } 
+
+    if (st instanceof ConditionalStatement) 
+    { ConditionalStatement cs = (ConditionalStatement) st; 
+    
+      if (Statement.isTailRecursive(bf,nme,cs.ifPart()))
+      { return Statement.isTailRecursive(
+                                 bf,nme,cs.elsePart()); 
+      } 
+    
+      return false; 
+    } 
+
+    if (st instanceof WhileStatement) 
+    { return false; } 
+    // Nested loops cannot be handled within a recursion. 
+
+    if (st instanceof TryStatement) 
+    { TryStatement ts = (TryStatement) st; 
+
+      if (Statement.isTailRecursive(bf,nme,ts.getBody())) 
+      { Vector stats = ts.getClauses(); 
+        for (int i = 0; i < stats.size(); i++) 
+        { if (stats.get(i) instanceof Statement)
+          { Statement stat = (Statement) stats.get(i); 
+            if (Statement.isTailRecursive(bf,nme,stat)) { } 
+            else 
+            { return false; } 
+          }
+          else 
+          { return false; } 
+        }  
+      }
+      else 
+      { return false; }
+  
+      if (ts.getEndStatement() == null) 
+      { return true; } 
+
+      return Statement.isTailRecursive(
+                               bf,nme,ts.getEndStatement()); 
+    } 
+
+    return true;
+  } // Other cases, for all other forms of statement. 
+
   public static boolean endsWithSelfCall(
             BehaviouralFeature bf, String nme, Statement st)
   { // if every branch ends with a self-call
@@ -4876,6 +4998,9 @@ class ImplicitInvocationStatement extends Statement
 
   public String getOperator() 
   { return "execute"; } 
+
+  public Expression getCallExp() 
+  { return callExp; } 
 
   public boolean isSkip()
   { if ("true".equals(callExp + "")) 

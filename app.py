@@ -49,16 +49,18 @@ class CC :
   cc_index = dict({})
 
   def __init__(self):
-    self.sq = SortedSet({"a","b","c"})
     CC.cc_instances.append(self)
 
 
 
-  def op(self) :
-    print(((self.sq)[1:]))
-    print(((self.sq)[0:-1]))
-    print(((self.sq)[0]))
-    print(((self.sq)[-1]))
+  def tailrec(self, x) :
+    result = 0
+    if x <= 1 :
+      result = 1
+    else :
+      if x > 1 :
+        result = self.tailrec(x - 1)
+    return result
 
   def killCC(cc_x) :
     cc_instances = ocl.excludingSet(cc_instances, cc_x)

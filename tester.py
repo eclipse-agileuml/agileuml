@@ -29,5 +29,16 @@ MAXOBJECTS = 500
 
 
 cc_count = len(app.CC.cc_instances)
+cc_tailrec_counts = [0 for _x in range(0,100)]
+cc_tailrec_totals = [0 for _y in range(0,100)]
+
+for _ex in app.CC.cc_instances :
+  MutationTest.MutationTest.tailrec_mutation_tests(_ex,cc_tailrec_counts, cc_tailrec_totals)
+  print("")
+
+for _idx in range(0,len(cc_tailrec_counts)) :
+  if cc_tailrec_totals[_idx] > 0 :
+    print("Test " + str(_idx) + " effectiveness: " + str(100.0*cc_tailrec_counts[_idx]/cc_tailrec_totals[_idx]) + "%")
+
 
 
