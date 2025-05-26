@@ -4387,9 +4387,18 @@ public class BehaviouralFeature extends ModelElement
             "!! Use 'Replace recursion by loop' refactoring"); 
       } 
       else 
-      { System.err.println("!!! Non-tail-recursion in " + 
+      { boolean semitail = 
+          Statement.isSemiTailRecursive(this, name, activity); 
+        if (semitail) 
+        { System.err.println("!! Semi-tail-recursion in " + 
             name + "\n" +  
-            "!!! Use 'Make operation cached' refactoring"); 
+            "!! Use 'Make operation cached' refactoring");
+        }
+        else 
+        { System.err.println("!!! Non-tail-recursion in " + 
+            name + "\n" +  
+            "!!! Use 'Make operation cached' refactoring");
+        }  
       } 
 
       System.err.println(); 
@@ -7863,40 +7872,16 @@ public class BehaviouralFeature extends ModelElement
   } */
 
   public boolean isTailRecursive(Vector postconds)
-  { if (postconds.size() == 0)
-    { return true; } 
-
-    Expression postcond = (Expression) postconds.get(0); 
-    boolean fst = isTailRecursiveBasicCase(postcond);
-
-    if (postconds.size() == 1) 
-    { return fst; } 
-
-    Vector ptail = new Vector(); 
-    ptail.addAll(postconds); 
-    ptail.remove(0); 
- 
-    if ((postcond instanceof BinaryExpression) &&  
-        "=>".equals(((BinaryExpression) postcond).operator))
-    { Expression next = (Expression) postconds.get(1); 
-
-      if ((next instanceof BinaryExpression) &&
-          "=>".equals(((BinaryExpression) next).operator)) 
-      { boolean elsepart = 
-           isTailRecursive(ptail);
-        return elsepart;    
-      } 
+  { 
+    for (int i = 0; i < postconds.size(); i++) 
+    { Expression postcond = (Expression) postconds.get(i); 
+      boolean fst = isTailRecursiveBasicCase(postcond);
+      if (fst) { } 
       else 
-      { boolean res = 
-           isTailRecursive(ptail); 
-        return res; 
-      } 
-    }      
-    else 
-    { boolean istailrec = 
-         isTailRecursive(ptail); 
-      return istailrec;
-    }  // sequencing of fst and ptail
+      { return false; } 
+    } 
+
+    return true;  
   } 
 
 

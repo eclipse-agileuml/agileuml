@@ -259,6 +259,38 @@ class BinaryExpression extends Expression
     return false; 
   } 
 
+  public boolean isSemiTailRecursion(BehaviouralFeature bf)
+  { // it is call + expr where bf not in expr
+    // or expr + call, or same with *
+    // ->including or ->union with sets. 
+
+    if ("=".equals(operator) && 
+        "result".equals(left + "") && 
+        right instanceof BinaryExpression)
+    { return 
+        ((BinaryExpression) right).isSemiTailRecursion(bf); 
+    } 
+
+    if (operator.equals("+") || operator.equals("*")) { } 
+    else 
+    { return false; } 
+
+    String bfname = bf.getName(); 
+
+    Vector names = new Vector(); 
+    names.add(bfname); 
+    Vector lvars = left.variablesUsedIn(names); 
+    Vector rvars = right.variablesUsedIn(names); 
+
+    if (lvars.size() == 0)
+    { return right.isSelfCall(bf); } 
+
+    if (rvars.size() == 0)
+    { return left.isSelfCall(bf); } 
+
+    return false; 
+  } 
+
   public Expression definedness()
   { Expression dl = left.definedness();
     Expression dr = right.definedness();

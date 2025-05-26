@@ -1052,6 +1052,49 @@ abstract class Statement implements Cloneable
   // collection operation uses at each nesting level
   // level |-> [expr1, expr2, ...] with iterators vars
 
+
+  public static boolean isSemiTailRecursive(
+            BehaviouralFeature bf, String nme, Statement st)
+  { // There is only one return that does not involve bf
+    // There is only one non-tail return involving bf
+    // All other returns are direct calls of bf
+ 
+    Vector names = new Vector(); 
+    names.add(nme); 
+
+    Vector rets = getReturnValues(st); 
+    
+    int nontail = 0; 
+    int nonrecursive = 0; 
+    int tailrecursive = 0;
+    int semitail = 0;  
+
+    for (int i = 0; i < rets.size(); i++) 
+    { Expression expr = (Expression) rets.get(i); 
+      Vector uses = expr.variablesUsedIn(names); 
+      if (uses.size() == 0) 
+      { nonrecursive++; } 
+      else if (expr.isSelfCall(bf))
+      { tailrecursive++; } 
+      else if (expr instanceof BinaryExpression && 
+        ((BinaryExpression) expr).isSemiTailRecursion(bf)) 
+      { semitail++; } 
+      else 
+      { nontail++; } 
+    } 
+
+    System.err.println(">> " + nme + " has " + 
+         nonrecursive + " non-recursive returns, " + 
+         tailrecursive + " tail recursive returns,\n>>" + 
+         " and " + 
+         nontail + " non-tail recursive returns,\n>> " + 
+         semitail + " semi-tail recursive returns: " + rets);
+
+    if (nonrecursive == 1 && semitail == 1 && nontail == 0)
+    { return true; } 
+    return false;  
+  } 
+
   public static boolean isTailRecursive(
             BehaviouralFeature bf, String nme, Statement st)
   { // if all calls of bf are direct calls in invocation 
@@ -1119,7 +1162,7 @@ abstract class Statement implements Cloneable
       Vector vars1 =
         expr.variablesUsedIn(names);
  
-      System.out.println(">> " + expr.isSelfCall(bf) + " " + vars1); 
+      // System.out.println(">> " + expr.isSelfCall(bf) + " " + vars1); 
 
       if (expr.isSelfCall(bf))
       { return true; } 
@@ -2147,7 +2190,7 @@ abstract class Statement implements Cloneable
   { // sequence statement of branch elements except 
     // self.nme() replaced by continue
 
-    System.out.println("+++ REPLACING: " + branch);
+    // System.out.println("+++ REPLACING: " + branch);
 
     Vector vect = new Vector(); 
     if (branch.get(0) instanceof Vector)
@@ -2155,7 +2198,7 @@ abstract class Statement implements Cloneable
 
       if (vect.get(0) instanceof Vector)
       { vect = (Vector) vect.get(0); 
-        System.out.println("+++ REPLACING code: " + vect);
+        // System.out.println("+++ REPLACING code: " + vect);
 
         if (vect.size() == 4 && 
             "if".equals(vect.get(0) + ""))      
