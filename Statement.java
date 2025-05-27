@@ -1058,6 +1058,9 @@ abstract class Statement implements Cloneable
   { // There is only one return that does not involve bf
     // There is only one non-tail return involving bf
     // All other returns are direct calls of bf
+
+    // More generally, all non-tail returns have same operator 
+    // (numeric +, *, or ->including or ->union on sets/bags)
  
     Vector names = new Vector(); 
     names.add(nme); 
@@ -2254,14 +2257,15 @@ abstract class Statement implements Cloneable
     if (st instanceof InvocationStatement)
     { InvocationStatement invok = 
         (InvocationStatement) st;
-      Statement res = new ContinueStatement();  
       
       Expression expr = invok.getCallExp();
  
       // if ((expr + "").startsWith("self." + nme + "("))
       if (expr != null && expr.isSelfCall(bf))
-      { Statement passigns = 
+      { Statement res = new ContinueStatement();  
+        Statement passigns = 
              bf.parameterAssignments(expr);
+
         if (passigns == null) 
         { return res; } 
         else if (passigns instanceof SequenceStatement)
@@ -2274,14 +2278,15 @@ abstract class Statement implements Cloneable
 
     if (st instanceof ReturnStatement)
     { ReturnStatement retstat = (ReturnStatement) st; 
-      Statement res = new ContinueStatement();  
       
       Expression expr = retstat.getReturnValue();
  
       // if ((expr + "").startsWith("self." + nme + "("))
       if (expr != null && expr.isSelfCall(bf))
-      { Statement passigns = 
+      { Statement res = new ContinueStatement();  
+        Statement passigns = 
              bf.parameterAssignments(expr);
+        
         if (passigns == null) 
         { return res; } 
         else if (passigns instanceof SequenceStatement)
@@ -2361,6 +2366,215 @@ abstract class Statement implements Cloneable
       Statement newend =
         Statement.replaceSelfCallsByContinue(
                bf, nme, endstat); 
+      Statement newtry = 
+        new TryStatement(newbdy, newstats, newend); 
+      return newtry; 
+    } 
+
+    return st;
+  } // Other cases, for all other forms of statement. 
+
+  public static Statement replaceSemiTailCallsByContinue(
+           BehaviouralFeature bf, String nme, Statement st, 
+           Vector inits)
+  { Vector names = new Vector(); 
+    names.add(nme); 
+
+    BasicExpression _result = 
+      BasicExpression.newVariableBasicExpression("_result"); 
+    _result.setType(bf.getResultType()); 
+
+    Vector rets = getReturnValues(st); 
+    
+    Vector nonrecReturns = new Vector(); 
+    Vector nontailReturns = new Vector(); 
+
+    for (int i = 0; i < rets.size(); i++) 
+    { Expression expr = (Expression) rets.get(i); 
+      Vector uses = expr.variablesUsedIn(names); 
+      if (uses.size() == 0) 
+      { nonrecReturns.add(expr); } 
+      else if (expr.isSelfCall(bf))
+      { } 
+      else if (expr instanceof BinaryExpression && 
+        ((BinaryExpression) expr).isSemiTailRecursion(bf)) 
+      { nontailReturns.add(expr); } 
+      else 
+      { } 
+    } 
+
+    Expression baseValue = (Expression) nonrecReturns.get(0); 
+    CreationStatement init = 
+       new CreationStatement(_result, baseValue); 
+    inits.add(init); 
+
+    return Statement.replaceSelfCallsByContinue(bf, nme, st,
+              _result, nonrecReturns, nontailReturns); 
+  } 
+
+  public static Statement replaceSelfCallsByContinue(
+           BehaviouralFeature bf, String nme, Statement st,
+           BasicExpression _result, 
+           Vector nonrecReturns, Vector nontailReturns)
+  { // self.nme(exprs) replaced by pars := exprs; continue
+    // Likewise for tail-recursive return self.nme(exprs)
+    // Non-recursive return replaced by return _result
+    // Non-tail return expr*self.nme(exprs) replaced by
+    // _result := expr*_result; pars := exprs; continue
+    // 
+    // Any branch that does not terminate in nme call/return
+    // or exit/return is ended by break. 
+
+    if (st == null) 
+    { return st; }
+
+    if (st instanceof InvocationStatement)
+    { InvocationStatement invok = 
+        (InvocationStatement) st;
+      
+      Expression expr = invok.getCallExp();
+ 
+      // if ((expr + "").startsWith("self." + nme + "("))
+      if (expr != null && expr.isSelfCall(bf))
+      { Statement res = new ContinueStatement();  
+        Statement passigns = 
+             bf.parameterAssignments(expr);
+
+        if (passigns == null) 
+        { return res; } 
+        else if (passigns instanceof SequenceStatement)
+        { ((SequenceStatement) passigns).addStatement(res); 
+          return passigns; 
+        } // passigns.setBrackets(true) 
+      }
+      return st; 
+    } 
+
+    if (st instanceof ReturnStatement)
+    { ReturnStatement retstat = (ReturnStatement) st; 
+      
+      Expression expr = retstat.getReturnValue();
+ 
+      if (nonrecReturns.contains(expr))
+      { Statement newret = new ReturnStatement(_result); 
+        return newret; 
+      } 
+
+      if (nontailReturns.contains(expr))
+      { // replace call by _result, assign to _result
+        BinaryExpression bexpr = 
+              (BinaryExpression) expr; 
+
+        Expression newexpr = 
+           bexpr.replacedSemiTailRecursion(bf, _result); 
+        Expression selfcall = bexpr.getSelfCall(bf); 
+
+        if (newexpr != null && selfcall != null)
+        { Statement res = new ContinueStatement(); 
+          AssignStatement assgn = 
+            new AssignStatement(_result, newexpr); 
+          SequenceStatement ss = new SequenceStatement(); 
+          ss.addStatement(assgn);  
+          Statement passigns = 
+             bf.parameterAssignments(selfcall);
+          ss.addStatements(passigns); 
+          ss.addStatement(res); 
+          return ss; 
+        } 
+      } 
+
+      if (expr != null && expr.isSelfCall(bf))
+      { Statement res = new ContinueStatement();  
+        Statement passigns = 
+             bf.parameterAssignments(expr);
+        
+        if (passigns == null) 
+        { return res; } 
+        else if (passigns instanceof SequenceStatement)
+        { ((SequenceStatement) passigns).addStatement(res); 
+          return passigns; 
+        } 
+      }
+
+      return st; 
+    } 
+ 
+    if (st instanceof SequenceStatement) 
+    { SequenceStatement sq = (SequenceStatement) st; 
+      Vector stats = sq.getStatements();
+      Vector res = new Vector(); 
+ 
+      for (int i = 0; i < stats.size(); i++) 
+      { Statement ss = (Statement) stats.get(i); 
+        Statement newstat = 
+            Statement.replaceSelfCallsByContinue(bf,nme,ss,
+                        _result, nonrecReturns, nontailReturns); 
+
+        if (newstat != null) 
+        { res.add(newstat); } 
+      } 
+
+      // if res does not end with return, continue or exit, 
+      // add a break statement: 
+
+      SequenceStatement newss = new SequenceStatement(res);
+
+      if (Statement.endsWithReturn(newss) || 
+          Statement.endsWithContinue(newss) ||
+          Statement.endsWithSelfCall(bf,nme,st) ||  
+          Statement.endsWithBreak(newss) || 
+          Statement.endsWithExit(newss)) { } 
+      else 
+      { BreakStatement bs = new BreakStatement(); 
+        newss.addStatement(bs); 
+      } 
+
+      return newss;
+    } 
+    
+    if (st instanceof ConditionalStatement) 
+    { ConditionalStatement cs = (ConditionalStatement) st;
+      Expression tst = cs.getTest(); 
+
+      Statement ifstat = cs.ifPart();
+      Statement elsestat = cs.elsePart(); 
+      
+      Statement newif = 
+        Statement.replaceSelfCallsByContinue(bf,nme,ifstat,
+                     _result, nonrecReturns, nontailReturns); 
+      Statement newelse = 
+        Statement.replaceSelfCallsByContinue(bf,nme,elsestat,
+                     _result, nonrecReturns, nontailReturns); 
+
+      return new ConditionalStatement(tst,newif,newelse); 
+    } 
+
+    if (st instanceof TryStatement) 
+    { TryStatement ts = (TryStatement) st; 
+      Statement bdy = ts.getBody(); 
+      Statement newbdy = 
+        Statement.replaceSelfCallsByContinue(bf,nme,bdy, 
+                         _result, nonrecReturns, nontailReturns);
+   
+      Vector stats = ts.getClauses(); 
+      Vector newstats = new Vector();
+ 
+      for (int i = 0; i < stats.size(); i++) 
+      { if (stats.get(i) instanceof Statement)
+        { Statement stat = (Statement) stats.get(i); 
+          Statement newstat = 
+            Statement.replaceSelfCallsByContinue(
+                               bf,nme,stat, _result, 
+                               nonrecReturns, nontailReturns);
+          newstats.add(newstat); 
+        }  
+      }
+
+      Statement endstat = ts.getEndStatement(); 
+      Statement newend =
+        Statement.replaceSelfCallsByContinue(
+            bf, nme, endstat, _result, 
+            nonrecReturns, nontailReturns); 
       Statement newtry = 
         new TryStatement(newbdy, newstats, newend); 
       return newtry; 
@@ -7674,7 +7888,8 @@ class CreationStatement extends Statement
     cs.elementType = elementType; 
     cs.declarationOnly = declarationOnly; 
     cs.initialValue = initialValue; 
-    cs.initialExpression = (Expression) initialExpression.clone(); 
+    cs.initialExpression = 
+         (Expression) initialExpression.clone(); 
     cs.isFrozen = isFrozen; 
     cs.variable = variable; 
     return cs; 
@@ -7737,6 +7952,17 @@ class CreationStatement extends Statement
     if (Type.isStringType(typ))
     { elementType = new Type("String", null); }  
     assignsTo = vbl + ""; 
+  }
+
+  public CreationStatement(BasicExpression var, Expression init)
+  { instanceType = var.getType(); 
+    elementType = var.getElementType(); 
+    if (Type.isStringType(instanceType))
+    { elementType = new Type("String", null); }
+  
+    initialExpression = init; 
+    createsInstanceOf = instanceType.getName(); 
+    assignsTo = var + ""; 
   }
 
   public CreationStatement defaultVersion()
@@ -8962,6 +9188,16 @@ class SequenceStatement extends Statement
 
   public void addStatements(SequenceStatement ss)
   { statements.addAll(ss.getStatements()); } 
+
+  public void addStatements(Statement st)
+  { if (st == null) 
+    { return; } 
+
+    if (st instanceof SequenceStatement)
+    { statements.addAll(
+          ((SequenceStatement) st).getStatements());
+    } 
+  }  
 
   public SequenceStatement(Statement s1, Statement s2)
   { statements = new Vector(); 

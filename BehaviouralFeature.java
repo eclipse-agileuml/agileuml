@@ -11530,18 +11530,35 @@ public class BehaviouralFeature extends ModelElement
 
     String nme = getName(); 
 
-    Statement loopBdy =             
+    boolean semitail = 
+          Statement.isSemiTailRecursive(this, nme, activity); 
+        
+    Statement loopBdy = null; 
+
+    if (semitail)
+    { Vector inits = new Vector(); 
+      loopBdy = 
+        Statement.replaceSemiTailCallsByContinue(
+                                     this,nme,oldact,
+                                     inits); 
+      WhileStatement ws = new WhileStatement(
+                                 new BasicExpression(true),
+                                 loopBdy);
+      SequenceStatement res = new SequenceStatement(); 
+      res.addStatements(inits); 
+      res.addStatement(ws); 
+      return res;  
+    } 
+    else 
+    { loopBdy =             
        Statement.replaceSelfCallsByContinue(
                                      this,nme,oldact);
 
-    WhileStatement ws = new WhileStatement(
+      WhileStatement ws = new WhileStatement(
                                  new BasicExpression(true),
                                  loopBdy); 
-
-    System.out.println(">>> Restructured code: " + ws); 
-    System.out.println(); 
-
-    return ws;
+      return ws; 
+    } 
   }
 
   public Statement selfCalls2Loops(Statement act)

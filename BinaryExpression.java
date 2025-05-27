@@ -291,6 +291,86 @@ class BinaryExpression extends Expression
     return false; 
   } 
 
+  public Expression replacedSemiTailRecursion(
+            BehaviouralFeature bf, BasicExpression _result)
+  { // it is _result + expr where bf not in expr
+    // or expr + _result, or same with *
+    // ->including or ->union with sets. 
+
+    /* if ("=".equals(operator) && 
+        "result".equals(left + "") && 
+        right instanceof BinaryExpression)
+    { return 
+        ((BinaryExpression) right).isSemiTailRecursion(bf); 
+    } Only for abstract constraints */ 
+
+    if (operator.equals("+") || operator.equals("*")) { } 
+    else 
+    { return null; } 
+
+    String bfname = bf.getName(); 
+
+    Vector names = new Vector(); 
+    names.add(bfname); 
+    Vector lvars = left.variablesUsedIn(names); 
+    Vector rvars = right.variablesUsedIn(names); 
+
+    if (lvars.size() == 0)
+    { new BinaryExpression(operator, left, _result); } 
+
+    if (rvars.size() == 0)
+    { return new BinaryExpression(operator, _result, right); } 
+
+    return null; 
+  } 
+
+  public Expression getSelfCall(
+            BehaviouralFeature bf)
+  { 
+    /* if ("=".equals(operator) && 
+        "result".equals(left + "") && 
+        right instanceof BinaryExpression)
+    { return 
+        ((BinaryExpression) right).isSemiTailRecursion(bf); 
+    } Only for abstract constraints */ 
+
+    if (operator.equals("+") || operator.equals("*")) { } 
+    else 
+    { return null; } 
+
+    String bfname = bf.getName(); 
+
+    Vector names = new Vector(); 
+    names.add(bfname); 
+    Vector lvars = left.variablesUsedIn(names); 
+    Vector rvars = right.variablesUsedIn(names); 
+
+    if (lvars.size() == 0)
+    { return right; } 
+
+    if (rvars.size() == 0)
+    { return left; } 
+
+    return null; 
+  } 
+
+  public static boolean allOperatorsSame(Vector bexprs)
+  { if (bexprs.size() == 0) 
+    { return true; } 
+
+    BinaryExpression bexpr = (BinaryExpression) bexprs.get(0); 
+    String op = bexpr.getOperator(); 
+
+    for (int i = 1; i < bexprs.size(); i++) 
+    { BinaryExpression be = (BinaryExpression) bexprs.get(i); 
+      if (op.equals(be.getOperator())) { } 
+      else 
+      { return false; } 
+    } 
+
+    return true; 
+  } 
+
   public Expression definedness()
   { Expression dl = left.definedness();
     Expression dr = right.definedness();
