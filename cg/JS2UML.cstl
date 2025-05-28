@@ -217,8 +217,14 @@ _* |-->
 functionDeclaration::
 function _1 ( ) _2 |-->  operation _1() : OclAny\n  pre: true post: true\n  activity:\n_2;\n\n
 function _1 ( _2 ) _3  |-->  operation _1(_2) : OclAny\n  pre: true post: true\n  activity:\n_3;\n\n
+
+async function _1 ( ) _2 |-->  operation _1() : OclProcess\n  pre: true post: true\n  activity:\n_2;\n\n
+async function _1 ( _2 ) _3  |-->  operation _1(_2) : OclProcess\n  pre: true post: true\n  activity:\n_3;\n\n
+
 function * _1 ( ) _2 |-->  operation _1(_position_ : int) : OclAny\n  pre: true post: true\n  activity:\n  var _yieldCount_ : int := 0;\n_2;\n\n<action> _1 generator
 function * _1 ( _2 ) _3  |-->  operation _1(_2, _position_ : int) : OclAny\n  pre: true post: true\n  activity:\n  var _yieldCount_ : int := 0;\n_3;\n\n<action> _1 generator
+
+_1 |-->_1<when> _1 functionDeclaration
 
 
 classDeclaration::
@@ -635,6 +641,8 @@ new BigInt _1 |-->("" + _1)->toLong()
 new RegExp _1 |-->OclRegex.compile(_1`firstArg)
 new WeakRef _1 |-->?_1
 
+new Promise _1 |-->OclProcess.newOclProcess(_1)
+
 new _1 _2 |-->_1.new_1_2    
 
 String _1 |-->("" + _1)
@@ -729,7 +737,7 @@ typeof _1 |-->((_1)->oclType() + "")
 - _1 |-->-_1
 ~ _1 |-->-(_1+1)
 ! _1 |-->not(_1)
-await _1 |-->_1 
+await _1 |-->_1.join() 
 
 _1 ** _2 |-->(_1)->pow(_2) 
 _1 * _2 |-->_1*_2
@@ -944,6 +952,8 @@ new Set _1 |-->Set
 new WeakSet _1 |-->Set
 new Map _1 |-->Map
 new WeakMap _1 |-->Map
+
+new Promise _1 |-->OclProcess
 
 new Array _1 |-->Sequence
 
@@ -1174,7 +1184,8 @@ typeof _1 |-->
 - _1 |-->_1`updateForm
 ~ _1 |-->_1`updateForm
 ! _1 |-->_1`updateForm
-await _1 |-->_1`updateForm 
+await _1 |-->_1.join()
+
 _1 = _2 |-->    _1 := _2 ;\n
 _1 *= _2 |-->  _1 := _1*_2 ;\n
 _1 /= _2 |-->  _1 := _1/_2 ;\n
@@ -1199,6 +1210,7 @@ _1 ? _2 : _3 |-->  _1`updateForm\n_2`updateForm\n_3`updateForm
 _1 _2 |-->    _1_2 ;\n<when> _2 arguments
 _1 |-->_1`updateForm<when> _1 singleExpression
 _1 |-->_1`updateForm<when> _1 yieldStatement
+_1 |-->_1`functionDeclaration<when> _1 anonymousFunction
 _1 |-->
 
 
@@ -1252,7 +1264,8 @@ typeof _1 |-->
 - _1 |-->_1`preSideEffect
 ~ _1 |-->_1`preSideEffect
 ! _1 |-->_1`preSideEffect
-await _1 |-->_1`preSideEffect 
+await _1 |-->_1`preSideEffect
+ 
 _1 = _2 |-->_1`preSideEffect_2`preSideEffect
 _1 *= _2 |-->_1`preSideEffect_2`preSideEffect
 _1 /= _2 |-->_1`preSideEffect_2`preSideEffect
@@ -1323,8 +1336,15 @@ objectLiteral::
 anonymousFunction::
 function ( ) _1 |-->lambda _anon_ : OclAny in (_1) 
 function ( _1 ) _2 |-->lambda _1 in (_2) 
+
+async function ( ) _1 |-->OclProcess.newOclProcess(lambda _anon_ : OclAny in (_1)) 
+async function ( _1 ) _2 |-->OclProcess.newOclProcess(lambda _1 in (_2))
+ 
 _1 => _2 |-->lambda _1 in (_2)
+_1 |-->_1`anonymousFunction<when> _1 functionDeclaration
+
 _1 |-->lambda _1`parameterDeclns in self._1`name(_1`parameters)
+
 
 arrowFunctionParameters::
 ( ) |-->_anon_ : OclAny
