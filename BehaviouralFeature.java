@@ -4392,7 +4392,7 @@ public class BehaviouralFeature extends ModelElement
         if (semitail) 
         { System.err.println("!! Semi-tail-recursion in " + 
             name + "\n" +  
-            "!! Use 'Make operation cached' refactoring");
+            "!! Use 'Replace recursion by loop' refactoring");
         }
         else 
         { System.err.println("!!! Non-tail-recursion in " + 
@@ -4414,6 +4414,11 @@ public class BehaviouralFeature extends ModelElement
       { System.err.println("!! Tail recursive operation! " + 
             name + "\n" +  
             "!! Use 'Replace recursion by loop' refactoring"); 
+      } 
+      else if (isSemiTailRecursive(cases))
+      { System.err.println("!!! Semi-tail-recursion in " + 
+            name + "\n" +  
+            "!!! Use 'Make operation cached' refactoring"); 
       } 
       else 
       { System.err.println("!!! Non-tail-recursion in " + 
@@ -7884,6 +7889,19 @@ public class BehaviouralFeature extends ModelElement
     return true;  
   } 
 
+  public boolean isSemiTailRecursive(Vector postconds)
+  { 
+    for (int i = 0; i < postconds.size(); i++) 
+    { Expression postcond = (Expression) postconds.get(i); 
+      boolean fst = isTailRecursiveBasicCase(postcond);
+      boolean semi = isSemiTailRecursiveBasicCase(postcond);
+      if (fst || semi) { } 
+      else 
+      { return false; } 
+    } 
+
+    return true;  
+  } 
 
   private Statement designBasicCase(Expression pst,
                   String resT, java.util.Map env0,
@@ -8035,6 +8053,52 @@ public class BehaviouralFeature extends ModelElement
     }
 
     return pst.isTailRecursion(this); 
+  }
+
+  private boolean isSemiTailRecursiveBasicCase(Expression pst)
+  { Vector names = new Vector(); 
+    names.add(name); 
+
+    if (pst instanceof BinaryExpression) 
+    { BinaryExpression be = (BinaryExpression) pst; 
+      if ("=>".equals(be.operator))
+      { Expression test = be.left; 
+
+        Vector vars1 =
+          test.variablesUsedIn(names);
+
+        if (vars1.contains(name))
+        { System.err.println("!! ERROR: operation called in test expression -- not semi-tail recursive"); 
+          return false; 
+        } 
+
+        boolean ifpart = 
+           isSemiTailRecursiveBasicCase(be.right); 
+
+        return ifpart; 
+      } 
+      else if ("=".equals(be.operator))
+      { Expression beleft = be.left;
+        Expression beright = be.right;
+        Vector vars2 =
+            beright.variablesUsedIn(names);
+
+        if ("result".equals(beleft + ""))
+        { boolean istail = beright.isTailRecursion(this); 
+          if (istail) { return true; } 
+ 
+          return (beright instanceof BinaryExpression) &&      
+            ((BinaryExpression) beright).isSemiTailRecursion(
+                                                       this); 
+        } 
+      } // and all the semi cases must be aligned. 
+    }
+
+    boolean istail = pst.isTailRecursion(this); 
+    if (istail) { return true; } 
+
+    return (pst instanceof BinaryExpression) && 
+      ((BinaryExpression) pst).isSemiTailRecursion(this); 
   }
 
   // assume it is a conjunction of implications
@@ -11551,7 +11615,7 @@ public class BehaviouralFeature extends ModelElement
     } 
     else 
     { loopBdy =             
-       Statement.replaceSelfCallsByContinue(
+         Statement.replaceSelfCallsByContinue(
                                      this,nme,oldact);
 
       WhileStatement ws = new WhileStatement(

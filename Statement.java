@@ -2387,7 +2387,7 @@ abstract class Statement implements Cloneable
     Vector rets = getReturnValues(st); 
     
     Vector nonrecReturns = new Vector(); 
-    Vector nontailReturns = new Vector(); 
+    Vector semitailReturns = new Vector(); 
 
     for (int i = 0; i < rets.size(); i++) 
     { Expression expr = (Expression) rets.get(i); 
@@ -2398,7 +2398,7 @@ abstract class Statement implements Cloneable
       { } 
       else if (expr instanceof BinaryExpression && 
         ((BinaryExpression) expr).isSemiTailRecursion(bf)) 
-      { nontailReturns.add(expr); } 
+      { semitailReturns.add(expr); } 
       else 
       { } 
     } 
@@ -2409,13 +2409,13 @@ abstract class Statement implements Cloneable
     inits.add(init); 
 
     return Statement.replaceSelfCallsByContinue(bf, nme, st,
-              _result, nonrecReturns, nontailReturns); 
+              _result, nonrecReturns, semitailReturns); 
   } 
 
   public static Statement replaceSelfCallsByContinue(
            BehaviouralFeature bf, String nme, Statement st,
            BasicExpression _result, 
-           Vector nonrecReturns, Vector nontailReturns)
+           Vector nonrecReturns, Vector semitailReturns)
   { // self.nme(exprs) replaced by pars := exprs; continue
     // Likewise for tail-recursive return self.nme(exprs)
     // Non-recursive return replaced by return _result
@@ -2454,13 +2454,17 @@ abstract class Statement implements Cloneable
     { ReturnStatement retstat = (ReturnStatement) st; 
       
       Expression expr = retstat.getReturnValue();
+
+      // System.out.println(">> Return expression " + expr + 
+      //             " Semi-tail returns: " + semitailReturns); 
  
       if (nonrecReturns.contains(expr))
       { Statement newret = new ReturnStatement(_result); 
         return newret; 
       } 
 
-      if (nontailReturns.contains(expr))
+      if (semitailReturns.contains(expr) && 
+          expr instanceof BinaryExpression)
       { // replace call by _result, assign to _result
         BinaryExpression bexpr = 
               (BinaryExpression) expr; 
@@ -2508,7 +2512,7 @@ abstract class Statement implements Cloneable
       { Statement ss = (Statement) stats.get(i); 
         Statement newstat = 
             Statement.replaceSelfCallsByContinue(bf,nme,ss,
-                        _result, nonrecReturns, nontailReturns); 
+                        _result, nonrecReturns, semitailReturns); 
 
         if (newstat != null) 
         { res.add(newstat); } 
@@ -2541,10 +2545,10 @@ abstract class Statement implements Cloneable
       
       Statement newif = 
         Statement.replaceSelfCallsByContinue(bf,nme,ifstat,
-                     _result, nonrecReturns, nontailReturns); 
+                     _result, nonrecReturns, semitailReturns); 
       Statement newelse = 
         Statement.replaceSelfCallsByContinue(bf,nme,elsestat,
-                     _result, nonrecReturns, nontailReturns); 
+                     _result, nonrecReturns, semitailReturns); 
 
       return new ConditionalStatement(tst,newif,newelse); 
     } 
@@ -2554,7 +2558,7 @@ abstract class Statement implements Cloneable
       Statement bdy = ts.getBody(); 
       Statement newbdy = 
         Statement.replaceSelfCallsByContinue(bf,nme,bdy, 
-                         _result, nonrecReturns, nontailReturns);
+                       _result, nonrecReturns, semitailReturns);
    
       Vector stats = ts.getClauses(); 
       Vector newstats = new Vector();
@@ -2565,7 +2569,7 @@ abstract class Statement implements Cloneable
           Statement newstat = 
             Statement.replaceSelfCallsByContinue(
                                bf,nme,stat, _result, 
-                               nonrecReturns, nontailReturns);
+                               nonrecReturns, semitailReturns);
           newstats.add(newstat); 
         }  
       }
@@ -2574,7 +2578,7 @@ abstract class Statement implements Cloneable
       Statement newend =
         Statement.replaceSelfCallsByContinue(
             bf, nme, endstat, _result, 
-            nonrecReturns, nontailReturns); 
+            nonrecReturns, semitailReturns); 
       Statement newtry = 
         new TryStatement(newbdy, newstats, newend); 
       return newtry; 

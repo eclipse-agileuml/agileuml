@@ -282,10 +282,14 @@ class BinaryExpression extends Expression
     Vector lvars = left.variablesUsedIn(names); 
     Vector rvars = right.variablesUsedIn(names); 
 
-    if (lvars.size() == 0)
+    System.out.println(">> Expression " + this); 
+    System.out.println(">> lvars: " + lvars); 
+    System.out.println(">> rvars: " + rvars); 
+
+    if (rvars.contains(bfname) && !lvars.contains(bfname))
     { return right.isSelfCall(bf); } 
 
-    if (rvars.size() == 0)
+    if (lvars.contains(bfname) && !rvars.contains(bfname))
     { return left.isSelfCall(bf); } 
 
     return false; 
@@ -312,14 +316,15 @@ class BinaryExpression extends Expression
 
     Vector names = new Vector(); 
     names.add(bfname); 
+
     Vector lvars = left.variablesUsedIn(names); 
     Vector rvars = right.variablesUsedIn(names); 
 
-    if (lvars.size() == 0)
-    { new BinaryExpression(operator, left, _result); } 
+    if (lvars.contains(bfname)) // left is the self call
+    { new BinaryExpression(operator, _result, right); } 
 
-    if (rvars.size() == 0)
-    { return new BinaryExpression(operator, _result, right); } 
+    if (rvars.contains(bfname)) // right is the self call
+    { return new BinaryExpression(operator, left, _result); } 
 
     return null; 
   } 
