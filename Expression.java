@@ -1313,6 +1313,10 @@ abstract class Expression
   public boolean isSelfCall(BehaviouralFeature bf) 
   { return false; } 
 
+  public boolean isSelfCallDecrement(BehaviouralFeature bf, 
+                                     String par) 
+  { return false; } 
+
   public boolean isSelfCall(String nme) 
   { return false; } 
 
@@ -3428,12 +3432,17 @@ abstract class Expression
   } 
 
   public static Expression simplifyCollect(Expression var, 
-                                Expression src, Expression expr)
-  { // Integer.subrange(a,b)->collect(x | sq[x]) is 
+                       Expression src, Expression expr)
+  { // sq->collect(x|x) is sq for sequence sq
+    // Integer.subrange(a,b)->collect(x | sq[x]) is 
     //    sq.subrange(a,b)
     // Integer.subrange(a,b)->collect(x | sq[x+1]) is 
     //    sq.subrange(a+1,b+1)
     // Likewise for sq->at(i)
+
+    if (src.isSequence() && 
+        (var + "").equals(expr + ""))
+    { return src; } 
 
     if (src instanceof BasicExpression &&
         expr instanceof BasicExpression && 
@@ -3446,7 +3455,8 @@ abstract class Expression
   
       if (arr.isSequenceApplication(var))  
       { BasicExpression res = 
-          BasicExpression.newFunctionBasicExpression("subrange", 
+          BasicExpression.newFunctionBasicExpression(
+                  "subrange", 
                   arr.getData(), pars); 
         return res; 
       }
@@ -3462,7 +3472,8 @@ abstract class Expression
                       new BasicExpression(1))); 
 
         BasicExpression res = 
-          BasicExpression.newFunctionBasicExpression("subrange", 
+          BasicExpression.newFunctionBasicExpression(
+                  "subrange", 
                   arr.getData(), newpars); 
         return res; 
       }
@@ -3480,7 +3491,8 @@ abstract class Expression
       if ("->at".equals(arr.getOperator()) && 
           arr.isSequenceApplication(var))  
       { BasicExpression res = 
-          BasicExpression.newFunctionBasicExpression("subrange", 
+          BasicExpression.newFunctionBasicExpression(
+                  "subrange", 
                   arr.getLeft(), pars); 
         return res; 
       }
@@ -3497,7 +3509,8 @@ abstract class Expression
                       new BasicExpression(1))); 
 
         BasicExpression res = 
-          BasicExpression.newFunctionBasicExpression("subrange", 
+          BasicExpression.newFunctionBasicExpression(
+                  "subrange", 
                   arr.getLeft(), newpars); 
         return res; 
       }

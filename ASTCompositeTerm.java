@@ -10725,8 +10725,8 @@ public class ASTCompositeTerm extends ASTTerm
 
   public Vector jsfunctionDeclarationToKM3(java.util.Map vartypes, 
     java.util.Map varelemtypes, Vector types, Vector entities)
-  { System.out.println(">> jsfunctionDeclarationToKM3 for " + tag + " with " + terms.size() + " terms"); 
-    System.out.println(); 
+  { // JOptionPane.showInputDialog(">> jsfunctionDeclarationToKM3 for " + tag + " with " + terms.size() + " terms"); 
+    // System.out.println(); 
 
     if ("functionDeclaration".equals(tag) && 
         "function".equals(terms.get(0) + "") &&
@@ -10893,6 +10893,86 @@ public class ASTCompositeTerm extends ASTTerm
     }
 
     if ("functionDeclaration".equals(tag) && 
+        "async".equals(terms.get(0) + "") && 
+        "function".equals(terms.get(1) + "") &&
+        "(".equals(terms.get(3) + "") &&
+        ")".equals(terms.get(5) + "") &&
+        terms.size() > 6)
+    { Vector res = new Vector(); 
+      Vector fpars = new Vector(); 
+
+      ASTTerm name = (ASTTerm) terms.get(2);
+      String fname = name.literalForm(); 
+
+      ASTTerm pars = (ASTTerm) terms.get(4); 
+      ASTTerm body = (ASTTerm) terms.get(6);
+
+      Vector parterms = pars.getTerms(); 
+      for (int i = 0; i < parterms.size(); i++) 
+      { ASTTerm vbl = (ASTTerm) parterms.get(i);
+        
+        if (vbl instanceof ASTSymbolTerm) { } 
+        else  
+        { 
+          Vector fpar = vbl.jsvariableDeclarationToKM3(
+                             vartypes,
+                             varelemtypes,types,
+                             entities);
+          fpars.addAll(fpar);
+        } 
+      }
+
+      // Type functype = 
+      //   BehaviouralFeature.buildFunctionType(fpars); 
+      // vartypes.put(fname,functype); 
+
+      java.util.Map vtps = new java.util.HashMap(); 
+      vtps.putAll(vartypes); 
+      java.util.Map vetps = new java.util.HashMap(); 
+      vetps.putAll(varelemtypes); 
+      ASTTerm.functionsInScope = new Vector(); 
+      Vector labelfunctions = 
+        ((ASTCompositeTerm) body).jsLabelFunctions(
+                            vtps,vetps,types,entities);
+      System.out.println(">>> Async operation " + fname + 
+              " has label functions " + labelfunctions);
+      // ASTTerm.functionsInScope.addAll(labelfunctions);   
+          
+      Vector stats = body.jsstatementToKM3(vartypes,
+                             varelemtypes,types,
+                             entities);
+      BehaviouralFeature bf = 
+        new BehaviouralFeature(fname,fpars,stats); 
+
+      Vector retvals = 
+         Statement.getReturnValues(bf.getActivity()); 
+
+      System.out.println(">> Function " + fname + " return values: " + retvals); 
+
+      if (retvals != null && retvals.size() > 0)
+      { Type retType = Type.determineType(retvals); 
+        bf.setType(retType);
+        Type retElemType = Type.determineElementType(retvals); 
+        bf.setElementType(retElemType); 
+      } 
+      else 
+      { bf.setReturnType(new Type("OclProcess", null)); }
+ 
+      // deduce return type from stat 
+
+      // Type bftype = bf.getFunctionType(); 
+      // vartypes.put(fname,bftype); 
+      // varelemtypes.put(fname,bf.getReturnType()); 
+      bf.setPost(trueExpression); 
+
+      // System.out.println("Variable types = " + vartypes); 
+      // System.out.println("Variable element types = " + varelemtypes); 
+
+      res.add(bf); 
+      return res;    
+    }
+
+    if ("functionDeclaration".equals(tag) && 
         "function".equals(terms.get(0) + "") &&
         "(".equals(terms.get(2) + "") &&
         ")".equals(terms.get(3) + "") &&
@@ -10945,6 +11025,68 @@ public class ASTCompositeTerm extends ASTTerm
       Type bftype = bf.getFunctionType(); 
       vartypes.put(fname,bftype); 
       varelemtypes.put(fname,bf.getReturnType()); 
+
+      // System.out.println("Variable types = " + vartypes); 
+      // System.out.println("Variable element types = " + varelemtypes); 
+
+      res.add(bf); 
+      return res;    
+    }
+
+    if ("functionDeclaration".equals(tag) && 
+        "async".equals(terms.get(0) + "") &&
+        "function".equals(terms.get(1) + "") &&
+        "(".equals(terms.get(3) + "") &&
+        ")".equals(terms.get(4) + "") &&
+        terms.size() > 5)
+    { Vector res = new Vector(); 
+      Vector fpars = new Vector(); 
+
+      ASTTerm name = (ASTTerm) terms.get(2);
+      String fname = name.literalForm(); 
+
+      ASTTerm body = (ASTTerm) terms.get(5);
+
+      java.util.Map vtps = new java.util.HashMap(); 
+      vtps.putAll(vartypes); 
+      java.util.Map vetps = new java.util.HashMap(); 
+      vetps.putAll(varelemtypes); 
+
+      ASTTerm.functionsInScope = new Vector(); 
+      Vector labelfunctions = 
+         ((ASTCompositeTerm) body).jsLabelFunctions(
+                              vtps,vetps,
+                              types,entities);
+      System.out.println(">>> Async operation " + fname + " has label functions " + labelfunctions);
+      // ASTTerm.functionsInScope.addAll(labelfunctions);   
+  
+      Vector stats = body.jsstatementToKM3(vartypes,
+                             varelemtypes,types,
+                             entities);
+      BehaviouralFeature bf = 
+        new BehaviouralFeature(fname,fpars,stats); 
+
+      Vector retvals = 
+         Statement.getReturnValues(bf.getActivity()); 
+
+      System.out.println(">> Return values: " + retvals); 
+
+      if (retvals != null && retvals.size() > 0)
+      { Type retType = Type.determineType(retvals); 
+        bf.setType(retType); 
+        Type retElemType = Type.determineElementType(retvals); 
+        bf.setElementType(retElemType); 
+      } 
+      else 
+      { bf.setReturnType(new Type("OclProcess", null)); }
+ 
+
+      bf.setPost(trueExpression);  
+      // deduce return type from stat 
+
+      // Type bftype = bf.getFunctionType(); 
+      // vartypes.put(fname,bftype); 
+      // varelemtypes.put(fname,bf.getReturnType()); 
 
       // System.out.println("Variable types = " + vartypes); 
       // System.out.println("Variable element types = " + varelemtypes); 
@@ -11529,6 +11671,24 @@ public class ASTCompositeTerm extends ASTTerm
       return res; 
     } 
 
+    if (terms.size() == 2 && 
+        "singleExpression".equals(tag) && 
+        "await".equals(
+           ((ASTTerm) terms.get(0)).literalForm()) 
+       ) 
+    { ASTTerm arg = (ASTTerm) terms.get(1); 
+      Expression expr = arg.jsexpressionToKM3(vartypes,
+                                varelemtypes,types,entities);
+      expr.setBrackets(true); 
+      Expression disp = 
+        BasicExpression.newCallBasicExpression("join", expr); 
+      Statement st = 
+        new ImplicitInvocationStatement(disp); 
+      Vector res = new Vector(); 
+      res.add(st); 
+      return res; 
+    } 
+
     if (terms.size() == 3 && 
         "=".equals(terms.get(1) + "") && 
         jsPrototypeAccess((ASTTerm) terms.get(0)))
@@ -11744,7 +11904,8 @@ public class ASTCompositeTerm extends ASTTerm
       return ystats; 
     } 
 
-    if ("variableDeclarationList".equals(tag) && terms.size() >= 2)
+    if ("variableDeclarationList".equals(tag) && 
+        terms.size() >= 2)
     { Vector res = new Vector(); 
       for (int i = 1; i < terms.size(); i++)
       { ASTTerm arg = (ASTTerm) terms.get(i); 
@@ -12320,6 +12481,17 @@ public class ASTCompositeTerm extends ASTTerm
         return res;   
       } 
 
+    } 
+
+    if ("anonymousFunction".equals(tag) &&
+        terms.size() == 1 && 
+        "functionDeclaration".equals(
+                   ((ASTTerm) terms.get(0)).getTag()))
+    { ASTCompositeTerm func = (ASTCompositeTerm) terms.get(0); 
+      Vector bfs = func.jsfunctionDeclarationToKM3(vartypes,
+                             varelemtypes,types,
+                             entities);
+      return bfs; 
     } 
 
     return new Vector(); 
@@ -14534,10 +14706,12 @@ public class ASTCompositeTerm extends ASTTerm
                       java.util.Map varelemtypes,
                       Vector types, Vector entities)
   { String opname = opexpr + ""; 
-    
-    System.out.println(">>> Testing if " + opexpr + " is a generator function"); 
+
+    if (opname.startsWith("self."))
+    { opname = opname.substring(5); } 
+   
+    System.out.println(">>> Testing if " + opname + " is a generator function"); 
  
-    
     for (int i = 0; i < entities.size(); i++) 
     { Entity ee = (Entity) entities.get(i);
 
@@ -17539,9 +17713,9 @@ public class ASTCompositeTerm extends ASTTerm
       Expression bfcall = 
         BasicExpression.newQueryCallBasicExpression(
                                     bf,selfexpr,fpars); 
-      Expression res = 
-        UnaryExpression.newLambdaUnaryExpression(bfcall, bf); 
-      return res;  
+      // Expression res = 
+      //   UnaryExpression.newLambdaUnaryExpression(bfcall, bf); 
+      return bfcall;  
     } 
 
     if ("getter".equals(tag) && terms.size() > 0)
@@ -17581,8 +17755,10 @@ public class ASTCompositeTerm extends ASTTerm
       return res; 
     } 
 
+
     if (terms.size() == 1)
-    { ASTTerm t1 = (ASTTerm) terms.get(0); 
+    { // JOptionPane.showInputDialog(tag + " with " + terms); 
+      ASTTerm t1 = (ASTTerm) terms.get(0); 
       Expression rs = t1.jsexpressionToKM3(
          vartypes, varelemtypes, types, entities);
       return rs;  
@@ -17590,6 +17766,16 @@ public class ASTCompositeTerm extends ASTTerm
 
     ASTTerm firstTerm = (ASTTerm) terms.get(0); 
     ASTTerm lastTerm = (ASTTerm) terms.get(terms.size()-1); 
+
+    if (terms.size() == 2 && 
+        "await".equals(firstTerm + "") )
+    { ASTTerm arg = (ASTTerm) terms.get(1); 
+      Expression expr = arg.jsexpressionToKM3(vartypes,
+                                varelemtypes,types,entities); 
+      BasicExpression res = 
+        BasicExpression.newCallBasicExpression("join", expr); 
+      return res;  
+    } 
 
     if ("templateStringLiteral".equals(tag) && 
         "`".equals(firstTerm + "") && "`".equals(lastTerm + ""))
@@ -18319,8 +18505,11 @@ public class ASTCompositeTerm extends ASTTerm
         if (isDefinedFunction(opexpr,vartypes,
                               varelemtypes,types,entities) ||
             opexpr.isFunctionType())
-        { opexpr = Expression.convertToApply(opexpr, pars); }
-        else if (opexpr instanceof BasicExpression)
+        { opexpr = Expression.convertToApply(opexpr, pars);
+          return opexpr; 
+        }
+        
+        if (opexpr instanceof BasicExpression)
         { BasicExpression be = (BasicExpression) opexpr; 
           if (be.objectRef == null) 
           { be.setParameters(pars);
@@ -18338,8 +18527,8 @@ public class ASTCompositeTerm extends ASTTerm
                                  vartypes,
                                  varelemtypes,types,entities); 
         } 
-        else 
-        { opexpr = Expression.convertToApply(opexpr, pars); }    
+        
+        opexpr = Expression.convertToApply(opexpr, pars);    
 
         // Expression opcall = 
         //   BasicExpression.newCallBasicExpression(opexpr, 
@@ -18837,6 +19026,15 @@ public class ASTCompositeTerm extends ASTTerm
           return errbe; 
         } 
 
+        if ("Promise".equals(cnme))
+        { BasicExpression datebe = 
+              BasicExpression.newStaticCallBasicExpression(
+                "newOclProcess", "OclProcess");
+          datebe.setType(new Type("OclProcess", null)); 
+          datebe.setParameters(pars); 
+          return datebe; 
+        }
+ 
         if ("Date".equals(cnme))
         { if (pars.size() == 0) 
           { BasicExpression datebe = 

@@ -282,9 +282,9 @@ class BinaryExpression extends Expression
     Vector lvars = left.variablesUsedIn(names); 
     Vector rvars = right.variablesUsedIn(names); 
 
-    System.out.println(">> Expression " + this); 
-    System.out.println(">> lvars: " + lvars); 
-    System.out.println(">> rvars: " + rvars); 
+    // System.out.println(">> Expression " + this); 
+    // System.out.println(">> lvars: " + lvars); 
+    // System.out.println(">> rvars: " + rvars); 
 
     if (rvars.contains(bfname) && !lvars.contains(bfname))
     { return right.isSelfCall(bf); } 
@@ -295,8 +295,45 @@ class BinaryExpression extends Expression
     return false; 
   } 
 
+  public boolean isSemiTailRecursionDecrement(
+                     BehaviouralFeature bf, String par)
+  { // it is bf(par-1) + expr where bf not in expr
+    // or expr + bf(par-1), or same with *
+
+    if ("=".equals(operator) && 
+        "result".equals(left + "") && 
+        right instanceof BinaryExpression)
+    { return 
+        ((BinaryExpression) right).isSemiTailRecursionDecrement(
+                                                        bf, par); 
+    } 
+
+    if (operator.equals("+") || operator.equals("*")) { } 
+    else 
+    { return false; } 
+
+    String bfname = bf.getName(); 
+
+    Vector names = new Vector(); 
+    names.add(bfname); 
+    Vector lvars = left.variablesUsedIn(names); 
+    Vector rvars = right.variablesUsedIn(names); 
+
+    // System.out.println(">> Expression " + this); 
+    // System.out.println(">> lvars: " + lvars); 
+    // System.out.println(">> rvars: " + rvars); 
+
+    if (rvars.contains(bfname) && !lvars.contains(bfname))
+    { return right.isSelfCallDecrement(bf, par); } 
+
+    if (lvars.contains(bfname) && !rvars.contains(bfname))
+    { return left.isSelfCallDecrement(bf, par); } 
+
+    return false; 
+  } 
+
   public Expression replacedSemiTailRecursion(
-            BehaviouralFeature bf, BasicExpression _result)
+            BehaviouralFeature bf, Expression _result)
   { // it is _result + expr where bf not in expr
     // or expr + _result, or same with *
     // ->including or ->union with sets. 
@@ -321,10 +358,42 @@ class BinaryExpression extends Expression
     Vector rvars = right.variablesUsedIn(names); 
 
     if (lvars.contains(bfname)) // left is the self call
-    { new BinaryExpression(operator, _result, right); } 
+    { return new BinaryExpression(operator, _result, right); } 
 
     if (rvars.contains(bfname)) // right is the self call
     { return new BinaryExpression(operator, left, _result); } 
+
+    return null; 
+  } 
+
+  public Expression replacedSemiTailRecursionDecrement(
+                           BehaviouralFeature bf, String par)
+  { // it is expr where bf not in expr
+    
+    /* if ("=".equals(operator) && 
+        "result".equals(left + "") && 
+        right instanceof BinaryExpression)
+    { return 
+        ((BinaryExpression) right).isSemiTailRecursion(bf); 
+    } Only for abstract constraints */ 
+
+    if (operator.equals("+") || operator.equals("*")) { } 
+    else 
+    { return null; } 
+
+    String bfname = bf.getName(); 
+
+    Vector names = new Vector(); 
+    names.add(bfname); 
+
+    Vector lvars = left.variablesUsedIn(names); 
+    Vector rvars = right.variablesUsedIn(names); 
+
+    if (lvars.contains(bfname)) // left is the self call
+    { return right; } 
+
+    if (rvars.contains(bfname)) // right is the self call
+    { return left; } 
 
     return null; 
   } 
@@ -350,10 +419,10 @@ class BinaryExpression extends Expression
     Vector lvars = left.variablesUsedIn(names); 
     Vector rvars = right.variablesUsedIn(names); 
 
-    if (lvars.size() == 0)
+    if (rvars.contains(bfname))
     { return right; } 
 
-    if (rvars.size() == 0)
+    if (lvars.contains(bfname))
     { return left; } 
 
     return null; 
@@ -363,17 +432,162 @@ class BinaryExpression extends Expression
   { if (bexprs.size() == 0) 
     { return true; } 
 
+    if (bexprs.get(0) instanceof BinaryExpression) { } 
+    else 
+    { return false; } 
+
     BinaryExpression bexpr = (BinaryExpression) bexprs.get(0); 
     String op = bexpr.getOperator(); 
 
     for (int i = 1; i < bexprs.size(); i++) 
-    { BinaryExpression be = (BinaryExpression) bexprs.get(i); 
+    { if (bexprs.get(i) instanceof BinaryExpression) { } 
+      else 
+      { return false; } 
+
+      BinaryExpression be = (BinaryExpression) bexprs.get(i); 
       if (op.equals(be.getOperator())) { } 
       else 
       { return false; } 
     } 
 
     return true; 
+  } 
+
+  public boolean variableBoundedAbove(String var)
+  { // This is the condition for the non-recursive case,
+    // which terminates the recursion
+
+    Vector varnames = new Vector(); 
+    varnames.add(var); 
+
+    Vector lvars = left.variablesUsedIn(varnames); 
+    Vector rvars = right.variablesUsedIn(varnames); 
+
+    if (operator.equals("<") || 
+        operator.equals("<="))
+    { if (lvars.contains(var) && 
+        !rvars.contains(var))
+      { return true; }
+      return false; 
+    } // var < val, var <= val
+
+    if (operator.equals(">") || 
+        operator.equals(">="))
+    { if (rvars.contains(var) && 
+        !lvars.contains(var))
+      { return true; }
+      return false; 
+    } // val > var, val >= var
+    
+    return false; 
+  } 
+
+  public boolean variableBoundedBelow(String var)
+  { // Condition that terminates the recursion
+
+    Vector varnames = new Vector(); 
+    varnames.add(var); 
+
+    Vector lvars = left.variablesUsedIn(varnames); 
+    Vector rvars = right.variablesUsedIn(varnames); 
+
+    if (operator.equals("<") || 
+        operator.equals("<="))
+    { if (rvars.contains(var) && 
+        !lvars.contains(var))
+      { return true; }
+      return false; 
+    } // val < var, val <= var
+
+    if (operator.equals(">") || 
+        operator.equals(">="))
+    { if (lvars.contains(var) && 
+        !rvars.contains(var))
+      { return true; }
+      return false; 
+    } // var > val, var >= val
+ 
+    return false; 
+  } 
+
+  public Expression variableBoundAbove(String var)
+  { if (operator.equals("<")) // var < bnd, recursion ends at bnd
+    { return right; } 
+ 
+    if (operator.equals("<=") || operator.equals("="))
+    { return new BinaryExpression("+", right, 
+                   new BasicExpression(1)); 
+    } // recursion ends at bnd+1
+
+    if (operator.equals(">")) // bnd > var
+    { return left; } // recursion ends at bnd
+
+    if (operator.equals(">=")) // bnd >= var
+    { return new BinaryExpression("+", left, 
+                   new BasicExpression(1)); 
+    } // recursion ends at bnd+1
+
+    return null; 
+  } 
+
+  public Expression variableBoundBelow(String var)
+  { if (operator.equals("<")) // bnd < var
+    { return new BinaryExpression("+", left, 
+                   new BasicExpression(1)); 
+    } 
+    
+    if (operator.equals("<="))
+    { return left; } 
+
+    if (operator.equals(">")) // var > bnd
+    { return new BinaryExpression("+", right, 
+                   new BasicExpression(1)); 
+    } 
+
+    if (operator.equals(">="))
+    { return right; }
+
+    return null;  
+  } 
+
+  public Expression iterationBoundAbove(String var)
+  { if (operator.equals("<")) // var < bnd
+    { return new BinaryExpression("-", right, 
+                          new BasicExpression(1)); 
+    } 
+ 
+    if (operator.equals("<=") || operator.equals("="))
+    { return right; }
+    
+    if (operator.equals(">")) // bnd > var
+    { return new BinaryExpression("-", left, 
+                          new BasicExpression(1)); 
+    } 
+
+    if (operator.equals(">=")) // bnd >= var
+    { return left; } 
+
+    return null; 
+  } 
+
+  public Expression iterationBoundBelow(String var)
+  { if (operator.equals("<")) // bnd < var
+    { return left; } 
+    
+    if (operator.equals("<="))
+    { return new BinaryExpression("-", left, 
+                          new BasicExpression(1)); 
+    } 
+
+    if (operator.equals(">")) // var > bnd
+    { return right; } 
+
+    if (operator.equals(">="))
+    { return new BinaryExpression("-", right, 
+                          new BasicExpression(1));
+    } 
+
+    return null;  
   } 
 
   public Expression definedness()
@@ -423,8 +637,10 @@ class BinaryExpression extends Expression
   { if ("or".equals(operator))
     { return new BasicExpression(false); }
 
-    if ("#".equals(operator) || "#LC".equals(operator) || "#1".equals(operator) || "!".equals(operator) ||
-        "|".equals(operator) || "|R".equals(operator) || "|C".equals(operator))
+    if ("#".equals(operator) || "#LC".equals(operator) || 
+        "#1".equals(operator) || "!".equals(operator) ||
+        "|".equals(operator) || "|R".equals(operator) || 
+        "|C".equals(operator))
     { Expression leftdet = ((BinaryExpression) left).right.determinate(); 
       Expression rightdet = right.determinate(); 
       return (new BinaryExpression("&",leftdet,rightdet)).simplify(); 
@@ -560,14 +776,21 @@ class BinaryExpression extends Expression
      Expression leftres = null; 
      Expression rightres = null; 
 
-     if ("boolean".equals(type + "") || "int".equals(type + "") || "long".equals(type + "") || 
-         "double".equals(type + "") || "String".equals(type + ""))
+     if ("boolean".equals(type + "") || 
+         "int".equals(type + "") || 
+         "long".equals(type + "") || 
+         "double".equals(type + "") || 
+         "String".equals(type + ""))
      { return this; } 
 
-     if (operator.equals("->exists") || operator.equals("->forAll") ||
-         "->existsLC".equals(operator) || "#LC".equals(operator) ||
-         operator.equals("#") || operator.equals("!") || operator.equals("->exists1") ||
-         operator.equals("#1") || operator.equals("and") || operator.equals("or"))
+     if (operator.equals("->exists") || 
+         operator.equals("->forAll") ||
+         "->existsLC".equals(operator) || 
+         "#LC".equals(operator) ||
+         operator.equals("#") || operator.equals("!") || 
+         operator.equals("->exists1") ||
+         operator.equals("#1") || operator.equals("and") || 
+         operator.equals("or"))
      { return this; } // intended as a boolean value
 
      if (operator.equals("->select") || operator.equals("->reject") || operator.equals("->collect") ||

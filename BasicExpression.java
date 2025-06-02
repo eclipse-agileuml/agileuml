@@ -375,7 +375,8 @@ class BasicExpression extends Expression
   public boolean isSequenceApplication(Expression var)
   { // It is data[var] 
 
-    arrayIndex.setBrackets(false); 
+    if (arrayIndex != null)
+    { arrayIndex.setBrackets(false); } 
 
     if (arrayType != null && arrayType.isSequence())
     { return (var + "").equals(arrayIndex + ""); } 
@@ -388,7 +389,8 @@ class BasicExpression extends Expression
 
     if (arrayType != null && arrayType.isSequence() && 
         arrayIndex instanceof BinaryExpression && 
-        "+".equals(((BinaryExpression) arrayIndex).getOperator())
+        "+".equals(
+          ((BinaryExpression) arrayIndex).getOperator())
        )
     { BinaryExpression bexpr = (BinaryExpression) arrayIndex; 
       Expression bleft = bexpr.getLeft(); 
@@ -17083,6 +17085,26 @@ public Statement generateDesignSubtract(Expression rhs)
     return false;  
   } 
 
+  public boolean isSelfCallDecrement(BehaviouralFeature bf, 
+                                     String par)
+  { String nme = bf.getName();
+
+    if (arrayIndex != null) 
+    { return false; } 
+ 
+    if (isSelfCallDecrement(nme, par))
+    { return true; } 
+
+    Entity owner = bf.getEntity(); 
+    if (bf.isStatic() && owner != null) 
+    { String ename = owner.getName(); 
+      if (isSelfCallDecrement(ename, nme, par))
+      { return true; } 
+    } 
+
+    return false;  
+  } 
+
   public boolean isSelfCall(String nme)
   { if (data.equals(nme) && 
         "self".equals(objectRef + "") && 
@@ -17092,12 +17114,41 @@ public Statement generateDesignSubtract(Expression rhs)
     return false;  
   }
 
+  public boolean isSelfCallDecrement(String nme, String par)
+  { if (data.equals(nme) && 
+        "self".equals(objectRef + "") && 
+        parameters.size() == 1 && 
+        (umlkind == UPDATEOP || umlkind == QUERY ||
+         isEvent)) 
+    { Expression par0 = (Expression) parameters.get(0);
+      par0.setBrackets(false);  
+      return (par0 + "").equals(par + " - 1"); 
+    }
+ 
+    return false;  
+  }
+
   public boolean isSelfCall(String ename, String nme)
   { if (data.equals(nme) && 
         ename.equals(objectRef + "") && 
         (umlkind == UPDATEOP || umlkind == QUERY ||
          isEvent)) 
     { return true; } 
+    return false;  
+  }
+
+  public boolean isSelfCallDecrement(String ename, String nme, 
+                                     String par)
+  { if (data.equals(nme) && 
+        ename.equals(objectRef + "") && 
+        parameters.size() == 1 &&
+        (umlkind == UPDATEOP || umlkind == QUERY ||
+         isEvent)) 
+    { Expression par0 = (Expression) parameters.get(0);
+      par0.setBrackets(false);  
+      return (par0 + "").equals(par + " - 1"); 
+    }
+ 
     return false;  
   }
 

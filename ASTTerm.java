@@ -1237,10 +1237,14 @@ public abstract class ASTTerm
                       java.util.Map vartypes,
                       java.util.Map varelemtypes,
                       Vector types, Vector ents)
-  { String opname = opexpr + ""; 
+  { String opname = opexpr + "";
+
+    if (opname.startsWith("self."))
+    { opname = opname.substring(5); } 
+ 
     Type tt = (Type) vartypes.get(opname);
 
-    System.out.println(">>> Testing if " + opexpr + " : " + tt + " is a function"); 
+    System.out.println(">>> Testing if " + opname + " : " + tt + " is a function"); 
  
     if (tt != null && tt.isFunction())
     { return true; } 
