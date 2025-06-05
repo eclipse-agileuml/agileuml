@@ -3580,7 +3580,7 @@ abstract class Expression
       if (vnames.contains("self") || 
           vuses.size() > 0) { } 
       else 
-      { System.out.println("OES flaw: " + vset + " not used in " + expr);
+      { System.out.println("!! OES flaw: " + vset + " not used in " + expr);
         return new BinaryExpression("*", 
                      Expression.simplifySize(col), expr);  
       } 
@@ -3617,7 +3617,7 @@ abstract class Expression
       if (vnames.contains(var + "") || 
           vuses.size() > 0) { } 
       else 
-      { System.out.println("OES flaw: " + var + " not used in " + expr);
+      { System.out.println("!! OES flaw: " + var + " not used in " + expr);
         expr.setBrackets(true); 
         return new BinaryExpression("->pow", 
                      expr, Expression.simplifySize(col));  
@@ -3650,7 +3650,7 @@ abstract class Expression
       if (vnames.contains("self") || 
           vuses.size() > 0) { } 
       else 
-      { System.out.println("OES flaw: " + vset + " not used in " + expr);
+      { System.out.println("!! OES flaw: " + vset + " not used in " + expr);
         expr.setBrackets(true); 
         return new BinaryExpression("->pow", expr, 
                      Expression.simplifySize(col));  
@@ -3945,7 +3945,8 @@ abstract class Expression
         if ("1".equals(par1 + ""))
         { return par2; } 
         else 
-        { BinaryExpression sze = new BinaryExpression("+", 
+        { par1.setBrackets(true); 
+          BinaryExpression sze = new BinaryExpression("+", 
                    new BinaryExpression("-", par2, par1), 
                    new BasicExpression(1));
           sze.setBrackets(true); 

@@ -66,8 +66,8 @@ abstract class Statement implements Cloneable
     { return false; }
 
     Vector pars = bf.getParameters(); 
-    if (pars.size() == 1) 
-    { /* should be integer */ } 
+    if (pars.size() >= 1) 
+    { /* 1st one should be integer, used for recursion */ } 
     else 
     { return false; } 
 
@@ -103,7 +103,8 @@ abstract class Statement implements Cloneable
       boolean boundedBelow = false; 
 
       if (tst instanceof BinaryExpression && 
-          ((BinaryExpression) tst).variableBoundedAbove(pname) &&
+          ((BinaryExpression) tst).variableBoundedAbove(pname) 
+          &&
           statif instanceof ReturnStatement)
       { Vector names2 = new Vector(); 
         names2.add(nme); 
@@ -116,14 +117,16 @@ abstract class Statement implements Cloneable
       } 
       else // other case of variableBoundedBelow
       if (tst instanceof BinaryExpression && 
-          ((BinaryExpression) tst).variableBoundedBelow(pname) &&
+          ((BinaryExpression) tst).variableBoundedBelow(pname) 
+          &&
           statelse instanceof ReturnStatement)
       { Vector names2 = new Vector(); 
         names2.add(nme); 
         names2.add(pname); 
         Vector elsevars = 
           statelse.variablesUsedIn(names2); 
-        if (elsevars.contains(nme) || elsevars.contains(pname))
+        if (elsevars.contains(nme) || 
+            elsevars.contains(pname))
         { return false; }
         boundedBelow = true; 
       } 

@@ -17092,7 +17092,7 @@ public Statement generateDesignSubtract(Expression rhs)
     if (arrayIndex != null) 
     { return false; } 
  
-    if (isSelfCallDecrement(nme, par))
+    if (isSelfCallDecrement(bf, nme, par))
     { return true; } 
 
     Entity owner = bf.getEntity(); 
@@ -17114,15 +17114,30 @@ public Statement generateDesignSubtract(Expression rhs)
     return false;  
   }
 
-  public boolean isSelfCallDecrement(String nme, String par)
+  public boolean isSelfCallDecrement(BehaviouralFeature bf, 
+                                     String nme, String par)
   { if (data.equals(nme) && 
         "self".equals(objectRef + "") && 
-        parameters.size() == 1 && 
+        parameters.size() >= 1 && 
         (umlkind == UPDATEOP || umlkind == QUERY ||
          isEvent)) 
     { Expression par0 = (Expression) parameters.get(0);
       par0.setBrackets(false);  
-      return (par0 + "").equals(par + " - 1"); 
+
+      if ((par0 + "").equals(par + " - 1")) { } 
+      else 
+      { return false; }
+ 
+      Vector pars = bf.getParameters(); 
+      for (int i = 1; i < pars.size(); i++) 
+      { Attribute attr = (Attribute) pars.get(i); 
+        Expression pari = (Expression) parameters.get(i); 
+        pari.setBrackets(false); 
+        if (attr.getName().equals(pari + "")) { } 
+        else 
+        { return false; } 
+      } 
+      return true; 
     }
  
     return false;  
