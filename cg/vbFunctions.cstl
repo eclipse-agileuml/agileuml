@@ -83,37 +83,47 @@ _1 |-->_1
 
 
 functionStmt::
-FUNCTION _1 _2 \r\n \r\n _3 _* END FUNCTION |-->operation _1`VB2UML_2`VB2UML : OclAny\n pre: true post: true\n activity: var _1 : OclAny;\n_3`VB2UML\n    return _1;\n\n<action> _88 _1
+FUNCTION _1 _2 \r\n \r\n _3 _* END FUNCTION |-->_3  operation _1`VB2UML_2`VB2UML : OclAny\n  pre: true post: true\n  activity: var _1 : OclAny;\n_3`VB2UML\n    return _1;\n\n<action> _88 _1
 
-Function _1 _2 \r\n \r\n _3 _* End Function |-->operation _1`VB2UML_2`VB2UML : OclAny\n pre: true post: true\n activity: var _1 : OclAny;\n_3`VB2UML\n    return _1;\n\n
+Function _1 _2 \r\n \r\n _3 _* End Function |-->_3  operation _1`VB2UML_2`VB2UML : OclAny\n  pre: true post: true\n activity: var _1 : OclAny;\n_3`VB2UML\n    return _1;\n\n
 
-FUNCTION _1 _2 \r\n _3 _* END FUNCTION |-->operation _1`VB2UML_2`VB2UML : OclAny\n pre: true post: true\n activity: var _1`VB2UML : OclAny;\n_3`VB2UML\n    return _1;\n\n<action> _88 _1
+FUNCTION _1 _2 \r\n _3 _* END FUNCTION |-->_3  operation _1`VB2UML_2`VB2UML : OclAny\n  pre: true post: true\n  activity: var _1`VB2UML : OclAny;\n_3`VB2UML\n    return _1;\n\n<action> _88 _1
 
-Function _1 _2 \r\n _3 _* End Function |-->operation _1`VB2UML_2`VB2UML : OclAny\n pre: true post: true\n activity: var _1`VB2UML : OclAny;\n_3`VB2UML\n    return _1;\n\n
+Function _1 _2 \r\n _3 _* End Function |-->_3  operation _1`VB2UML_2`VB2UML : OclAny\n  pre: true post: true\n  activity: var _1`VB2UML : OclAny;\n_3`VB2UML\n    return _1;\n\n
 
-FUNCTION _1 _2 _3 \r\n \r\n _4 _* END FUNCTION |-->operation _1_2`VB2UML _3`VB2UML\n pre: true post: true\n activity: var _1 _3`VB2UML;\n_4`VB2UML\n    return _1;\n\n<action> _88 _1
+FUNCTION _1 _2 _3 \r\n \r\n _4 _* END FUNCTION |-->_4  operation _1_2`VB2UML _3`VB2UML\n  pre: true post: true\n  activity: var _1 _3`VB2UML;\n_4`VB2UML\n    return _1;\n\n<action> _88 _1
 
-Function _1 _2 _3 \r\n \r\n _4 _* End Function |-->operation _1_2`VB2UML _3`VB2UML\n pre: true post: true\n activity: var _1 _3`VB2UML;\n_4`VB2UML\n    return _1;\n\n
+Function _1 _2 _3 \r\n \r\n _4 _* End Function |-->_4  operation _1_2`VB2UML _3`VB2UML\n  pre: true post: true\n  activity: var _1 _3`VB2UML;\n_4`VB2UML\n    return _1;\n\n
 
-FUNCTION _1 _2 _3 \r\n _4 _* END FUNCTION |-->operation _1_2`VB2UML _3`VB2UML\n pre: true post: true\n activity: var _1 _3`VB2UML;\n_4`VB2UML\n    return _1;\n\n<action> _88 _1
+FUNCTION _1 _2 _3 \r\n _4 _* END FUNCTION |-->_4  operation _1_2`VB2UML _3`VB2UML\n pre: true post: true\n activity: var _1 _3`VB2UML;\n_4`VB2UML\n    return _1;\n\n<action> _88 _1
 
-Function _1 _2 _3 \r\n _4 _* End Function |-->operation _1_2`VB2UML _3`VB2UML\n pre: true post: true\n activity: var _1 _3`VB2UML;\n_4`VB2UML\n    return _1;\n\n
+Function _1 _2 _3 \r\n _4 _* End Function |-->_4  operation _1_2`VB2UML _3`VB2UML\n  pre: true post: true\n  activity: var _1 _3`VB2UML;\n_4`VB2UML\n    return _1;\n\n
 
-_1 FUNCTION _2 _3 _4 \r\n \r\n _5 _* END FUNCTION |-->operation _2`VB2UML_3`VB2UML _4`VB2UML\n pre: true post: true\n activity: var _2 _4`VB2UML;\n_5`VB2UML\n    return _2;\n\n<action> _88 _1
 
-_1 Function _2 _3 _4 \r\n \r\n _5 _* End Function |-->operation _2`VB2UML_3`VB2UML _4`VB2UML\n pre: true post: true\n activity: var _2 _4`VB2UML;\n_5`VB2UML\n    return _2;\n\n
+STATIC FUNCTION _1 _2 \r\n \r\n _3 _* END FUNCTION |-->_3  static operation _1`VB2UML_2`VB2UML : OclAny\n  pre: true post: true\n  activity: var _1 : OclAny;\n _3`VB2UML\n    return _1;\n\n
 
-_1 FUNCTION _2 _3 _4 \r\n _5 _* END FUNCTION |-->operation _2`VB2UML_3`VB2UML _4`VB2UML\n pre: true post: true\n activity: var _2 _4`VB2UML;\n_5`VB2UML\n    return _2;\n\n<action> _88 _1
+STATIC FUNCTION _1 _2 \r\n _3 _* END FUNCTION |-->_3  static operation _1`VB2UML_2`VB2UML : OclAny\n  pre: true post: true\n  activity: var _1 : OclAny;\n _3`VB2UML\n    return _1;\n\n
 
-_1 Function _2 _3 _4 \r\n _5 _* End Function |-->operation _2`VB2UML_3`VB2UML _4`VB2UML\n pre: true post: true\n activity: var _2 _4`VB2UML;\n_5`VB2UML\n    return _2;\n\n
+Static Function _1 _2 \r\n \r\n _3 _* End Function |-->_3  static operation _1`VB2UML_2`VB2UML : OclAny\n  pre: true post: true\n  activity: var _1 : OclAny;\n _3`VB2UML\n    return _1;\n\n
 
-STATIC FUNCTION _1 _2 _3 \r\n \r\n _4 _* END FUNCTION |-->static operation _1_2`VB2UML _3`VB2UML\n pre: true post: true\n activity: var _1 _3`VB2UML;\n_4`VB2UML\n    return _1;\n\n
+Static Function _1 _2 \r\n _3 _* End Function |-->_3  static operation _1`VB2UML_2`VB2UML : OclAny\n  pre: true post: true\n  activity: var _1`VB2UML : OclAny;\n_3`VB2UML\n    return _1;\n\n
 
-STATIC FUNCTION _1 _2 _3 \r\n _4 _* END FUNCTION |-->static operation _1_2`VB2UML _3`VB2UML\n pre: true post: true\n activity: var _1 _3`VB2UML;\n_4`VB2UML\n    return _1;\n\n
 
-_1 STATIC FUNCTION _2 _3 _4 \r\n \r\n _5 _* END FUNCTION |-->static operation _2_3`VB2UML _4`VB2UML\n pre: true post: true\n activity: var _2 _3`VB2UML;\n_5`VB2UML\n    return _2;\n\n
+STATIC FUNCTION _1 _2 _3 \r\n \r\n _4 _* END FUNCTION |-->_4  static operation _1_2`VB2UML _3`VB2UML\n  pre: true post: true\n  activity: var _1 _3`VB2UML;\n_4`VB2UML\n    return _1;\n\n
 
-_1 STATIC FUNCTION _2 _3 _4 \r\n _5 _* END FUNCTION |-->static operation _2_3`VB2UML _4`VB2UML\n pre: true post: true\n activity: var _2 _3`VB2UML;\n_5`VB2UML\n    return _2;\n\n
+STATIC FUNCTION _1 _2 _3 \r\n _4 _* END FUNCTION |-->_4  static operation _1_2`VB2UML _3`VB2UML\n  pre: true post: true\n  activity: var _1 _3`VB2UML;\n_4`VB2UML\n    return _1;\n\n
+
+_1 STATIC FUNCTION _2 _3 _4 \r\n \r\n _5 _* END FUNCTION |-->_5  static operation _2_3`VB2UML _4`VB2UML\n  pre: true post: true\n  activity: var _2 _3`VB2UML;\n_5`VB2UML\n    return _2;\n\n
+
+_1 STATIC FUNCTION _2 _3 _4 \r\n _5 _* END FUNCTION |-->_5  static operation _2_3`VB2UML _4`VB2UML\n  pre: true post: true\n  activity: var _2 _3`VB2UML;\n_5`VB2UML\n    return _2;\n\n
+
+_1 FUNCTION _2 _3 _4 \r\n \r\n _5 _* END FUNCTION |-->_5  operation _2`VB2UML_3`VB2UML _4`VB2UML\n  pre: true post: true\n  activity: var _2 _4`VB2UML;\n_5`VB2UML\n    return _2;\n\n<action> _88 _1
+
+_1 Function _2 _3 _4 \r\n \r\n _5 _* End Function |-->_5  operation _2`VB2UML_3`VB2UML _4`VB2UML\n  pre: true post: true\n  activity: var _2 _4`VB2UML;\n_5`VB2UML\n    return _2;\n\n
+
+_1 FUNCTION _2 _3 _4 \r\n _5 _* END FUNCTION |-->_5  operation _2`VB2UML_3`VB2UML _4`VB2UML\n  pre: true post: true\n  activity: var _2 _4`VB2UML;\n_5`VB2UML\n    return _2;\n\n<action> _88 _1
+
+_1 Function _2 _3 _4 \r\n _5 _* End Function |-->_5  operation _2`VB2UML_3`VB2UML _4`VB2UML\n  pre: true post: true\n  activity: var _2 _4`VB2UML;\n_5`VB2UML\n    return _2;\n\n
 
 
 beepStmt::
@@ -200,6 +210,9 @@ _* |-->
 
 variableStmt::
 GLOBAL _1 |-->  _1
+Global _1 |-->  _1
+STATIC _1 |-->  static_1
+Static _1 |-->  static_1
 _* |-->
 
 variableListStmt::
@@ -561,5 +574,40 @@ _1 |-->0_1<when> _1`first .
 _1 |-->_1
 
 
+argList::
+( ) |-->()
+( _* ) |-->(_*)
 
+iCS_S_VariableOrProcedureCall::
+DoEvents |-->OclProcess.activeCount()
+Error |-->OclException.any.getMessage()
+Err |-->OclException->any()
+Now |-->OclDate.newOclDate()
+Date |-->OclDate.newOclDate()
+Rnd |-->MathLib.random()
+Time |-->OclDate.getSystemTime()
+Timer |-->(let _d : OclDate = OclDate.newOclDate() in _d.getTime() - OclDate.newOclDate_YMD(_d.getYear(),_d.getMonth(),_d.getDate()-1).getTime())/1000)
+
+CurDir |-->(OclFile.newOclFile(".")).getAbsolutePath()
+VBNORMAL |-->0
+VBREADONLY |-->1
+VBHIDDEN |-->2
+VBSYSTEM |-->4
+VBDIRECTORY |-->16
+VBARCHIVE |-->32
+VBALIAS |-->64
+
+_1 _2 |-->_1_2
+_1 |-->_1
+
+
+arg::
+OPTIONAL _1 _2 |-->_1 _2
+OPTIONAL _1 |-->_1 : OclAny
+BYVAL _1 _2 |-->_1 _2
+BYREF _1 _2 |-->_1 _2
+_1 ( ) _2 |-->_1 _2`sequenceType<action> _1 Sequence
+_1 _2 |-->_1 _2<action> _1 _2`asTypeKind
+_1 ( ) |-->_1 : Sequence(OclAny)<action> _1 Sequence
+_1 |-->_1 : OclAny
 

@@ -317,10 +317,15 @@ variableStmt::
 DIM _1 |-->_1
 Dim _1 |-->_1
 PUBLIC _1 |-->_1
+Public _1 |-->_1
 PRIVATE _1 |-->_1
-GLOBAL _1 |-->_1`variableListInitialisation
-STATIC _1 |--> static_1
+Private _1 |-->_1
+GLOBAL _1 |-->  _1`variableListInitialisation
+Global _1 |-->  _1`variableListInitialisation
+STATIC _1 |-->    skip
+Static _1 |-->    skip
 FRIEND _1 |-->_1
+Friend _1 |-->_1
 
 
 variableListStmt::
