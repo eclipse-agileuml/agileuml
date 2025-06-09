@@ -1,5 +1,5 @@
 declaration::
-_1 ; |-->    var _1`C2UMLdeclaredVariable : _1`C2UMLtypelhs_1`declaredType_1`C2UMLtyperhs ;\n
+_1 ; |-->   _1`cqualifier var _1`C2UMLdeclaredVariable : _1`C2UMLtypelhs_1`declaredType_1`C2UMLtyperhs ;\n
 _1 _2 ; |-->    var _2`C2UMLdeclaredVariable : _2`C2UMLtypelhs_1 _2`C2UMLtyperhs := _2`C2UMLdeclaredValue ;\n
 
 
@@ -17,12 +17,22 @@ declarationSpecifiers::
 _1 |-->_1
 _* |-->_*
 
+cqualifier::
+_1 |-->_1`cqul
+_* |-->_*`cqul
 
 declarationSpecifier::
 _1 |-->_1
 
+cqul::
+_1 |-->_1`cspecqual
+
+cspecqual::
+static |-->static
+_1 |-->
+
 storageClassSpecifier::
-typedef |-->datatype
+typedef |--> datatype
 _1 |-->
 
 typeQualifier::
