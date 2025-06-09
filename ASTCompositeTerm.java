@@ -1327,7 +1327,7 @@ public class ASTCompositeTerm extends ASTTerm
           varSpec.cdeclaratorToModelElements(
                   vartypes, varelemtypes, types, entities);
 
-        // System.out.println(">> Model elements: " + mes); 
+        // JOptionPane.showInputDialog(">> Model elements of " + terms + ": " + mes); 
 
         Vector res = new Vector(); 
         if (mes != null && mes.size() > 0) 
@@ -1395,6 +1395,7 @@ public class ASTCompositeTerm extends ASTTerm
               res.add(me);
             } 
           } 
+
           return res; 
         } 
 
@@ -2314,7 +2315,8 @@ public class ASTCompositeTerm extends ASTTerm
     return null; 
   } 
 
-  public Vector cdeclaratorToModelElements(java.util.Map vartypes, 
+  public Vector cdeclaratorToModelElements(
+    java.util.Map vartypes, 
     java.util.Map varelemtypes, Vector types, Vector entities)
   { System.out.println(">> Declarator to ModelElements " + tag + 
                        " with " + terms.size() + " terms"); 
@@ -2413,7 +2415,6 @@ public class ASTCompositeTerm extends ASTTerm
         return results;
       } 
 
-
       for (int k = 0; k < mes.size(); k++) 
       { ModelElement me = (ModelElement) mes.get(k); 
         Attribute att; 
@@ -2437,7 +2438,7 @@ public class ASTCompositeTerm extends ASTTerm
           att.setElementType(typ.getElementType()); 
         }
 
-        System.out.println(">> Uninitialised attribute " + att + " type = " + att.getType() + " " + att.getElementType()); 
+        // JOptionPane.showInputDialog(">> Uninitialised attribute " + att + " type = " + att.getType() + " " + att.getElementType()); 
 
         atttype = att.getType(); 
         if (atttype != null)
@@ -2731,17 +2732,15 @@ public class ASTCompositeTerm extends ASTTerm
     }
 
     if ("declarationSpecifiers".equals(tag))
-    { /* for (int i = 0; i < terms.size(); i++) 
+    { boolean isStatic = false; 
+
+      for (int i = 0; i < terms.size(); i++) 
       { ASTTerm tt = (ASTTerm) terms.get(i); 
-        if (tt instanceof ASTCompositeTerm)
-        { ASTCompositeTerm trm = (ASTCompositeTerm) tt; 
-          ModelElement typ = trm.cdeclaratorToModelElement(
-                vartypes,varelemtypes,types,entities); 
-          if (typ != null) 
-          { return typ; } 
+        if ("static".equals(tt.literalForm()))
+        { isStatic = true;
+          break;
         } 
       }
-      */ 
 
       // The model element if any is the last term: 
 
@@ -2751,8 +2750,15 @@ public class ASTCompositeTerm extends ASTTerm
         ASTCompositeTerm trm = (ASTCompositeTerm) tt; 
         ModelElement typ = trm.cdeclaratorToModelElement(
                 vartypes,varelemtypes,types,entities); 
+
         if (typ != null) 
         { res.add(typ); }
+
+        if (typ instanceof Attribute && isStatic)
+        { ((Attribute) typ).setStatic(true);
+          // JOptionPane.showInputDialog(">> Static attribute " + typ);
+        } 
+
         return res;  
       } 
         
@@ -3590,7 +3596,9 @@ public class ASTCompositeTerm extends ASTTerm
     } 
 
     if ("declaration".equals(tag) && terms.size() == 2)
-    { ASTTerm typeSpec = (ASTTerm) terms.get(0); 
+    { // No initialiser 
+
+      ASTTerm typeSpec = (ASTTerm) terms.get(0); 
       Type typ = typeSpec.cdeclarationToType(
                     vartypes,varelemtypes,types,entities);
       String tname = typeSpec.literalForm(); 
@@ -3601,10 +3609,24 @@ public class ASTCompositeTerm extends ASTTerm
 
       // System.out.println(">>> " + typeSpec); 
 
-      // System.out.println(">>> Model elements: " + mes + " type = " + typ); 
+      // JOptionPane.showInputDialog(">>> Model elements for " + terms + ": " + mes + " type = " + typ); 
 
       if (mes == null) 
       { return null; } 
+
+      if (mes.size() == 1)
+      { ModelElement me = (ModelElement) mes.get(0);
+        if (me instanceof Attribute && 
+            ((Attribute) me).isStatic())
+        { //add to FromC class, not this.
+          Entity fromC = (Entity) 
+                            ModelElement.lookupByName(
+                                   "FromC", entities);
+          if (fromC != null) 
+          { fromC.addAttribute((Attribute) me); } 
+          return null; 
+        }
+      } 
 
       SequenceStatement ss = new SequenceStatement(); 
 
@@ -44962,15 +44984,15 @@ public class ASTCompositeTerm extends ASTTerm
           { // fieldName[i] = 
             //    owner.subrange(startPos[i],endPos[i])
 
-            JOptionPane.showMessageDialog(null, 
-                 progname + ":: " + fieldName + 
-                 "[i] = " + ownername + 
-                 ".subrange(" + startPos + " + (i-1)*" + 
-                            fwdth + 
-                            ",  " + startPos + 
-                            " + i*" + fwdth + " - 1)", 
-                          "", 
-                          JOptionPane.INFORMATION_MESSAGE);
+            // JOptionPane.showMessageDialog(null, 
+            //      progname + ":: " + fieldName + 
+            //      "[i] = " + ownername + 
+            //      ".subrange(" + startPos + " + (i-1)*" + 
+            //                 fwdth + 
+            //                 ",  " + startPos + 
+            //                 " + i*" + fwdth + " - 1)", 
+            //               "", 
+            //               JOptionPane.INFORMATION_MESSAGE);
 
             BasicExpression owner = 
               BasicExpression.newAttributeBasicExpression(
@@ -45018,12 +45040,12 @@ public class ASTCompositeTerm extends ASTTerm
           else if (multiplicity == 1 & contMult > 1)
           { // fieldName[i] = owner[i].subrange(...)
 
-            JOptionPane.showMessageDialog(null, 
-               progname + ":: " + fieldName + 
-               "[i] = " + ownername + 
-               "[i].subrange(" + startPos + "," + endPos + ")", 
-               "", 
-               JOptionPane.INFORMATION_MESSAGE);
+            // JOptionPane.showMessageDialog(null, 
+            //    progname + ":: " + fieldName + 
+            //    "[i] = " + ownername + 
+            //    "[i].subrange(" + startPos + "," + endPos + ")", 
+            //    "", 
+            //    JOptionPane.INFORMATION_MESSAGE);
 
             // BasicExpression indx = 
             //     BasicExpression.newVariableBasicExpression(
@@ -45092,15 +45114,15 @@ public class ASTCompositeTerm extends ASTTerm
           { // fieldName[i] = sequence made from 
             //                owner[i].subrange(...)
 
-            JOptionPane.showMessageDialog(null, 
-              progname + ":: " + 
-                fieldName + "[i] = Integer.subrange(1," + 
-                multiplicity + ")->collect( _j | " + ownername + 
-                                                "[i].subrange(" + 
-                startPos + " + (_j - 1)*" + fwdth + ", " + 
-                startPos + " + _j*" + fwdth + " - 1))", 
-              "", 
-              JOptionPane.INFORMATION_MESSAGE);
+            // JOptionPane.showMessageDialog(null, 
+            //   progname + ":: " + 
+            //     fieldName + "[i] = Integer.subrange(1," + 
+            //     multiplicity + ")->collect( _j | " + ownername + 
+            //                                    "[i].subrange(" + 
+            //     startPos + " + (_j - 1)*" + fwdth + ", " + 
+            //     startPos + " + _j*" + fwdth + " - 1))", 
+            //   "", 
+            //   JOptionPane.INFORMATION_MESSAGE);
 
                             
             Type seqType = new Type("Sequence", null); 
@@ -45301,13 +45323,13 @@ public class ASTCompositeTerm extends ASTTerm
             ownername = 
                  cname.substring(0,cname.length()-6);
             
-            JOptionPane.showMessageDialog(null, 
-                 fieldName + 
-                 " is subrecord of " + ownername + 
-                 " from " + startPos + 
-                 " multiplicity " + multiplicity, 
-                          "", 
-                          JOptionPane.INFORMATION_MESSAGE);
+            // JOptionPane.showMessageDialog(null, 
+            //      fieldName + 
+            //      " is subrecord of " + ownername + 
+            //      " from " + startPos + 
+            //      " multiplicity " + multiplicity, 
+            //               "", 
+            //               JOptionPane.INFORMATION_MESSAGE);
              att.setMultiplicity(multiplicity); 
              
        // context.put("container", newent); 
