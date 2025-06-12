@@ -21877,7 +21877,7 @@ public Statement existsLC(Vector preds, Expression eset, Expression etest,
 
       Vector vuses = variablesUsedIn(vars); 
       if (level > 1 && vuses.size() == 0)
-      { JOptionPane.showInputDialog(">> (LCE) flaw: The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
+      { System.out.println("!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
           "Use Extract local variable to optimise."); 
         refactorELV = true; 
       }
@@ -21895,7 +21895,7 @@ public Statement existsLC(Vector preds, Expression eset, Expression etest,
 
       Vector vuses = variablesUsedIn(vars); 
       if (level > 1 && vuses.size() == 0)
-      { JOptionPane.showInputDialog(">> (LCE) flaw: The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
+      { System.out.println("!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
           "Use Extract local variable to optimise."); 
         refactorELV = true; 
       }
@@ -21920,7 +21920,7 @@ public Statement existsLC(Vector preds, Expression eset, Expression etest,
 
       Vector vuses = variablesUsedIn(vars); 
       if (level > 1 && vuses.size() == 0)
-      { JOptionPane.showInputDialog(">> (LCE) flaw: The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
+      { System.out.println("!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
           "Use Extract local variable to optimise.");
         refactorELV = true;  
       }
