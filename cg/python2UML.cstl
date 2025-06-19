@@ -193,6 +193,9 @@ dict _1 |-->_1`dictarguments
 set _1 |-->Set{}->union(_1)
 set _1 _2 |-->Set{}->union(_1)_2
 
+SortedSet _1 |-->SortedSet{}->union(_1->characters())<when> _1`ocltype String
+SortedSet _1 |-->SortedSet{}->union(_1)
+
 divmod _1 |-->Sequence{(_1`firstArg div _1`secondArg), (_1`firstArg mod _1`secondArg)}
  
 filter _1 |-->(_1`secondArg)->select( _x | (_1`firstArg)->apply(_x) = true )
@@ -215,8 +218,13 @@ list _1 |-->_1->characters()<when> _1`ocltype String
 list _1 |-->_1->keys()->asSequence()<when> _1`ocltype Map
 list _1 |-->_1
 
+SortedList _1 |-->SortedSequence{}->union(_1->characters())<when> _1`ocltype String
+SortedList _1 |-->SortedSequence{}->union(_1->keys()->asSequence())<when> _1`ocltype Map
+SortedList _1 |-->SortedSequence{}->union(_1)
+
 deque _1 |-->_1
 OrderedDict _1 |-->_1
+SortedDict _1 |-->SortedMap{}->union(_1)
 
 max _1 |-->_1->max()<when> _1`argCount 1
 max _1 |-->Set{_1`argList}->max()
@@ -250,6 +258,7 @@ sorted _1 |-->_1`sortedTrailer
 
 tuple _1 |-->_1
 range _1 |-->_1`rangeTrailer
+irange _1 |-->_1`rangeTrailer
 enumerate _1 |-->Integer.subrange(1, _1->size())->collect( _indx | Sequence{_indx-1, _1->at(_indx)} )
 zip _1 |-->Integer.subrange(1, _1`firstArg->size())->collect( _indx | Sequence{_1`firstArg->at(_indx), _1`secondArg->at(_indx)} )
 
@@ -435,6 +444,10 @@ bool |-->OclType["boolean"]
 dict |-->OclType["Map"]
 list |-->OclType["Sequence"]
 set |-->OclType["Set"]
+SortedSet |-->OclType["SortedSet"]
+SortedList |-->OclType["SortedSequence"]
+SortedDict |-->OclType["SortedMap"]
+
 
 R _1 |-->StringLib.rawString(_1)
 r _1 |-->StringLib.rawString(_1)
@@ -542,7 +555,10 @@ _1 |-->_1`isMapExpression<when> _1 atom
 print _1 |-->false
 del _1 |-->false
 dict _1 |-->true
+SortedMap _1 |-->true
 Counter _1 |-->false
+SortedSet _1 |-->false
+SortedList _1 |-->false
 
 ( ) |-->false
 ( _1 ) |-->false<when> _1 multiple
@@ -572,7 +588,11 @@ print _1 |-->false
 del _1 |-->false
 dict _1 |-->false
 range _1 |-->true
+irange _1 |-->true
 Counter _1 |-->false
+SortedSet _1 |-->false
+SortedList _1 |-->true
+SortedDict _1 |-->false
 
 ( ) |-->false
 ( _1 ) |-->false<when> _1 multiple
@@ -605,7 +625,12 @@ print _1 |-->false
 del _1 |-->false
 dict _1 |-->false
 range _1 |-->false
+irange _1 |-->false
 Counter _1 |-->true
+SortedSet _1 |-->false
+SortedList _1 |-->false
+SortedDict _1 |-->false
+
 
 ( ) |-->false
 ( _1 ) |-->false<when> _1 multiple
@@ -865,6 +890,10 @@ _1 : str |-->  attribute _1 : String;\n<action> _1 String
 _1 : list |-->  attribute _1 : Sequence(OclAny);\n<action> _1 Sequence
 _1 : set |-->  attribute _1 : Set(OclAny);\n<action> _1 Set
 
+_1 : SortedSet |-->  attribute _1 : SortedSet(OclAny);\n<action> _1 Set
+_1 : SortedList |-->  attribute _1 : SortedSequence(OclAny);\n<action> _1 Sequence
+_1 : SortedDict |-->  attribute _1 : SortedMap(String,OclAny);\n<action> _1 Map
+
 _1 : _2 |-->  attribute _1 : _2;\n<action> _1 _2
 
 
@@ -945,12 +974,15 @@ trailer::
 . issuperset _1 |-->->includesAll_1
 . symmetric_difference _1 |-->->symmetricDifference_1
 . update _1 |-->_1`allUnion
+. union _1 |-->->union_1
 . remove _1 |-->->excludingFirst_1
 . discard _1 |-->->excluding_1
 . clear _1 |-->->intersection(Set{})
 . items _1 |-->->asSequence()->collect( _mx | Sequence{_mx->keys()->any(), _mx->values()->any()})
 . elements _1 |-->->asSequence()
 . total _1 |-->->size()
+. range _1 |-->_1`rangeArguments
+. irange _1 |-->_1`irangeArgs->asSequence()
 
 . upper _1 |-->->toUpperCase()
 . lower _1 |-->->toLowerCase()
@@ -1127,7 +1159,8 @@ sequenceQueryForm::
 . discard _1 |-->->excluding_1
 . clear _1 |-->->intersection(Set{})
 . items _1 |-->->asSequence()->collect( _mx | Sequence{_mx->keys()->any(), _mx->values()->any()})
-
+. range _1 |-->_1`rangeTrailer
+. irange _1 |-->_1`irangeTrail
 
 . max _1 |-->->max()
 . min _1 |-->->min()
@@ -1189,6 +1222,8 @@ sequenceTrailerType::
 . discard _1 |-->Sequence
 . clear _1 |-->Sequence
 . items _1 |-->Sequence
+. range _1 |-->Sequence
+. irange _1 |-->Sequence
 
 . max _1 |-->OclAny
 . min _1 |-->OclAny
@@ -1228,6 +1263,9 @@ print _1 |-->0
 del _1 |-->0
 dict _1 |-->0
 Counter _1 |-->0
+SortedSet _1 |-->0
+SortedList _1 |-->0
+SortedDict _1 |-->0
 
 ( ) |-->0
 ( _1 ) |-->_1`arity<when> _1 multiple
@@ -1739,6 +1777,10 @@ rangeTrailer::
 _1 |-->_1`rangeArguments
 
 
+irangeTrail::
+_1 |-->_1`irangeArgs
+
+
 sortedTrailer::
 _1 |-->_1`sortedArguments
 
@@ -1921,6 +1963,7 @@ arglist::
 _1 |-->_1
 _1 , _* |-->_1, _*`recurse
 
+
 rangeArguments::
 ( ) |-->
 ( _1 ) |-->_1`rangeArguments
@@ -1928,6 +1971,14 @@ _1 |-->Integer.subrange(0, _1-1)
 _1 , _2 |-->Integer.subrange(_1, _2-1)
 _1 , _2 , -1 |-->Integer.subrange(_2 + 1, _1)->reverse()
 _1 , _2 , _3 |-->Integer.subrange(_1, _2-1)->select( $x | ($x - _1) mod _3 = 0 )
+
+
+irangeArgs::
+( ) |-->
+( _1 ) |-->_1`irangeArgs
+_1 |-->->select( _x0 | _x0 >= _1 )
+_1 , _2 |-->->select( _x1 | _x1 >= _1 & _x1 <= _2)
+
 
 sortedArguments::
 ( _1 ) |-->_1`sortedArguments
@@ -2419,6 +2470,10 @@ tuple |-->Sequence
 bool |-->boolean
 name |-->String
 
+SortedSet |-->SortedSet
+SortedList |-->SortedSequence
+SortedDict |-->SortedMap
+
 _1 |-->_1`ocltype<when> _1 testlist_star_expr
 _1 |-->_1`ocltype<when> _1 testlist
 _1 |-->_1`ocltype<when> _1 trailer
@@ -2463,6 +2518,10 @@ set _1 |-->Set
 sorted _1 |-->Sequence
 tuple _1 |-->Sequence
 
+SortedList _1 |-->SortedSequence
+SortedDict _1 |-->SortedMap
+SortedSet _1 |-->SortedSet
+
 pow _1 |-->double
 repr _1 |-->String
 reversed _1 |-->Sequence
@@ -2478,6 +2537,7 @@ unichr _1 |-->String
 ord _1 |-->int
 type _1 |-->OclType
 range _1 |-->Sequence
+irange _1 |-->Sequence
 enumerate _1 |-->Sequence
 zip _1 |-->Sequence
 slice _1 |-->Sequence

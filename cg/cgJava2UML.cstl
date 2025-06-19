@@ -54,8 +54,8 @@ BlockingDeque |-->Sequence
 LinkedBlockingDeque |-->Sequence
 BlockingQueue |-->Sequence
 ArrayBlockingQueue |-->Sequence
-PriorityBlockingQueue |-->Sequence
-PriorityQueue |-->Sequence
+PriorityBlockingQueue |-->SortedSequence
+PriorityQueue |-->SortedSequence
 Bag |-->Sequence
 TreeBag |-->Sequence
 
@@ -87,10 +87,11 @@ SequencedCollection |-->Sequence
 SequencedSet |-->Sequence
 
 Set |-->Set
-TreeSet |-->Set
-SortedSet |-->Set
+TreeSet |-->SortedSet
+SortedSet |-->SortedSet
 HashSet |-->Set
 EnumSet |-->Set
+NavigableSet |-->Set
 
 JsonString |-->String
 Integer |-->int
@@ -334,8 +335,8 @@ AbstractSequentialList _1 |-->Sequence_1`collectionParameters
 ArrayDeque _1 |-->Sequence_1`collectionParameters
 BlockingDeque _1 |-->Sequence_1`collectionParameters
 LinkedBlockingDeque _1 |-->Sequence_1`collectionParameters
-PriorityBlockingQueue _1 |-->Sequence_1`collectionParameters
-PriorityQueue _1 |-->Sequence_1`collectionParameters
+PriorityBlockingQueue _1 |-->SortedSequence_1`collectionParameters
+PriorityQueue _1 |-->SortedSequence_1`collectionParameters
 Bag _1 |-->Sequence_1`collectionParameters
 TreeBag _1 |-->Sequence_1`collectionParameters
 
@@ -348,10 +349,11 @@ HashBag _1 |-->Sequence_1`collectionParameters
 TreeList _1 |-->Sequence_1`collectionParameters
 
 Set _1 |-->Set_1`collectionParameters
-TreeSet _1 |-->Set_1`collectionParameters
+TreeSet _1 |-->SortedSet_1`collectionParameters
 HashSet _1 |-->Set_1`collectionParameters
-SortedSet _1 |-->Set_1`collectionParameters
+SortedSet _1 |-->SortedSet_1`collectionParameters
 EnumSet _1 |-->Set_1`collectionParameters
+NavigableSet _1 |-->Set_1`collectionParameters
 
 Map . Entry |-->Map
 Map . Entry _1 |-->Map_1`collectionParameters
@@ -867,7 +869,7 @@ _1 [ ] [ ] |-->_1
 
 
 variableDeclarator::
-_1 = _2 |-->    var _1 : _1`getOclType ; _2`preSideEffect_1 := _2`queryForm<action> _1 _1`getOclType
+_1 = _2 |-->    var _1 : _1`getOclType ; _2`preSideEffect_1 := _2`queryForm _2`postSideEffect<action> _1 _1`getOclType
 _1 |-->    var _1 : _1`getOclType<action> _1 _1`getOclType
 
 
@@ -1158,9 +1160,15 @@ remove ( _1 ) |-->->includes(_1)
 removeFirst ( ) |-->->first()
 removeLast ( ) |-->->last()
 set ( _1 ) |-->->at(_1`first+1)
-pop ( ) |-->->last()
+pop ( ) |-->->first()
 take ( ) |-->->last()
-poll ( ) |-->->min()
+poll ( ) |-->->first()
+pollFirst ( ) |-->->first()
+pollLast ( ) |-->->last()
+ceiling ( _1 ) |-->->select( _x | _x >= _1 )->min()
+higher ( _1 ) |-->->select( _x | _x > _1 )->min()
+floor ( _1 ) |-->->select( _x | _x <= _1 )->max()
+lower ( _1 ) |-->->select( _x | _x < _1 )->max()
 
 _1 ( ) |-->._1()
 _1 ( _2 ) |-->._1(_2)
@@ -1186,10 +1194,17 @@ remove ( _1 ) |-->OclAny<when> _1 integer
 remove ( _1 ) |-->boolean
 removeFirst ( ) |-->OclAny
 removeLast ( ) |-->OclAny
+pollFirst ( ) |-->OclAny
+pollLast ( ) |-->OclAny
 set ( _1 ) |-->OclAny
 pop ( ) |-->OclAny
 take ( ) |-->OclAny
 poll ( ) |-->OclAny
+ceiling ( _1 ) |-->_1`ocltype
+floor ( _1 ) |-->_1`ocltype
+lower ( _1 ) |-->_1`ocltype
+higher ( _1 ) |-->_1`ocltype
+
 
 _1 ( ) |-->OclAny
 _1 ( _2 ) |-->OclAny
@@ -1233,7 +1248,7 @@ _1 ( _2 ) |-->._1(_2)
 
 
 collectionMethodCallSideEffect::
-pop ( ) |-->->front()
+pop ( ) |-->->tail()
 take ( ) |-->->front()
 
 removeAll ( _1 ) |--> - _1
@@ -1247,13 +1262,12 @@ remove ( _1 ) |-->->excludingFirst(_1)
 removeRange ( _1 ) |-->->antirestrict( Integer.subrange(_1`first+1,_1`last) )
 removeLast ( ) |-->->front()
 removeFirst ( ) |-->->tail()
+pollLast ( ) |-->->front()
+pollFirst ( ) |-->->tail()
 clear ( ) |-->->intersection(Set{})
 removeAllElements ( ) |-->->intersection(Set{})
-pop ( ) |-->->front()
-take ( ) |-->->front()
-pollLast ( ) |-->->front()
-poll ( ) |-->->sort()->tail()
-pollFirst ( ) |-->->tail()
+
+poll ( ) |-->->tail()
 insertElementAt ( _1 ) |-->.insertAt(_1`last+1,_1`first)
 add ( _1 ) |-->.insertAt(_1`first+1,_1`last)<when>_1 multiple
 add ( _1 ) |-->->including(_1)
@@ -1314,7 +1328,7 @@ clear ( ) |-->->intersection(Set{})
 removeAllElements ( ) |-->->intersection(Set{})
 pop ( ) |-->->front()
 take ( ) |-->->front()
-poll ( ) |-->->sort()->tail()
+poll ( ) |-->->tail()
 pollFirst ( ) |-->->tail()
 pollLast ( ) |-->->front()
 pollFirstEntry ( ) |-->->tail()
@@ -1700,6 +1714,8 @@ java.lang.reflect.Array . _1 |-->_1`arrayMethodCall
 Collections . _1 |-->_1`collectionMethodCallQueryForm
 
 _1 . _2 |-->(if _1`queryForm->keys()->contains(_2`keyvalue) then _1`queryForm_2`mapMethodCallQueryForm else _2`testdefault endif)<when> _1 Map, _2`methodName getOrDefault
+
+_1 . _2 |-->_1->first()<when> _1 SortedSequence, _2`methodName peek
  
 _1 . _2 |-->_1`queryForm_2`mapMethodCallQueryForm<when> _1 Map
 _1 . _2 |-->_1`queryForm_2`fileMethodCallQueryForm<when> _1 File
@@ -1824,7 +1840,7 @@ set ( _1 ) |-->->at(_1`first+1)
 pop ( ) |-->->last()
 take ( ) |-->->last()
 reversed ( ) |-->->reverse()
-poll ( ) |-->->min()
+poll ( ) |-->->first()
 pollFirst ( ) |-->->first()
 pollLast ( ) |-->->last()
 offerFirst ( ) |-->true
@@ -1834,9 +1850,16 @@ elements ( ) |-->->iterator()
 values ( ) |-->.allInstances()
 
 subList ( _1 ) |-->.subrange(_1`first+1,_1`last) 
-subSequence ( _1 ) |-->.subrange(_1`first+1,_1`last) 
+subSequence ( _1 ) |-->.subrange(_1`first+1,_1`last)
+ 
+headSet ( _1 ) |-->->select( _x0 | _x0 <= _1`first )<when> _1 multiple, _1`last true
+headSet ( _1 ) |-->->select( _x0 | if _1`last then _x0 <= _1`first else _x0 < _1`first endif )<when> _1 multiple
 headSet ( _1 ) |-->->select( _x0 | _x0 < _1 )
+
+tailSet ( _1 ) |-->->select( _x0 | _x0 > _1`first )<when> _1 multiple, _1`last false
+tailSet ( _1 ) |-->->select( _x0 | if _1`last then _x0 >= _1`first else _x0 > _1`first endif )<when> _1 multiple
 tailSet ( _1 ) |-->->select( _x0 | _x0 >= _1 )
+
 subSet ( _1 ) |-->->select( _x0 | _x0 >= _1`first & _x0 < _1`last )
 
 filter ( _1 ) |-->->select( _x1 | (_1)->apply(_x1) )
@@ -1888,8 +1911,8 @@ first ( ) |-->->first()
 getLast ( ) |-->->last()
 last ( ) |-->->last()
 lastElement ( ) |-->->last()
-peek ( ) |-->->min()
-search ( _1 ) |-->->reverse()->indexOf(_1)-1
+peek ( ) |-->->last()
+search ( _1 ) |-->->reverse()->indexOf(_1)
 getCount ( _1 ) |-->->count(_1)
 
 indexOf ( _1 ) |-->.subrange(_1`last+1)->indexOf(_1`first+"") + _1`last - 1 <when> _1 multiple
@@ -1928,6 +1951,7 @@ deleteCharAt ( _1 ) |-->->excludingAt(_1+1)
 delete ( _1 ) |-->->antirestrict( Integer.subrange(_1`first+1,_1`last) )
 insert ( _1 ) |-->.insertAt(_1`first+1, StringLib.newString(_1`tailtail))
 reverse ( ) |-->->reverse()
+descendingSet ( ) |-->->reverse()
 
 toArray ( ) |-->->asSequence()
 toArray ( _1 ) |-->->asSequence()
@@ -1935,7 +1959,11 @@ iterator ( _1 ) |-->.subrange(_1+1)->iterator()
 iterator ( ) |-->->iterator()
 listIterator ( ) |-->->iterator()
 listIterator ( _1 ) |-->.subrange(_1+1)->iterator()
-
+descendingIterator ( ) |-->->reverse()->iterator()
+ceiling ( _1 ) |-->->select( _x | _x >= _1 )->min()
+higher ( _1 ) |-->->select( _x | _x > _1 )->min()
+floor ( _1 ) |-->->select( _x | _x <= _1 )->max()
+lower ( _1 ) |-->->select( _x | _x < _1 )->max()
 
 get ( _1 ) |-->->at(_1+1)
 getOrDefault ( _1 ) |-->->at(_1+1)
@@ -1960,6 +1988,8 @@ Stream . _1 |-->_1`streamMethodCallQueryForm
 Collections . _1 |-->_1`collectionMethodCallQueryForm
 
 _1 . _2 |-->if _1`queryForm->keys()->contains(_2`keyvalue) then _1`queryForm_2`mapMethodCallQueryForm else _2`testdefault endif<when> _2`methodName getOrDefault
+
+_1 . _2 |-->_1->first()<when> _1 SortedSequence, _2`methodName peek
 
 _1 . _2 |-->_1_2`mapMethodCallQueryForm<when> _1 Map
 _1 . _2 |-->_1_2`fileMethodCallQueryForm<when> _1 File
@@ -2739,6 +2769,11 @@ writeFloat ( _1 ) |-->void
 writeDouble ( _1 ) |-->void
 skipBytes ( _1 ) |-->int
 
+ceiling ( _1 ) |-->_1`ocltype
+floor ( _1 ) |-->_1`ocltype
+lower ( _1 ) |-->_1`ocltype
+higher ( _1 ) |-->_1`ocltype
+
 _1 ( ) |-->_1()
 _1 ( _2 ) |-->_1(_2)
 
@@ -3070,6 +3105,8 @@ _1 instanceof _2 |-->_1->oclIsKindOf(_2)
 
 _1 . _2 |-->(if _1`queryForm->keys()->contains(_2`keyvalue) then _1`queryForm_2`mapMethodCallQueryForm else _2`testdefault endif)<when> _1 Map, _2`methodName getOrDefault
 
+_1 . _2 |-->_1->first()<when> _1 SortedSequence, _2`methodName peek
+
 _1 . _2 |-->_1_2`mapMethodCallQueryForm<when> _1 Map
 _1 . _2 |-->_1_2`fileMethodCallQueryForm<when> _1 File
 _1 . _2 |-->_1_2`dateMethodCallQueryForm<when> _1 Date
@@ -3337,6 +3374,7 @@ _1 |-->long<when> _1 long
 _1 |-->boolean<when> _1 boolean
 _1 |-->String<when> _1 String
 _1 |-->Sequence<when> _1 Sequence
+_1 |-->SortedSequence<when> _1 SortedSequence
 _1 |-->Set<when> _1 Set
 _1 |-->Map<when> _1 Map
 _1 |-->Function<when> _1 Function
@@ -3468,18 +3506,22 @@ _1 | _2 |-->_1`postSideEffect_2`postSideEffect
 _1 && _2 |-->_1`postSideEffect_2`postSideEffect
 _1 || _2 |-->_1`postSideEffect_2`postSideEffect
 _1 ^ _2 |-->_1`postSideEffect_2`postSideEffect
-
-
+ 
 Collections . _1 |--> ; _1`collectionsMethodCall
+
+_1 . class |-->_1`postSideEffect
+
+_1 . _2 |--> ; _1`updatedObject := _1_2`methodCallSideEffect<when> _2 updatesObject
+_1 . _2 |-->
 
 ++ _1 |-->_1`postSideEffect
 -- _1 |-->_1`postSideEffect
 
-_1 |-->_1`postSideEffect<when> _1 multiple
-
-_1 . class |-->_1`postSideEffect
-
 new _1 |-->
+
+_1 |-->_1<when>_1 variableInitializer, _1 updatesObject
+
+_1 |-->_1`postSideEffect<when> _1 multiple
 
 _1 |-->
 
@@ -3673,9 +3715,10 @@ BitSet _1 |-->MathLib.toBitSequence_1
 
 Set _1 |-->Set{}_1`collectionCreationRest
 HashSet _1 |-->Set{}_1`collectionCreationRest
+NavigableSet _1 |-->Set{}_1`collectionCreationRest
 
-TreeSet _1 |-->Set{}_1`collectionCreationRest
-SortedSet |-->Set{}_1`collectionCreationRest
+TreeSet _1 |-->SortedSet{}_1`collectionCreationRest
+SortedSet |-->SortedSet{}_1`collectionCreationRest
 EnumSet |-->Set{}_1`collectionCreationRest
 
 SequencedCollection |-->Sequence{}_1`collectionCreationRest
@@ -3695,8 +3738,8 @@ BlockingDeque _1 |-->Sequence{}_1`collectionCreationRest
 LinkedBlockingDeque _1 |-->Sequence{}_1`collectionCreationRest
 BlockingQueue _1 |-->Sequence{}_1`collectionCreationRest
 ArrayBlockingQueue _1 |-->Sequence{}_1`collectionCreationRest
-PriorityQueue _1 |-->Sequence{}_1`collectionCreationRest
-PriorityBlockingQueue _1 |-->Sequence{}_1`collectionCreationRest
+PriorityQueue _1 |-->SortedSequence{}_1`collectionCreationRest
+PriorityBlockingQueue _1 |-->SortedSequence{}_1`collectionCreationRest
 Bag _1 |-->Sequence{}_1`collectionCreationRest
 TreeBag _1 |-->Sequence{}_1`collectionCreationRest
 
@@ -3790,6 +3833,7 @@ SortedSet _1 |-->true
 SequencedCollection _1 |-->true
 SequencedSet _1 |-->true
 EnumSet _1 |-->true
+NavigableSet _1 |-->true
 
 Vector _1 |-->true
 List _1 |-->true
@@ -3931,7 +3975,7 @@ Stack |-->Sequence
 Queue |-->Sequence
 BlockingQueue |-->Sequence
 ArrayBlockingQueue |-->Sequence
-PriorityQueue |-->Sequence
+PriorityQueue |-->SortedSequence
 Bag |-->Sequence
 TreeBag |-->Sequence
 
@@ -3951,10 +3995,11 @@ JsonArray |-->Sequence
 JSONArray |-->Sequence
 
 Set |-->Set
-TreeSet |-->Set
-SortedSet |-->Set
+TreeSet |-->SortedSet
+SortedSet |-->SortedSet
 HashSet |-->Set
 EnumSet |-->Set
+NavigableSet |-->Set
 
 LinkedHashSet |-->Sequence
 SequencedCollection |-->Sequence
@@ -4146,7 +4191,7 @@ Stack _1 |-->Sequence{}
 Queue _1 |-->Sequence{}
 BlockingQueue _1 |-->Sequence{}
 ArrayBlockingQueue _1 |-->Sequence{}
-PriorityQueue _1 |-->Sequence{}
+PriorityQueue _1 |-->SortedSequence{}
 Bag _1 |-->Sequence{}
 TreeBag _1 |-->Sequence{}
 
@@ -4163,10 +4208,11 @@ SequencedCollection _1 |-->Sequence{}
 Comparator _1 |-->OclComparator_1.newOclComparator
 
 Set _1 |-->Set{}
-TreeSet _1 |-->Set{}
+TreeSet _1 |-->SortedSet{}
 HashSet _1 |-->Set{}
-SortedSet _1 |-->Set{}
+SortedSet _1 |-->SortedSet{}
 EnumSet _1 |-->Set{}
+NavigableSet _1 |-->Set{}
 
 
 Map . Entry |-->Map{}

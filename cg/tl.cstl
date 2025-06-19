@@ -1,232 +1,337 @@
-relationaloperator::
-_1 |-->_1
-
-actualParameter::
-_1 |-->_1
-
-parameterList::
-_1 |-->_1
-
-additiveoperator::
-_1 |-->_1
-
-elementList::
-_* |-->_*
-_1 |-->_1
-
-element::
-_1 |-->_1
-
-identifier::
-_1  |-->_1 
-
-identifierList::
-_1 |-->_1
-
-expression::
-_1 <=  _3  |-->_1 <= _3 <when> _1 simpleExpression
-_1 <=  _3  |-->_3 ->includesAll ( _1 ) <when> _1 set_
-_1 in  _3  |-->_3 ->includes ( _1 ) 
-_1 =  _3  |-->_1 = _3 
-_1  |-->_1 
-
-functionDesignator::
-_1 ( _3 )  |-->_3 _1`nestedSfunc40 ( ) 
-
-seq2ruleset38::
-_* |-->_*`seq2subruleset37
-
-signedFactor::
-+ _2  |-->_2 
-- _2  |-->- _2 
-_1 |-->_1 
-
-set_::
-[ _* ]  |-->Set { _*`seq2ruleset38 } 
-_1 |-->_1
 
 
-simpleExpression::
-_1 or  _3  |-->_1 or _3 
-_1 +  _3  |-->_1 + _3 <when> _1 term
-_1 +  _3  |-->_1 ->union ( _3 ) <when> _1 set_
-_1 -  _3  |-->_1 - _3 
-_1  |-->_1 
 
-unsignedInteger::
-_1 |-->_1 
 
-nestedSfunc32::
-nil |-->null
-_1 |-->_1
-_* |-->null
 
-bool_::
-_1 |-->_1 
 
-nestedSfunc40::
-sin |-->->sin
-cos |-->->cos
-arctan |-->->atan
-ln |-->->log
-_* |-->->sin
 
-variable::
-_1 [ _3 ]  |-->_1 ->at ( "" + _3 ) 
-_1 [ _3 , _5 ]  |-->_1 ->at ( "" + _3 ) ->at ( "" + _5 ) 
+
+
+
+
+
+
+
+
+
+
+OclAttribute::
+attribute _2 : double   |-->this . _2 = 0.0 ; 
+attribute _2 : String   |-->this . _2 = "" ; 
+attribute _2 : _4  |-->this . _2 = 0 ; 
+
+OclBasicExpression::
+null  |-->NULL 
+this |-->self
+_1 . _3 ( )  |-->_1 . _3 ( ) 
+_1 [ _3 ]  |-->_1 [ _3`subruleset141 ] 
+_1 . _3 ( _5 )  |-->_1 . _3 _5`seq3subruleset143 
 _1 . _3  |-->_1 . _3 
-_1 ^  |-->! _1 <when> _1 identifier
-@ _2  |-->? _2 
-_1  |-->_1 
+_1 |-->_1 <when> _1 Integer
+_1 |-->_1 <when> _1 Real
+_1 |-->_1 <when> _1 Boolean
+_1 |-->_1 <when> _1 String
+_1 |-->_1
+_* |-->self
 
-term::
-_1 div _3  |-->_1 div _3 
-_1 mod _3  |-->_1 mod _3 
-_1 and _3  |-->_1 & _3 
-_1 * _3  |-->_1 * _3 <when> _1 signedFactor
-_1 * _3  |-->_1 ->intersection ( _3 ) <when> _1 set_
-_1  |-->_1 
+OclBinaryExpression::
+_1 _2 ( _4 )  |-->_2`nestedTfunc157 ( _1`subruleset160 , _4`subruleset163 ) 
+q  - _3  |-->q - _3 
+p  _2 _3  |-->p _2`func345 _3 
+2.5  _2 _3  |-->2.5 _2 _3 
+_1 <= _3  |-->_1 <= _3 
+_1 mod _3  |-->_1 % _3 
+_1 or _3  |-->_1 || _3 
+_1 & _3  |-->_1 && _3 
+_1 * _3  |-->_1 * _3 
+_1 + _3  |-->_1 + _3 
+_1 - _3  |-->_1 - _3 
+_1 /= _3  |-->_1 != _3 
+_1 / _3  |-->_1 / _3 
+_1 div _3  |-->( int ) ( _1 / _3 ) 
+_1 <>= _3  |-->_1 == _3 
+_1 < _3  |-->_1 < _3 
+_1 = _3  |-->_1 == _3 
+_1 > _3  |-->_1 > _3 
+_1 >= _3  |-->_1 >= _3 
 
-seq2subruleset37::
-_1  |-->_1 
+OclClass::
+class _2 { }  |-->function _2 ( ) { } 
+class _2 { _4 }  |-->function _2 ( ) { _4`seq3subruleset339 } 
+
+OclCollectionExpression::
+Set { _3 }  |-->newSet _3`seq3subruleset167 
+Sequence { _3 }  |-->newList _3`seq3subruleset169 
+_1 { }  |-->_1`nestedTfunc165 ( ) 
+
+OclConditionalExpression::
+if _2 then _4 else _6 endif  |-->_2`subruleset146 ? _2`subruleset149 : _6 
+
+OclEnumeration::
+enumeration _2 { _4 }  |-->const _2 = _4`seq3subruleset344 <EOF> 
+
+OclOperation::
+operation _2 ( ) : void pre: true  post: true  activity: _12  |-->this . _2 = function ( ) { _12 } ; 
+operation _2 ( _* ) : void pre: true  post: true  activity: _13  |-->this . _2 = function ( _*`seq2subruleset331 ) { _13 } ; 
+query _2 ( ) : _6 pre: true  post: true  activity: _12  |-->_6`subruleset275 = function ( ) { _12 } ; 
+query _2 ( _* ) : _7 pre: true  post: true  activity: _13  |-->_7`subruleset305 = function ( _*`seq2subruleset308 ) { _13 } ; 
+
+OclStatement::
+var _2 : Map ( OclAny  , OclAny  )   |-->let _2 = { } ; 
+var _2 : double   |-->let _2 = 0.0 ; 
+var _2 : boolean   |-->let _2 = false ; 
+var _2 : String   |-->let _2 = "" ; 
+var _2 : Sequence   |-->let _2 = [ elementList ] ; 
+var _2 : Set   |-->let _2 = [ elementList ] ; 
+var _2 : OclAny   |-->let _2 = { } ; 
+( _2 )  |-->{ _2`seq3subruleset241 } 
+return _2  |-->return _2`subruleset172 ; 
+call _2  |-->_2 ; 
+var _2 : _4  |-->let _2 = 0 ; <when> _4 Integer
+while _2 do _4  |-->while ( _2`subruleset256 ) { _4 } 
+_1 := _3  |-->_1 = _3 ; 
+if _2 then _4 else _6  |-->if ( _2`subruleset175 ) { _4 } else { _6 } 
+for _2 : _4 do _6  |-->for ( var _2 of _4`subruleset253 ) { _6 } 
+break  |-->break ; 
+continue  |-->continue ; 
+return  |-->return ; 
+
+OclType::
+void  |-->Null 
+OclAny  |-->Object 
+int |-->Number
+double |-->Number
+long |-->Number
+boolean |-->Boolean
+String  |-->String 
+Set ( _3 )  |-->Object 
+Sequence ( _3 )  |-->Object 
+_1  |-->Object <when> _1 Class
+Function ( _3 , _5 )  |-->Function 
+Map ( _3 , _5 )  |-->Map 
+_* |-->Number
+
+OclUnaryExpression::
+_1 _2 ( )  |-->_2`nestedTfunc153 _1`subruleset156 
+_1 _2  |-->_2`subruleset152 _2 
+
+func150::
+1 |-->-
+p |-->-
+true |-->!
+q |-->!
+_* |-->-
+
+func345::
+<>= |-->==
+= |-->==
+& |-->&&
+or |-->||
+_1 |-->_1
+_* |-->==
+
+nestedSfunc138::
+this |-->self
+_1 |-->_1
+_* |-->self
+
+nestedSfunc164::
+int |-->Number
+double |-->Number
+long |-->Number
+boolean |-->Boolean
+_* |-->Number
+
+nestedTfunc147::
+p |-->1
+q |-->p
+_* |-->1
+
+nestedTfunc153::
+->toLowerCase |-->toLowerCase
+->toUpperCase |-->toUpperCase
+->front |-->front
+->tail |-->tail
+->first |-->first
+->last |-->last
+_* |-->toLowerCase
+
+nestedTfunc157::
+->including |-->including
+->union |-->union
+->intersection |-->intersection
+->excludesAll |-->excludesAll
+->excludes |-->excludes
+->includesAll |-->includesAll
+->indexOf |-->indexOf
+->lastIndexOf |-->lastIndexOf
+->append |-->append
+->prepend |-->prepend
+->pow |-->pow
+_* |-->including
+
+nestedTfunc165::
+Set |-->newSet
+Sequence |-->newList
+_* |-->newSet
+
+nestedTfunc273::
+int |-->op
+String |-->op1
+_* |-->op
+
+nestedTfunc303::
+long |-->set
+int |-->op1
+String |-->op2
+_* |-->set
+
+nestedTfunc335::
+OclDate |-->x
+OclProcess |-->q
+OclFile |-->p
+OclType |-->x
+_* |-->x
+
+nestedTfunc342::
+_1 |-->'_1'
+
+seq2subruleset308::
+_1 : _3  |-->_1 
 _0 |-->_0
 
-factor::
-( _2 )  |-->( _2 ) 
-not _2  |-->not _2 
+seq2subruleset331::
+_1 : _3  |-->_1 
+_0 |-->_0
+
+seq3ruleset142::
 _1 |-->_1 
+_0 |-->_0
 
+seq3ruleset166::
+_1 |-->_1 
+_0 |-->_0
 
-unsignedConstant::
-nil |-->null
-_1 |-->_1
-_* |-->null
+seq3ruleset168::
+_1 |-->_1 
+_0 |-->_0
 
+seq3ruleset240::
+; |--> 
+_1 := _3  |-->_1 = _3 ; 
+_0 |-->_0
 
+seq3ruleset338::
+; |--> 
+_1 |-->_1 
+_0 |-->_0
 
-compoundStatement::
-_* |-->_*
+seq3ruleset343::
+; |-->,
+literal _2  |-->_2 : _2`nestedTfunc342 
+_0 |-->_0
 
+seq3subruleset143::
+_* |-->( _*`seq3ruleset142 )
 
+seq3subruleset167::
+_* |-->( _*`seq3ruleset166 )
 
-parameterGroup::
-_1 |-->_1
-_* |-->_*
+seq3subruleset169::
+_* |-->( _*`seq3ruleset168 )
 
+seq3subruleset241::
+_* |-->_*`seq3ruleset240
 
-formalParameterList::
-_1 |-->_1
-_* |-->_*
+seq3subruleset339::
+_* |-->_*`seq3ruleset338
 
-simpleStatement::
-_1 |-->_1
+seq3subruleset344::
+_* |-->{ _*`seq3ruleset343 }
 
-formalParameterSection::
-_1 |-->_1
+subSourceF140::
+_*  |-->_1 - 1 
 
-unlabelledStatement::
-_1 |-->_1
+subSourceF145::
+_*  |-->( _1 ) 
 
+subSourceF148::
+_1 |-->_1`nestedTfunc147
 
-typeIdentifier::
-_1 |-->_1
+subSourceF151::
+_1 |-->_1`func150
 
-block::
-_1 |-->_1
+subSourceF155::
+_*  |-->( _1 ) 
 
-
-
-
-unsignedNumber::
-_1 |-->_1
-
-
-assignmentStatement::
-_* |-->_*
-
-
-statements::
-_1 |-->_1
-
-
-formalParameterList::
-_* |-->_*
-
-simpleStatement::
-_1 |-->_1
-
-formalParameterSection::
+subSourceF159::
 _1 |-->_1
 
-unlabelledStatement::
+subSourceF162::
 _1 |-->_1
 
-statement::
+subSourceF171::
 _1 |-->_1
 
-
-typeIdentifier::
+subSourceF174::
 _1 |-->_1
 
-
-resultType::
+subSourceF252::
 _1 |-->_1
 
-unsignedConstant::
+subSourceF255::
 _1 |-->_1
 
-unsignedReal::
-_1 |-->_1
+subSourceF274::
+_*  |-->this . _1`nestedTfunc273 
 
+subSourceF304::
+_*  |-->this . _1`nestedTfunc303 
 
+subSourceF336::
+_*  |-->this . _1`nestedTfunc335 = null 
 
+subruleset141::
+_1  |-->_1`subSourceF140
 
-functionDeclaration::
-function _2 : _4 ; _6  |-->operation _2 ( ) : _4`subruleset27 pre: true post: true activity: _6`subruleset36 ; 
+subruleset146::
+_1  |-->_1`subSourceF145
 
-function _2 _3 : _5 ; _7  |-->operation _2 ( _3`subruleset24 ) : _5`subruleset27 pre: true post: true activity: _7`subruleset36 ; 
+subruleset149::
+_1  |-->_1`subSourceF148
 
-subSourceF21::
-_1 |-->_1
+subruleset152::
+_1  |-->_1`subSourceF151
 
-subSourceF23::
-_1  |-->_1`subruleset22 : Real 
+subruleset156::
+_1  |-->_1`subSourceF155
 
-subSourceF26::
-_1 |-->_1
+subruleset160::
+_1  |-->_1`subSourceF159
 
-subSourceF29::
-_1 |-->_1
+subruleset163::
+_1  |-->_1`subSourceF162
 
-subSourceF31::
-_1  |-->_1`subruleset30 
+subruleset172::
+_1  |-->_1`subSourceF171
 
-subSourceF33::
-_1  |-->_1`subruleset32 
+subruleset175::
+_1  |-->_1`subSourceF174
 
-subSourceF35::
-begin _2 end  |-->return _2`subruleset34 
+subruleset253::
+_1  |-->_1`subSourceF252
 
-subruleset22::
-_1 : Real  |-->_1`subSourceF21
+subruleset256::
+_1  |-->_1`subSourceF255
 
-subruleset24::
-( _2 )  |-->_2`subSourceF23
+subruleset275::
+_1  |-->_1`subSourceF274
 
-subruleset27::
-_1  |-->_1`subSourceF26
+subruleset305::
+_1  |-->_1`subSourceF304
 
-subruleset30::
-_1 := _3  |-->_3`subSourceF29
-
-subruleset32::
-_1  |-->_1`subSourceF31
-
-subruleset34::
-_1  |-->_1`subSourceF33
-
-subruleset36::
-_1  |-->_1`subSourceF35
+subruleset337::
+_1  |-->_1`subSourceF336
 
 
 
