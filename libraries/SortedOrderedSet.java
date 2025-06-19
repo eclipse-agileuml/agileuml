@@ -24,7 +24,8 @@ class SortedOrderedSet<T extends Comparable<T>> implements Set<T>, List<T>
 
   public SortedOrderedSet<T> clone()
   { HashSet<T> elems = (HashSet<T>) elementSet.clone(); 
-    SortedSequence<T> ss = (SortedSequence<T>) elementSeq.clone();
+    SortedSequence<T> ss = 
+          (SortedSequence<T>) elementSeq.clone();
     SortedOrderedSet<T> sos = new SortedOrderedSet<T>();
     sos.elementSet = elems;
     sos.elementSeq = ss; 
@@ -37,8 +38,6 @@ class SortedOrderedSet<T extends Comparable<T>> implements Set<T>, List<T>
   public void setElementSeq(SortedSequence<T> col)
   { elementSeq = col; }
  
-    
-
   public boolean contains(Object x)
   { return elementSet.contains(x); } 
 
@@ -71,13 +70,15 @@ class SortedOrderedSet<T extends Comparable<T>> implements Set<T>, List<T>
 
   public boolean addAll(Collection col)
   { boolean changed = false; 
+
     for (Object obj : col)
     { boolean added = elementSet.add((T) obj); 
       if (added) 
       { changed = true; 
         elementSeq.add((T) obj);
       } 
-    } 
+    }
+ 
     return changed;  
   }
 
@@ -141,7 +142,10 @@ class SortedOrderedSet<T extends Comparable<T>> implements Set<T>, List<T>
   { return elementSeq.indexOf((T) x); } 
 
   public T remove(int i)
-  { return elementSeq.remove(i); }
+  { T removed = elementSeq.remove(i); 
+    elementSet.remove(removed); 
+    return removed; 
+  }
 
   public void add(int i, T x)
   { boolean added = elementSet.add((T) x); 
@@ -185,6 +189,10 @@ class SortedOrderedSet<T extends Comparable<T>> implements Set<T>, List<T>
     sos.add("cc"); sos.add("bb"); 
     sos.add("aa"); sos.add("bb"); sos.add("aa"); 
     System.out.println(sos); 
+
+    sos.remove("bb"); 
+    System.out.println(sos); 
+
 	
     SortedOrderedSet<String> newelems = new SortedOrderedSet<String>(); 
     newelems.add("dd"); newelems.add("cc"); 
