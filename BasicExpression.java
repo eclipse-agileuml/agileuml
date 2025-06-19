@@ -10129,20 +10129,26 @@ class BasicExpression extends Expression
     } // version with array? obj.r[i] for each obj: objs? 
     return data;
   }
- 
+
+  public Statement generateDesignSemiTail(
+            BehaviouralFeature bf,
+            java.util.Map env, Vector exprs, boolean local) 
+  { return generateDesign(env, local); } 
+
   public Statement generateDesign(java.util.Map env, boolean local) 
   { // if multiple objectRef:  for (v : objectRef) { v.data(pars) } 
     // otherwise  objectRef.data(pars)
     // objs.isDeleted  is a call  KillAllE(objs)
 
-    if (isEvent || umlkind == Expression.UPDATEOP) // an operation of entity
+    if (isEvent || 
+        umlkind == Expression.UPDATEOP) 
     { if (entity != null) 
       { BehaviouralFeature bf = entity.getDefinedOperation(data); 
         if (bf != null && bf.isStatic())
         { InvocationStatement res = new InvocationStatement(this); 
           return res; 
         } 
-      } 
+      } // an operation of entity
 
       if (objectRef != null && objectRef.isMultiple())
       { String v = Identifier.nextIdentifier("v_"); 
@@ -10163,7 +10169,8 @@ class BasicExpression extends Expression
       return res; 
     } 
     
-    if (umlkind == Expression.FUNCTION && data.equals("isDeleted"))
+    if (umlkind == Expression.FUNCTION && 
+        data.equals("isDeleted"))
     { if (objectRef.umlkind == Expression.CLASSID && (objectRef instanceof BasicExpression) && 
           ((BasicExpression) objectRef).arrayIndex == null) 
       { BasicExpression killset = new BasicExpression("allInstances"); 
@@ -17190,6 +17197,40 @@ public Statement generateDesignSubtract(Expression rhs)
     } 
 
     return isSelfCall(bf); 
+  } 
+
+  public void recursiveExpressions(BehaviouralFeature bf, 
+                           Vector valueReturns, 
+                           Vector tailReturns, 
+                           Vector semitailReturns, 
+                           Vector nontailReturns)
+  { 
+    String bfname = bf.getName(); 
+
+    Vector names = new Vector(); 
+    names.add(bfname); 
+    Vector vars = variablesUsedIn(names); 
+
+    if (vars.size() == 0)
+    { valueReturns.add(this); 
+      return; 
+    } 
+
+    if (parameters != null)
+    { for (int i = 0; i < parameters.size(); i++) 
+      { Expression par = (Expression) parameters.get(i); 
+        Vector pvars = par.variablesUsedIn(names); 
+        if (pvars.size() > 0) 
+        { nontailReturns.add(this);
+          return; 
+        } 
+      } 
+    } 
+
+    if (isSelfCall(bf))
+    { tailReturns.add(this); } 
+    else 
+    { nontailReturns.add(this); }  
   } 
 
   public Vector equivalentsUsedIn()

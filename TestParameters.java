@@ -58,7 +58,10 @@ public class TestParameters
                  new HashMap<String,Double>(); 
 
     sequenceCC.put("->includes", 2.0);   // O(n) 
+    sequenceCC.put(":", 2.0);   // O(n) 
     sequenceCC.put("->excludes", 2.0);   // O(n) 
+    sequenceCC.put("/:", 2.0);   // O(n) 
+
     sequenceCC.put("->at", 1.0);         // O(1)
     sequenceCC.put("->including", 1.5);  // O(log n) 
     sequenceCC.put("->excluding", 2.0); 
@@ -92,6 +95,10 @@ public class TestParameters
     sequenceCC.put("|C", 2.0);   
     sequenceCC.put("|R", 2.0);
     sequenceCC.put("|isUnique", 2.0); 
+    sequenceCC.put("->selectMinimals", 2.0); 
+    sequenceCC.put("|selectMinimals", 2.0); 
+    sequenceCC.put("->selectMaximals", 2.0); 
+    sequenceCC.put("|selectMaximals", 2.0); 
  
 
     sequenceCC.put("->forAll", 2.0); 
@@ -104,6 +111,7 @@ public class TestParameters
     sequenceCC.put("->front", 2.0); 
     sequenceCC.put("->tail", 2.0); 
     sequenceCC.put("->reverse", 2.0); 
+    sequenceCC.put("->copy", 2.0); 
 
     sequenceCC.put("->sum", 2.0); 
     sequenceCC.put("->prd", 2.0); 
@@ -118,7 +126,10 @@ public class TestParameters
                  new HashMap<String,Double>(); 
 
     sortedsequenceCC.put("->includes", 1.5);     // O(log n) 
+    sortedsequenceCC.put(":", 2.0);    
     sortedsequenceCC.put("->excludes", 1.5);     // O(log n) 
+    sortedsequenceCC.put("/:", 1.5);     // O(log n) 
+    
     sortedsequenceCC.put("->at", 1.0);           // O(1)
     sortedsequenceCC.put("->including", 2.0);    // O(n) 
     sortedsequenceCC.put("->excluding", 2.0); 
@@ -162,10 +173,15 @@ public class TestParameters
     sortedsequenceCC.put("!", 2.0); 
     sortedsequenceCC.put("#", 2.0);   
     sortedsequenceCC.put("#1", 2.0); 
+    sortedsequenceCC.put("->selectMinimals", 2.0); 
+    sortedsequenceCC.put("|selectMinimals", 2.0); 
+    sortedsequenceCC.put("->selectMaximals", 2.0); 
+    sortedsequenceCC.put("|selectMaximals", 2.0); 
 
     sortedsequenceCC.put("->front", 2.0); 
     sortedsequenceCC.put("->tail", 2.0); 
     sortedsequenceCC.put("->reverse", 2.0); 
+    sortedsequenceCC.put("->copy", 2.0); 
     
     sortedsequenceCC.put("->sort", 1.0);  
     sortedsequenceCC.put("->sortedBy", 3.0);     // O(n log n) 
@@ -178,7 +194,10 @@ public class TestParameters
                  new HashMap<String,Double>(); 
 
     setCC.put("->includes", 1.0);     // O(1) 
+    setCC.put(":", 1.0);     // O(1) 
     setCC.put("->excludes", 1.0);     // O(1) 
+    setCC.put("/:", 1.0);     // O(1) 
+
     setCC.put("->including", 1.0);  
     setCC.put("->excluding", 1.0); 
     setCC.put("->excludingFirst", 1.0); 
@@ -201,6 +220,10 @@ public class TestParameters
     setCC.put("|", 2.0); 
     setCC.put("|C", 2.0);   
     setCC.put("|R", 2.0); 
+    setCC.put("->selectMinimals", 2.0); 
+    setCC.put("|selectMinimals", 2.0); 
+    setCC.put("->selectMaximals", 2.0); 
+    setCC.put("|selectMaximals", 2.0); 
 
     setCC.put("->forAll", 2.0); 
     setCC.put("->exists", 2.0);   
@@ -210,7 +233,8 @@ public class TestParameters
     setCC.put("#1", 2.0); 
     setCC.put("->isUnique", 2.0); 
     setCC.put("|isUnique", 2.0); 
-    
+    setCC.put("->copy", 2.0); 
+
     setCC.put("->sort", 3.0);     // O(n log n) 
     setCC.put("->sortedBy", 3.0); 
     setCC.put("|sortedBy", 3.0); 
@@ -222,7 +246,10 @@ public class TestParameters
                  new HashMap<String,Double>(); 
 
     sortedsetCC.put("->includes", 1.5);     // O(log n) 
+    sortedsetCC.put(":", 1.5);     // O(log n) 
     sortedsetCC.put("->excludes", 1.5);     // O(log n) 
+    sortedsetCC.put("/:", 1.5);     // O(log n) 
+    
     sortedsetCC.put("->including", 1.5);  
     sortedsetCC.put("->excluding", 1.5); 
     sortedsetCC.put("->excludingFirst", 1.5); 
@@ -238,6 +265,7 @@ public class TestParameters
 
     sortedsetCC.put("->includesAll", 3.0); 
     sortedsetCC.put("->excludesAll", 3.0); 
+    sortedsetCC.put("->copy", 2.0); 
 
     sortedsetCC.put("->select", 3.0); 
     sortedsetCC.put("->collect", 2.0);   
@@ -247,6 +275,10 @@ public class TestParameters
     sortedsetCC.put("|R", 3.0); 
     sortedsetCC.put("->isUnique", 2.0); 
     sortedsetCC.put("|isUnique", 2.0); 
+    sortedsetCC.put("->selectMinimals", 3.0); 
+    sortedsetCC.put("|selectMinimals", 3.0); 
+    sortedsetCC.put("->selectMaximals", 3.0); 
+    sortedsetCC.put("|selectMaximals", 3.0); 
     
     sortedsetCC.put("->forAll", 2.0); 
     sortedsetCC.put("->exists", 2.0);   
@@ -279,6 +311,7 @@ public class TestParameters
     mapCC.put("->union", 2.0);
     mapCC.put("->intersection", 2.0);
     mapCC.put("-", 2.0);
+    mapCC.put("->copy", 2.0); 
 
     mapCC.put("->sort", 3.0);
     mapCC.put("->restrict", 3.0);
@@ -313,6 +346,7 @@ public class TestParameters
     sortedmapCC.put("->sort", 1.0);
     sortedmapCC.put("->restrict", 3.0);
     sortedmapCC.put("->antirestrict", 3.0);
+    sortedmapCC.put("->copy", 2.0); 
 
     sortedmapCC.put("->select", 3.0);
     sortedmapCC.put("->reject", 3.0);

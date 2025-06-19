@@ -1398,6 +1398,7 @@ public class ASTBasicTerm extends ASTTerm
     } 
 
     if ("Set".equals(value) || "HashSet".equals(value) ||
+        "NavigableSet".equals(value) ||
         "EnumSet".equals(value))
     { modelElement = new Type("Set", null); 
       expression = new BasicExpression((Type) modelElement); 
@@ -2451,6 +2452,7 @@ public class ASTBasicTerm extends ASTTerm
 
     if ("Set".equals(value) ||
         "HashSet".equals(value) || 
+        "NavigableSet".equals(value) ||
         "EnumSet".equals(value))
     { modelElement = new Type("Set", null); 
       expression = new BasicExpression((Type) modelElement); 

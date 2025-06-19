@@ -398,6 +398,58 @@ class BinaryExpression extends Expression
     return null; 
   } 
 
+  public void recursiveExpressions(BehaviouralFeature bf, 
+                         Vector valueReturns, 
+                         Vector tailReturns, 
+                         Vector semitailReturns, 
+                         Vector nontailReturns)
+  { 
+    if ("=".equals(operator) && 
+        "result".equals(left + ""))
+    { right.recursiveExpressions(bf, valueReturns,
+                                  tailReturns,
+                                  semitailReturns,
+                                  nontailReturns); 
+      return; 
+    } 
+
+    String bfname = bf.getName(); 
+
+    Vector names = new Vector(); 
+    names.add(bfname); 
+    Vector lvars = left.variablesUsedIn(names); 
+    Vector rvars = right.variablesUsedIn(names); 
+
+    // System.out.println(">> Expression " + this); 
+    // System.out.println(">> lvars: " + lvars); 
+    // System.out.println(">> rvars: " + rvars); 
+
+    if (!rvars.contains(bfname) && !lvars.contains(bfname))
+    { valueReturns.add(this); 
+      return; 
+    } // no recursive call
+
+    if (rvars.contains(bfname) && !lvars.contains(bfname))
+    { if ("+".equals(operator) || "*".equals(operator))
+      { if (right.isSelfCall(bf))
+        { semitailReturns.add(this); 
+          return; 
+        }
+      }  
+    }  
+
+    if (lvars.contains(bfname) && !rvars.contains(bfname))
+    { if ("+".equals(operator) || "*".equals(operator))
+      { if (left.isSelfCall(bf))
+        { semitailReturns.add(this); 
+          return; 
+        }
+      } 
+    }   
+
+    nontailReturns.add(this); 
+  } 
+
   public Expression getSelfCall(
             BehaviouralFeature bf)
   { 
@@ -15382,6 +15434,47 @@ public Statement existsLC(Vector preds, Expression eset, Expression etest,
   return new SequenceStatement(); // preds.size() == 0 
 }
 
+public Statement generateDesignSemiTail(BehaviouralFeature bf, 
+          java.util.Map env, Vector valueReturns, boolean local)
+{ 
+  if (operator.equals("=") && "result".equals(left + "") && 
+      valueReturns.contains(right))
+  { return new ReturnStatement(right); }
+
+  // Or a semi-tail call - replace expr*call by expr*result
+  if (operator.equals("=") && "result".equals(left + "") &&
+      right instanceof BinaryExpression && 
+      ((BinaryExpression) right).isSemiTailRecursion(bf))
+  { // update result, then 
+    // parameter assignments ; continue
+    BinaryExpression beright = 
+                  (BinaryExpression) right; 
+    Expression rhs = 
+       beright.replacedSemiTailRecursion(bf,left); 
+    AssignStatement updateResult = 
+       new AssignStatement(left, rhs);  
+    ContinueStatement ctn = new ContinueStatement();
+    Expression selfcall = 
+                 beright.getSelfCall(bf);  
+    Statement assgns = bf.parameterAssignments(selfcall); 
+    SequenceStatement ss = new SequenceStatement(); 
+    ss.addStatement(updateResult); 
+  
+    if (assgns == null) 
+    { ss.addStatement(ctn); 
+      ss.setBrackets(true); 
+      return ss; 
+    } 
+    else 
+    { ss.addStatements((SequenceStatement) assgns); 
+      ss.addStatement(ctn);
+      ss.setBrackets(true);  
+      return ss; 
+    } 
+  } 
+
+  return generateDesign(env, local); 
+} 
 
   public Statement generateDesign(java.util.Map env, boolean local)
   { String val2;
@@ -15486,7 +15579,8 @@ public Statement existsLC(Vector preds, Expression eset, Expression etest,
 
     if (operator.equals("=") && left instanceof BasicExpression)
     { return new AssignStatement(left, right); }
-    else if (operator.equals("=") && left instanceof BinaryExpression)
+    else if (operator.equals("=") && 
+             left instanceof BinaryExpression)
     { BinaryExpression leftbe = (BinaryExpression) left; 
       if ("+".equals(leftbe.operator) && left.isString() && 
           leftbe.left.isAssignable() && 
@@ -21849,7 +21943,6 @@ public Statement existsLC(Vector preds, Expression eset, Expression etest,
                                       Vector vars)
   { //  level |-> [x.setAt(i,y), etc]
 
-    left.collectionOperatorUses(level,res,vars); 
 
     if (operator.equals("->including") ||
         operator.equals("->prepend") ||
@@ -21869,7 +21962,8 @@ public Statement existsLC(Vector preds, Expression eset, Expression etest,
         operator.equals("->union") ||
         operator.equals("->restrict") ||
         operator.equals("->antirestrict"))
-    { Vector opers = (Vector) res.get(level); 
+    { left.collectionOperatorUses(level,res,vars); 
+      Vector opers = (Vector) res.get(level); 
       if (opers == null) 
       { opers = new Vector(); } 
       opers.add(this); 
@@ -21882,12 +21976,14 @@ public Statement existsLC(Vector preds, Expression eset, Expression etest,
         refactorELV = true; 
       }
 
+      right.collectionOperatorUses(level,res,vars); 
       return res; 
     } 
 
     if (operator.equals("->count") ||
         operator.equals("->at"))
-    { Vector opers = (Vector) res.get(level); 
+    { left.collectionOperatorUses(level,res,vars); 
+      Vector opers = (Vector) res.get(level); 
       if (opers == null) 
       { opers = new Vector(); } 
       opers.add(this); 
@@ -21900,6 +21996,7 @@ public Statement existsLC(Vector preds, Expression eset, Expression etest,
         refactorELV = true; 
       }
 
+      right.collectionOperatorUses(level,res,vars); 
       return res; 
     } 
 
@@ -21911,8 +22008,11 @@ public Statement existsLC(Vector preds, Expression eset, Expression etest,
         operator.equals("->exists1") ||
         operator.equals("->isUnique") ||
         operator.equals("->iterate") ||  
+        operator.equals("->selectMinimals") ||
+        operator.equals("->selectMaximals") ||  
         operator.equals("->sortedBy"))
-    { Vector opers = (Vector) res.get(level); 
+    { left.collectionOperatorUses(level,res,vars); 
+      Vector opers = (Vector) res.get(level); 
       if (opers == null) 
       { opers = new Vector(); } 
       opers.add(this); 
@@ -21942,14 +22042,19 @@ public Statement existsLC(Vector preds, Expression eset, Expression etest,
         operator.equals("|unionAll") || 
         operator.equals("|intersectAll") || 
         operator.equals("|concatenateAll") || 
+        operator.equals("|selectMinimals") || 
+        operator.equals("|selectMaximals") || 
         operator.equals("|sortedBy"))
-    { Vector opers = (Vector) res.get(level); 
+    { BinaryExpression iter = (BinaryExpression) left; 
+      Expression col = iter.getRight(); 
+      col.collectionOperatorUses(level,res,vars); 
+
+      Vector opers = (Vector) res.get(level); 
       if (opers == null) 
       { opers = new Vector(); } 
       opers.add(this); 
       res.put(level, opers); 
 
-      BinaryExpression iter = (BinaryExpression) left; 
       String var = "" + iter.getLeft(); 
       
       Vector newvars = new Vector(); 
@@ -21960,6 +22065,7 @@ public Statement existsLC(Vector preds, Expression eset, Expression etest,
       return res; 
     } 
 
+    left.collectionOperatorUses(level,res,vars); 
     right.collectionOperatorUses(level,res,vars); 
 
     return res; 

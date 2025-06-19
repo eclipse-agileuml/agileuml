@@ -220,6 +220,13 @@ abstract class Expression
 
   public abstract boolean isTailRecursion(BehaviouralFeature bf);
 
+  public void recursiveExpressions(BehaviouralFeature bf, 
+                         Vector valueReturns, 
+                         Vector tailReturns, 
+                         Vector semitailReturns, 
+                         Vector nontailReturns)
+  { } 
+
   public void setStatic(boolean s)
   { isStatic = s; } 
 
@@ -1210,6 +1217,11 @@ abstract class Expression
   public abstract void findMagicNumbers(java.util.Map mgns, String rule, String op); 
 
   public abstract String updateForm(java.util.Map env, boolean local); 
+
+  public Statement generateDesignSemiTail(
+            BehaviouralFeature bf, 
+            java.util.Map env, Vector exprs, boolean local)
+  { return new SequenceStatement(); } 
 
   public Statement generateDesign(java.util.Map env, boolean local)
   { return new SequenceStatement(); } 

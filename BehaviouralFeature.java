@@ -4378,7 +4378,8 @@ public class BehaviouralFeature extends ModelElement
 
     Vector unusedVars = checkParameterNames(); 
     if (unusedVars.size() > 0) 
-    { amberUses.add("!! Unused parameters: " + unusedVars + "\n" + 
+    { amberUses.add("!! Unused parameters in " + name + ": " + 
+             unusedVars + "\n" + 
              ">>> Use remove unused parameters refactoring"); 
       int ascore = (int) res.get("amber");
       ascore = ascore + unusedVars.size();
@@ -4387,7 +4388,8 @@ public class BehaviouralFeature extends ModelElement
 
     Vector opuses = this.operationsUsedIn();
 
-    System.out.println(">>> Operations " + opuses + " are used in " + name); 
+    System.out.println(">>> Operations " + opuses + 
+                       " are used in " + name); 
 
     if (opuses.contains(entity + "::" + name) && 
         activity != null)
@@ -5847,7 +5849,8 @@ public class BehaviouralFeature extends ModelElement
     return wpc(pre,uses,exbe,op,feat,ord,valbe); 
   }
 
-  public Statement generateDesign(Entity ent, Vector entities, Vector types)
+  public Statement generateDesign(Entity ent, 
+                           Vector entities, Vector types)
   { Statement res = new SequenceStatement(); 
     Vector localEntities = allTypeParameterEntities(ent); 
     localEntities.addAll(entities); 
@@ -5936,21 +5939,32 @@ public class BehaviouralFeature extends ModelElement
 
     if (query && isNoRecursion())
     { Vector cases = Expression.caselist(post); 
-	
-      boolean issemirec = 
-           isSemiTailRecursive(cases); 
+      Vector valueReturns = new Vector(); 
+      Vector tailReturns = new Vector(); 
+      Vector semitailReturns = new Vector(); 
+      Vector nontailReturns = new Vector(); 
 
-      if (issemirec)
+      this.recursiveExpressions(cases, valueReturns,
+                                tailReturns, 
+                                semitailReturns, 
+                                nontailReturns); 
+
+      if (valueReturns.size() == 1 && 
+          nontailReturns.size() == 0 && 
+          semitailReturns.size() > 0)
       { System.err.println("!! Semi-tail-recursion in " + 
-            name + "\n"); 
-        Vector nonrecReturns = new Vector(); 
+            name + "\n" + 
+            "Value returns = " + valueReturns + 
+            "Semi-tail returns: " + semitailReturns);
+ 
         Statement init = semiTailInitialisation(
-                             cases, nonrecReturns); 
+                             cases, valueReturns); 
       
         Statement qstat = 
           designQueryListSemiTail(cases, resT, env0, 
-                  nonrecReturns, types, localEntities, atts);
-        qstat.setBrackets(true); 
+                  valueReturns, types, localEntities, atts);
+        qstat.setBrackets(true);
+ 
         WhileStatement ws = 
           new WhileStatement(
             new BasicExpression(true), qstat);
@@ -7994,12 +8008,27 @@ public class BehaviouralFeature extends ModelElement
     return true;  
   } 
 
+  public void recursiveExpressions(Vector postconds,
+                 Vector valueReturns, 
+                 Vector tailReturns,
+                 Vector semitailReturns, 
+                 Vector nontailReturns)
+  { for (int i = 0; i < postconds.size(); i++) 
+    { Expression expr = (Expression) postconds.get(i); 
+      expr.recursiveExpressions(this,valueReturns,
+                                  tailReturns,
+                                  semitailReturns,
+                                  nontailReturns);  
+    } 
+  } 
+
   public boolean isSemiTailRecursive(Vector postconds)
   { // All recursive calls are either tail or semitail
 
     Vector rets = getReturnValues(postconds); 
 
-    /* for (int i = 0; i < postconds.size(); i++) 
+    /* 
+    for (int i = 0; i < postconds.size(); i++) 
     { Expression postcond = (Expression) postconds.get(i); 
       boolean fst = isTailRecursiveBasicCase(postcond);
       boolean semi = isSemiTailRecursiveBasicCase(postcond);
@@ -8013,6 +8042,7 @@ public class BehaviouralFeature extends ModelElement
     names.add(nme); 
 
     Vector valueReturns = new Vector(); 
+    Vector tailReturns = new Vector(); 
     Vector semitailReturns = new Vector(); 
     Vector nontailReturns = new Vector(); 
 
@@ -8022,25 +8052,33 @@ public class BehaviouralFeature extends ModelElement
       if (uses.size() == 0) 
       { valueReturns.add(expr); } 
       else if (expr.isSelfCall(this))
-      { } 
-      else if (expr instanceof BinaryExpression && 
-        ((BinaryExpression) expr).isSemiTailRecursion(this)) 
-      { semitailReturns.add(expr); } 
+      { tailReturns.add(expr); } 
       else 
-      { nontailReturns.add(expr); } 
+      { expr.recursiveExpressions(this,valueReturns,
+                                  tailReturns,
+                                  semitailReturns,
+                                  nontailReturns); 
+      } 
     } 
 
     if (valueReturns.size() == 1 && 
         nontailReturns.size() == 0)
     { return true; } 
 
-    System.err.println("!! Non-tail recursion: simple returns " + valueReturns + " non-tail returns: " + nontailReturns); 
+    System.err.println("!! Non-tail recursion in " + name + 
+         ":\n!! simple returns: " + valueReturns + 
+         " tail returns: " + tailReturns + 
+         " semi-tail returns: " + semitailReturns + 
+         " non-tail returns: " + nontailReturns); 
 
     return false;   
   } 
 
   public Vector getReturnValues(Vector postconds)
   { Vector res = new Vector(); 
+
+    // The RHS of => and of result = ...
+    // otherwise the entire expression
 
     for (int i = 0; i < postconds.size(); i++) 
     { Expression postcond = (Expression) postconds.get(i); 
@@ -8055,14 +8093,15 @@ public class BehaviouralFeature extends ModelElement
 
   public Statement semiTailInitialisation(Vector cases, 
                                      Vector nonrecReturns)
-  { String nme = this.getName(); 
+  { /* String nme = this.getName(); 
     Vector names = new Vector(); 
-    names.add(nme); 
+    names.add(nme); */ 
 
     BasicExpression _result = 
       BasicExpression.newVariableBasicExpression("result"); 
     _result.setType(this.getResultType()); 
 
+    /* 
     Vector rets = getReturnValues(cases); 
     
     Vector semitailReturns = new Vector(); 
@@ -8079,7 +8118,7 @@ public class BehaviouralFeature extends ModelElement
       { semitailReturns.add(expr); } 
       else 
       { } 
-    } 
+    } */ 
 
     // Should only be 1 nonrecReturns
 
@@ -8390,7 +8429,8 @@ public class BehaviouralFeature extends ModelElement
       } 
     }
 
-    return pst.generateDesign(env0, true);
+    return pst.generateDesignSemiTail(this, env0, 
+                               valueReturns, true);
   }
 
   private boolean isTailRecursiveBasicCase(Expression pst)

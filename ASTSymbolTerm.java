@@ -674,10 +674,11 @@ public class ASTSymbolTerm extends ASTTerm
     { modelElement = new Type("Sequence", null); 
       expression = new BasicExpression((Type) modelElement); 
       return "Sequence"; 
-    } 
+    } // Should be a Bag
 
  
     if ("Set".equals(symbol) || "HashSet".equals(symbol) ||
+        "NavigableSet".equals(symbol) ||
         "EnumSet".equals(symbol)) 
     { modelElement = new Type("Set", null); 
       expression = new BasicExpression((Type) modelElement); 

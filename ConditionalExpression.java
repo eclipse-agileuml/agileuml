@@ -151,6 +151,18 @@ public class ConditionalExpression extends Expression
     return new ConditionalStatement(test, ifstat, elsestat); 
   } 
 
+  public Statement generateDesignSemiTail(
+           BehaviouralFeature bf, 
+           java.util.Map env, Vector valueReturns,
+           boolean local)
+  { Statement ifstat = 
+      ifExp.generateDesignSemiTail(bf,env,valueReturns,local); 
+    Statement elsestat = 
+       elseExp.generateDesignSemiTail(bf,
+                         env,valueReturns,local); 
+    return new ConditionalStatement(test, ifstat, elsestat); 
+  } 
+
   public boolean isTailRecursion(BehaviouralFeature bf)
   { // bfname does not occur in test
     // and both limbs of conditional are tail recursions 
@@ -170,6 +182,32 @@ public class ConditionalExpression extends Expression
            elseExp.isTailRecursion(bf); 
   } 
 
+  public void recursiveExpressions(BehaviouralFeature bf, 
+                  Vector valueReturns, Vector tailReturns,
+                  Vector semitailReturns, 
+                  Vector nontailReturns)
+  { // bfname does not occur in test
+    // Accumulate recursions from the branches 
+
+    String bfname = bf.getName(); 
+
+    Vector names = new Vector(); 
+    names.add(bfname); 
+    Vector vars = test.variablesUsedIn(names); 
+
+    if (vars.size() > 0)
+    { System.err.println("!! Error: recursive call of " + 
+                         bf + " in " + test); 
+    } 
+
+    ifExp.recursiveExpressions(bf, valueReturns, tailReturns,
+                               semitailReturns, 
+                               nontailReturns); 
+    elseExp.recursiveExpressions(bf, 
+                               valueReturns, tailReturns,
+                               semitailReturns, 
+                               nontailReturns);
+  } 
 
   public Expression simplifyOCL()
   { Expression ifstat = ifExp.simplifyOCL(); 

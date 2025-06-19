@@ -857,6 +857,10 @@ public class CGCondition
         t.isSequenceType())
     { return positive; }
 
+    if ("sortedsequence".equals(stereotype.toLowerCase()) && 
+        t.isSortedSequenceType())
+    { return positive; }
+
     if ("set".equals(stereotype.toLowerCase()) && 
         t.isSetType())
     { return positive; }
@@ -913,6 +917,9 @@ public class CGCondition
     { return !positive; }
 
     if ("sequence".equals(stereotype.toLowerCase()) && !(t.isSequenceType()))
+    { return !positive; }
+
+    if ("sortedsequence".equals(stereotype.toLowerCase()) && !(t.isSortedSequenceType()))
     { return !positive; }
 
     if ("set".equals(stereotype.toLowerCase()) && !(t.isSetType()))
@@ -1104,6 +1111,16 @@ public class CGCondition
       { return "Sequence".equals(tname); }
       else
       { return !("Sequence".equals(tname)); }
+    }
+    else if ("SortedSequence".equals(stereotype))
+    { if (positive)
+      { return "Sequence".equals(tname) && 
+               t != null && t.isSorted(); 
+      }
+      else
+      { return !("Sequence".equals(tname)) || t == null ||
+               !t.isSorted(); 
+      }
     }
     else if ("Map".equals(stereotype))
     { if (positive)

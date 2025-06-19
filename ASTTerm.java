@@ -943,6 +943,52 @@ public abstract class ASTTerm
 
   public abstract boolean isIdentifier(); 
 
+  public static boolean isStreamOperator(String called, 
+                                  ASTTerm arg)
+  { if ("noneMatch".equals(called) && 
+        arg.isCollection())
+    { return true; } 
+    
+    if ("anyMatch".equals(called) && arg.isCollection())
+    { return true; }
+
+    if ("allMatch".equals(called) && arg.isCollection())
+    { return true; } 
+
+    if ("filter".equals(called) && arg.isCollection())
+    { return true; } 
+
+    if ("forEach".equals(called) && arg.isCollection())
+    { return true; } 
+
+    if ("map".equals(called) && arg.isCollection())
+    { return true; } 
+
+    if (("mapToDouble".equals(called) || 
+         "flatMapToDouble".equals(called)) && 
+        arg.isCollection())
+    { return true; } 
+
+    if (("mapToInt".equals(called) || 
+         "flatMapToInt".equals(called)) && 
+        arg.isCollection())
+    { return true; } 
+
+    if (("mapToLong".equals(called) || 
+         "flatMapToLong".equals(called)) && 
+        arg.isCollection())
+    { return true; } 
+
+    if ("reduce".equals(called) && arg.isCollection())
+    { return true; } 
+
+    if ("removeIf".equals(called))
+    { return true; } 
+
+    return false; 
+  } 
+
+
   public static boolean isMathOCLIdentifier(String str)
   { int n = str.length(); 
     if (n > 0 && Character.isJavaIdentifierStart(str.charAt(0))) 
@@ -1057,28 +1103,41 @@ public abstract class ASTTerm
     { return isString(); }  
 
     if ("Sequence".equals(str))
-    { return isSequence(); } 
+    { return isSequence(); }
+ 
+    if ("SortedSequence".equals(str))
+    { return isSortedSequence(); } 
+
     if ("StringSequence".equals(str))
     { return isStringSequence(); } 
+
     if ("IntegerSequence".equals(str))
     { return isIntegerSequence(); }
+
     if ("RealSequence".equals(str))
     { return isRealSequence(); }
+
     if ("BooleanSequence".equals(str))
     { return isBooleanSequence(); }
  
     if ("Set".equals(str))
     { return isSet(); } 
+
     if ("Map".equals(str))
     { return isMap(); } 
+
     if ("Function".equals(str))
     { return isFunction(); } 
+
     if ("Collection".equals(str))
     { return isCollection(); } 
+
     if ("File".equals(str))
     { return isFile(); } 
+
     if ("Date".equals(str))
     { return isDate(); } 
+
     if ("Process".equals(str))
     { return isProcess(); } 
 
