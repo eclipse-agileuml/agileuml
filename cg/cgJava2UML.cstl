@@ -82,7 +82,9 @@ MultiSet |-->Sequence
 
 Bag |-->Sequence
 HashBag |-->Sequence
+TreeBag |-->SortedSequence
 TreeList |-->Sequence
+FixedSizeList |-->Sequence
 SequencedCollection |-->Sequence
 SequencedSet |-->Sequence
 
@@ -338,7 +340,7 @@ LinkedBlockingDeque _1 |-->Sequence_1`collectionParameters
 PriorityBlockingQueue _1 |-->SortedSequence_1`collectionParameters
 PriorityQueue _1 |-->SortedSequence_1`collectionParameters
 Bag _1 |-->Sequence_1`collectionParameters
-TreeBag _1 |-->Sequence_1`collectionParameters
+MultiSet _1 |-->Sequence_1`collectionParameters
 
 SequencedCollection _1 |-->Sequence_1`collectionParameters
 SequencedSet _1 |-->Sequence_1`collectionParameters
@@ -346,7 +348,9 @@ SetUniqueList _1 |-->Sequence_1`collectionParameters
 ListOrderedSet _1 |-->Sequence_1`collectionParameters
 Bag _1 |-->Sequence_1`collectionParameters
 HashBag _1 |-->Sequence_1`collectionParameters
+TreeBag _1 |-->SortedSequence_1`collectionParameters
 TreeList _1 |-->Sequence_1`collectionParameters
+FixedSizeList _1 |-->Sequence_1`collectionParameters
 
 Set _1 |-->Set_1`collectionParameters
 TreeSet _1 |-->SortedSet_1`collectionParameters
@@ -1150,6 +1154,7 @@ retainAll ( _1 ) |--> /<: _1
 add ( _1 ) |-->->excludes(_1`last)
 addAll ( _1 ) |-->->intersection(_1`last) /= _1`last
 push ( _1 ) |-->true
+setCount ( _1 ) |-->->count(_1`first)
 
 removeElementAt ( _1 ) |-->->excludingAt(_1+1)
 removeElement ( _1 ) |-->->excludingFirst(_1)
@@ -1184,6 +1189,7 @@ retainAll ( _1 ) |-->boolean
 add ( _1 ) |-->boolean
 addAll ( _1 ) |-->boolean
 push ( _1 ) |-->boolean
+setCount ( _1 ) |-->int
 
 reversed ( ) |-->Sequence
 removeElementAt ( _1 ) |-->Sequence
@@ -1266,6 +1272,7 @@ pollLast ( ) |-->->front()
 pollFirst ( ) |-->->tail()
 clear ( ) |-->->intersection(Set{})
 removeAllElements ( ) |-->->intersection(Set{})
+setCount ( _1 ) |-->->excluding(_1`first)->union(Integer.subrange(1,_1`last)->collect(_1`first))
 
 poll ( ) |-->->tail()
 insertElementAt ( _1 ) |-->.insertAt(_1`last+1,_1`first)
@@ -1336,9 +1343,9 @@ pollLastEntry ( ) |-->->front()
 
 replaceAll ( _1 ) |-->    _1`first := _1`first->collect( x1 | if x1 = _1`third then _1`last else x1 endif )
 
-print ( _1 ) |-->.print(_1->sum())<when> _1 StringSequence
+print ( _1 ) |-->.print("" + _1) _1`sideEffect<when> _1 updatesObject
 print ( _1 ) |-->.print("" + _1)
-println ( _1 ) |-->.println(_1->sum())<when> _1 StringSequence
+println ( _1 ) |-->.println("" + _1) _1`sideEffect<when> _1 updatesObject
 println ( _1 ) |-->.println("" + _1)
 printf ( _1 ) |-->.printf(_1`first, Sequence{_1`tailtail})<when>_1 multiple
 format ( _1 ) |-->.printf(_1`first, Sequence{_1`tailtail})<when>_1 multiple
@@ -1386,6 +1393,7 @@ putDouble ( _1 ) |-->.setAt(_1`last+1, _1`first)<when> _1 multiple
 set ( _1 ) |-->.setAt(_1`first+1, _1`last)<when> _1 multiple
 set ( _1 ) |-->.set(_1)
 setSize ( _1 ) |-->.subrange(1,_1)
+setCount ( _1 ) |-->->excluding(_1`first)->union(Integer.subrange(1,_1`last)->collect(_1`first))
 
 append ( _1 ) |--> + StringLib.newString(_1)
 deleteCharAt ( _1 ) |-->->excludingAt(_1+1)
@@ -1914,6 +1922,7 @@ lastElement ( ) |-->->last()
 peek ( ) |-->->last()
 search ( _1 ) |-->->reverse()->indexOf(_1)
 getCount ( _1 ) |-->->count(_1)
+setCount ( _1 ) |-->->count(_1`first)
 
 indexOf ( _1 ) |-->.subrange(_1`last+1)->indexOf(_1`first+"") + _1`last - 1 <when> _1 multiple
 indexOf ( _1 ) |-->->indexOf(_1)-1
@@ -2593,6 +2602,12 @@ setProperty ( _1 ) |-->    OclProcess.setEnvironmentProperty(_1);\n
 clearProperty ( _1 ) |-->    OclProcess.clearEnvironmentProperty(_1);\n
 arraycopy ( _1 ) |-->    for _x : Integer.subrange(1,_1`last) do _1`fifth[_1`seventh + _x] := _1`first[_1`third + _x]
 
+println ( _1 ) |-->println("" + _1) _1`postSideEffect<when> _1 updatesObject
+println ( _1 ) |-->println("" + _1)
+
+print ( _1 ) |-->print("" + _1) _1`postSideEffect<when> _1 updatesObject
+print ( _1 ) |-->print("" + _1)
+
 _1 ( ) |-->_1()
 _1 ( _2 ) |-->_1(_2)
 
@@ -2653,6 +2668,7 @@ this ( ) |-->self.initialise()
 this ( _1 ) |-->self.initialise(_1) 
 
 parseInt ( _1 ) |-->(_1 + "")->toInteger()
+println ( _1 ) |-->(_1) _1`sideEffect<when> _1 updatesObject
 println ( _1 ) |-->(_1)
 deepToString ( _1 ) |-->(_1 + "")
  
@@ -3741,13 +3757,15 @@ ArrayBlockingQueue _1 |-->Sequence{}_1`collectionCreationRest
 PriorityQueue _1 |-->SortedSequence{}_1`collectionCreationRest
 PriorityBlockingQueue _1 |-->SortedSequence{}_1`collectionCreationRest
 Bag _1 |-->Sequence{}_1`collectionCreationRest
-TreeBag _1 |-->Sequence{}_1`collectionCreationRest
+MultiSet _1 |-->Sequence{}_1`collectionCreationRest
 
 SetUniqueList _1 |-->Sequence{}_1`collectionCreationRest
 ListOrderedSet _1 |-->Sequence{}_1`collectionCreationRest
 Bag _1 |-->Sequence{}_1`collectionCreationRest
 HashBag _1 |-->Sequence{}_1`collectionCreationRest
+TreeBag _1 |-->SortedSequence{}_1`collectionCreationRest
 TreeList _1 |-->Sequence{}_1`collectionCreationRest
+FixedSizeList _1 |-->Sequence{}_1`collectionCreationRest
 
 Stream _1 |-->Sequence{}_1`collectionCreationRest
 IntStream _1 |-->Sequence{}
@@ -3850,7 +3868,9 @@ TreeBag _1 |-->true
 SetUniqueList _1 |-->true
 ListOrderedSet _1 |-->true
 Bag _1 |-->true
+MultiSet _1 |-->true
 HashBag _1 |-->true
+FixedSizeList _1 |-->true
 TreeList _1 |-->true
 
 Stream _1 |-->true
@@ -3976,13 +3996,16 @@ Queue |-->Sequence
 BlockingQueue |-->Sequence
 ArrayBlockingQueue |-->Sequence
 PriorityQueue |-->SortedSequence
+PriorityBlockingQueue |-->SortedSequence
 Bag |-->Sequence
-TreeBag |-->Sequence
+TreeBag |-->SortedSequence
 
 SetUniqueList |-->Sequence
 ListOrderedSet |-->Sequence
 Bag |-->Sequence
+MultiSet |-->Sequence
 HashBag |-->Sequence
+FixedSizeList |-->Sequence
 TreeList |-->Sequence
 
 BitSet |-->Sequence(boolean)
@@ -4191,15 +4214,18 @@ Stack _1 |-->Sequence{}
 Queue _1 |-->Sequence{}
 BlockingQueue _1 |-->Sequence{}
 ArrayBlockingQueue _1 |-->Sequence{}
+PriorityBlockingQueue _1 |-->SortedSequence{}
 PriorityQueue _1 |-->SortedSequence{}
 Bag _1 |-->Sequence{}
-TreeBag _1 |-->Sequence{}
+TreeBag _1 |-->SortedSequence{}
 
 ListOrderedSet _1 |-->Sequence{}
 SetUniqueList _1 |-->Sequence{}
 Bag _1 |-->Sequence{}
 HashBag _1 |-->Sequence{}
+MultiSet _1 |-->Sequence{}
 TreeList _1 |-->Sequence{}
+FixedSizeList _1 |-->Sequence{}
 
 Stream _1 |-->Sequence{}
 SequencedSet _1 |-->Sequence{}

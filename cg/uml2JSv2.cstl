@@ -72,8 +72,19 @@ seq3subruleset77::
 _* |-->_*`seq3ruleset76
 
 OclClass::
-class _2 { }  |-->function _2 ( ) { } 
-class _2 { _4 }  |-->function _2 ( ) { _4`seq3subruleset147 } 
+class _2 { }  |-->class _2 { constructor _2 ( ) { } }  
+class _2 { _4 }  |-->class _2 { constructor _2 ( ) { _4`seq3subruleset147 }  } 
+
+class _2 extends _4 { }  |-->class _2 extends _4 { constructor _2 ( ) { } }  
+class _2 extends _4 { _6 }  |-->class _2 extends _4 { constructor _2 ( ) { _6`seq3subruleset147 }\n} 
+
+abstract class _2 { }  |-->class _2 { constructor _2 ( ) { } }  
+abstract class _2 { _4 }  |-->class _2 { constructor _2 ( ) { _4`seq3subruleset147 }  } 
+
+abstract class _2 extends _4 { }  |-->class _2 extends _4 { constructor _2 ( ) { } }  
+abstract class _2 extends _4 { _6 }  |-->class _2 extends _4 { constructor _2 ( ) { _6`seq3subruleset147 }\n} 
+
+
 
 seq3subruleset147::
 _* |-->_*`seq3ruleset146
@@ -122,7 +133,7 @@ _1 |-->_1
 _0 |-->_0
 
 OclBasicExpression::
-null  |-->NULL 
+null  |-->null
 this |-->self
 _1 . _3 ( )  |-->_1 . _3 ( ) 
 _1 [ _3 ]  |-->_1 [ _3 - 1 ] 
@@ -194,7 +205,10 @@ _* |-->{ _*`seq3ruleset151 }
 OclAttribute::
 attribute _2 : double   |-->this . _2 = 0.0 ; 
 attribute _2 : String   |-->this . _2 = "" ; 
-attribute _2 : _4  |-->this . _2 = 0 ; 
+attribute _2 : int  |-->this . _2 = 0 ; 
+attribute _2 : long  |-->this . _2 = 0 ; 
+attribute _2 : _4  |-->this . _2 = null ; 
+
 
 OclEnumeration::
 enumeration _2 { _4 }  |-->const _2 = _4`seq3subruleset152 <EOF> 
