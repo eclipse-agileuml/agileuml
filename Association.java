@@ -5850,7 +5850,7 @@ String qual = "";
   } 
 
   public String toAST()
-  { String res = "(Attribute " + role2 + " : "; 
+  { String res = "(OclAttribute " + role2 + " : "; 
     Type t2 = getRole2Type(); 
     res = res + t2.toAST(); 
     return res + " )"; 

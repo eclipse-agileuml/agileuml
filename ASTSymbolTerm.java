@@ -637,7 +637,8 @@ public class ASTSymbolTerm extends ASTTerm
     { modelElement = new Type("Sequence", null); 
       expression = new BasicExpression((Type) modelElement); 
       return "Sequence"; 
-    }
+    } // OrderedSet for ListOrderedSet, SetUniqueList,
+      // LinkedHashSet
 
     if ("PriorityQueue".equals(symbol) ||
         "PriorityBlockingQueue".equals(symbol) || 
@@ -656,7 +657,8 @@ public class ASTSymbolTerm extends ASTTerm
     }
 
     if ("Bag".equals(symbol) || "HashBag".equals(symbol) ||
-        "TreeList".equals(symbol))
+        "TreeList".equals(symbol) || 
+        "FixedSizeList".equals(symbol))
     { modelElement = new Type("Sequence", null); 
       expression = new BasicExpression((Type) modelElement); 
       return "Sequence";

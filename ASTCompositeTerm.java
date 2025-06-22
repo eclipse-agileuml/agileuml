@@ -20897,7 +20897,7 @@ public class ASTCompositeTerm extends ASTTerm
 
     if ("variableDeclarator".equals(tag) || 
         "constantDeclarator".equals(tag))
-    { ASTTerm var = (ASTTerm) terms.get(0); 
+    { ASTTerm var = (ASTTerm) terms.get(0); // The variable id
       String res = var.toKM3();
       statement = var.statement; 
       return res;  
@@ -20913,7 +20913,7 @@ public class ASTCompositeTerm extends ASTTerm
       expression = vd1.expression; 
       statement = vd1.statement; 
       return res; 
-    } 
+    } // just the first one
 
     if ("variableDeclarator".equals(tag) && terms.size() > 2)
     { // (variableDeclaratorId x) = (variableInitializer expr)
@@ -20925,6 +20925,9 @@ public class ASTCompositeTerm extends ASTTerm
       { res = expr.toKM3(); 
         statement = expr.statement;
         expression = expr.expression;
+
+        // JOptionPane.showInputDialog("+++ Side effect of " + this + " is " + statement); 
+
       } 
       /* else 
       { SequenceStatement ss = new SequenceStatement(); 
@@ -21698,7 +21701,12 @@ public class ASTCompositeTerm extends ASTTerm
           ASTTerm.setType(this, elemT); 
 
           if (arg.expression != null) 
-          { expression = new UnaryExpression("->last", arg.expression); } 
+          { expression = 
+              new UnaryExpression("->last", arg.expression); 
+            Expression tl = 
+                new UnaryExpression("->front", arg.expression); 
+            statement = new AssignStatement(arg.expression, tl);
+          } 
 
           return args + "->last()";   
         }
@@ -24785,8 +24793,10 @@ public class ASTCompositeTerm extends ASTTerm
             { arg1.postSideEffect(); 
               sideEffect = arg1.statement; 
             }   
+            else if (arg1.updatesObject(null))
+            { sideEffect = arg1.statement; }
 
-            System.out.println(">>> Side effect of println is: " + sideEffect); 
+            // JOptionPane.showInputDialog(">>> Side effect of println is: " + sideEffect); 
 
             if (sideEffect == null) 
             { statement = stat; } 
@@ -24841,8 +24851,10 @@ public class ASTCompositeTerm extends ASTTerm
             { arg1.postSideEffect(); 
               sideEffect = arg1.statement; 
             }   
+            else if (arg1.updatesObject(null))
+            { sideEffect = arg1.statement; }
 
-            System.out.println(">>> Side effect of println is: " + sideEffect); 
+            // System.out.println(">>> Side effect of println is: " + sideEffect); 
      
             if (sideEffect == null) 
             { statement = stat; } 
@@ -24876,6 +24888,8 @@ public class ASTCompositeTerm extends ASTTerm
           { arg1.postSideEffect(); 
             sideEffect = arg1.statement; 
           } 
+          else if (arg1.updatesObject(null))
+          { sideEffect = arg1.statement; }
  
           // JOptionPane.showInputDialog(">>> Side effect of println is: " + sideEffect); 
 
@@ -30142,6 +30156,8 @@ public class ASTCompositeTerm extends ASTTerm
                                   tailexpr); 
           } 
 
+          // JOptionPane.showInputDialog("poll side effect is: " + statement); 
+
           return args + " := " + args + "->tail()";   
         }
         else if (    
@@ -30550,18 +30566,57 @@ public class ASTCompositeTerm extends ASTTerm
         else if ("setSize".equals(called))
         { ASTTerm callarg = (ASTTerm) callterms.get(2); 
           String callp = callarg.toKM3();
+
           if (arg.expression != null && 
               callarg.expression != null) 
           { Vector pars = new Vector(); 
             pars.add(unitExpression); 
             pars.add(callarg.expression); 
             expression = 
-              BasicExpression.newCallBasicExpression(
+              BasicExpression.newFunctionBasicExpression(
                   "subrange", callarg.expression, pars); 
             statement = 
               new AssignStatement(arg.expression, expression); 
           } 
+
           return args + " := " + args + ".subrange(1," + callp + ");"; 
+        }   
+        else if ("setCount".equals(called))
+        { ASTTerm.setType(thisliteral,"int"); 
+          ASTTerm callarg1 = (ASTTerm) cargs.get(0); 
+          String callp1 = callarg1.toKM3();
+          ASTTerm callarg2 = (ASTTerm) cargs.get(1); 
+          String callp2 = callarg2.toKM3();
+
+          if (arg.expression != null && 
+              callarg1.expression != null && 
+              callarg2.expression != null) 
+          { expression = 
+              new BinaryExpression("->count", 
+                              arg.expression, 
+                              callarg1.expression); 
+            Vector pars = new Vector(); 
+            pars.add(unitExpression); 
+            pars.add(callarg2.expression); 
+            Expression rnge = 
+              BasicExpression.newFunctionBasicExpression(
+                  "subrange", "Integer", pars);
+            Expression expr = 
+               new BinaryExpression("->collect", 
+                                    rnge, callarg1.expression); 
+            Expression update = 
+               new BinaryExpression("->union", 
+                 new BinaryExpression("->excluding", 
+                       arg.expression, callarg1.expression), 
+                 expr);   
+            statement = 
+              new AssignStatement(arg.expression, update); 
+          } 
+
+          return args + " := " + args + 
+             "->excluding(" + callp1 + 
+             ")->union(Integer.subrange(1," + callp2 + 
+             ")->collect(" + callp1 + ");"; 
         }   
         else if ("removeElementAt".equals(called) || 
                  "deleteCharAt".equals(called))
@@ -35561,6 +35616,27 @@ public class ASTCompositeTerm extends ASTTerm
       return res; 
     } 
 
+    /* if ("variableDeclarator".equals(tag) && 
+        terms.size() == 3 && "=".equals(terms.get(1) + ""))
+    { // id = value
+      ASTTerm vbl = (ASTTerm) terms.get(0); 
+      ASTTerm init = (ASTTerm) terms.get(2);
+       
+      String initialValue = init.toKM3(); 
+      BasicExpression var = new BasicExpression(vbl); 
+      AssignStatement assgn = 
+          new AssignStatement(var, init.expression); 
+      if (init.statement != null) 
+      { SequenceStatement res = new SequenceStatement(); 
+        res.addStatement(assgn); 
+        res.addStatement(init.statement); 
+        statement = res; 
+      } 
+      else 
+      { statement = assgn; } 
+      return statement + ""; 
+    } */ 
+
     if ("variableInitializer".equals(tag))
     { ASTTerm t = (ASTTerm) terms.get(0); // An expression
 
@@ -35579,8 +35655,8 @@ public class ASTCompositeTerm extends ASTTerm
       if (t.updatesObject(null))
       { // System.out.println(">> Expression returning value, and with side-effect: " + t); 
         statement = t.statement;    // updateForm
-        JOptionPane.showInputDialog(">> Update form of " + 
-                                    this + " : >> " + statement);  
+        // JOptionPane.showInputDialog(">> Update form of " + 
+        //                 this + " : >> " + statement);  
         // System.out.println(); 
         String qf = t.queryForm(); 
         expression = t.expression; 
@@ -35589,7 +35665,7 @@ public class ASTCompositeTerm extends ASTTerm
         return qf + " ; " + statement; 
       }
       else if (t.hasSideEffect())
-      { System.out.println(">> Expression returning value, and with side-effect: " + t); 
+      { // System.out.println(">> Expression returning value, and with side-effect: " + t); 
         t.postSideEffect(); 
         statement = t.statement;    // updateForm
         // System.out.println(statement); 
@@ -36146,9 +36222,9 @@ public class ASTCompositeTerm extends ASTTerm
             statement = new AssignStatement(op.expression, expression); 
           } 
 
-          System.out.println(">> Query form of " + this + " is: " + expression); 
-          System.out.println(">> Update form of " + this + " is: " + statement); 
-          System.out.println(); 
+          // System.out.println(">> Query form of " + this + " is: " + expression); 
+          // System.out.println(">> Update form of " + this + " is: " + statement); 
+          // System.out.println(); 
 
           return op1 + " := " + op1 + " + 1"; 
         } 
@@ -36189,9 +36265,9 @@ public class ASTCompositeTerm extends ASTTerm
         if (arg.expression != null) 
         { expression = UnaryExpression.newUnaryExpression(op1trim, arg.expression); }   
 
-        System.out.println(">> Query form of " + this + " is: " + expression); 
-        System.out.println(">> Update form of " + this + " is: " + statement); 
-        System.out.println(); 
+        // System.out.println(">> Query form of " + this + " is: " + expression); 
+        // System.out.println(">> Update form of " + this + " is: " + statement); 
+        // System.out.println(); 
         
         return op1 + arg1; 
       }  
@@ -36809,7 +36885,7 @@ public class ASTCompositeTerm extends ASTTerm
 
         if (".".equals(op + ""))
         { e1x = e1.queryForm(); 
-          // System.out.println(">>> Feature access: " + e1 + "." + e2); 
+          // JOptionPane.showInputDialog(">>> Feature access: " + e1 + "." + e2 + " " + e1.hasSideEffect()); 
 
           String res = featureAccess(e1,e2,e1x,e2x);
 
@@ -36838,8 +36914,8 @@ public class ASTCompositeTerm extends ASTTerm
         { // e1x := result of e2x ; postsideeffect of e2x
           String postEffect = e2.postSideEffect(); 
 
-          // JOptionPane.showInputDialog(">> Update form of " + 
-          //                this + " : >> " + e2.statement); 
+          // JOptionPane.showInputDialog(">> Updates object: " + 
+          //                 this + " : >> " + e2.statement); 
         
           Statement updateF = e2.statement; 
           String qf = e2.queryForm(); 
@@ -38666,7 +38742,7 @@ public class ASTCompositeTerm extends ASTTerm
         // System.out.println(">>> Statement of expression statement " + t.literalForm() + " is " + statement); 
         // System.out.println(">>> Modelelements of expression statement are " + modelElements); 
         
-        System.out.println();  
+        // System.out.println();  
         return "  " + rs; 
       }
 
@@ -38676,7 +38752,7 @@ public class ASTCompositeTerm extends ASTTerm
         String res = t.toKM3();
         statement = t.statement; 
         return res;  
-      } 
+      } // not modelled
 
       if (terms.size() == 1) // Single statement
       { ASTTerm t = (ASTTerm) terms.get(0); 
@@ -38881,7 +38957,8 @@ public class ASTCompositeTerm extends ASTTerm
     } 
 
 
-    if ("localVariableDeclaration".equals(tag) && terms.size() > 1)
+    if ("localVariableDeclaration".equals(tag) && 
+        terms.size() > 1)
     { // (localVariableDeclaration type (variableDeclarators ...))
       // (localVariableDeclaration modifiers type (variableDeclarators ...))
 
@@ -38894,7 +38971,8 @@ public class ASTCompositeTerm extends ASTTerm
             
       if (terms.size() >= 3) 
       { typeTerm = (ASTTerm) terms.get(terms.size()-2); 
-        varTerm = (ASTCompositeTerm) terms.get(terms.size()-1); 
+        varTerm = 
+           (ASTCompositeTerm) terms.get(terms.size()-1); 
       } // ignore modifiers 
       else 
       { typeTerm = (ASTTerm) terms.get(0); 
@@ -38906,15 +38984,21 @@ public class ASTCompositeTerm extends ASTTerm
       if (typeTerm.modelElement instanceof Type)
       { actualType = (Type) typeTerm.modelElement; } 
       else if (typeTerm.modelElement instanceof Entity)
-      { actualType = new Type((Entity) typeTerm.modelElement); }
+      { actualType = 
+          new Type((Entity) typeTerm.modelElement); 
+      }
 
       Vector vardeclarators = varTerm.terms; 
       for (int i = 0; i < vardeclarators.size(); i++) 
-      { ASTTerm vTerm = (ASTTerm) vardeclarators.get(i);
+      { /* "variableDeclarator" sequence */ 
+
+        ASTTerm vTerm = (ASTTerm) vardeclarators.get(i);
         if (vTerm instanceof ASTCompositeTerm)  
         { ASTCompositeTerm tv = (ASTCompositeTerm) vTerm; 
           String km3var = tv.toKM3Var(); 
           String km3init = tv.toKM3VarInit(); 
+
+          Statement initPostSideEffect = tv.statement; 
 
           Type ctyp = tv.toKM3CollectionType(actualType); 
  
@@ -38961,8 +39045,8 @@ public class ASTCompositeTerm extends ASTTerm
           } 
           sstatements.addStatement(cs); 
            
-          // System.out.println(">> Type of " + varbe + " is " + varbe.getType());
-          System.out.println(); 
+          // JOptionPane.showInputDialog(">> post side effect of " + varbe + " is " + initPostSideEffect);
+          // System.out.println(); 
 
           ASTTerm vInit = tv.varInit(); 
           if (vInit != null && vInit.expression != null)
@@ -38981,17 +39065,21 @@ public class ASTCompositeTerm extends ASTTerm
               /* JOptionPane.showInputDialog(">+++> Pre side-effect of " + vInit + " : " + vInit.statement); */ 
             }
 
-            vInit.statement = null; 
+            if (initPostSideEffect != null) 
+            { sstatements.addStatement(initPostSideEffect); } 
+            else 
+            { vInit.statement = null; 
 
-            if (vInit.hasSideEffect())
-            { String postse = vInit.postSideEffect(); 
+              if (vInit.hasSideEffect())
+              { String postse = vInit.postSideEffect(); 
 
-              if (vInit.statement != null) // post side-effect 
-              { sstatements.addStatement(tv.statement); } 
+                if (vInit.statement != null) // post side-effect 
+                { sstatements.addStatement(tv.statement); } 
 
              /* JOptionPane.showInputDialog(">+++> Post side-effect: " + tv.statement); */ 
+              }
             }
-          }
+          } 
 
           /* System.out.println(">+++> Declaration statements: " + statement);
           System.out.println(); */  
@@ -41082,6 +41170,7 @@ public class ASTCompositeTerm extends ASTTerm
           "setElementAt".equals(called) || 
           "setSize".equals(called) || 
           "setLength".equals(called) || 
+          "setCount".equals(called) ||
           "removeRange".equals(called) || 
           "clear".equals(called) || "push".equals(called) || 
           "removeElement".equals(called) || 
@@ -41099,7 +41188,7 @@ public class ASTCompositeTerm extends ASTTerm
           "pollLastEntry".equals(called) ||  
           "pollFirstEntry".equals(called) ||  
           "retainAll".equals(called))
-      { JOptionPane.showInputDialog(">**>**> methodCall " + called + " updates the object it is applied to."); 
+      { // JOptionPane.showInputDialog(">**>**> methodCall " + called + " updates the object it is applied to."); 
         return true; 
       } 
       return false; 
@@ -41119,6 +41208,11 @@ public class ASTCompositeTerm extends ASTTerm
         //                             call.updatesObject(null));   
         return call.updatesObject(null); 
       } 
+    } 
+    else if ("expressionList".equals(tag) && 
+             terms.size() >= 1)
+    { ASTTerm call = (ASTTerm) terms.get(0); 
+      return call.updatesObject(null); 
     } 
 
     return false; 
@@ -41159,7 +41253,7 @@ public class ASTCompositeTerm extends ASTTerm
     { 
       String called = terms.get(0) + "";
       if ("replaceAll".equals(called))
-      { System.out.println(">>> methodCall " + called + " has side-effect."); 
+      { // System.out.println(">>> methodCall " + called + " has side-effect."); 
         return true; 
       } // But not when applied to a string. 
       return false;  
@@ -41265,7 +41359,7 @@ public class ASTCompositeTerm extends ASTTerm
     { return false; } 
 
     return false; 
-  } 
+  } // method calls are handled via 'updatesObject'
 
   public boolean hasPreSideEffect()
   { if (terms.size() == 3 && 
@@ -41544,7 +41638,8 @@ public class ASTCompositeTerm extends ASTTerm
         if (".".equals(op) && 
             "methodCall".equals(arg2.getTag()))
         { if (arg2.updatesObject(arg1))
-          { JOptionPane.showInputDialog(arg2 + " updates " + arg1); }
+          { // JOptionPane.showInputDialog(arg2 + " updates " + arg1); 
+          }
           else 
           { statement = null; 
             return ""; // return null; 
@@ -46724,9 +46819,9 @@ public class ASTCompositeTerm extends ASTTerm
       String vname = var.literalForm(); 
       Object vx = ASTTerm.mathoclvars.get(vname); 
       if (vx == null)
-      { JOptionPane.showMessageDialog(null, 
+      { /* JOptionPane.showMessageDialog(null, 
           "Warning!: variable " + vname + " does not have a definition to use for " + this,   "",
-          JOptionPane.WARNING_MESSAGE); 
+          JOptionPane.WARNING_MESSAGE); */  
       } // also if it is (basicExpression null)
 
       expr.checkMathOCL(); 

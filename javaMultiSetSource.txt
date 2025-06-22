@@ -1,0 +1,10 @@
+class MSet
+{ public static void main(String[] args) 
+  { MultiSet<String> ms = new MultiSet<String>(); 
+    ms.add("aa"); ms.add("bb"); ms.add("aa"); 
+
+    ms.setCount("bb", 2); 
+
+    int x = ms.setCount("aa", 3); 
+  } 
+} 

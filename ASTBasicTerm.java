@@ -1330,7 +1330,8 @@ public class ASTBasicTerm extends ASTTerm
     } 
 
     if ("Bag".equals(value) || "HashBag".equals(value) ||
-        "TreeList".equals(value))
+        "TreeList".equals(value) || 
+        "FixedSizeList".equals(value))
     { modelElement = new Type("Sequence", null); 
       expression = new BasicExpression((Type) modelElement); 
       return "Sequence";
@@ -2389,7 +2390,7 @@ public class ASTBasicTerm extends ASTTerm
     { modelElement = new Type("Sequence", null); 
       expression = new BasicExpression((Type) modelElement); 
       return "Sequence"; 
-    }
+    } // ListOrderedSet and SetUniqueList are OrderedSet
  
     if ("PriorityQueue".equals(value) ||
         "PriorityBlockingQueue".equals(value) ||
@@ -2409,7 +2410,8 @@ public class ASTBasicTerm extends ASTTerm
     } 
 
     if ("Bag".equals(value) || "HashBag".equals(value) ||
-        "TreeList".equals(value))
+        "TreeList".equals(value) || 
+        "FixedSizeList".equals(value))
     { modelElement = new Type("Sequence", null); 
       expression = new BasicExpression((Type) modelElement); 
       return "Sequence";
