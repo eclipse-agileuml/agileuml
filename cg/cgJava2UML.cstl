@@ -1147,6 +1147,9 @@ _1 ( _2 ) |-->._1(_2)
 
 
 collectionMethodCallQueryForm::
+min ( _1 ) |-->_1`first->min()
+max ( _1 ) |-->_1`first->max()
+
 replaceAll ( _1 ) |-->_1`first->includes( _1`third )
 put ( _1 ) |-->->at(_1)
 removeAll ( _1 ) |-->->intersection(_1)->notEmpty()
@@ -1182,6 +1185,9 @@ _1 _2 |-->_2
 
 
 collectionMethodCallType::
+min ( _1 ) |-->OclAny
+max ( _1 ) |-->OclAny
+
 replaceAll ( _1 ) |-->boolean
 put ( _1 ) |-->OclAny
 removeAll ( _1 ) |-->boolean
@@ -2146,12 +2152,12 @@ _1 ( _2 ) |-->OclAny
 
 
 collectionsMethodCall::
+min ( _1 ) |-->
+max ( _1 ) |-->
 list ( _1 ) |-->Sequence{}->union(_1.elements)
 singletonList ( _1 ) |-->Sequence{_1}
 singletonMap ( _1 ) |-->Map{_1}
 singleton ( _1 ) |-->Set{_1}
-min ( _1 ) |-->_1->min()
-max ( _1 ) |--> _1->max()
 enumeration ( _1 ) |-->OclIterator.newOclIterator_Set(_1)
  
 replaceAll ( _1 ) |-->    _1`first := _1`first->collect( x1 | if x1 = _1`third then _1`last else x1 endif )
