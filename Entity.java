@@ -1573,7 +1573,12 @@ public class Entity extends ModelElement implements Comparable
 
   public void refineOperation(String op, Vector pars)
   { // Add or refine definition of op
+
     BehaviouralFeature bf = getOperation(op);
+
+    /* if (bf != null)
+    { JOptionPane.showInputDialog("Operation " + bf + " has result type " + bf.getType()); } */ 
+
     if (bf == null) 
     { bf = new BehaviouralFeature(op); 
       for (int i = 0; i < pars.size(); i++) 
@@ -1583,13 +1588,16 @@ public class Entity extends ModelElement implements Comparable
         if (ptyp == null) 
         { ptyp = new Type("OclAny", null); } 
 
-        Attribute par = new Attribute("par_" + i, 
-                                        ptyp, 
-                                        ModelElement.INTERNAL); 
+        Attribute par = 
+           new Attribute("par_" + i, 
+                  ptyp,                       
+                  ModelElement.INTERNAL); 
         bf.addParameter(par); 
       }
+
       addOperation(bf);  
     } // else, refine it. 
+
   } 
 
 

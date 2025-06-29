@@ -21920,7 +21920,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
              left instanceof BasicExpression && 
              ((BasicExpression) left).isOperationCall())
     { // redundant results computation
-      aUses.add("! OCL efficiency smell (OES): Redundant results computation in: " + this);
+
+      aUses.add("!! OCL efficiency smell (OES): Redundant results computation in: " + this);
       int ascore = (int) res.get("amber"); 
       res.set("amber", ascore+1); 
     } 
@@ -21930,7 +21931,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
                     ((BinaryExpression) left).getOperator()))
     { // redundant results computation
 
-      aUses.add("! OCL efficiency smell (OES): Redundant results computation in: " + this);
+      aUses.add("!! OCL efficiency smell (OES): Redundant results computation in: " + this);
       int ascore = (int) res.get("amber"); 
       res.set("amber", ascore+1); 
     } 

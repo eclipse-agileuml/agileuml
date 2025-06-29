@@ -827,22 +827,23 @@ public class CGSpec
       else if (op.equals("for") && trimmedlhs.startsWith(op))
       { return r; }
       else if (op.equals("return") && trimmedlhs.startsWith(op))
-      { if (((ReturnStatement) e).hasValue() && r.hasVariables())
+      { if (((ReturnStatement) e).hasValue() && 
+            r.hasVariables())
         { return r; }
         else 
-        { if (!((ReturnStatement) e).hasValue() && !r.hasVariables())
+        { if (!((ReturnStatement) e).hasValue() && 
+              !r.hasVariables())
           { return r; } 
         } 
       } 
-      else if (op.equals("if") && trimmedlhs.startsWith(op) && (e instanceof ConditionalStatement))
-      { // ConditionalStatement cs = (ConditionalStatement) e; 
-        // if ((cs.getTest() + "").equals("true") && 
-        //     r.lhs.startsWith("if true"))
-        // { return r; }
-        // else if ((cs.getTest() + "").equals("false") &&
-        //          r.lhs.startsWith("if false"))
-        // { return r; } 
-        // else 
+      else if (op.equals("if") && trimmedlhs.startsWith(op) && 
+               (e instanceof ConditionalStatement))
+      { ConditionalStatement cs = (ConditionalStatement) e;
+        if (trimmedlhs.endsWith(" skip") && 
+            cs.hasSkipElse())
+        { return r; }  
+        else if (!trimmedlhs.endsWith(" skip") &&
+                 !cs.hasSkipElse()) 
         { return r; } 
       } 
       else if (op.equals("if") && trimmedlhs.startsWith(op) && 

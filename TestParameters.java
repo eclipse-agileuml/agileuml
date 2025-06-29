@@ -51,7 +51,17 @@ public class TestParameters
   public static 
     HashMap<String, HashMap<String,Double>> compComplexity; 
 
+  public static HashMap<String, String> compExplanation; 
+
   static {
+    compExplanation = new HashMap<String,String>(); 
+    compExplanation.put("1.0", "Constant: O(1)"); 
+    compExplanation.put("1.5", "Log: O(log n)"); 
+    compExplanation.put("2.0", "Linear: O(n)"); 
+    compExplanation.put("3.0", "Log-Linear: O(n log n)"); 
+    compExplanation.put("4.0", "Quadratic: O(n*n)"); 
+    compExplanation.put("100.0", "unknown"); 
+
     compComplexity = new HashMap<String, HashMap<String, Double>>(); 
 	
     HashMap<String,Double> sequenceCC = 
@@ -363,7 +373,11 @@ public class TestParameters
      getOperationsComplexityScore(Vector ops)
   { // for the op : ops find best data structures
     
+
     Vector res = new Vector(); 
+    if (ops.size() == 0) 
+    { return res; } 
+
     double bestScore = 100.0; 
 
     java.util.Set<String> datatypes = compComplexity.keySet(); 
@@ -398,7 +412,9 @@ public class TestParameters
 
     System.out.println(); 
     System.out.println(">> The best data structures for operations " + ops + " are " + res); 
-    System.out.println(">> With overall complexity " + bestScore); 
+    System.out.println(">> With overall " + 
+       TestParameters.compExplanation.get("" + bestScore) + 
+       " complexity"); 
  
     return res; 
   }         

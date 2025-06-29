@@ -1887,6 +1887,13 @@ abstract class Statement implements Cloneable
     return Statement.endsWithExit(stat); 
   } 
 
+  public static boolean isControlFlowEnd(Statement stat)
+  { if (Statement.hasSingleStatement(stat)) { } 
+    else 
+    { return false; } 
+
+    return Statement.endsWithControlFlowBreak(stat); 
+  } 
 
   public static Statement replaceReturnBySkip(Statement st)
   { if (st == null) 
@@ -8255,8 +8262,10 @@ class CreationStatement extends Statement
     cs.elementType = elementType; 
     cs.declarationOnly = declarationOnly; 
     cs.initialValue = initialValue; 
-    cs.initialExpression = 
-         (Expression) initialExpression.clone(); 
+    if (initialExpression != null) 
+    { cs.initialExpression = 
+         (Expression) initialExpression.clone();
+    }  
     cs.isFrozen = isFrozen; 
     cs.variable = variable; 
     return cs; 
@@ -15884,6 +15893,12 @@ class ConditionalStatement extends Statement
   public Statement getElse()
   { return elsePart; } 
 
+  public boolean hasSkipElse()
+  { if (elsePart == null) 
+    { return true; } 
+    return elsePart.isSkip(); 
+  } 
+
   public void setIfPart(Statement st)
   { ifPart = st; } 
 
@@ -15932,6 +15947,10 @@ class ConditionalStatement extends Statement
 	
     if ("true".equals(test + ""))
     { return ifPart.cg(cgs); }
+
+    if ("false".equals(test + "") && 
+        elsePart != null)
+    { return elsePart.cg(cgs); }
 	
     args.add(test.cg(cgs));
     args.add(ifPart.cg(cgs));
@@ -15950,6 +15969,12 @@ class ConditionalStatement extends Statement
 	
     if ("true".equals(test + ""))
     { args.add(ifPart);
+      return args;
+    }
+
+    if ("false".equals(test + "") && 
+        elsePart != null)
+    { args.add(elsePart);
       return args;
     }
 	
@@ -16144,19 +16169,35 @@ class ConditionalStatement extends Statement
           uses.set("amber", oscore + 1); 
         } 
       } 
+      else if ("->includes".equals(testbe.getOperator()) && 
+          Statement.isControlFlowEnd(ifPart) &&                  
+          (elsePart.isSkip() || 
+           Statement.isAdditionToCollection(
+                         elseStat, testbeRight, testbeLeft))) 
+      { // adds to testbeLeft only if not in there already
+
+        if (testbeLeft.hasSequenceType())
+        { oUses.add("!! Possibly using sequence " + testbeLeft + " as set in: " + this + 
+               "\n>> Recommend declaring " + testbeLeft + " as a Set or SortedSet"); 
+
+          int ascore = (int) uses.get("amber"); 
+          uses.set("amber", ascore + 1); 
+        } 
+      } 
       else if ("->excludes".equals(testbe.getOperator()) &&
                Statement.hasSingleStatement(ifPart) &&
-               (elsePart == null || elsePart.isSkip()) &&                  
+               (elsePart == null || elsePart.isSkip() ||
+                Statement.isControlFlowEnd(elsePart)) &&                  
                Statement.isAdditionToCollection(
                          ifStat, testbeRight, testbeLeft)) 
       { // adds to testbeLeft only if not in there already
 
         if (testbeLeft.hasSequenceType())
-        { rUses.add("!! Possibly using sequence " + testbeLeft + " as set in: " + this + 
+        { oUses.add("!! Possibly using sequence " + testbeLeft + " as set in: " + this + 
              "\n>> Recommend declaring " + testbeLeft + " as a Set or SortedSet"); 
 
-          int rscore = (int) uses.get("red"); 
-          uses.set("red", rscore + 1); 
+          int ascore = (int) uses.get("amber"); 
+          uses.set("amber", ascore + 1); 
         } 
         else if (testbeLeft.hasSetType())
         { oUses.add("! Redundant test on set addition " + testbeLeft + " in: " + this); 

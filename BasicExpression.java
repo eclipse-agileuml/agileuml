@@ -6411,9 +6411,11 @@ class BasicExpression extends Expression
   public boolean isOperationCall()
   { if (isEvent && parameters != null) 
     { return true; } 
+
     if (umlkind == UPDATEOP ||
         umlkind == QUERY)
     { return true; } 
+
     return false; 
   } 
 
@@ -17144,6 +17146,7 @@ public Statement generateDesignSubtract(Expression rhs)
         else 
         { return false; } 
       } 
+
       return true; 
     }
  
@@ -17219,6 +17222,8 @@ public Statement generateDesignSubtract(Expression rhs)
     if (parameters != null)
     { for (int i = 0; i < parameters.size(); i++) 
       { Expression par = (Expression) parameters.get(i); 
+        par.setBrackets(false); 
+
         Vector pvars = par.variablesUsedIn(names); 
         if (pvars.size() > 0) 
         { nontailReturns.add(this);
@@ -17962,6 +17967,15 @@ public Statement generateDesignSubtract(Expression rhs)
       { Expression par = (Expression) parameters.get(i); 
         par.energyUse(res,rUses,oUses); 
       } 
+
+      if (arrayIndex != null && this.isOperationCall())
+      { // redundant results computation
+
+        oUses.add("!! OCL efficiency smell (OES): Redundant results computation in: " + this);
+        int ascore = (int) res.get("amber"); 
+        res.set("amber", ascore+1); 
+      } 
+
     } 
 
     if (umlkind == VALUE) {} 

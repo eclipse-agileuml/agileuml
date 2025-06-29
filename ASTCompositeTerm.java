@@ -22837,44 +22837,65 @@ public class ASTCompositeTerm extends ASTTerm
           return "(" + args + ".length() = " + args + ".getPosition())"; 
         }  
 
-    if (arg.expression != null && call.expression != null &&
-        call.expression instanceof BasicExpression) 
-    { expression = (BasicExpression) call.expression; 
-      ((BasicExpression) expression).setObjectRef(arg.expression); 
+        if (arg.expression != null && call.expression != null &&
+            call.expression instanceof BasicExpression) 
+        { expression = (BasicExpression) call.expression; 
+          ((BasicExpression) expression).setObjectRef(arg.expression); 
 
       // Vector pars = new Vector(); 
       // for (int i = 0; i < cargs.size(); i++) 
       
+      } 
+
+      System.out.println(">>> internal method call: " + arg + "." + called + cargs); 
+
+      Vector xpars = new Vector(); 
+      for (int i = 0; i < cargs.size(); i++) 
+      { ASTTerm cargi = (ASTTerm) cargs.get(i); 
+        if (cargi.expression != null) 
+        { xpars.add(cargi.expression); } 
+      } 
+          
+      String cname = ASTTerm.getType(args);
+
+      if (cname == null || "OclAny".equals(cname)) 
+      { Entity argclass = 
+          (Entity) ModelElement.lookupByName(
+                          args, ASTTerm.entities);
+
+        if (argclass != null)
+        { cname = argclass.getName(); } 
+      } // static operation cname.called(...) 
+         
+      
+
+    if (cname != null) 
+    { Entity cent = 
+          (Entity) ModelElement.lookupByName(
+                          cname, ASTTerm.entities); 
+      if (cent != null) 
+      { cent.refineOperation(called,xpars); 
+
+        BehaviouralFeature bf = cent.getOperation(called); 
+        ASTTerm.setType(this, bf.getType() + "");
+      }        
     } 
 
-        System.out.println(">>> internal method call: " + arg + "." + called + cargs); 
+    /* JOptionPane.showInputDialog("Class name of " + 
+               args + " with " + ASTTerm.entities + " is " + 
+               cname + " " + ASTTerm.getType(this)); */ 
 
-        Vector xpars = new Vector(); 
-        for (int i = 0; i < cargs.size(); i++) 
-        { ASTTerm cargi = (ASTTerm) cargs.get(i); 
-          if (cargi.expression != null) 
-          { xpars.add(cargi.expression); } 
-        } 
-          
-        String cname = ASTTerm.getType(args); 
-        if (cname != null) 
-        { Entity cent = 
-            (Entity) ModelElement.lookupByName(cname,ASTTerm.entities); 
-          if (cent != null) 
-          { cent.refineOperation(called,xpars); } 
-        } 
-
-        if (arg.expression != null) 
-        { expression = BasicExpression.newCallBasicExpression(
+    if (arg.expression != null) 
+    { expression = BasicExpression.newCallBasicExpression(
                 called, arg.expression, xpars); 
-          ((BasicExpression) expression).setIsEvent();  
-          statement = 
+      ((BasicExpression) expression).setIsEvent();  
+      statement = 
             InvocationStatement.newInvocationStatement(
                 expression, xpars);  
               
-          System.out.println(">>> internal method call: " + arg.expression + "." + called + xpars); 
-          return args + "." + calls; 
-        } 
+      System.out.println(">>> internal method call: " + arg.expression + "." + called + xpars); 
+      return args + "." + calls; 
+    } 
 
     return args + "." + calls;  
   }  
@@ -22940,28 +22961,46 @@ public class ASTCompositeTerm extends ASTTerm
     for (int i = 0; i < cargs.size(); i++) 
     { ASTTerm cargi = (ASTTerm) cargs.get(i); 
       if (cargi.expression != null) 
-          { xpars.add(cargi.expression); } 
-        } 
+      { xpars.add(cargi.expression); } 
+    } 
           
-        String cname = ASTTerm.getType(args); 
-        if (cname != null) 
-        { Entity cent = 
-            (Entity) ModelElement.lookupByName(cname,ASTTerm.entities); 
-          if (cent != null) 
-          { cent.refineOperation(called,xpars); } 
-        } 
+    String cname = ASTTerm.getType(args);
 
-        if (arg.expression != null) 
-        { expression = BasicExpression.newCallBasicExpression(
+    if (cname == null || "OclAny".equals(cname)) 
+    { Entity argclass = 
+        (Entity) ModelElement.lookupByName(
+                          args, ASTTerm.entities);
+      if (argclass != null)
+      { cname = argclass.getName(); } 
+    } // static operation cname.called(...) 
+         
+
+ 
+    if (cname != null) 
+    { Entity cent = 
+            (Entity) ModelElement.lookupByName(cname,ASTTerm.entities); 
+      if (cent != null) 
+      { cent.refineOperation(called,xpars); 
+        BehaviouralFeature bf = cent.getOperation(called); 
+        ASTTerm.setType(this, bf.getType() + "");
+      } 
+    } 
+
+    /*  JOptionPane.showInputDialog("Class name of " + 
+               args + " with " + ASTTerm.entities + " is " + 
+               cname + " " + ASTTerm.getType(this)); */ 
+
+    if (arg.expression != null) 
+    { expression = BasicExpression.newCallBasicExpression(
                 called, arg.expression, xpars); 
-          ((BasicExpression) expression).setIsEvent();  
-          statement = 
-            InvocationStatement.newInvocationStatement(
+      ((BasicExpression) expression).setIsEvent();  
+      statement = 
+        InvocationStatement.newInvocationStatement(
                 expression, xpars);  
               
-          System.out.println(">>> internal method call: " + arg.expression + "." + called + xpars); 
-          return args + "." + calls; 
-        } 
+      System.out.println(">>> internal method call: " + arg.expression + "." + called + xpars); 
+      return args + "." + calls; 
+    } 
 
     return ""; 
   } 
@@ -23588,28 +23627,45 @@ public class ASTCompositeTerm extends ASTTerm
     for (int i = 0; i < cargs.size(); i++) 
     { ASTTerm cargi = (ASTTerm) cargs.get(i); 
       if (cargi.expression != null) 
-          { xpars.add(cargi.expression); } 
-        } 
+      { xpars.add(cargi.expression); } 
+    } 
           
-        String cname = ASTTerm.getType(args); 
-        if (cname != null) 
-        { Entity cent = 
-            (Entity) ModelElement.lookupByName(cname,ASTTerm.entities); 
-          if (cent != null) 
-          { cent.refineOperation(called,xpars); } 
-        } 
+    String cname = ASTTerm.getType(args);
 
-        if (arg.expression != null) 
-        { expression = BasicExpression.newCallBasicExpression(
+    if (cname == null || "OclAny".equals(cname)) 
+    { Entity argclass = 
+        (Entity) ModelElement.lookupByName(
+                          args, ASTTerm.entities);
+      if (argclass != null)
+      { cname = argclass.getName(); } 
+    } // static operation cname.called(...) 
+          
+    if (cname != null) 
+    { Entity cent = 
+        (Entity) 
+           ModelElement.lookupByName(cname,ASTTerm.entities); 
+      if (cent != null) 
+      { cent.refineOperation(called,xpars); 
+        BehaviouralFeature bf = cent.getOperation(called); 
+        ASTTerm.setType(this, bf.getType() + ""); 
+      } 
+    } 
+
+    /* JOptionPane.showInputDialog("Class name of " + 
+               args + " with " + ASTTerm.entities + " is " + 
+               cname + " " + ASTTerm.getType(this)); */ 
+
+    if (arg.expression != null) 
+    { expression = BasicExpression.newCallBasicExpression(
                 called, arg.expression, xpars); 
-          ((BasicExpression) expression).setIsEvent();  
-          statement = 
+      ((BasicExpression) expression).setIsEvent();  
+      statement = 
             InvocationStatement.newInvocationStatement(
                 expression, xpars);  
               
-          System.out.println(">>> internal method call: " + arg.expression + "." + called + xpars); 
-          return args + "." + calls; 
-        } 
+      System.out.println(">>> internal method call: " + arg.expression + "." + called + xpars); 
+      return args + "." + calls; 
+    } 
 
     return ""; 
   }  
@@ -31857,33 +31913,48 @@ public class ASTCompositeTerm extends ASTTerm
           { xpars.add(cargi.expression); } 
         } 
           
-        String cname = ASTTerm.getType(args); 
-        if (cname != null) 
-        { Entity cent = 
-            (Entity) ModelElement.lookupByName(cname,ASTTerm.entities); 
-          if (cent != null) 
-          { cent.refineOperation(called,xpars); } 
-        } 
+        String cname = ASTTerm.getType(args);
 
-        if (arg.expression != null) 
-        { expression = BasicExpression.newCallBasicExpression(
+      if (cname == null || "OclAny".equals(cname)) 
+      { Entity argclass = 
+          (Entity) ModelElement.lookupByName(
+                          args, ASTTerm.entities);
+        if (argclass != null)
+        { cname = argclass.getName(); } 
+      } // static operation cname.called(...) 
+         
+ 
+      if (cname != null) 
+      { Entity cent = 
+          (Entity) ModelElement.lookupByName(cname,ASTTerm.entities); 
+        if (cent != null) 
+        { cent.refineOperation(called,xpars);
+          BehaviouralFeature bf = cent.getOperation(called); 
+          ASTTerm.setType(this, bf.getType() + "");
+        } 
+      } 
+
+      if (arg.expression != null) 
+      { expression = BasicExpression.newCallBasicExpression(
                 called, arg.expression, xpars); 
-          ((BasicExpression) expression).setIsEvent();  
-          statement = 
+        ((BasicExpression) expression).setIsEvent();  
+        statement = 
             InvocationStatement.newInvocationStatement(
                 expression, xpars);  
               
-          System.out.println(">>> internal method call: " + arg.expression + "." + called + xpars); 
-          return args + "." + calls; 
-        } 
-      }
-      else // call is ASTCompositeTerm 
-      { Vector pars = callterm.getParameterExpressions();
-        ASTTerm mterm = (ASTTerm) ((ASTCompositeTerm) call).terms.get(0); 
-        String called = mterm.toKM3();
+        System.out.println(">>> internal method call: " + arg.expression + "." + called + xpars + 
+               " : " + ASTTerm.getType(this)); 
+        return args + "." + calls; 
+      } 
+    }
+    else // call is ASTCompositeTerm 
+    { Vector pars = callterm.getParameterExpressions();
+      ASTTerm mterm = (ASTTerm) ((ASTCompositeTerm) call).terms.get(0); 
+      String called = mterm.toKM3();
 
         if (arg.expression != null)   
-        { expression = BasicExpression.newCallBasicExpression(called, arg.expression, pars); 
+        { expression = BasicExpression.newCallBasicExpression(
+               called, arg.expression, pars); 
 
           if (ModelElement.lookupByName(args, ASTTerm.entities) != null) 
           { expression.setStatic(true);
@@ -39871,7 +39942,7 @@ public class ASTCompositeTerm extends ASTTerm
       String res = "  operation " + mname + mparams.toKM3() + " : " + restype  + "\n" + 
               "  pre: true\n" + "  post: true"; 
 
-      // System.out.println("+++ return type of " + mname + " is " + mtype.modelElement); 
+      // JOptionPane.showInputDialog("+++ return type of " + mname + " is " + mtype.modelElement); 
 
       if (mtype.modelElement instanceof Type)
       { bf.setType((Type) mtype.modelElement); } 
@@ -39894,6 +39965,12 @@ public class ASTCompositeTerm extends ASTTerm
       modelElements = new Vector(); 
       modelElements.add(bf); 
 
+      if (ASTTerm.currentClass != null)
+      { ASTTerm.currentClass.addOperation(bf); 
+        // JOptionPane.showInputDialog("Added " + bf + 
+        //                 " to class " + ASTTerm.currentClass); 
+      } 
+
       if (terms.size() > 3)
       { ASTTerm mbody = (ASTTerm) terms.get(3);
 
@@ -39913,7 +39990,8 @@ public class ASTCompositeTerm extends ASTTerm
 
             Statement interfacestat = 
               new ReturnStatement(retval); 
-            bf.setActivity(interfacestat);  
+            bf.setActivity(interfacestat);
+  
             return res + "\n  activity: return " + retval + ";\n\n"; 
           } 
           return res + ";\n\n"; 
@@ -40012,6 +40090,8 @@ public class ASTCompositeTerm extends ASTTerm
         if (resT != null) 
         { bf.setType(resT); } 
       } 
+
+      JOptionPane.showInputDialog("+++ return type of " + mname + " is " + mtype.modelElement); 
 
       if (mparams.modelElements != null) 
       { bf.setParameters(mparams.modelElements); } 
@@ -40779,7 +40859,7 @@ public class ASTCompositeTerm extends ASTTerm
       if (contents.modelElements != null) 
       { newEnt.addModelElements(contents.modelElements);
         // System.out.println(">>> Model elements of " + newEnt + " are: " + contents.modelElements);
-      } 
+      } // But operations need to be added as soon as declared.
 
       Vector entPars = newEnt.getTypeParameters(); 
       for (int kk = 0; kk < entPars.size(); kk++) 
