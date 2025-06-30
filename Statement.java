@@ -427,7 +427,7 @@ abstract class Statement implements Cloneable
                        " : " + rng + " @ " + st); 
 
     if (st instanceof AssignStatement)
-    { // patterns are s := s + var
+    { // patterns are s := s + var, s := s + var*var,
       // s := s * var, s := s - var, s := s / var
       // s := s & var, s := s or var
       // Also same with expr instead of var,

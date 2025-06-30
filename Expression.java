@@ -3533,14 +3533,64 @@ abstract class Expression
   } 
 
   public static Expression simplifySum(Expression src)
-  { // Integer.subrange(a,b)->collect(x | sq[x])->sum() is 
-    //    sq.subrange(a,b)->sum()
-    // Integer.subrange(a,b)->collect(x | sq[x+1])->sum() is 
-    //    sq.subrange(a+1,b+1)->sum()
+  { // Integer.subrange(1,n)->sum() is (n*(n+1))/2
+    // Integer.subrange(1,n)->collect( x | x*x )->sum() is
+    //    (n*(n+1)*(2*n + 1))/6
+    // Integer.subrange(1,n)->collect( x | x*x*x )->sum() is
+    //    ((n*(n+1))/2)->sqr()
+
     // sq->collect(x|e)->sum() is (sq->size())*e when e
     //    independent of x
     // sq->collect(e)->sum() is (sq->size())*e when e
     //    independent of sq elements
+
+    if (src instanceof BasicExpression &&
+        ((BasicExpression) src).getData().equals("subrange") &&
+        "Integer".equals(
+           ((BasicExpression) src).getObjectRef() + ""))
+    { BasicExpression lcol = (BasicExpression) src; 
+      Vector pars = lcol.getParameters(); 
+  
+      Expression par1 = (Expression) pars.get(0); 
+      par1.setBrackets(false); 
+      Expression par2 = (Expression) pars.get(1); 
+
+      if ("1".equals(par1 + ""))
+      { // par2*(par2+1)/2
+        Expression sum1 = new BinaryExpression("+", par2, 
+                                new BasicExpression(1)); 
+        sum1.setBrackets(true); 
+        Expression prd1 = new BinaryExpression("*", 
+                                               par2, sum1); 
+        prd1.setBrackets(true); 
+
+        Expression res = 
+           new BinaryExpression("/", prd1, 
+             new BasicExpression(2)); 
+        return res; 
+      }
+      else 
+      { // (par2 - par1 + 1)*(par1 + par2)/2
+        Expression sum1 = new BinaryExpression("+", par1, 
+                                               par2); 
+        sum1.setBrackets(true); 
+        Expression sum2 = 
+          new BinaryExpression("+", par2, 
+            new BinaryExpression("-", par1, 
+              new BasicExpression(1))); 
+        sum2.setBrackets(true); 
+
+        Expression prd1 =             
+          new BinaryExpression("*", sum1, sum2); 
+        prd1.setBrackets(true); 
+
+        Expression res = 
+          new BinaryExpression("/", prd1, 
+            new BasicExpression(2)); 
+        return res; 
+      } 
+    }     
+  
 
     if (src instanceof BinaryExpression &&
         "|C".equals(((BinaryExpression) src).getOperator()))
@@ -3549,7 +3599,8 @@ abstract class Expression
       BinaryExpression inrange = 
               (BinaryExpression) colexpr.getLeft(); 
 
-      BasicExpression var = (BasicExpression) inrange.getLeft(); 
+      BasicExpression var = 
+          (BasicExpression) inrange.getLeft(); 
       Expression col = inrange.getRight(); 
       Expression expr = colexpr.getRight();
       Vector vset = new Vector(); 
@@ -3561,10 +3612,53 @@ abstract class Expression
       if (vnames.contains(var + "") || 
           vuses.size() > 0) { } 
       else 
-      { System.out.println("OES flaw: " + var + " not used in " + expr);
+      { System.out.println("!! OES flaw: " + var + " not used in " + expr);
         return new BinaryExpression("*", 
                      Expression.simplifySize(col), expr);  
       } 
+
+      expr.setBrackets(false); 
+      String vars = "" + var; 
+
+      if (col instanceof BasicExpression &&
+          ("" + expr).equals(vars + " * " + vars) &&
+          ((BasicExpression) col).getData().equals("subrange") &&
+          "Integer".equals(
+             ((BasicExpression) col).getObjectRef() + ""))
+      { BasicExpression lcol = (BasicExpression) col; 
+        Vector pars = lcol.getParameters(); 
+  
+        Expression par1 = (Expression) pars.get(0); 
+        par1.setBrackets(false); 
+        Expression par2 = (Expression) pars.get(1); 
+
+        if ("1".equals(par1 + ""))
+        { // (par2*(par2+1)*(2*par2 + 1))/6
+
+          Expression sum1 = new BinaryExpression("+", par2, 
+                                new BasicExpression(1)); 
+          sum1.setBrackets(true); 
+
+          Expression prd2 = new BinaryExpression("*", par2,
+                           new BasicExpression(2));
+          prd2.setBrackets(true); 
+
+          Expression sum2 = 
+              new BinaryExpression("+", prd2,  
+                                new BasicExpression(1)); 
+          sum2.setBrackets(true); 
+
+          Expression prd1 = 
+               new BinaryExpression("*", par2, 
+                 new BinaryExpression("*", sum1, sum2)); 
+          prd1.setBrackets(true); 
+
+          Expression res = 
+             new BinaryExpression("/", prd1, 
+               new BasicExpression(6)); 
+          return res; 
+        }
+      }
     } 
 
     if (src instanceof BinaryExpression &&
@@ -3616,7 +3710,8 @@ abstract class Expression
       BinaryExpression inrange = 
               (BinaryExpression) colexpr.getLeft(); 
 
-      BasicExpression var = (BasicExpression) inrange.getLeft(); 
+      BasicExpression var = 
+           (BasicExpression) inrange.getLeft(); 
       Expression col = inrange.getRight(); 
       Expression expr = colexpr.getRight();
  
