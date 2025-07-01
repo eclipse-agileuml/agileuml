@@ -1379,6 +1379,8 @@ public abstract class ASTTerm
 
   public abstract String lambdaParametersToKM3();
 
+  public abstract Vector expressionListToKM3();
+
   public Type toKM3CollectionType(Type innerType)
   { return null; } 
 

@@ -2040,6 +2040,12 @@ public class ASTBasicTerm extends ASTTerm
     return null; 
   } 
 
+  public Vector expressionListToKM3()
+  { // if ("argumentExpressionList".equals(tag))
+    Vector res = new Vector();
+    return res;  
+  }
+
   public String toKM3type()
   { if (ASTTerm.entities == null) 
     { ASTTerm.entities = new Vector(); } 

@@ -7933,8 +7933,23 @@ System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
   public boolean hasOperation(String nme)
   { for (int i = 0; i < operations.size(); i++) 
     { BehaviouralFeature bf = (BehaviouralFeature) operations.get(i); 
-      if (nme.equals(bf.getName())) { return true; } 
+      if (nme.equals(bf.getName())) 
+      { return true; } 
     } 
+    return false; 
+  } 
+
+  public boolean hasOperation(String nme, int npars)
+  { for (int i = 0; i < operations.size(); i++) 
+    { BehaviouralFeature bf = 
+           (BehaviouralFeature) operations.get(i);
+ 
+      if (nme.equals(bf.getName()) && 
+          bf.getParameters() != null && 
+          bf.getParameters().size() == npars) 
+      { return true; } 
+    } 
+
     return false; 
   } 
 
@@ -7998,6 +8013,19 @@ System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
     }  
 
     return getOperation(nme); 
+  } 
+
+  public BehaviouralFeature getOperation(String nme, int npars)
+  { BehaviouralFeature res = null; 
+    for (int i = 0; i < operations.size(); i++) 
+    { res = (BehaviouralFeature) operations.get(i); 
+      if (nme.equals(res.getName()) && 
+          res.getParameters() != null &&
+          res.getParameters().size() == npars)
+      { return res; }
+    }  
+
+    return null; 
   } 
 
   public BehaviouralFeature getOperationBySignature(String sig)

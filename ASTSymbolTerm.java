@@ -396,6 +396,12 @@ public class ASTSymbolTerm extends ASTTerm
   public String queryForm()
   { return toKM3(); } 
 
+  public Vector expressionListToKM3()
+  { // if ("argumentExpressionList".equals(tag))
+    Vector res = new Vector();
+    return res;  
+  }
+
   public String getJavaLabel()
   { return null; } 
 
