@@ -681,6 +681,17 @@ class BasicExpression extends Expression
     return res; 
   } 
 
+  public static BasicExpression newQueryCallBasicExpression(
+                     String f, Expression obj, Vector pars) 
+  { BasicExpression res = new BasicExpression(f);
+    res.setObjectRef(obj);  
+    res.umlkind = QUERY;
+    res.parameters = new Vector();
+    res.parameters.addAll(pars);  
+    res.isEvent = true; 
+    return res; 
+  } 
+
   public static BasicExpression newCallBasicExpression(String f, Expression obj) 
   { BasicExpression res = new BasicExpression(f);
     res.setObjectRef(obj);  
@@ -779,6 +790,19 @@ class BasicExpression extends Expression
     return res; 
   } 
 
+  public static BasicExpression 
+     newStaticQueryCallBasicExpression(
+                        String f, Expression obj, Vector pars) 
+  { BasicExpression res = new BasicExpression(f);
+    obj.umlkind = CLASSID; 
+    res.setObjectRef(obj);  
+    res.umlkind = QUERY;
+    res.isStatic = true; 
+    res.isEvent = true; 
+    res.parameters = pars; 
+    return res; 
+  } 
+
   public static BasicExpression newStaticCallBasicExpression(
                       String f, String arg, Expression par) 
   { Vector pars = new Vector(); 
@@ -817,6 +841,21 @@ class BasicExpression extends Expression
     obj.umlkind = CLASSID; 
     res.setObjectRef(obj);  
     res.umlkind = UPDATEOP;
+    res.isStatic = true; 
+    res.isEvent = true; 
+    res.parameters = pars; 
+    return res; 
+  } 
+
+  public static BasicExpression 
+       newStaticQueryCallBasicExpression(
+               String f, Expression obj, Expression par) 
+  { Vector pars = new Vector(); 
+    pars.add(par); 
+    BasicExpression res = new BasicExpression(f);
+    obj.umlkind = CLASSID; 
+    res.setObjectRef(obj);  
+    res.umlkind = QUERY;
     res.isStatic = true; 
     res.isEvent = true; 
     res.parameters = pars; 
@@ -17115,11 +17154,15 @@ public Statement generateDesignSubtract(Expression rhs)
   } 
 
   public boolean isSelfCall(String nme)
-  { if (data.equals(nme) && 
+  { /* JOptionPane.showInputDialog(">>> Is self-call? " + 
+          nme + " " + data + " " + objectRef); */ 
+
+    if (data.equals(nme) && 
         "self".equals(objectRef + "") && 
         (umlkind == UPDATEOP || umlkind == QUERY ||
          isEvent)) 
     { return true; } 
+
     return false;  
   }
 

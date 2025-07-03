@@ -21099,12 +21099,12 @@ public class ASTCompositeTerm extends ASTTerm
           { obj = new BasicExpression(ASTTerm.currentClass);  
 
             expression = 
-              BasicExpression.newStaticCallBasicExpression(
+              BasicExpression.newStaticQueryCallBasicExpression(
                      methodt, obj, oclargs);
           } 
           else 
           { expression = 
-              BasicExpression.newCallBasicExpression(
+              BasicExpression.newQueryCallBasicExpression(
                      methodt, obj, oclargs);
           }
  
@@ -35814,9 +35814,45 @@ public class ASTCompositeTerm extends ASTTerm
         String methodname = methodt.toKM3();
         ASTTerm callargs = (ASTTerm) terms.get(2);
         Vector cargs = getCallArguments(callargs); 
+        int npars = cargs.size(); 
 
         String mqf = methodt.queryForm(); 
   
+        if (ASTTerm.currentClass != null &&
+            ASTTerm.currentClass.hasOperation(
+                       methodname, npars))
+        { /* JOptionPane.showInputDialog(">>> operation " + methodt + " of " + ASTTerm.currentClass); */ 
+
+          BehaviouralFeature bf = 
+            ASTTerm.currentClass.getOperation(
+                                    methodname, npars);
+
+          Type restype = bf.getResultType(); 
+          if (restype != null) 
+          { ASTTerm.setType(this, restype + "");  
+
+            BasicExpression obj = 
+               BasicExpression.newVariableBasicExpression(
+                        "self", 
+                        new Type(ASTTerm.currentClass));
+            Vector oclargs = callargs.expressionListToKM3();   
+            if (bf.isStatic())
+            { obj = new BasicExpression(ASTTerm.currentClass);  
+
+              expression = 
+                BasicExpression.newStaticCallBasicExpression(
+                     methodname, obj, oclargs);
+            } 
+            else 
+            { expression = 
+                BasicExpression.newCallBasicExpression(
+                     methodname, obj, oclargs);
+            }
+ 
+            return "" + expression;  
+          }        
+        }   
+
         if ("parseInt".equals(methodname) && cargs.size() > 0)
         { ASTTerm arg1 = (ASTTerm) cargs.get(0); 
           String res = arg1.queryForm(); 
@@ -36097,6 +36133,7 @@ public class ASTCompositeTerm extends ASTTerm
           ((BasicExpression) expression).setIsEvent();  
           statement = new InvocationStatement((BasicExpression) expression); 
         } 
+
         Vector parexprs = new Vector(); 
         ((BasicExpression) expression).setParameters(parexprs);
         ((InvocationStatement) statement).setParameters(parexprs); 
@@ -39953,7 +39990,7 @@ public class ASTCompositeTerm extends ASTTerm
       ASTTerm mDec = (ASTTerm) terms.get(1); 
 
       String gtype = typePars.toKM3type(); 
-      System.out.println(">> Generic types = " + gtype); 
+      // System.out.println(">> Generic types = " + gtype); 
 
       String met = mDec.toKM3(); 
       modelElement = mDec.modelElement; 
@@ -39966,6 +40003,12 @@ public class ASTCompositeTerm extends ASTTerm
         bf.setTypeParameters(typePars.modelElements);
         String bfname = bf.getName();  
         res = met.replace(bfname, bfname + "" + gtype + ""); 
+
+        if (ASTTerm.currentClass != null)
+        { ASTTerm.currentClass.addOperation(bf); 
+          // JOptionPane.showInputDialog("Added " + bf + 
+          //                 " to class " + ASTTerm.currentClass); 
+        } 
       }  
 
       for (int i = 0; i < typePars.modelElements.size(); i++)
@@ -40022,7 +40065,7 @@ public class ASTCompositeTerm extends ASTTerm
       if (ASTTerm.currentClass != null)
       { ASTTerm.currentClass.addOperation(bf); 
         // JOptionPane.showInputDialog("Added " + bf + 
-        //                 " to class " + ASTTerm.currentClass); 
+        //        " to class " + ASTTerm.currentClass); 
       } 
 
       if (terms.size() > 3)

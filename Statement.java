@@ -59,8 +59,12 @@ abstract class Statement implements Cloneable
 
   public static boolean isCumulativeRecursion(
                     BehaviouralFeature bf, Statement stat)
-  { // stat involves semi-tail recursive calls to bf & only one 
-    // base return statement
+  { // stat involves semi-tail recursive calls to bf & 
+    // only one base return statement - return using 
+    // values and parameters only. 
+
+    // stat does not write any of the parameters or 
+    // any attributes - only local variables. 
 
     if (stat == null) 
     { return false; }
@@ -70,6 +74,31 @@ abstract class Statement implements Cloneable
     { /* 1st one should be integer, used for recursion */ } 
     else 
     { return false; } 
+
+    Vector parnames = VectorUtil.getStrings(pars); 
+
+    Vector newvars = new Vector(); // updated in stat
+    Vector wrfr = stat.writeFrame();
+
+    for (int i = 0; i < wrfr.size(); i++) 
+    { String wrv = (String) wrfr.get(i); 
+      int k = wrv.indexOf("::"); 
+      if (k >= 0) 
+      { // newvars.add(wrv.substring(k+2));
+        System.err.println("! " + bf + 
+                           " updates attribute " + wrv); 
+        return false; 
+      } 
+      else if (parnames.contains(wrv))
+      { System.err.println("! " + bf + 
+                           " updates parameter " + wrv); 
+        return false; 
+      } 
+      else 
+      { newvars.add(wrv); } 
+    }  
+
+    System.out.println(">> local variables " + newvars + " are written in " + stat); 
 
     Attribute par = (Attribute) pars.get(0); 
     Type partype = par.getType(); 
@@ -85,6 +114,7 @@ abstract class Statement implements Cloneable
     String nme = bf.getName(); 
     Vector names = new Vector(); 
     names.add(nme); 
+    names.addAll(newvars); // local variables
 
     if (stat instanceof ConditionalStatement) 
     { ConditionalStatement conds = 
@@ -244,12 +274,42 @@ abstract class Statement implements Cloneable
     // By return of  
     // expr0*Integer.subrange(lbound+1,n)->collect(n|expr)->prd() 
     
+    Vector pars = bf.getParameters(); 
+    if (pars.size() >= 1) 
+    { /* 1st one should be integer, used for recursion */ } 
+    else 
+    { return stat; } 
+
+    Vector parnames = VectorUtil.getStrings(pars); 
+
+    Vector newvars = new Vector(); // updated in stat
+    Vector wrfr = stat.writeFrame();
+
+    for (int i = 0; i < wrfr.size(); i++) 
+    { String wrv = (String) wrfr.get(i); 
+      int k = wrv.indexOf("::"); 
+      if (k >= 0) 
+      { // newvars.add(wrv.substring(k+2));
+        System.err.println("! " + bf + 
+                           " updates attribute " + wrv); 
+        return stat; 
+      } 
+      else if (parnames.contains(wrv))
+      { System.err.println("! " + bf + 
+                           " updates parameter " + wrv); 
+        return stat; 
+      } 
+      else 
+      { newvars.add(wrv); } 
+    }  
+
     Attribute par = bf.getParameter(0); 
     String pname = par.getName(); 
     String nme = bf.getName(); 
 
     Vector names = new Vector(); 
     names.add(nme); 
+    names.addAll(newvars); 
 
     ConditionalStatement conds = 
         (ConditionalStatement) stat; 
@@ -301,10 +361,10 @@ abstract class Statement implements Cloneable
       else 
       { return stat; }       
 
-    Vector pars = new Vector(); 
-    pars.add(n0); 
+    Vector rangepars = new Vector(); 
+    rangepars.add(n0); 
     Expression parexpr = new BasicExpression(par);  
-    pars.add(parexpr); 
+    rangepars.add(parexpr); 
 
     Vector pars1 = new Vector(); 
     pars1.add(iterbound); 
@@ -352,8 +412,8 @@ abstract class Statement implements Cloneable
         rec.replacedSemiTailRecursionDecrement(bf,pname); 
 
       Expression subrange = 
-        BasicExpression.newFunctionBasicExpression("subrange", 
-                                            "Integer", pars);
+        BasicExpression.newFunctionBasicExpression(
+             "subrange", "Integer", rangepars);
       Type subrangetype = new Type("Sequence", null); 
       subrangetype.setElementType(new Type("int", null)); 
       subrange.setType(subrangetype); 
@@ -1422,8 +1482,36 @@ abstract class Statement implements Cloneable
     // More generally, all non-tail returns have same operator 
     // (numeric +, *, or ->including or ->union on sets/bags)
  
+    Vector pars = bf.getParameters(); 
+    Vector parnames = VectorUtil.getStrings(pars); 
+
+    Vector newvars = new Vector(); // updated in st
+    Vector wrfr = st.writeFrame();
+
+    for (int i = 0; i < wrfr.size(); i++) 
+    { String wrv = (String) wrfr.get(i); 
+      int k = wrv.indexOf("::"); 
+      if (k >= 0) 
+      { // newvars.add(wrv.substring(k+2));
+        System.err.println("! " + bf + 
+                           " updates attribute " + wrv); 
+        return false; 
+      } 
+      else if (parnames.contains(wrv))
+      { System.err.println("! " + bf + 
+                           " updates parameter " + wrv); 
+        return false; 
+      } 
+      else 
+      { newvars.add(wrv); } 
+    }  
+
+    System.out.println(">> Local variables of " + st + 
+                       " are " + newvars); 
+
     Vector names = new Vector(); 
     names.add(nme); 
+    names.addAll(newvars); 
 
     Vector rets = getReturnValues(st); 
     
@@ -1458,10 +1546,80 @@ abstract class Statement implements Cloneable
     return false;  
   } 
 
+  public static boolean isTailRecursion(
+            BehaviouralFeature bf, String nme, Statement st)
+  { // There is only one return that does not involve bf
+    // All other returns are direct calls of bf
+
+    Vector pars = bf.getParameters(); 
+    Vector parnames = VectorUtil.getStrings(pars); 
+
+    Vector newvars = new Vector(); // updated in st
+    Vector wrfr = st.writeFrame();
+
+    for (int i = 0; i < wrfr.size(); i++) 
+    { String wrv = (String) wrfr.get(i); 
+      int k = wrv.indexOf("::"); 
+      if (k >= 0) 
+      { // newvars.add(wrv.substring(k+2));
+        System.err.println("! " + bf + 
+                           " updates attribute " + wrv); 
+        return false; 
+      } 
+      else if (parnames.contains(wrv))
+      { System.err.println("! " + bf + 
+                           " updates parameter " + wrv); 
+        return false; 
+      } 
+      else 
+      { newvars.add(wrv); } 
+    }  
+
+    System.out.println(">> Local variables of " + st + 
+                       " are " + newvars); 
+
+    Vector names = new Vector(); 
+    names.add(nme); 
+    names.addAll(newvars); 
+
+    Vector rets = getReturnValues(st); 
+    
+    int nontail = 0; 
+    int nonrecursive = 0; 
+    int tailrecursive = 0;
+    int semitail = 0;  
+
+    for (int i = 0; i < rets.size(); i++) 
+    { Expression expr = (Expression) rets.get(i); 
+      Vector uses = expr.variablesUsedIn(names); 
+      if (uses.size() == 0) 
+      { nonrecursive++; } 
+      else if (expr.isSelfCall(bf))
+      { tailrecursive++; } 
+      else if (expr instanceof BinaryExpression && 
+        ((BinaryExpression) expr).isSemiTailRecursion(bf)) 
+      { semitail++; } 
+      else 
+      { nontail++; } 
+    } 
+
+    System.err.println(">> " + nme + " has " + 
+         nonrecursive + " non-recursive returns, " + 
+         tailrecursive + " tail recursive returns,\n>>" + 
+         " and " + 
+         nontail + " non-tail recursive returns,\n>> " + 
+         semitail + " semi-tail recursive returns: " + rets);
+
+    if (semitail == 0 && nontail == 0)
+    { return true; } 
+    return false;  
+  } 
+
   public static boolean isTailRecursive(
             BehaviouralFeature bf, String nme, Statement st)
   { // if all calls of bf are direct calls in invocation 
-    // statements or return statements. 
+    // statements or return statements. But not allowed to 
+    // modify result of a self-call before returning it.
 
     if (st == null) 
     { return true; }
@@ -5473,12 +5631,15 @@ class InvocationStatement extends Statement
           { String par = "" + params.get(p); 
             parstrings.add(par); 
           } 
+
           res.removeAll(parstrings); 
         }
         // System.out.println("Invocation " + callString + " WRITE FRAME= " + res); 
+
         return res; 
       } 
     }   
+
     return res; 
   } 
 
@@ -13298,6 +13459,7 @@ class TryStatement extends Statement
     { Vector endrd = endStatement.writeFrame(); 
       res = VectorUtil.union(res,endrd); 
     }  
+
     return res; 
   } 
 
@@ -15360,13 +15522,15 @@ class AssignStatement extends Statement
 
   public Vector writeFrame()
   { Vector res = new Vector();
+
     if (lhs instanceof BasicExpression) 
     { String frame = ((BasicExpression) lhs).data; 
       Entity e = lhs.getEntity(); 
       if (e != null) 
       { frame = e.getName() + "::" + frame; } 
       res.add(frame); 
-    } 
+    } // also case of v->at(i) := expr, etc
+
     // res.add(lhs + "");  // lhs.data if a BasicExpression
     return res;  
   }  

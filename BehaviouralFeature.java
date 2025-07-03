@@ -4393,7 +4393,7 @@ public class BehaviouralFeature extends ModelElement
 
     if (opuses.contains(entity + "::" + name) && 
         activity != null)
-    { boolean tailrec = Statement.isTailRecursive(this, name, 
+    { boolean tailrec = Statement.isTailRecursion(this, name, 
                                                   activity); 
       System.err.println(); 
 
@@ -4417,6 +4417,7 @@ public class BehaviouralFeature extends ModelElement
         }  
       } 
 
+      System.err.println(); 
       System.err.println(); 
     }
     else if (opuses.contains(entity + "::" + name) && 
@@ -4442,6 +4443,7 @@ public class BehaviouralFeature extends ModelElement
             "!!! Use 'Make operation cached' refactoring"); 
       } 
 
+      System.err.println(); 
       System.err.println(); 
     }	 
 
