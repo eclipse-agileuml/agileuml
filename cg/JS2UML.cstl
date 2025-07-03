@@ -423,6 +423,7 @@ console . log |-->OclFile["System.out"].println
 
 ArrayBuffer _1 |-->Sequence{}
 
+Array.isArray _1 |-->_1->oclIsTypeOf(Sequence)
 Array.of _1 |-->Sequence{_1}
 Array.from _1 |-->_1`arrayFrom
 Int8Array.of _1 |-->Sequence{_1}
@@ -531,13 +532,16 @@ _1 . isDisjointFrom |-->_1->excludesAll
 _1 . isSubsetOf |-->_1 <: 
 _1 . isSupersetOf |-->_1->includesAll
 
+_1 . toReversed |-->_1->reverse
+_1 . toSorted |-->_1->sort
+_1 . with |-->_1.setAt
 
 _1 . add |-->_1 := _1->including
 _1 . delete |-->_1 := _1->excluding
 _1 . push |-->_1 := _1->append
 _1 . unshift |-->_1 := _1->prepend
 _1 . pop |-->_1 := _1->front
-_1 . shift |-->_1 := _1->tail
+_1 . shift |-->_1->first() ; _1 := _1->tail
 _1 . reverse |-->_1 := _1->reverse
 _1 . sort |-->_1 := _1->sort
 _1 . set |-->_1 := _1.setAt
@@ -551,6 +555,8 @@ _1 . keys |-->OclIterator.newOclIterator_Sequence(Integer.subrange(0,_1.size-1))
 _1 . values |-->OclIterator.newOclIterator_Sequence(_1)
 
 _1 . reverse |-->_1->reverse
+_1 . find |-->_1->any
+_1 . findLast |-->_1->reverse()->any 
 _1 . has |-->_1->includes
 _1 . includes |-->_1->includes
 _1 . toString |-->_1 + ""
@@ -559,7 +565,11 @@ _1 . hasOwnProperty |-->OclType.hasAttribute(_1,
 _1 . get |-->_1->at
 _1 . at |-->_1->at
 _1 . charAt |-->_1->at
-_1 . concat |-->_1 + 
+
+_1 . concat |-->_1 + <when> _1 String 
+_1 . concat |-->_1->union
+
+_1 . search |-->_1->indexOf
 _1 . trim |-->_1->trim
 _1 . startsWith |-->_1->hasPrefix
 _1 . endsWith |-->_1->hasSuffix
@@ -810,6 +820,7 @@ console . log |-->
 
 ArrayBuffer _1 |-->Sequence
 
+Array.isArray _1 |-->boolean
 Array.of _1 |-->Sequence
 Array.from _1 |-->Sequence
 Int8Array.of _1 |-->Sequence
@@ -912,6 +923,7 @@ _1 . keys |-->OclIterator
 _1 . values |-->OclIterator
 
 _1 . reverse |-->_1`ocltype
+_1 . unshift |-->int
 _1 . has |-->boolean
 _1 . includes |-->boolean
 _1 . toString |-->String
@@ -919,6 +931,7 @@ _1 . join |-->String
 _1 . hasOwnProperty |-->boolean
 _1 . get |-->OclAny
 _1 . at |-->OclAny
+_1 . shift |-->OclAny
 _1 . charAt |-->String
 _1 . concat |-->String
 _1 . trim |-->String
@@ -934,8 +947,18 @@ _1 . replaceAll |-->String
 
 _1 . filter |-->_1`ocltype
 _1 . map |-->Sequence
+_1 . toReversed |-->Sequence
+_1 . toSorted |-->Sequence
+_1 . concat |-->Sequence
+
 _1 . every |-->boolean
 _1 . some |-->boolean
+_1 . find |-->OclAny
+_1 . findLast |-->OclAny
+_1 . indexOf |-->int
+_1 . lastIndexOf |-->int
+_1 . findIndex |-->int
+_1 . findLastIndex |-->int
 
 _1 . test |-->OclAny
 _1 . exec |-->Sequence
@@ -1137,6 +1160,7 @@ _1 |-->String<when> _1 String
 _1 |-->double<when> _1 real
 
 _1 |-->OclAny
+
 
 updateForm::
 var _1 |-->_1<when> _1 variableDeclaration
