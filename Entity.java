@@ -7969,6 +7969,7 @@ System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
       if (statText.equals(bf.getActivity() + "")) 
       { return bf; } 
     } 
+
     return null; 
   } 
 
@@ -7979,6 +7980,7 @@ System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
       if (statText.equals(bf.getActivity() + "")) 
       { return true; } 
     } 
+
     return false; 
   } 
 

@@ -3085,6 +3085,7 @@ abstract class Expression
         return lbody.substituteEq(vname,arg); 
       } 
     } 
+
     return new BinaryExpression("->apply", func, arg); 
   }  
 
