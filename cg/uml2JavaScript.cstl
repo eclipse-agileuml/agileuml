@@ -103,21 +103,21 @@ _* |-->_*`seq3ruleset76
 
 
 OclClass::
-class _2 { }  |-->class _2 { constructor _2 ( ) { } }  
+class _2 { }  |-->class _2 { _2 ( ) { } }  
 class _2 { _4 }  |-->class _2 { _4`staticClassContents constructor _2 ( ) { _4 }  } 
-class _2 { _* }  |-->class _2 { constructor _2 ( ) { _* }  } 
+class _2 { _* }  |-->class _2 { _2 ( ) { _* }  } 
 
-class _2 extends _4 { }  |-->class _2 extends _4 { constructor _2 ( ) { } }  
-class _2 extends _4 { _6 }  |-->class _2 extends _4 { _6`staticClassContents constructor _2 ( ) { _6 } }  
-class _2 extends _4 { _* }  |-->class _2 extends _4 { constructor _2 ( ) { _* } } 
+class _2 extends _4 { }  |-->class _2 extends _4 { _2 ( ) { } }  
+class _2 extends _4 { _6 }  |-->class _2 extends _4 { _6`staticClassContents _2 ( ) { _6 } }  
+class _2 extends _4 { _* }  |-->class _2 extends _4 { _2 ( ) { _* } } 
 
-abstract class _2 { }  |-->class _2 { constructor _2 ( ) { } }  
-abstract class _2 { _4 }  |-->class _2 { _4`staticClassContents constructor _2 ( ) { _4 } }  
-abstract class _2 { _* }  |-->class _2 { constructor _2 ( ) { _* }  } 
+abstract class _2 { }  |-->class _2 { _2 ( ) { } }  
+abstract class _2 { _4 }  |-->class _2 { _4`staticClassContents _2 ( ) { _4 } }  
+abstract class _2 { _* }  |-->class _2 { _2 ( ) { _* }  } 
 
-abstract class _2 extends _4 { }  |-->class _2 extends _4 { constructor _2 ( ) { } }  
-abstract class _2 extends _4 { _6 }  |-->class _2 extends _4 { _6`staticClassContents constructor _2 ( ) { _6 } }  
-abstract class _2 extends _4 { _* }  |-->class _2 extends _4 { constructor _2 ( ) { _* } } 
+abstract class _2 extends _4 { }  |-->class _2 extends _4 { _2 ( ) { } }  
+abstract class _2 extends _4 { _6 }  |-->class _2 extends _4 { _6`staticClassContents _2 ( ) { _6 } }  
+abstract class _2 extends _4 { _* }  |-->class _2 extends _4 { _2 ( ) { _* } } 
 
 
 
@@ -185,23 +185,45 @@ _0 |-->_0
 
 OclBasicExpression::
 null  |-->null
-this |-->self
+self |-->this
+
 _1 . _3 ( )  |-->_1._3( ) 
-_1 [ _3 ]  |-->_1[ _3 - 1 ] 
+_1 [ _3 ]  |-->_1[ _3 - 1 ] <when> _1 Sequence
+_1 [ _3 ]  |-->_1->at( _3 - 1 ) <when> _1 String
+_1 [ _3 ]  |-->_1[ _3 ]
+
 _1 . _3 ( _5 )  |-->_1._3 _5`seq3subruleset66 
 _1 . _3  |-->_1._3 
-_1 |-->_1 <when> _1 Integer
-_1 |-->_1 <when> _1 Real
-_1 |-->_1 <when> _1 Boolean
-_1 |-->_1 <when> _1 String
 _1 |-->_1
-_* |-->self
 
 
 OclBinaryExpression::
+_1 <= _3  |-->_1 <= _3 
+_1 mod _3  |-->_1 % _3 
+_1 or _3  |-->_1 || _3 
+_1 & _3  |-->_1 && _3 
+_1 => _2 |-->(_1?_2:true)
+_1 * _3  |-->_1 * _3 
+_1 + _3  |-->_1 + _3 
+
+_1 - _3 |-->Ocl.excludingAll(_1,_3)<when> _1 Set
+_1 - _3 |-->Ocl.excludingAll(_1,_3)<when> _1 Sequence
+_1 - _3  |-->_1 - _3 
+
+_1 /= _3  |-->_1 != _3 
+_1 / _3  |-->_1 / _3 
+_1 div _3  |-->( int ) ( _1 / _3 ) 
+_1 <>= _3  |-->_1 == _3 
+_1 < _3  |-->_1 < _3 
+_1 = _3  |-->_1 == _3 
+_1 > _3  |-->_1 > _3 
+_1 >= _3  |-->_1 >= _3 
+
 _1 ->apply _2 |-->_1(_2)
 
-_1 ->at ( _2 ) |-->_1[_2]
+_1 ->at ( _2 ) |-->_1->at(_2-1)<when> _1 String
+_1 ->at ( _2 ) |-->_1[_2-1]<when> _1 Sequence
+_1 ->at ( _2 ) |-->_1.get(_2) 
 
 _1 ->gcd ( _2 ) |-->gcd(_1, _2)
 
@@ -217,22 +239,7 @@ _1 ->reject _2 |-->reject(_1, function(self) { return _2; } )
 _1 ->reject ( _2 | _3 ) |-->reject(_1, function(_2) { return _3; })
 
 _1 _2 ( _4 )  |-->_2`nestedTfunc69 ( _1 , _4 ) 
-_1 <= _3  |-->_1 <= _3 
-_1 mod _3  |-->_1 % _3 
-_1 or _3  |-->_1 || _3 
-_1 & _3  |-->_1 && _3 
-_1 => _2 |-->(_1?_2:true)
-_1 * _3  |-->_1 * _3 
-_1 + _3  |-->_1 + _3 
-_1 - _3  |-->_1 - _3 
-_1 /= _3  |-->_1 != _3 
-_1 / _3  |-->_1 / _3 
-_1 div _3  |-->( int ) ( _1 / _3 ) 
-_1 <>= _3  |-->_1 == _3 
-_1 < _3  |-->_1 < _3 
-_1 = _3  |-->_1 == _3 
-_1 > _3  |-->_1 > _3 
-_1 >= _3  |-->_1 >= _3 
+
 
 seq3ruleset72::
 _1 |-->_1 
