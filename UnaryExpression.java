@@ -382,6 +382,9 @@ public class UnaryExpression extends Expression
   public Vector getParameters() 
   { return new Vector(); } 
 
+  public Expression getInnerObjectRef()
+  { return argument.getInnerObjectRef(); } 
+
   public void setOperator(String op) 
   { operator = op; } 
 
@@ -444,6 +447,19 @@ public class UnaryExpression extends Expression
 
   public boolean isLambdaExpression()
   { return "lambda".equals(operator); } 
+
+  public void refineLambdaParameterType(Type typ)
+  { if (accumulator != null) 
+    { Type oldtype = accumulator.getType(); 
+      if (oldtype == null || "OclAny".equals(oldtype + ""))
+      { if (typ != null && !("OclAny".equals(typ + "")))
+        { accumulator.setType(typ); 
+          type.setKeyType(typ); 
+        } 
+      } 
+    } 
+  } 
+
 
   public boolean isTailRecursion(BehaviouralFeature bf)
   { // bfname does not occur in this 
@@ -1133,8 +1149,10 @@ public void findClones(java.util.Map clones,
 
       Vector vuses = variablesUsedIn(vars); 
       if (level > 1 && vuses.size() == 0)
-      { System.out.println("!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
+      { System.out.println(); 
+        System.out.println("!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
           "Use Extract local variable to optimise.");
+        System.out.println(); 
         refactorELV = true;  
       }
           

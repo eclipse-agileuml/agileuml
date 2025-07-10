@@ -634,6 +634,8 @@ abstract class Expression
     return res; 
   } 
 
+  public abstract Expression getInnerObjectRef(); 
+
   public static Expression convertToApply(Expression expr,
                                           Vector pars)
   { Expression res = expr; 

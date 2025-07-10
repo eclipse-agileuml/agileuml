@@ -160,6 +160,9 @@ class BinaryExpression extends Expression
     elementType = be.getElementType();  
   } 
 
+  public Expression getInnerObjectRef()
+  { return left.getInnerObjectRef(); } 
+
   public void setLeft(Expression le) { left = le; } 
 
   public void setRight(Expression re) { right = re; } 

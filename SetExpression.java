@@ -155,6 +155,9 @@ public class SetExpression extends Expression
     return null; 
   } 
 
+  public Expression getInnerObjectRef()
+  { return this; } 
+
   public Expression transformPythonSelectExpressions()
   { SetExpression res = new SetExpression(ordered); 
 

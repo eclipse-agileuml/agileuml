@@ -833,6 +833,22 @@ class BasicExpression extends Expression
     return res; 
   } 
 
+ public static BasicExpression 
+           newStaticQueryCallExpression(
+                      String f, String arg, Expression par) 
+  { Vector pars = new Vector(); 
+    pars.add(par); 
+    BasicExpression res = new BasicExpression(f);
+    BasicExpression obj = new BasicExpression(arg); 
+    obj.umlkind = CLASSID; 
+    res.setObjectRef(obj);  
+    res.umlkind = QUERY;
+    res.isStatic = true; 
+    res.isEvent = true; 
+    res.parameters = pars; 
+    return res; 
+  } 
+
   public static BasicExpression newStaticCallBasicExpression(
                String f, Expression obj, Expression par) 
   { Vector pars = new Vector(); 
@@ -885,6 +901,20 @@ class BasicExpression extends Expression
     obj.umlkind = CLASSID; 
     res.setObjectRef(obj);  
     res.umlkind = UPDATEOP;
+    res.isStatic = true; 
+    res.isEvent = true; 
+    res.parameters = pars; 
+    return res; 
+  } 
+
+  public static BasicExpression 
+       newStaticQueryCallBasicExpression(
+               String f, String obj, Vector pars) 
+  { BasicExpression res = new BasicExpression(f);
+    BasicExpression objx = new BasicExpression(obj); 
+    objx.umlkind = CLASSID; 
+    res.setObjectRef(objx);  
+    res.umlkind = QUERY;
     res.isStatic = true; 
     res.isEvent = true; 
     res.parameters = pars; 
@@ -2510,6 +2540,16 @@ class BasicExpression extends Expression
     { objectRef = e; }
     else if (objectRef instanceof BasicExpression)
     { ((BasicExpression) objectRef).setInnerObjectRef(e); } 
+  }  
+
+  public Expression getInnerObjectRef() 
+  { if (objectRef == null) 
+    { return this; }
+    
+    if (objectRef instanceof BasicExpression)
+    { return ((BasicExpression) objectRef).getInnerObjectRef(); }
+
+    return this;  
   }  
 
   public void setArrayIndex(Expression ind)

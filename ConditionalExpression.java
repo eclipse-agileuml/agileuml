@@ -54,6 +54,10 @@ public class ConditionalExpression extends Expression
   public Vector getParameters() 
   { return new Vector(); } 
 
+  public Expression getInnerObjectRef()
+  { return this; } 
+
+
   public Expression transformPythonSelectExpressions()
   { Expression tqf = test.transformPythonSelectExpressions();
     Expression lqf = ifExp.transformPythonSelectExpressions();
