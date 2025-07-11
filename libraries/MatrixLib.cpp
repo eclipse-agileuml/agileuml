@@ -1,4 +1,5 @@
 #include <iostream>
+#include <ostream>
 #include <vector>
 
 using std::vector;
@@ -19,13 +20,23 @@ class MatrixLib {
             }
             return result;
         };
+        static vector<vector<double>> rowMultiplication(vector<vector<double>> m1, vector<vector<double>> m2) {
+            vector<vector<double>> result;
+            for (vector<double> row : m1) {
+                result.push_back(rowMult(row, m2));
+            }
+            return result;
+        };
 };
 
 int main() {
-    vector<double> list = MatrixLib::rowMult({2.0, 2.0}, {{4.0, 6.0}});
-    cout << list.size() << endl;
+    vector<vector<double>> list = MatrixLib::rowMultiplication({{1.0, 2.0}, {3.0, 4.0}}, {{5.0, 6.0}, {7.0, 8.0}});
+    // cout << list.size() << endl;
     for (auto value : list) {
-        cout << value << ", ";
+        for (auto innervalue : value) {
+            cout << innervalue << ", ";
+        }
+        cout << endl;
     }
     cout << "end" << endl;
     return 0;
