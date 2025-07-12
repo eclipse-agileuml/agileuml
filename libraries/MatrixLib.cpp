@@ -69,37 +69,37 @@ class MatrixLib {
         //     }
         //     return m[i];
         // }
-        static vector<int> shape(T* x) {
-            vector<int> result = {0};
-            if (string(typeid(x).name()).find("vector") != string::npos) {
-                vector<T> sq = {&x};
-                result = {sq.size()};
-                if (sq.size() > 0) {
-                    for (auto v : shape(sq[0])) {
-                        if (find(sq[0].begin(), sq[0].end(), v) == v.end()) {
-                            result.push_back(v);
-                        }
-                    }
-                }
-            }
-            return result;
-        }
+        // static vector<int> shape(T* x) {
+        //     vector<int> result = {0};
+        //     if (string(typeid(x).name()).find("vector") != string::npos) {
+        //         vector<T> sq = {&x};
+        //         result = {sq.size()};
+        //         if (sq.size() > 0) {
+        //             for (auto v : shape(sq[0])) {
+        //                 if (find(sq[0].begin(), sq[0].end(), v) == v.end()) {
+        //                     result.push_back(v);
+        //                 }
+        //             }
+        //         }
+        //     }
+        //     return result;
+        // }
 };
 
 int main() {
     // MatrixLib<int>::column({1, 2, 3, 4}, 0);
     // MatrixLib<vector<int>>::column({{1, 2}, {3, 4}}, 0);
-    // vector<vector<double>> list = MatrixLib<void>::rowMultiplication({{1.0, 2.0}, {3.0, 4.0}}, {{5.0, 6.0}, {7.0, 8.0}});
-    vector<double> param = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0,8.0};
-    vector<double>* param_pointer = &param;
-    vector<int> list = MatrixLib<vector<double>>::shape(param_pointer);
-    // cout << list.size() << endl;
+    vector<vector<double>> list = MatrixLib<void>::rowMultiplication({{1.0, 2.0}, {3.0, 4.0}}, {{5.0, 6.0}, {7.0, 8.0}});
+    // vector<double> param = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0,8.0};
+    // vector<double>* param_pointer = &param;
+    // vector<int> list = MatrixLib<vector<double>>::shape(param_pointer);
+    cout << list.size() << endl;
     for (auto value : list) {
-        cout << value << endl;
-        // for (auto innervalue : value) {
-        //     cout << innervalue << ", ";
-        // }
-        // cout << endl;
+        // cout << value << endl;
+        for (auto innervalue : value) {
+            cout << innervalue << ", ";
+        }
+        cout << endl;
     }
     cout << "end" << endl;
     return 0;
