@@ -1,7 +1,9 @@
 #include <iostream>
-#include <ostream>
+#include <string>
 #include <vector>
+#include <typeinfo>
 
+using std::string;
 using std::vector;
 using std::cout;
 using std::endl;
@@ -61,9 +63,17 @@ class MatrixLib {
             }
             return result;
         }
+        static vector<T> column(vector<T> m, int i) {
+            if (string(typeid(m[i]).name()).find("vector") != string::npos) {
+                return {m[i]};
+            }
+            return m[i];
+        }
 };
 
 int main() {
+    MatrixLib<int>::column({1, 2, 3, 4}, 0);
+    MatrixLib<vector<int>>::column({{1, 2}, {3, 4}}, 0);
     vector<vector<double>> list = MatrixLib<void>::rowMultiplication({{1.0, 2.0}, {3.0, 4.0}}, {{5.0, 6.0}, {7.0, 8.0}});
     // cout << list.size() << endl;
     for (auto value : list) {
