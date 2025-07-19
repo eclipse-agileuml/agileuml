@@ -5,6 +5,9 @@
 #undef max
 #undef min
 
+#include <set>
+#include <vector>
+
 using namespace std;
 
 class Runnable
