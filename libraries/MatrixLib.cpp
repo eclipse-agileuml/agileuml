@@ -72,8 +72,9 @@ class MatrixLib {
         // static vector<int> shape(T* x) {
         //     vector<int> result = {0};
         //     if (string(typeid(x).name()).find("vector") != string::npos) {
-        //         vector<T> sq = {&x};
-        //         result = {sq.size()};
+        //         vector<T> sq;
+        //         sq.push_back(*x);
+        //         result = {(int) sq.size()};
         //         if (sq.size() > 0) {
         //             for (auto v : shape(sq[0])) {
         //                 if (find(sq[0].begin(), sq[0].end(), v) == v.end()) {
