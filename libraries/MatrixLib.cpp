@@ -85,6 +85,76 @@ class MatrixLib {
         //     }
         //     return result;
         // }
+        static vector<T> singleValueMatrix(vector<T> sh, T* x) {
+            if (sh.size() == 0) {
+                return {};
+            } else if (sh.size() == 1) {
+                vector<T> result;
+                T upperLimit = sh[0];
+                for (int i = 0; i < upperLimit; i++) {
+                    result.push_back(&x);
+                }
+                return result;
+            } else {
+                vector<T> result;
+                T upperLimit = sh[0];
+                for (int i = 0; i < upperLimit; i++) {
+                    result.push_back(singleValueMatrix((vector<T>) sh.end(), x));
+                }
+                return result;
+            }
+        }
+        static vector<T> fillMatrixForm(vector<T> sq, vector<T> sh) {
+            if (sh.size() == 0) {
+                return {};
+            } else if (sh.size() == 1) {
+                vector<T> result;
+                T upperLimit = sh[0];
+                for (int i = 0; i < upperLimit; i++) {
+                    result.push_back(sh[i]);
+                }
+                return result;
+            } else {
+                vector<T> result;
+                T upperLimit = sh[0];
+                int prod = 0;
+                for (auto x: sh.end()) {
+                    prod *= x;
+                }
+                for (int i = 0; i < upperLimit; i++) {
+                    int startIndex = prod * (i - 1);
+                    int endIndex = prod * i - 1;
+                    vector<T> vectorSubrange = {};
+                    if (startIndex < 0) {
+                        startIndex = (sq.size() - 1) + startIndex;
+                    }
+                    if (endIndex < 0) {
+                        endIndex = (sq.size() - 1) + endIndex;
+                    }
+                    for (int k = startIndex - 1; k < endIndex; k++) {
+                        vectorSubrange.push_back(sq[k]);
+                    }
+                    vector<T> rowi = fillMatrixForm(vectorSubrange, (vector<T>) sh.end());
+                    result.push_back(rowi);
+                }
+                return result;
+            }
+        }
+        static vector<vector<double>> identityMatrix(int n) {
+            vector<vector<double>> result;
+            for (int i = 0; i < n; i++) {
+                vector<double> interimList;
+                for (int j = 0; j < n; j++) {
+                    if (i == j) {
+                        interimList.push_back(1.0);
+                    } else {
+                        interimList.push_back(0.0);
+                    }
+                }
+                result.push_back(interimList);
+            }
+            return result;
+        }
 };
 
 int main() {
