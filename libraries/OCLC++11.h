@@ -24,50 +24,50 @@ public:
     }
 
 
-    static bool isIn(_T x, std::set<_T>* st)
+    static bool isIn(_T x, set<_T>* st)
     { return (st->find(x) != st->end()); }
 
     static bool isIn(_T x, vector<_T>* sq)
     { return (find(sq->begin(), sq->end(), x) != sq->end()); }
 
-    static bool isSubset(std::set<_T>* s1, set<_T>* s2)
+    static bool isSubset(set<_T>* s1, set<_T>* s2)
     { bool res = true; 
-      for (std::set<_T>::iterator _pos = s1->begin(); _pos != s1->end(); ++_pos)
+      for (set<_T>::iterator _pos = s1->begin(); _pos != s1->end(); ++_pos)
       { if (isIn(*_pos, s2)) { } 
         else { return false; } 
       }
       return res;
     }
 
-    static bool isSubset(std::set<_T>* s1, vector<_T>* s2)
+    static bool isSubset(set<_T>* s1, vector<_T>* s2)
     { bool res = true; 
-      for (std::set<_T>::iterator _pos = s1->begin(); _pos != s1->end(); ++_pos)
+      for (set<_T>::iterator _pos = s1->begin(); _pos != s1->end(); ++_pos)
       { if (isIn(*_pos, s2)) { }
         else { return false; } 
       }
       return res;
     }
 
-    static bool isSubset(std::vector<_T>* s1, vector<_T>* s2)
+    static bool isSubset(vector<_T>* s1, vector<_T>* s2)
     { bool res = true; 
-      for (std::vector<_T>::iterator _pos = s1->begin(); _pos != s1->end(); ++_pos)
+      for (vector<_T>::iterator _pos = s1->begin(); _pos != s1->end(); ++_pos)
       { if (isIn(*_pos, s2)) { }
         else { return false; } 
       }
       return res;
     }
 
-    static bool isSubset(std::vector<_T>* s1, set<_T>* s2)
+    static bool isSubset(vector<_T>* s1, set<_T>* s2)
     { bool res = true; 
-      for (std::vector<_T>::iterator _pos = s1->begin(); _pos != s1->end(); ++_pos)
+      for (vector<_T>::iterator _pos = s1->begin(); _pos != s1->end(); ++_pos)
       { if (isIn(*_pos, s2)) { }
         else { return false; } 
       }
       return res;
     }
 
-    static std::set<_T>* makeSet(_T x)
-    { std::set<_T>* res = new std::set<_T>();
+    static set<_T>* makeSet(_T x)
+    { set<_T>* res = new set<_T>();
       res->insert(x);
       return res;
     }
@@ -78,7 +78,7 @@ public:
       return res;
     }
 
-    static std::set<_T>* addSet(std::set<_T>* s, _T x)
+    static set<_T>* addSet(set<_T>* s, _T x)
     { s->insert(x); 
       return s;
     }
@@ -92,14 +92,14 @@ public:
     { s->push_back(x);
       return s; }
 
-    static vector<_T>* asSequence(std::set<_T>* c)
+    static vector<_T>* asSequence(set<_T>* c)
     { vector<_T>* res = new vector<_T>();
-      for (std::set<_T>::iterator _pos = c->begin(); _pos != c->end(); ++_pos)
+      for (set<_T>::iterator _pos = c->begin(); _pos != c->end(); ++_pos)
       { res->push_back(*_pos); } 
       return res;
    }
 
-    static vector<_T>* asSequence(std::vector<_T>* c)
+    static vector<_T>* asSequence(vector<_T>* c)
     { return c; }
 
 
@@ -203,41 +203,41 @@ public:
 
 
 
-  static _T max(std::set<_T>* l)
-  { return *std::max_element(l->begin(), l->end()); }
+  static _T max(set<_T>* l)
+  { return *max_element(l->begin(), l->end()); }
   static _T max(vector<_T>* l)
-  { return *std::max_element(l->begin(), l->end()); }
+  { return *max_element(l->begin(), l->end()); }
 
 
-  static _T min(std::set<_T>* l)
-  { return *std::min_element(l->begin(), l->end()); }
+  static _T min(set<_T>* l)
+  { return *min_element(l->begin(), l->end()); }
   static _T min(vector<_T>* l)
-  { return *std::min_element(l->begin(), l->end()); }
+  { return *min_element(l->begin(), l->end()); }
 
 
-  static std::set<_T>* unionSet(std::set<_T>* a, std::set<_T>* b)
-  { std::set<_T>* res = new std::set<_T>(); 
+  static set<_T>* unionSet(set<_T>* a, set<_T>* b)
+  { set<_T>* res = new set<_T>(); 
     res->insert(a->begin(),a->end()); 
     res->insert(b->begin(),b->end()); 
     return res;
   }
 
-  static std::set<_T>* unionSet(vector<_T>* a, std::set<_T>* b)
-  { std::set<_T>* res = new std::set<_T>(); 
+  static set<_T>* unionSet(vector<_T>* a, set<_T>* b)
+  { set<_T>* res = new set<_T>(); 
     res->insert(a->begin(),a->end()); 
     res->insert(b->begin(),b->end()); 
     return res;
   }
 
-  static std::set<_T>* unionSet(std::set<_T>* a, vector<_T>* b)
-  { std::set<_T>* res = new std::set<_T>(); 
+  static set<_T>* unionSet(set<_T>* a, vector<_T>* b)
+  { set<_T>* res = new set<_T>(); 
     res->insert(a->begin(),a->end()); 
     res->insert(b->begin(),b->end()); 
     return res;
   }
 
-  static std::set<_T>* unionSet(std::vector<_T>* a, vector<_T>* b)
-  { std::set<_T>* res = new std::set<_T>(); 
+  static set<_T>* unionSet(vector<_T>* a, vector<_T>* b)
+  { set<_T>* res = new set<_T>(); 
     res->insert(a->begin(),a->end()); 
     res->insert(b->begin(),b->end()); 
     return res;
@@ -254,7 +254,7 @@ public:
     return res;
   }
 
-  static vector<_T>* subtract(vector<_T>* a, std::set<_T>* b)
+  static vector<_T>* subtract(vector<_T>* a, set<_T>* b)
   { vector<_T>* res = new vector<_T>(); 
     for (int i = 0; i < a->size(); i++)
     { if (UmlRsdsLib<_T>::isIn((*a)[i],b)) { }
@@ -264,9 +264,9 @@ public:
     return res;
   }
 
-  static std::set<_T>* subtract(std::set<_T>* a, std::set<_T>* b)
-  { std::set<_T>* res = new std::set<_T>(); 
-    for (std::set<_T>::iterator _pos = a->begin(); _pos != a->end(); ++_pos)
+  static set<_T>* subtract(set<_T>* a, set<_T>* b)
+  { set<_T>* res = new set<_T>(); 
+    for (set<_T>::iterator _pos = a->begin(); _pos != a->end(); ++_pos)
     { if (UmlRsdsLib<_T>::isIn(*_pos,b)) { }
       else
       { res->insert(*_pos); }
@@ -274,9 +274,9 @@ public:
     return res;
   }
 
-  static std::set<_T>* subtract(std::set<_T>* a, vector<_T>* b)
-  { std::set<_T>* res = new std::set<_T>(); 
-    for (std::set<_T>::iterator _pos = a->begin(); _pos != a->end(); ++_pos)
+  static set<_T>* subtract(set<_T>* a, vector<_T>* b)
+  { set<_T>* res = new set<_T>(); 
+    for (set<_T>::iterator _pos = a->begin(); _pos != a->end(); ++_pos)
     { if (UmlRsdsLib<_T>::isIn(*_pos,b)) { }
       else
       { res->insert(*_pos); }
@@ -292,25 +292,25 @@ public:
 
 
 
-  static std::set<_T>* intersection(std::set<_T>* a, std::set<_T>* b)
-  { std::set<_T>* res = new std::set<_T>(); 
-    for (std::set<_T>::iterator _pos = a->begin(); _pos != a->end(); ++_pos)
+  static set<_T>* intersection(set<_T>* a, set<_T>* b)
+  { set<_T>* res = new set<_T>(); 
+    for (set<_T>::iterator _pos = a->begin(); _pos != a->end(); ++_pos)
     { if (UmlRsdsLib<_T>::isIn(*_pos, b))
       { res->insert(*_pos); }
     }
     return res;
   }
 
-  static std::set<_T>* intersection(std::set<_T>* a, vector<_T>* b)
-  { std::set<_T>* res = new std::set<_T>(); 
-    for (std::set<_T>::iterator _pos = a->begin(); _pos != a->end(); ++_pos)
+  static set<_T>* intersection(set<_T>* a, vector<_T>* b)
+  { set<_T>* res = new set<_T>(); 
+    for (set<_T>::iterator _pos = a->begin(); _pos != a->end(); ++_pos)
     { if (UmlRsdsLib<_T>::isIn(*_pos, b))
       { res->insert(*_pos); }
     }
     return res;
   }
 
-  static vector<_T>* intersection(vector<_T>* a, std::set<_T>* b)
+  static vector<_T>* intersection(vector<_T>* a, set<_T>* b)
   { vector<_T>* res = new vector<_T>(); 
     for (int i = 0; i < a->size(); i++)
     { if (UmlRsdsLib<_T>::isIn((*a)[i], b))
@@ -330,8 +330,8 @@ public:
 
 
 
-     static std::set<_T>* symmetricDifference(vector<_T>* a, vector<_T>* b)
-    { std::set<_T>* res = new std::set<_T>();
+     static set<_T>* symmetricDifference(vector<_T>* a, vector<_T>* b)
+    { set<_T>* res = new set<_T>();
       for (int i = 0; i < a->size(); i++)
       { if (UmlRsdsLib<_T>::isIn((*a)[i], b)) { }
         else { res->insert((*a)[i]); }
@@ -343,9 +343,9 @@ public:
       return res;
     }
 
-    static std::set<_T>* symmetricDifference(std::set<_T>* a, vector<_T>* b)
-    { std::set<_T>* res = new std::set<_T>();
-      for (std::set<_T>::iterator _pos = a->begin(); _pos != a->end(); _pos++)
+    static set<_T>* symmetricDifference(set<_T>* a, vector<_T>* b)
+    { set<_T>* res = new set<_T>();
+      for (set<_T>::iterator _pos = a->begin(); _pos != a->end(); _pos++)
       { if (UmlRsdsLib<_T>::isIn(*_pos, b)) { }
         else { res->insert(*_pos); }
       }
@@ -356,26 +356,26 @@ public:
       return res;
     }
 
-     static std::set<_T>* symmetricDifference(vector<_T>* a, std::set<_T>* b)
-    { std::set<_T>* res = new std::set<_T>();
+     static set<_T>* symmetricDifference(vector<_T>* a, set<_T>* b)
+    { set<_T>* res = new set<_T>();
       for (int i = 0; i < a->size(); i++)
       { if (UmlRsdsLib<_T>::isIn((*a)[i], b)) { }
         else { res->insert((*a)[i]); }
       }
-      for (std::set<_T>::iterator _pos = b->begin(); _pos != b->end(); _pos++)
+      for (set<_T>::iterator _pos = b->begin(); _pos != b->end(); _pos++)
       { if (UmlRsdsLib<_T>::isIn(*_pos, a)) { }
         else { res->insert(*_pos); }
       }
       return res;
     }
 
-    static std::set<_T>* symmetricDifference(std::set<_T>* a, std::set<_T>* b)
-    { std::set<_T>* res = new std::set<_T>();
-      for (std::set<_T>::iterator _pos = a->begin(); _pos != a->end(); _pos++)
+    static set<_T>* symmetricDifference(set<_T>* a, set<_T>* b)
+    { set<_T>* res = new set<_T>();
+      for (set<_T>::iterator _pos = a->begin(); _pos != a->end(); _pos++)
       { if (UmlRsdsLib<_T>::isIn(*_pos, b)) { }
         else { res->insert(*_pos); }
       }
-      for (std::set<_T>::iterator _pos = b->begin(); _pos != b->end(); _pos++)
+      for (set<_T>::iterator _pos = b->begin(); _pos != b->end(); _pos++)
       { if (UmlRsdsLib<_T>::isIn(*_pos, a)) { }
         else { res->insert(*_pos); }
       }
@@ -385,7 +385,7 @@ public:
 
 
   static bool isUnique(vector<_T>* evals)
-  { std::set<_T> vals; 
+  { set<_T> vals; 
     for (int i = 0; i < evals->size(); i++)
     { _T ob = (*evals)[i]; 
       if (vals.find(ob) != vals.end()) { return false; }
@@ -393,7 +393,7 @@ public:
     }
     return true;
   }
-  static bool isUnique(std::set<_T>* evals)
+  static bool isUnique(set<_T>* evals)
   { return true; }
 
 
@@ -434,9 +434,9 @@ public:
     { _sum.append( (*a)[i] ); }
     return _sum; }
 
-  static string sumString(std::set<string>* a)
+  static string sumString(set<string>* a)
   { string _sum(""); 
-    std::set<string>::iterator _pos;
+    set<string>::iterator _pos;
     for (_pos = a->begin(); _pos != a->end(); ++_pos)
     { _sum.append( *_pos ); }
     return _sum; }
@@ -447,9 +447,9 @@ public:
     { _sum += (*a)[i]; }
     return _sum; }
 
-  static _T sum(std::set<_T>* a)
+  static _T sum(set<_T>* a)
   { _T _sum(0); 
-    std::set<_T>::iterator _pos;
+    set<_T>::iterator _pos;
     for (_pos = a->begin(); _pos != a->end(); ++_pos)
     { _sum += *_pos; }
     return _sum; }
@@ -462,9 +462,9 @@ public:
     { _prd *= (*a)[i]; }
     return _prd; }
 
-  static _T prd(std::set<_T>* a)
+  static _T prd(set<_T>* a)
   { _T _prd(1); 
-    std::set<_T>::iterator _pos;
+    set<_T>::iterator _pos;
     for (_pos = a->begin(); _pos != a->end(); ++_pos)
     { _prd *= *_pos; }
     return _prd; }
@@ -478,7 +478,7 @@ public:
     return res;
   }
 
-  static vector<_T>* concatenate(vector<_T>* a, std::set<_T>* b)
+  static vector<_T>* concatenate(vector<_T>* a, set<_T>* b)
   { vector<_T>* res = new vector<_T>(); 
     res->insert(res->end(), a->begin(),a->end()); 
     res->insert(res->end(), b->begin(),b->end()); 
@@ -488,13 +488,13 @@ public:
 
 
 
-     static std::set<_T>* asSet(vector<_T>* c)
-    { std::set<_T>* res = new std::set<_T>();
+     static set<_T>* asSet(vector<_T>* c)
+    { set<_T>* res = new set<_T>();
       res->insert(c->begin(), c->end());
       return res;
     }
 
-    static std::set<_T>* asSet(std::set<_T>* c)
+    static set<_T>* asSet(set<_T>* c)
     { return c; }
 
     static vector<_T>* asOrderedSet(vector<_T>* c)
@@ -518,7 +518,7 @@ public:
     { vector<_T>* res = new vector<_T>();
       for (vector<_T>::iterator _pos = sq->begin(); _pos != sq->end(); ++_pos)
       { res->push_back(*_pos); }
-      std::random_shuffle(res->begin(), res->end());
+      random_shuffle(res->begin(), res->end());
       return res; 
     }
 
@@ -527,7 +527,7 @@ public:
   static vector<_T>* reverse(vector<_T>* a)
   { vector<_T>* res = new vector<_T>(); 
     res->insert(res->end(), a->begin(), a->end()); 
-    std::reverse(res->begin(), res->end()); 
+    reverse(res->begin(), res->end()); 
     return res; }
 
   static string reverse(string a)
@@ -559,14 +559,14 @@ public:
   static vector<_T>* sort(vector<_T>* a)
   { vector<_T>* res = new vector<_T>();
     res->insert(res->end(), a->begin(), a->end());
-    std::sort(res->begin(), res->end());
+    sort(res->begin(), res->end());
     return res;
   }
 
-  static vector<_T>* sort(std::set<_T>* a)
+  static vector<_T>* sort(set<_T>* a)
   { vector<_T>* res = new vector<_T>();
     res->insert(res->end(), a->begin(), a->end());
-    std::sort(res->begin(), res->end());
+    sort(res->begin(), res->end());
     return res;
   }
 
@@ -610,12 +610,12 @@ public:
   }
 
 
-  static int count(std::set<_T>* l, _T obj)
+  static int count(set<_T>* l, _T obj)
   { if (l->find(obj) != l->end()) { return 1; } else { return 0; } 
   }
 
   static int count(vector<_T>* l, _T obj)
-  { return std::count(l->begin(), l->end(), obj); }
+  { return count(l->begin(), l->end(), obj); }
 
   static int count(string s, string x)
   { int res = 0; 
@@ -649,9 +649,9 @@ public:
       return v->at(0);
     }
 
-  static _T any(std::set<_T>* v)
+  static _T any(set<_T>* v)
     { if (v->size() == 0) { return 0; }
-      std::set<_T>::iterator _pos = v->begin();
+      set<_T>::iterator _pos = v->begin();
       return *_pos;
     }
 
@@ -662,9 +662,9 @@ public:
       return v->at(0);
     }
 
-  static _T first(std::set<_T>* v)
+  static _T first(set<_T>* v)
     { if (v->size() == 0) { return 0; }
-      std::set<_T>::iterator _pos = v->begin();
+      set<_T>::iterator _pos = v->begin();
       return *_pos;
     }
 
@@ -675,9 +675,9 @@ public:
     return v->at(v->size() - 1);
   }
 
-  static _T last(std::set<_T>* v)
+  static _T last(set<_T>* v)
   { if (v->size() == 0) { return 0; }
-    std::set<_T>::iterator _pos = v->end();
+    set<_T>::iterator _pos = v->end();
     _pos--;
     return *_pos;
   }
@@ -838,11 +838,11 @@ public:
   }
 
 
-  static std::set<_T>* intersectAll(std::set<std::set<_T>*>* se)
-  { std::set<_T>* res = new std::set<_T>(); 
+  static set<_T>* intersectAll(set<set<_T>*>* se)
+  { set<_T>* res = new set<_T>(); 
     if (se->size() == 0) { return res; }
-    std::set<set<_T>*>::iterator _pos = se->begin();
-    std::set<_T>* frst = *_pos;
+    set<set<_T>*>::iterator _pos = se->begin();
+    set<_T>* frst = *_pos;
     res->insert(frst->begin(), frst->end());
     ++_pos; 
     for (; _pos != se->end(); ++_pos)
@@ -850,10 +850,10 @@ public:
     return res;
   }
 
-  static std::set<_T>* intersectAll(std::set<vector<_T>*>* se)
-  { std::set<_T>* res = new std::set<_T>(); 
+  static set<_T>* intersectAll(set<vector<_T>*>* se)
+  { set<_T>* res = new set<_T>(); 
     if (se->size() == 0) { return res; }
-    std::set<vector<_T>*>::iterator _pos = se->begin();
+    set<vector<_T>*>::iterator _pos = se->begin();
     vector<_T>* frst = *_pos;
     res->insert(frst->begin(), frst->end());
     ++_pos; 
@@ -862,10 +862,10 @@ public:
     return res;
   }
 
-  static std::set<_T>* intersectAll(vector<std::set<_T>*>* se)
-  { std::set<_T>* res = new std::set<_T>(); 
+  static set<_T>* intersectAll(vector<set<_T>*>* se)
+  { set<_T>* res = new set<_T>(); 
     if (se->size() == 0) { return res; }
-    std::set<_T>* frst = (*se)[0];
+    set<_T>* frst = (*se)[0];
     res->insert(frst->begin(), frst->end());
     for (int i = 1; i < se->size(); ++i)
     { res = UmlRsdsLib<_T>::intersection(res, (*se)[i]); }
@@ -884,26 +884,26 @@ public:
 
 
 
-  static std::set<_T>* unionAll(std::set<set<_T>*>* se)
-  { std::set<_T>* res = new std::set<_T>(); 
+  static set<_T>* unionAll(set<set<_T>*>* se)
+  { set<_T>* res = new set<_T>(); 
     if (se->size() == 0) { return res; }
-    std::set<set<_T>*>::iterator _pos;
+    set<set<_T>*>::iterator _pos;
     for (_pos = se->begin(); _pos != se->end(); ++_pos)
     { res = UmlRsdsLib<_T>::unionSet(res, *_pos); }
     return res;
   }
 
-  static std::set<_T>* unionAll(std::set<vector<_T>*>* se)
-  { std::set<_T>* res = new std::set<_T>(); 
+  static set<_T>* unionAll(set<vector<_T>*>* se)
+  { set<_T>* res = new set<_T>(); 
     if (se->size() == 0) { return res; }
-    std::set<vector<_T>*>::iterator _pos;
+    set<vector<_T>*>::iterator _pos;
     for (_pos = se->begin(); _pos != se->end(); ++_pos)
     { res = UmlRsdsLib<_T>::unionSet(res, *_pos); }
     return res;
   }
 
-  static std::set<_T>* unionAll(vector<set<_T>*>* se)
-  { std::set<_T>* res = new std::set<_T>(); 
+  static set<_T>* unionAll(vector<set<_T>*>* se)
+  { set<_T>* res = new set<_T>(); 
     if (se->size() == 0) { return res; }
     for (int i = 0; i < se->size(); ++i)
     { res = UmlRsdsLib<_T>::unionSet(res, (*se)[i]); }
@@ -1089,13 +1089,13 @@ public:
 
 
  static bool isInteger(string str)
-  { try { std::stoi(str); return true; }
+  { try { stoi(str); return true; }
     catch (exception _e) { return false; }
   }
 
 
  static bool isReal(string str)
-  { try { std::stod(str); return true; }
+  { try { stod(str); return true; }
     catch (exception _e) { return false; }
   }
 
@@ -1111,19 +1111,19 @@ public:
 
     if (str[0] == '0' && str.length() > 1 && str[1] == 'x')
     { try {
-        int x = std::stoi(str, 0, 16);
+        int x = stoi(str, 0, 16);
         return x; 
       }
       catch (exception e) { return 0; }
     }
     else if (str[0] == '0' && str.length() > 1)
     { try { 
-        int y = std::stoi(str, 0, 8);
+        int y = stoi(str, 0, 8);
         return y;
       } catch (exception f)
         { return 0; }
     }  
-    try { int z = std::stoi(str, 0, 10);
+    try { int z = stoi(str, 0, 10);
           return z;
     } 
     catch (exception g) { return 0; } 
@@ -1136,19 +1136,19 @@ public:
 
     if (str[0] == '0' && str.length() > 1 && str[1] == 'x')
     { try {
-        long x = std::stol(str, 0, 16);
+        long x = stol(str, 0, 16);
         return x; 
       }
       catch (exception e) { return 0; }
     }
     else if (str[0] == '0' && str.length() > 1)
     { try { 
-        long y = std::stol(str, 0, 8);
+        long y = stol(str, 0, 8);
         return y;
       } catch (exception f)
         { return 0; }
     }  
-    try { long z = std::stol(str, 0, 10);
+    try { long z = stol(str, 0, 10);
           return z;
     } 
     catch (exception g) { return 0; } 
@@ -1160,7 +1160,7 @@ public:
     { return 0.0; }
 
     try {
-      double x = std::stod(str);
+      double x = stod(str);
       return x; 
     }
     catch (exception e) { return 0.0; }
@@ -1169,21 +1169,21 @@ public:
 
 
  static bool isLong(string str)
-  { try { std::stol(str); return true; }
+  { try { stol(str); return true; }
     catch (exception _e) { return false; }
   }
 
 
   static bool hasMatch(string str, string patt)
-  { std::regex rr(patt);
-    return std::regex_search(str,rr);
+  { regex rr(patt);
+    return regex_search(str,rr);
   }
 
 
 
   static bool isMatch(string str, string patt)
-  { std::regex rr(patt);
-    return std::regex_match(str,rr);
+  { regex rr(patt);
+    return regex_match(str,rr);
   }
 
 
@@ -1193,13 +1193,13 @@ public:
     vector<string>* res = new vector<string>(); 
     if (slen == 0)  
     { return res; }  
-    std::regex patt_regex(patt);
-    auto words_begin = std::sregex_iterator(s.begin(), s.end(), patt_regex);
-    auto words_end = std::sregex_iterator();
+    regex patt_regex(patt);
+    auto words_begin = sregex_iterator(s.begin(), s.end(), patt_regex);
+    auto words_end = sregex_iterator();
     
-    for (std::sregex_iterator i = words_begin; i != words_end; ++i)
-    { std::smatch match = *i;
-      std::string match_str = match.str();
+    for (sregex_iterator i = words_begin; i != words_end; ++i)
+    { smatch match = *i;
+      string match_str = match.str();
       if (match_str.length() > 0)
       { res->push_back(match_str); }
     }
@@ -1212,13 +1212,13 @@ public:
     string res = ""; 
     if (slen == 0)  
     { return res; }  
-    std::regex patt_regex(patt);
-    auto words_begin = std::sregex_iterator(s.begin(), s.end(), patt_regex);
-    auto words_end = std::sregex_iterator();
+    regex patt_regex(patt);
+    auto words_begin = sregex_iterator(s.begin(), s.end(), patt_regex);
+    auto words_end = sregex_iterator();
     
-    for (std::sregex_iterator i = words_begin; i != words_end; ++i)
-    { std::smatch match = *i;
-      std::string match_str = match.str();
+    for (sregex_iterator i = words_begin; i != words_end; ++i)
+    { smatch match = *i;
+      string match_str = match.str();
       if (match_str.length() > 0)
       { return match_str; }
     }
@@ -1227,17 +1227,17 @@ public:
 
 
   static string replaceAll(string text, string patt, string rep)
-  { std::regex patt_re(patt);
-    std::string res = std::regex_replace(text, patt_re, rep);
+  { regex patt_re(patt);
+    string res = regex_replace(text, patt_re, rep);
     return res;
   }
 
 
   static string replaceFirstMatch(string text, string patt, string rep)
-  { std::regex patt_re(patt);
-    std::regex_constants::match_flag_type fonly =
-           std::regex_constants::format_first_only;
-    std::string res = std::regex_replace(text, patt_re, rep, fonly);
+  { regex patt_re(patt);
+    regex_constants::match_flag_type fonly =
+           regex_constants::format_first_only;
+    string res = regex_replace(text, patt_re, rep, fonly);
     return res;
   }
 
@@ -1249,12 +1249,12 @@ public:
     { res->push_back(s);
       return res; 
     } 
-    std::regex patt_regex(patt);
-    auto words_begin = std::sregex_iterator(s.begin(), s.end(), patt_regex);
-    auto words_end = std::sregex_iterator();
+    regex patt_regex(patt);
+    auto words_begin = sregex_iterator(s.begin(), s.end(), patt_regex);
+    auto words_end = sregex_iterator();
     int prev = 0; 
-    for (std::sregex_iterator i = words_begin; i != words_end; ++i)
-    { std::smatch match = *i;
+    for (sregex_iterator i = words_begin; i != words_end; ++i)
+    { smatch match = *i;
       int pos = match.position(0);
       int ln = match.length(0); 
       if (ln > 0)
@@ -1462,9 +1462,9 @@ public:
   } 
 
 
-  static std::set<string>* keys(map<string,_T>* s)
+  static set<string>* keys(map<string,_T>* s)
   { map<string,_T>::iterator iter;
-    std::set<string>* res = new std::set<string>();
+    set<string>* res = new set<string>();
   
     for (iter = s->begin(); iter != s->end(); ++iter)
     { string key = iter->first;
@@ -1486,7 +1486,7 @@ public:
   }
 
 
-  static map<string,_T>* restrict(map<string,_T>* m1, std::set<string>* ks)
+  static map<string,_T>* restrict(map<string,_T>* m1, set<string>* ks)
   { map<string,_T>* res = new map<string,_T>();
     map<string,_T>::iterator iter;
     for (iter = m1->begin(); iter != m1->end(); ++iter)
@@ -1497,7 +1497,7 @@ public:
     return res;
   }
 
-  static map<string,_T>* antirestrict(map<string,_T>* m1, std::set<string>* ks)
+  static map<string,_T>* antirestrict(map<string,_T>* m1, set<string>* ks)
   { map<string,_T>* res = new map<string,_T>();
     map<string,_T>::iterator iter;
     for (iter = m1->begin(); iter != m1->end(); ++iter)
