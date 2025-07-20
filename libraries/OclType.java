@@ -26,6 +26,12 @@ class OclType {
     booleanType.actualMetatype = boolean.class; 
     OclType voidType = OclType.createByPKOclType("void"); 
     voidType.actualMetatype = void.class; 
+    OclType sequenceType = OclType.createByPKOclType("Sequence"); 
+    sequenceType.actualMetatype = ArrayList.class; 
+    OclType setType = OclType.createByPKOclType("Set"); 
+    setType.actualMetatype = HashSet.class; 
+    OclType mapType = OclType.createByPKOclType("Map"); 
+    mapType.actualMetatype = HashMap.class; 
   } 
 
   public Class actualMetatype = null; 
@@ -51,6 +57,11 @@ class OclType {
   String name = ""; /* primary */
   static Map<String,OclType> OclType_index;
 
+  static OclType newOclType(String nme)
+  { OclType res = createByPKOclType(nme); 
+    return res; 
+  } 
+
   static OclType createByPKOclType(String namex)
   { OclType result = OclType.OclType_index.get(namex);
     if (result != null) 
@@ -58,7 +69,15 @@ class OclType {
     result = new OclType();
     OclType.OclType_index.put(namex,result);
     result.name = namex;
-    return result; }
+    return result; 
+  }
+
+  static Class getByPKOclType(String namex)
+  { OclType result = OclType.OclType_index.get(namex);
+    if (result != null) 
+    { return result.actualMetatype; }
+    return null; 
+  }
 
   static void killOclType(String namex)
   { OclType rem = OclType_index.get(namex);
@@ -108,7 +127,7 @@ class OclType {
   public ArrayList<OclAttribute> getFields()
   { if (actualMetatype != null) 
     { attributes.clear(); 
-      Field[] flds = actualMetatype.getFields(); 
+      Field[] flds = actualMetatype.getDeclaredFields(); 
       for (int i = 0; i < flds.length; i++) 
       { OclAttribute att = new OclAttribute(flds[i].getName()); 
         att.setType(new OclType(flds[i].getType())); 
@@ -143,7 +162,7 @@ class OclType {
     } 
       
     Class metatype = obj.getClass(); 
-    Field[] flds = metatype.getFields(); 
+    Field[] flds = metatype.getDeclaredFields(); 
     for (int i = 0; i < flds.length; i++) 
     { OclAttribute att = new OclAttribute(flds[i].getName()); 
       att.setType(new OclType(flds[i].getType())); 
@@ -154,7 +173,7 @@ class OclType {
 
 
   public OclAttribute getDeclaredField(String s)
-  { attributes = getFields(); 
+  { attributes = getDeclaredFields(); 
     OclAttribute result = null;
     result = Ocl.any(Ocl.selectSequence(attributes,(att)->{return att.name.equals(s);}));
     return result;
@@ -162,7 +181,7 @@ class OclType {
 
 
   public OclAttribute getField(String s)
-  { attributes = getFields(); 
+  { attributes = getDeclaredFields(); 
     OclAttribute result = null;
     result = Ocl.any(Ocl.selectSequence(attributes,(att)->{return att.name.equals(s);}));
     return result;
@@ -190,6 +209,7 @@ class OclType {
       Method[] mets = actualMetatype.getMethods(); 
       for (int i = 0; i < mets.length; i++) 
       { OclOperation op = new OclOperation(mets[i].getName()); 
+        op.actualMethod = mets[i]; 
         if (mets[i].getReturnType() != null) 
         { op.setType(new OclType(mets[i].getReturnType())); }  
         operations.add(op); 
@@ -205,7 +225,8 @@ class OclType {
     if (actualMetatype != null) 
     { Method[] mets = actualMetatype.getDeclaredMethods(); 
       for (int i = 0; i < mets.length; i++) 
-      { OclOperation op = new OclOperation(mets[i].getName()); 
+      { OclOperation op = new OclOperation(mets[i].getName());
+        op.actualMethod = mets[i];  
         if (mets[i].getReturnType() != null) 
         { op.setType(new OclType(mets[i].getReturnType())); }  
         result.add(op); 
@@ -214,6 +235,24 @@ class OclType {
     return result;
   }
 
+  public OclOperation getMethod(String nme, ArrayList<OclType> typs)
+  { if (actualMetatype == null) 
+    { return null; } 
+
+    Class[] cargs = new Class[typs.size()]; 
+    for (int i = 0; i < typs.size(); i++) 
+    { OclType typ = typs.get(i); 
+      cargs[i] = typ.actualMetatype; 
+    }
+ 
+    try { 
+      Method res = actualMetatype.getMethod(nme, cargs); 
+      OclOperation op = new OclOperation(nme); 
+      op.actualMethod = res; 
+      return op;
+    } 
+    catch (Exception _ex) { return null; }  
+  } 
 
   public ArrayList<OclOperation> getConstructors()
   {
@@ -259,7 +298,7 @@ class OclType {
 
     Class metatype = obj.getClass(); 
     try {
-      Field fld = metatype.getField(att); 
+      Field fld = metatype.getDeclaredField(att); 
       return fld != null;
     } catch (Exception e) 
       { return false; }  
@@ -281,7 +320,7 @@ class OclType {
 
     Class metatype = obj.getClass(); 
     try {
-      Field fld = metatype.getField(att); 
+      Field fld = metatype.getDeclaredField(att); 
       if (fld != null)
       { return fld.get(obj); } 
     } catch (Exception e) 
@@ -301,12 +340,15 @@ class OclType {
 
     Class metatype = obj.getClass(); 
     try {
-      Field fld = metatype.getField(att); 
+      Field fld = metatype.getDeclaredField(att); 
       if (fld != null)
       { fld.set(obj,val); } 
     } catch (Exception e) 
       { }  
-  } 
+  } /* But cannot add a new attribute to an object */ 
+
+  public void addAttributeToClass(String att, Object val) { } 
+  /* Or to a class */ 
 
   public static void removeAttribute(Object obj, String att)
   { if (obj instanceof Map)
@@ -316,7 +358,7 @@ class OclType {
     } 
 
     System.err.println(
-       "removeAttribute is invalid in Java");
+       "!! removeAttribute is invalid in Java");
   }  
   
   public Object newInstance()
@@ -325,8 +367,21 @@ class OclType {
 	  catch (InstantiationException _e) { return null; }
 	  catch (IllegalAccessException _e) { return null; }
     } 
-	return null; 
+    return null; 
   } 
+
+  /* public Object newInstance(ArrayList<Object> args)
+  { Object[] pars = new Object[args.size()]; 
+    for (int i = 0; i < args.size(); i++)
+    { pars[i] = args.get(i); } 
+
+    if (actualMetatype != null) 
+    { try { return actualMetatype.newInstance(pars); }
+	  catch (InstantiationException _e) { return null; }
+	  catch (IllegalAccessException _e) { return null; }
+    } 
+    return null; 
+  } */ 
 
   public boolean isArray()
   { if ("Sequence".equals(name)) 

@@ -6,6 +6,7 @@ class OclAttribute :
   def __init__(self,nme,typ=None) : 
     self.name = nme
     self.type = typ
+    self.stereotypes = set({})
 
   def getName(self) : 
     return self.name
@@ -13,12 +14,22 @@ class OclAttribute :
   def getType(self) : 
     return self.type
 
+  def hasStereotype(self, s) : 
+    return (s in self.stereotypes)
+
+  def addStereotype(self, s) : 
+    self.stereotypes.add(s)
+
+  def removeStereotype(self, s) : 
+    self.stereotypes.discard(s)
+
 
 class OclMethod : 
   def __init__(self,nme,typ=None) : 
     self.name = nme
     self.type = typ
     self.parameters = []
+    self.actualMethod = None
 
   def getName(self) : 
     return self.name
@@ -35,6 +46,14 @@ class OclMethod :
   def getParameters(self) : 
     return self.parameters
 
+  def invoke(self, obj, vals) : 
+    if obj == None or self.actualMethod == None : 
+      return
+    args = []
+    args.append(obj)
+    args.extend(vals)
+    self.actualMethod(args)
+
 
 class OclType : 
   ocltype_index = dict({})
@@ -44,6 +63,10 @@ class OclType :
     self.instance = None
     self.stereotypes = []
     self.actualMetatype = None
+
+  def newOclType(nme) : 
+    res = createByPKOclType(nme)
+    return res
 
   def getName(self) : 
     return self.name
@@ -145,6 +168,25 @@ class OclType :
         res.append(newmethod)
     return res
 
+  def getMethod(self, nme, typs) :
+    res = None
+    if self.actualMetatype == None : 
+      return res
+    ls = inspect.getmembers(self.actualMetatype)
+    for (name,value) in ls :
+      if name[0] == '_' : 
+        pass
+      elif inspect.isfunction(value) and nme == name : 
+        newmethod = OclMethod(name)
+        newmethod.actualMethod = value
+        sig = inspect.signature(value)
+        if len(sig.parameters) == len(typs) : 
+          for x in sig.parameters : 
+            parx = OclAttribute(str(x))
+            newmethod.addParameter(parx)
+          return newmethod
+    return res
+
   def getConstructors(self) :
     res = []
     if self.actualMetatype == None : 
@@ -194,6 +236,10 @@ class OclType :
         del obj[att]
       return
     delattr(obj,att)
+
+  def addAttributeToClass(self, attr, val) : 
+    if self.actualMetatype != None : 
+      setattr(self.actualMetatype, attr, val)
 
   def isArray(self) : 
     if "Sequence" == self.name : 
@@ -278,7 +324,7 @@ map_OclType = createByPKOclType("Map")
 map_OclType.instance = dict([])
 map_OclType.actualMetatype = type(dict([]))
 
-function_OclType = createByPKOclType("Set")
+function_OclType = createByPKOclType("Function")
 function_OclType.instance = (lambda x : x)
 function_OclType.actualMetatype = type(lambda x : x)
 
