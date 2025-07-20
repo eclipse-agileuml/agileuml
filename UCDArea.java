@@ -2249,6 +2249,9 @@ public class UCDArea extends JPanel
 
     // cgbe(); 
 
+    // Assert the types and element types of all attributes
+    // for use by a CSTL file that processes OclAttribute 
+    // and OclExpression items. 
 
     System.out.println(">>> ASTs of classes and use cases: "); 
     System.out.println(); 
@@ -2260,6 +2263,7 @@ public class UCDArea extends JPanel
       String entast = ent.toAST(); 
       entasts.add(entast); 
       System.out.println(entast); 
+      System.out.println(); 
     } 
 
     Vector saved = new Vector(); 
@@ -2270,6 +2274,9 @@ public class UCDArea extends JPanel
         System.out.println(uc.toAST(saved)); 
       } 
     }  
+
+    System.out.println(); 
+    System.out.println(); 
 
     File cgtlfile = null; 
     try 
@@ -2299,29 +2306,37 @@ public class UCDArea extends JPanel
       return; 
     } 
 
-    Vector res = new Vector(); 
+    Vector res = new Vector(); // ASTs of classes
+    Vector actualents = new Vector(); // corresponding classes
+
+    java.util.Date d1 = new java.util.Date(); 
+    long t1 = d1.getTime(); 
 
     for (int i = 0; i < entasts.size(); i++) 
     { String s = (String) entasts.get(i); 
       Compiler2 c = new Compiler2();    
       ASTTerm xx =
           c.parseGeneralAST(s); 
+
       if (xx == null) 
       { System.err.println("!!ERROR: Invalid text for general AST: " + s); 
         System.err.println(c.lexicals); 
           // return; 
       }
       else 
-      { res.add(xx); }
+      { res.add(xx);
+        Entity ent = (Entity) entities.get(i); 
+        actualents.add(ent); 
+      }
     }
 
     Vector results = new Vector(); 
 
-    Date d1 = new Date(); 
-    long t1 = d1.getTime(); 
-
     for (int i = 0; i < res.size(); i++) 
     { ASTTerm tt = (ASTTerm) res.get(i); 
+      Entity ent = (Entity) actualents.get(i);
+      ent.assertTypeInformation(); 
+  
       String outtext = tt.cg(spec); 
       results.add(outtext); 
     } 
@@ -2333,6 +2348,11 @@ public class UCDArea extends JPanel
     { String tt = (String) results.get(i); 
       System.out.println(tt);  
     } 
+
+    java.util.Date d2 = new java.util.Date(); 
+    long t2 = d2.getTime();
+
+    System.out.println(">>> Code generation took " + (t2 - t1) + " ms");  
   }     
 
   public void validateCGBE()
@@ -14849,7 +14869,7 @@ public void produceCUI(PrintWriter out)
       String newt = t.cg(spec);
       newclasses = newclasses + newt + '\n'; 
       
-      System.out.println("Transformed entity is: " + newt); 
+      System.out.println(">>> Transformed entity is: " + newt); 
     } 
 
     /* Argument _4 of the package rule */ 

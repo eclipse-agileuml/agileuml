@@ -773,7 +773,7 @@ public class Compiler2
         { sb = new StringBuffer();     // unrecognised lexical
           lexicals.addElement(sb);  
           in = INUNKNOWN; 
-          System.err.println("!! Unrecognised token in expression: " + c); 
+          // System.err.println("!! Unrecognised token in expression: " + c); 
           sb.append(c); 
         }
       }

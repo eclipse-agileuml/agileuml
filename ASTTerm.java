@@ -503,9 +503,9 @@ public abstract class ASTTerm
       } 
       newstereos.add(mf + "=" + val); 
       ASTTerm.metafeatures.put(lit,newstereos); 
-      // System.out.println("*** Set " + lit + 
-      //                    " tagged values: " + 
-      //                    newstereos); 
+      System.out.println("*** Set " + lit + 
+                         " tagged values: " + 
+                         newstereos); 
     } 
   }
 
@@ -1332,6 +1332,11 @@ public abstract class ASTTerm
 
   public abstract Vector jsexpressionListToKM3(java.util.Map vartypes, 
     java.util.Map varelemtypes, Vector types, Vector entities);
+
+  public abstract Vector jsexpressionListToKM3(int sze,
+    java.util.Map vartypes, 
+    java.util.Map varelemtypes, 
+    Vector types, Vector entities); 
 
   public abstract Vector jsupdateForm(java.util.Map vartypes, 
     java.util.Map varelemtypes, Vector types, Vector ents); 

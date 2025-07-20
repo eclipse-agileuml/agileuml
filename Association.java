@@ -5850,10 +5850,22 @@ String qual = "";
   } 
 
   public String toAST()
-  { String res = "(OclAttribute " + role2 + " : "; 
+  { String res = "(OclAttribute attribute " + role2 + " : "; 
     Type t2 = getRole2Type(); 
     res = res + t2.toAST(); 
     return res + " )"; 
+  } 
+
+  public void assertTypeInformation()
+  { Type t2 = getRole2Type(); 
+    if (t2 != null) 
+    { ASTTerm.setTaggedValue(role2, "type", t2.getName()); 
+      Type etype = t2.getElementType(); 
+      if (etype != null) 
+      { ASTTerm.setTaggedValue(role2, 
+                               "elementType", etype.getName()); 
+      }
+    } 
   } 
 
   public void saveEcore(PrintWriter out)

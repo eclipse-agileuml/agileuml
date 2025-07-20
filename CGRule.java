@@ -1675,10 +1675,10 @@ public class CGRule
             res = replaceByMetafeatureValue(res,mf,repl);
           }   
           else if (cgs.hasRuleset(mffeat))
-          { System.err.println(">***> Valid ruleset " + mffeat);  
+          { System.err.println(">***> Valid internal ruleset " + mffeat);  
             // System.out.println(); 
             String repl = cgs.applyRuleset(mffeat,(ASTTerm) obj);
-            System.err.println(">***> Applying ruleset " + mffeat + " to ASTTerm " + obj); 
+            // System.err.println(">***> Applying ruleset " + mffeat + " to ASTTerm " + obj); 
             // System.out.println(); 
 
             if (repl != null) 
@@ -1746,11 +1746,11 @@ public class CGRule
         }
         else if (obj instanceof String && 
                  cgs.hasRuleset(mffeat))
-        { System.err.println(">***> Valid ruleset " + mffeat);  
+        { System.err.println(">***> Valid internal ruleset " + mffeat);  
           System.err.println();
           ASTSymbolTerm asymbol = new ASTSymbolTerm(obj + "");  
           String repl = cgs.applyRuleset(mffeat, asymbol);
-          System.err.println(">***> Applying ruleset " + mffeat + " to ASTSymbolTerm " + obj); 
+          // System.err.println(">***> Applying ruleset " + mffeat + " to ASTSymbolTerm " + obj); 
           System.err.println(); 
 
           if (repl != null) 
@@ -1758,13 +1758,13 @@ public class CGRule
         }  // Other string functions could be added.  
         else if (obj instanceof Vector) // Of ASTTerm
         { Vector v = (Vector) obj;
-          System.err.println(">***> Applying " + mffeat + " to vector of terms " + v);
+          // System.err.println(">***> Applying " + mffeat + " to vector of terms " + v);
           System.err.println(); 
   
           String repl = "";
           
           if (cgs.hasRuleset(mffeat))
-          { System.err.println(">***> Valid ruleset " + mffeat);  
+          { System.err.println(">***> Valid internal ruleset " + mffeat);  
             System.err.println(); 
             String replv = ""; 
             for (int p = 0; p < v.size(); p++)

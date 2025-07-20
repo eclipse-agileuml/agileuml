@@ -981,6 +981,16 @@ public class ASTBasicTerm extends ASTTerm
     return res; 
   }
 
+  public Vector jsexpressionListToKM3(int sze,
+    java.util.Map vartypes, 
+    java.util.Map varelemtypes, Vector types, Vector entities)
+  { System.out.println(">> jsexpressionListToKM3 for " + tag + " with value " + value); 
+    System.out.println(); 
+
+    Vector res = new Vector(); 
+    return res; 
+  }
+
   public Vector jsvariableDeclarationToKM3(java.util.Map vartypes, 
     java.util.Map varelemtypes, Vector types, Vector entities)
   { System.out.println(">> jsvariableDeclarationToKM3 for " + tag + " with value " + value); 

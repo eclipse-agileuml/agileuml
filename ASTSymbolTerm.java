@@ -360,6 +360,14 @@ public class ASTSymbolTerm extends ASTTerm
     return res; 
   } 
 
+  public Vector jsexpressionListToKM3(int sze,
+    java.util.Map vartypes, 
+    java.util.Map varelemtypes, Vector types, Vector entities)
+  { 
+    Vector res = new Vector(); 
+    return res; 
+  } 
+
   public Vector jscompleteUpdateForm(java.util.Map vartypes, 
     java.util.Map varelemtypes, Vector types, Vector ents)
   { return new Vector(); } 

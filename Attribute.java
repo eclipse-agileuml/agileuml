@@ -1781,6 +1781,20 @@ public class Attribute extends ModelElement
     { out.println("    attribute " + getName() + " : " + getType() + ";"); } 
   } 
 
+  public void assertTypeInformation()
+  { Type t2 = getType(); 
+    String nme = getName(); 
+
+    if (t2 != null) 
+    { ASTTerm.setTaggedValue(nme, "type", t2.getName()); 
+      Type etype = getElementType(); 
+      if (etype != null) 
+      { ASTTerm.setTaggedValue(nme, 
+                               "elementType", etype.getName()); 
+      }
+    } 
+  } 
+
   public String toAST()
   { if (isStatic())
     { return "(OclAttribute static attribute " + getName() + " : " + getType().toAST() + " )"; } 

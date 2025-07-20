@@ -1438,14 +1438,20 @@ public void findPlugins()
 
     JMenuItem cstlGenerator = new JMenuItem("Use CSTL specification"); 
     cstlGenerator.addActionListener(this);
+    cstlGenerator.setToolTipText(
+      "For code generators in restricted CSTL format for AgileUML, e.g., cgJava8.cstl"); 
     buildMenu.add(cstlGenerator); 
 
     JMenuItem cgtlGenerator = new JMenuItem("Use CGTL specification"); 
     cgtlGenerator.addActionListener(this);
+    cgtlGenerator.setToolTipText(
+      "For code generators in general CSTL format for OCL source"); 
     buildMenu.add(cgtlGenerator); 
 
     JMenuItem cstl4ast = new JMenuItem("Apply CSTL/CGTL to AST"); 
     cstl4ast.addActionListener(this);
+    cstl4ast.setToolTipText(
+      "Apply a CSTL file to output/ast.txt"); 
     buildMenu.add(cstl4ast); 
 
     buildMenu.addSeparator(); 

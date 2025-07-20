@@ -164,8 +164,8 @@ public class BehaviouralFeature extends ModelElement
       Vector calls = 
         Statement.getOperationCalls(activity); 
 
-      System.out.println("^^^^^^^ Operation calls: " + calls); 
-      System.out.println(); 
+      // System.out.println("^^^^^^^ Operation calls: " + calls); 
+      // System.out.println(); 
 
       Vector pars = new Vector(); 
       Vector exprs = new Vector();  
@@ -297,7 +297,7 @@ public class BehaviouralFeature extends ModelElement
           if (calledname.startsWith("initialise"))
           { String superclassName = 
                calledname.substring(10);
-            System.out.println("^^^^^ Superclass: " + superclassName);  
+            // System.out.println("^^^^^ Superclass: " + superclassName);  
             Entity superEnt = 
               (Entity) ModelElement.lookupByName(
                            superclassName, entities); 
