@@ -3543,6 +3543,8 @@ new _1 |-->
 
 _1 |-->_1<when>_1 variableInitializer, _1 updatesObject
 
+_1 |--><when> _1 arrayInitializer
+
 _1 |-->_1`postSideEffect<when> _1 multiple
 
 _1 |-->
@@ -4529,7 +4531,7 @@ _1 |-->
 
 
 forControl::
-_1 ; _2 ; _3 |-->  for _1`variableName : Integer.subrange(_1`initialisationValue, _2`upperBound) do ( <when> _1`singleVariableDeclaration true, _3`singleVariableIncrement true, _1`variableName _3`incrementedVariable, _1`variableName _2`lowerBound
+_1 ; _2 ; _3 |-->  for _1`variableName : Integer.subrange(_1`initialisationValue, _2`upperBound) do ( _2`extraTestCode <when> _1`singleVariableDeclaration true, _3`singleVariableIncrement true, _1`variableName _3`incrementedVariable, _1`variableName _2`lowerBound
 
 _1 ; _2 ; _3 |-->  _1 ; while _2 do (
 _1 ; ; _2 |-->  _1 ; while true do (
@@ -4561,6 +4563,7 @@ _1 |-->false
 lowerBound::
 _1 < _2 |-->_1
 _1 <= _2 |-->_1
+_1 && _2 |-->_1`lowerBound
 _1 |-->_1`lowerBound<when> _1 expression
 _1 |-->Math_NINFINITY
 _* |-->Math_NINFINITY
@@ -4569,9 +4572,19 @@ _* |-->Math_NINFINITY
 upperBound::
 _1 < _2 |-->(_2)-1
 _1 <= _2 |-->_2
+_1 && _2 |-->_1`upperBound
 _1 |-->_1`upperBound<when> _1 expression
 _1 |-->Math_PINFINITY
 _* |-->Math_PINFINITY
+
+
+extraTestCode::
+_1 < _2 |-->
+_1 <= _2 |-->
+_1 && _2 |-->  if _2 then skip else break; 
+_1 |-->_1`extraTestCode<when> _1 expression
+_1 |-->
+_* |-->
 
 
 singleVariableIncrement::
