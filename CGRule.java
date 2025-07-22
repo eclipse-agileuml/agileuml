@@ -642,10 +642,15 @@ public class CGRule
      
     if ("type".equals(mffeat))
     { String repl = ASTTerm.getType(term);
+
+      if (repl == null && term.hasMetafeature("type"))
+      { repl = term.getMetafeatureValue("type"); } 
+         
       if (repl == null) 
       { Type tt = term.deduceType();
         repl = tt + ""; 
       } 
+
       return repl;  
     }   
 
@@ -656,11 +661,14 @@ public class CGRule
     { return "" + term.getTag(); }   
 
     if ("trimQuotes".equals(mffeat)) 
-    { String rep = term.cg(cgs); 
+    { String rep = term.cg(cgs);
+ 
       if (rep.endsWith("\""))
       { rep = rep.substring(0,rep.length()-1); } 
+
       if (rep.startsWith("\""))
       { rep = rep.substring(1); } 
+
       return rep; 
     }  
       
@@ -720,6 +728,7 @@ public class CGRule
             return repl;
           } 
         }    
+
         if (term instanceof ASTSymbolTerm)
         { ASTSymbolTerm st = (ASTSymbolTerm) term;
           return "" + st.symbol.charAt(2);  
@@ -740,6 +749,7 @@ public class CGRule
             return repl;
           } 
         } 
+
         if (term instanceof ASTSymbolTerm)
         { ASTSymbolTerm st = (ASTSymbolTerm) term;
           return "" + st.symbol.charAt(3);  
@@ -820,6 +830,7 @@ public class CGRule
           String repl = ct1.cg(cgs); 
           return repl; 
         } 
+
         if (term instanceof ASTSymbolTerm)
         { ASTSymbolTerm st = (ASTSymbolTerm) term;
           int ssize = st.symbol.length();
@@ -955,6 +966,7 @@ public class CGRule
        else 
        { System.err.println(">!!!> cannot apply ruleset: " + mffeat + " to " + term); 
  
+         // Should this be an alternative at a higher level?
          if (term.hasMetafeature(mffeat))
          { String replx = term.getMetafeatureValue(mffeat); 
            if (replx != null) 
@@ -962,49 +974,49 @@ public class CGRule
            else 
            { System.err.println(">!!!> no metafeature: " + mffeat + " of " + term); 
            } 
-         }
-         else if (ASTTerm.hasTaggedValue(term,mffeat))
-         { String replx = ASTTerm.getTaggedValue(term,mffeat); 
-           if (replx != null) 
-           { return replx; }
-           else 
-           { System.err.println(">!!!> no tagged value: " + mffeat + " of " + term); 
-           } 
-         }       
-         else if (term instanceof ASTSymbolTerm)
-         { String replx = 
+        }
+        else if (ASTTerm.hasTaggedValue(term,mffeat))
+        { String replx = ASTTerm.getTaggedValue(term,mffeat); 
+          if (replx != null) 
+          { return replx; }
+          else 
+          { System.err.println(">!!!> no tagged value: " + mffeat + " of " + term); 
+          } 
+        }       
+        else if (term instanceof ASTSymbolTerm)
+        { String replx = 
                  ((ASTSymbolTerm) term).getSymbol(); 
-           return replx;  
-         } // specialised symbol functions go here.
-         else if (CSTL.hasTemplate(mffeat + ".cstl")) 
-         { // System.out.println(">>> Template exists: " + 
+          return replx;  
+        } // specialised symbol functions go here.
+        else if (CSTL.hasTemplate(mffeat + ".cstl")) 
+        { // System.out.println(">>> Template exists: " + 
            //                       mffeat + ".cstl"); 
-           CGSpec newcgs = CSTL.getTemplate(mffeat + ".cstl"); 
+          CGSpec newcgs = CSTL.getTemplate(mffeat + ".cstl"); 
            // System.out.println(); 
-           String replx = term.cg(newcgs);
+          String replx = term.cg(newcgs);
             
-           if (replx != null) 
-           { return replx; } 
-         } 
-         else 
-         { System.err.println("!! No template " + mffeat + ".cstl exists"); 
-           System.err.println(">>> Trying to load template ./cg/" + mffeat + ".cstl"); 
+          if (replx != null) 
+          { return replx; } 
+        } 
+        else 
+        { System.err.println("!! No template " + mffeat + ".cstl exists"); 
+          System.err.println(">>> Trying to load template ./cg/" + mffeat + ".cstl"); 
            // System.out.println(); 
 
-           File sub = new File("./cg/" + mffeat + ".cstl");
+          File sub = new File("./cg/" + mffeat + ".cstl");
       
-           Vector types = new Vector(); // CGTL.types; 
+          Vector types = new Vector(); // CGTL.types; 
 		   
-           CGSpec newcgs = new CGSpec(entities,types); 
-           CGSpec xcgs = 
+          CGSpec newcgs = new CGSpec(entities,types); 
+          CGSpec xcgs = 
                 CSTL.loadCSTL(newcgs,sub,types,entities); 
-           if (xcgs != null)
-           { CSTL.addTemplate(mffeat + ".cstl", xcgs); 
-             String rpl = term.cg(xcgs);   
-             return rpl;
-           }              
-         } 
-       }
+          if (xcgs != null)
+          { CSTL.addTemplate(mffeat + ".cstl", xcgs); 
+            String rpl = term.cg(xcgs);   
+            return rpl;
+          }              
+        } 
+      }
     } 
 
     // New: 8th March 2023

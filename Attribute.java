@@ -1796,16 +1796,20 @@ public class Attribute extends ModelElement
   } 
 
   public String toAST()
-  { if (isStatic())
-    { return "(OclAttribute static attribute " + getName() + " : " + getType().toAST() + " )"; } 
+  { String init = ""; 
+    if (initialExpression != null) 
+    { init = " := " + initialExpression.toAST(); } 
+
+    if (isStatic())
+    { return "(OclAttribute static attribute " + getName() + " : " + getType().toAST() + init + " )"; } 
     else if (isIdentity())
-    { return "(OclAttribute attribute " + getName() + " identity : " + getType().toAST() + " )"; }
+    { return "(OclAttribute attribute " + getName() + " identity : " + getType().toAST() + init + " )"; }
     else if (isDerived())
-    { return "(OclAttribute attribute " + getName() + " derived : " + getType().toAST() + " )"; }
+    { return "(OclAttribute attribute " + getName() + " derived : " + getType().toAST() + init + " )"; }
     else if (isParameter())
     { return toASTParameter(); } 
     else  
-    { return "(OclAttribute attribute " + getName() + " : " + getType().toAST() + " )"; } 
+    { return "(OclAttribute attribute " + getName() + " : " + getType().toAST() + init + " )"; } 
   } 
 
   public String toASTParameter()

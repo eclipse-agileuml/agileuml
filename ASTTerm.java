@@ -1051,10 +1051,12 @@ public abstract class ASTTerm
 
   public static String getType(ASTTerm t) 
   { String val = (String) types.get(t.literalForm());
+
     if (val == null && t instanceof ASTBasicTerm) 
     { ASTBasicTerm bt = (ASTBasicTerm) t; 
       return bt.getType(); 
     } 
+
     return val;  
   }
 
