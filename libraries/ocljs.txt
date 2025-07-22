@@ -2,6 +2,27 @@
 
 class Ocl {
 
+static function newSet(...args)
+{ var res = new Set();
+  for (var x of args)
+  { res.add(x); }
+  return res;
+}
+
+static function newList(...args)
+{ var res = [];
+  for (var x of args)
+  { res.push(x); }
+  return res;
+}
+
+static function newMap(...args)
+{ var res = new Map();
+  for (var x of args)
+  { res.set(x.at(0), x.at(1)); }
+  return res;
+}
+
 static function sqr(x)  
 { return x*x; }
 
@@ -212,9 +233,26 @@ static function asOrderedSet(sq)
   return res;
 }
 
-static function isUnique(s) 
-{ var st = new Set(s);
-  return st.size == s.length;
+static function isUnique(s, f) 
+{ var st = new Set();
+  for (var x of s)
+  { var y = f(x);
+    if (st.has(y))
+    { return false; }
+    st.add(y);
+  }
+  return true;
+}
+
+static function isUniqueMap(m, f) 
+{ var st = new Set();
+  for (var [k,x] of m)
+  { var y = f(x);
+    if (st.has(y))
+    { return false; }
+    st.add(y);
+  }
+  return true;
 }
 
 static function any(s)  
@@ -531,13 +569,13 @@ static function at(sq,i)
 static function first(sq)  
 { if (sq.length == 0) 
   { return null; }
-  return sq[0];
-}
+  return sq.at(0);
+} // also for strings
 
 static function last(sq) 
 { if (sq.length == 0) 
   { return null; }
-  return sq[sq.length - 1];
+  return sq.at(sq.length - 1);
 }
 
 static function front(sq) 
@@ -687,7 +725,7 @@ static function insertInto(x,i,s)
   var x2 = x.slice(i-1);
   var res = x1.concat(s);
   return res.concat(x2);
-}
+} // for sequences
 
 static function excludingSubrange(x,i,j)
 { // i must be > 0, i <= j
@@ -698,15 +736,15 @@ static function excludingSubrange(x,i,j)
   var x1 = x.slice(0,i-1);
   var x2 = x.slice(j);
   return x1.concat(x2);
-}
+} // ok for strings, sequences
 
 static function setSubrange(x,i,j,v) :
-{ // Only for strings. i must be > 0, i <= j
+{ // sequences, strings. i must be > 0, i <= j
   if (i <= 0) 
   { return x; }
   if (i > j) 
   { return x; }
-  return x.substring(0,i-1) + v + x.substring(j);
+  return x.slice(0,i-1).concat(v).concat(x.slice(j));
 }
 
 static function sequenceSubrange(l, i, j)
@@ -725,6 +763,13 @@ static function sequenceSubrange(l, i, j)
   return result;
 }
 
+static function integerSubrange(i, j)
+{ var result = [];
+  for (var k = i; k <= j; k++)
+  { result.push(k); }
+  return result;
+}
+
 
 static function insertAt(x,i,s) 
 { // i must be > 0
@@ -733,21 +778,30 @@ static function insertAt(x,i,s)
   var sq = x.slice(0,i-1);
   sq.push(s);
   return sq.concat(x.slice(i-1));
-}
+} // sequences
+
+static function insertAtString(x,i,s) 
+{ // i must be > 0
+  if (i <= 0) 
+  { return x; }
+  var sq = x.slice(0,i-1);
+  sq = sq + s;
+  return sq.concat(x.slice(i-1));
+} // string
 
 static function setAt(sq,i,val)  
 { var res = sq;
   if (i >= 1 && i <= sq.length)  
   { res[i-1] = val; }
   return res;
-}
+} // sequences
 
 static function removeAt(sq,i)  
 { 
   if (i >= 1 && i <= sq.length)
   { return sq.slice(0,i-1).concat(sq.slice(i)); }
   return sq;
-}
+} // ok for sequences, strings
 
 static function setAtMap(sq,k,val) 
 { var res = new Map(sq);
@@ -775,13 +829,12 @@ static function excludingAtString(ss,i)
 
 
 static function excludingFirst(sq,x) 
-{ var res = []
-  var ind = sq.indexOf(x);
+{ var ind = sq.indexOf(x);
   if (ind < 0)
   { return sq; }
-  res = sq.slice(0,ind); 
+  var res = sq.slice(0,ind); 
   return res.concat(sq.slice(ind+1));
-}
+} // ok for sequences, strings
 
 
 static function includingSequence(s,x) :
@@ -947,9 +1000,10 @@ static function reverseSequence(s)
 
 
 static function reverseSet(s) 
-{ var res = new Set();
-  return res.union(s);
-}
+{ var res = new Set(); 
+  var sq = Array.from(s);
+  return res.union(sq.toReversed());
+} 
 
 
 static function sortSequence(s) 
@@ -986,13 +1040,13 @@ static function sortMap(s)
 
 static function sortedBy(s, fields)
 { var n = fields.length;
-  var p = [].concat(s)
+  var p = Array.from(s);
   for (var ind = n-1; ind >= 0; ind--)
   { var f = fields[ind];
     p = p.asSorted((a,b) => compareTo(f(a), f(b)));
   }
   return p;
-}
+} // for collections
 
 
 static function selectSet(s,f) 
@@ -1128,6 +1182,50 @@ static function selectMinimalsSet(col,f)
     else 
     { if (value == minimal)
       { result.add(x); }
+    }
+  }
+  return result;
+}
+
+static function selectMinimalsMap(m,f)
+{ var result = new Map();
+  if (m.size == 0)
+  { return result; }
+  var elem = anyMap(m);
+  var minimal = f(elem);
+
+  for (var [k,x] of m)
+  { var value = f(x);
+    if (value < minimal)
+    { result = new Map();
+      result.set(k,x);
+      minimal = value;
+    }
+    else 
+    { if (value == minimal)
+      { result.set(k,x); }
+    }
+  }
+  return result;
+}
+
+static function selectMaximalsMap(m,f)
+{ var result = new Map();
+  if (m.size == 0)
+  { return result; }
+  var elem = anyMap(m);
+  var maximal = f(elem);
+
+  for (var [k,x] of m)
+  { var value = f(x);
+    if (value > maximal)
+    { result = new Map();
+      result.set(k,x);
+      maximal = value;
+    }
+    else 
+    { if (value == maximal)
+      { result.set(k,x); }
     }
   }
   return result;
