@@ -9,6 +9,8 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <ctime>
+#include <cmath>
 
 using namespace std;
 
