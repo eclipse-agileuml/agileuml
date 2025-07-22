@@ -9,6 +9,7 @@
 #include <map>
 #include <ctime>
 #include <cmath>
+#include <iosfwd>
 
 using namespace std;
 
