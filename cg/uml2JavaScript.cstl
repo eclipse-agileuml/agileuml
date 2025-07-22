@@ -8,6 +8,7 @@
 nestedTfunc71::
 Set |-->newSet
 Sequence |-->newList
+Map |-->newMap
 _* |-->newSet
 
 seq2ruleset141::
@@ -15,20 +16,35 @@ _* |-->_*`seq2subruleset140
 
 
 OclUnaryExpression::
-_1 ->size ( ) |-->_1.length<when> _1 Sequence
-_1 ->size ( ) |-->_1.length<when> _1 String
+_1 ->size ( ) |-->_1.length<when> _1`ocltype Sequence
+_1 ->size ( ) |-->_1.length<when> _1`ocltype String
 _1 ->size ( ) |-->_1.size
 
-_1 ->max ( ) |-->Ocl.maxSet(_1)<when> _1 Set
-_1 ->max ( ) |-->Ocl.maxMap(_1)<when> _1 Map
+_1 ->max ( ) |-->Ocl.maxSet(_1)<when> _1`ocltype Set
+_1 ->max ( ) |-->Ocl.maxMap(_1)<when> _1`ocltype Map
 _1 ->max ( ) |-->Ocl.maxSequence(_1)
 
-_1 ->min ( ) |-->Ocl.minSet(_1)<when> _1 Set
-_1 ->min ( ) |-->Ocl.minMap(_1)<when> _1 Map
+_1 ->min ( ) |-->Ocl.minSet(_1)<when> _1`ocltype Set
+_1 ->min ( ) |-->Ocl.minMap(_1)<when> _1`ocltype Map
 _1 ->min ( ) |-->Ocl.minSequence(_1)
 
-_1 ->any ( ) |-->Ocl.anyMap(_1)<when> _1 Map
+_1 ->sum ( ) |-->Ocl.sumString(_1)<when> _1`elementType String
+_1 ->sum ( ) |-->Ocl.sum(_1)
+_1 ->prd ( ) |-->Ocl.prd(_1)
+
+
+_1 ->any ( ) |-->Ocl.anyMap(_1)<when> _1`ocltype Map
 _1 ->any ( ) |-->Ocl.any(_1)
+
+_1 ->reverse ( ) |-->Ocl.reverseString(_1)<when> _1`ocltype String
+_1 ->reverse ( ) |-->Ocl.reverseSequence(_1)<when> _1`ocltype Sequence
+_1 ->reverse ( ) |-->Ocl.reverseSet(_1)<when> _1`ocltype Set
+_1 ->reverse ( ) |-->_1
+
+_1 ->sort ( ) |-->Ocl.sortSet(_1)<when> _1`ocltype Set
+_1 ->sort ( ) |-->Ocl.sortMap(_1)<when> _1`ocltype Map
+_1 ->sort ( ) |-->Ocl.sortSequence(_1)<when> _1`ocltype Sequence
+_1 ->sort ( ) |-->_1
 
 lambda _1 : _2 in _3 |-->function(_1) { return _3; }
 
@@ -54,6 +70,16 @@ _1 ->tanh ( ) |-->Math.tanh(_1)
 _1 ->sqr ( ) |-->((_1)*(_1))
 _1 ->sqrt ( ) |-->Math.sqrt(_1)
 _1 ->cbrt ( ) |-->Math.cbrt(_1)
+
+_1 ->unionAll ( ) |-->Ocl.unionAll(_1)<when> _1`elementType Set
+_1 ->unionAll ( ) |-->Ocl.concatenateAll(_1)<when> _1`elementType Sequence
+_1 ->unionAll ( ) |-->Ocl.unionAllMap(_1)<when> _1`elementType Map
+
+_1 ->concatenateAll ( ) |-->Ocl.concatenateAll(_1)
+
+_1 ->intersectAll ( ) |-->Ocl.intersectAllSet(_1)<when> _1`elementType Set
+_1 ->intersectAll ( ) |-->Ocl.intersectAllSequence(_1)<when> _1`elementType Sequence
+_1 ->intersectAll ( ) |-->Ocl.intersectAllMap(_1)<when> _1`elementType Map
 
 _1 _2 ( )  |-->Ocl._2`nestedTfunc68( _1 ) 
 _1 _2  |-->_1`func67 _2 
@@ -174,8 +200,9 @@ seq3subruleset147::
 _* |-->_*`seq3ruleset146
 
 OclCollectionExpression::
-Set { _3 }  |-->newSet _3`seq3subruleset73 
-Sequence { _3 }  |-->newList _3`seq3subruleset75 
+Set { _3 }  |-->Ocl.newSet_3`seq3subruleset73 
+Sequence { _3 }  |-->Array.of_3`seq3subruleset75
+Map { _3 } |-->Ocl.newMap_3`seq3subruleset73 
 _1 { }  |-->_1`nestedTfunc71 ( ) 
 
 seq3ruleset65::
@@ -194,7 +221,7 @@ nestedTfunc68::
 ->values |-->values
 ->keys |-->keys
 ->trim |-->trim
-
+->characters |-->characters
 
 _1 |-->_1
 
@@ -243,15 +270,38 @@ OclBasicExpression::
 null  |-->null
 self |-->this
 
-_1 . _3 ( )  |-->_1._3( ) 
-_1 [ _3 ]  |-->_1[ _3 - 1 ] <when> _1`ocltype Sequence
-_1 [ _3 ]  |-->_1.at( _3 - 1 ) <when> _1`ocltype String
-_1 [ _3 ]  |-->_1.get(_3) <when> _1`ocltype Map
-_1 [ _3 ]  |-->_1[_3]
+Integer . subrange ( _1 ) |-->Ocl.integerSubrange(_1`first, _1`last)
 
+_1 . subrange ( _2 ) |-->_1.slice(_2`first-1, _2`last)
+
+_1 . setAt ( _2 ) |-->Ocl.setAtMap(_1, _2`first, _2`last)<when> _1`ocltype Map
+_1 . setAt ( _2 ) |-->Ocl.setAtString(_1, _2`first, _2`last)<when> _1`ocltype String
+_1 . setAt ( _2 ) |-->Ocl.setAt(_1, _2`first, _2`last)
+
+_1 . insertAt ( _2 ) |-->Ocl.insertAtString(_1, _2`first, _2`last)<when> _1`ocltype String
+_1 . insertAt ( _2 ) |-->Ocl.insertAt(_1, _2`first, _2`last)
+
+_1 . insertInto ( _2 ) |-->Ocl.insertAtString(_1, _2`first, _2`last)<when> _1`ocltype String
+_1 . insertInto ( _2 ) |-->Ocl.insertInto(_1, _2`first, _2`last)
+
+_1 . excludingSubrange ( _2 ) |-->Ocl.excludingSubrange(_1, _2`first, _2`last)
+_1 . setSubrange ( _2 ) |-->Ocl.setSubrange(_1, _2`first, _2`last)
+
+_1 . replace ( _2 ) |-->Ocl.replace(_1, _2`first, _2`last)
+_1 . replaceAll ( _2 ) |-->Ocl.replaceAll(_1, _2`first, _2`last)
+_1 . replaceAllMatches ( _2 ) |-->Ocl.replaceAllMatches(_1, _2`first, _2`last)
+_1 . replaceFirstMatch ( _2 ) |-->Ocl.replaceFirstMatch(_1, _2`first, _2`last)
+
+_1 [ _3 ]  |-->_1.get(_3) <when> _1`ocltype Map
+_1 [ _3 ]  |-->_1.at( _3 - 1 )
+
+
+_1 . _3 ( )  |-->_1._3( ) 
 
 _1 . _3 ( _5 )  |-->_1._3 _5`seq3subruleset66 
+
 _1 . _3  |-->_1._3 
+
 _1 |-->_1
 
 
@@ -278,6 +328,8 @@ _1 < _3  |-->_1 < _3
 _1 = _3  |-->_1 == _3 
 _1 > _3  |-->_1 > _3 
 _1 >= _3  |-->_1 >= _3 
+
+_1 |-> _3 |-->[_1, _3]
 
 _1 ->apply _2 |-->_1(_2)
 
@@ -306,8 +358,14 @@ _1 ->lastIndexOf ( _2 ) |-->Ocl.lastIndexOfSubSequence(_1, _2)<when> _1`ocltype 
 _1 ->indexOf ( _2 ) |-->Ocl.indexOfSequence(_1, _2)
 _1 ->lastIndexOf ( _2 ) |-->Ocl.lastIndexOfSequence(_1, _2)
 
-_1 ->hasPrefix ( _2 ) |-->_1.startsWith(_2)
-_1 ->hasSuffix ( _2 ) |-->_1.endsWith(_2)
+_1 ->hasPrefix ( _2 ) |-->_1.startsWith(_2)<when> _1`ocltype String
+
+_1 ->hasSuffix ( _2 ) |-->_1.endsWith(_2)<when> _1`ocltype String
+
+_1 ->excludingAt ( _2 ) |-->Ocl.removeAtMap(_1, _2)<when> _1`ocltype Map
+_1 ->excludingAt ( _2 ) |-->Ocl.removeAt(_1, _2)
+
+_1 ->excludingFirst ( _2 ) |-->Ocl.excludingFirst(_1, _2)
 
 _1 ->includesAll ( _2 ) |-->Ocl.includesAllSet(_1,_2)<when> _1`ocltype Set
 _1 ->includesAll ( _2 ) |-->Ocl.includesAllMap(_1,_2)<when> _1`ocltype Map
@@ -333,6 +391,23 @@ _1 ->intersection ( _2 ) |-->Ocl.intersectionSet(_1,_2)<when> _1`ocltype Set
 _1 ->intersection ( _2 ) |-->Ocl.intersectionMap(_1,_2)<when> _1`ocltype Map
 _1 ->intersection ( _2 ) |-->Ocl.intersectionSequence(_1,_2)
 
+_1 ->forAll ( _2 ) |-->Ocl.forAllMap( _1, function(self) { return _2; } )<when> _1`ocltype Map 
+_1 ->forAll ( _2 ) |-->Ocl.forAll( _1, function(self) { return _2; } )
+
+_1 ->forAll ( _2 | _3 ) |-->Ocl.forAllMap( _1, function(_2) { return _3; } )<when> _1`ocltype Map 
+_1 ->forAll ( _2 | _3 ) |-->Ocl.forAll( _1, function(_2) { return _3; } )
+ 
+_1 ->exists ( _2 ) |-->Ocl.existsMap( _1, function(self) { return _2; } )<when> _1`ocltype Map 
+_1 ->exists ( _2 ) |-->Ocl.exists( _1, function(self) { return _2; } )
+
+_1 ->exists ( _2 | _3 ) |-->Ocl.existsMap( _1, function(_2) { return _3; } )<when> _1`ocltype Map 
+_1 ->exists ( _2 | _3 ) |-->Ocl.exists( _1, function(_2) { return _3; } )
+
+_1 ->exists1 ( _2 ) |-->Ocl.exists1Map( _1, function(self) { return _2; } )<when> _1`ocltype Map 
+_1 ->exists1 ( _2 ) |-->Ocl.exists1( _1, function(self) { return _2; } )
+
+_1 ->exists1 ( _2 | _3 ) |-->Ocl.exists1Map( _1, function(_2) { return _3; } )<when> _1`ocltype Map 
+_1 ->exists1 ( _2 | _3 ) |-->Ocl.exists1( _1, function(_2) { return _3; } )
 
 
 _1 ->collect _2 |-->Ocl.collectSequence(_1, function(self) { return _2; } )<when> _1`ocltype Sequence
@@ -349,6 +424,12 @@ _1 ->any ( _2 | _3 ) |-->Ocl.anyMapElement(_1, function(_2) { return _3; })<when
 
 _1 ->any _2 |-->Ocl.anyCollection(_1, function(self) { return _2; } )
 _1 ->any ( _2 | _3 ) |-->Ocl.anyCollection(_1, function(_2) { return _3; })
+
+_1 ->isUnique _2 |-->Ocl.isUniqueMap(_1, function(self) { return _2; } )<when> _1`ocltype Map
+_1 ->isUnique ( _2 | _3 ) |-->Ocl.isUniqueMap(_1, function(_2) { return _3; })<when> _1`ocltype Map
+
+_1 ->isUnique _2 |-->Ocl.isUnique(_1, function(self) { return _2; } )
+_1 ->isUnique ( _2 | _3 ) |-->Ocl.isUnique(_1, function(_2) { return _3; })
 
 _1 ->select _2 |-->Ocl.selectSet(_1, function(self) { return _2; } )<when> _1`ocltype Set
 _1 ->select ( _2 | _3 ) |-->Ocl.selectSet(_1, function(_2) { return _3; })<when> _1`ocltype Set
@@ -368,6 +449,26 @@ _1 ->reject ( _2 | _3 ) |-->Ocl.rejectSequence(_1, function(_2) { return _3; })<
 
 _1 ->reject _2 |-->Ocl.rejectMap(_1, function(self) { return _2; } )<when> _1`ocltype Map
 _1 ->reject ( _2 | _3 ) |-->Ocl.rejectMap(_1, function(_2) { return _3; })<when> _1`ocltype Map
+
+
+_1 ->selectMinimals _2 |-->Ocl.selectMinimalsSet(_1, function(self) { return _2; } )<when> _1`ocltype Set
+_1 ->selectMinimals ( _2 | _3 ) |-->Ocl.selectMinimalsSet(_1, function(_2) { return _3; })<when> _1`ocltype Set
+
+_1 ->selectMinimals _2 |-->Ocl.selectMinimalsSequence(_1, function(self) { return _2; } )<when> _1`ocltype Sequence
+_1 ->selectMinimals ( _2 | _3 ) |-->Ocl.selectMinimalsSequence(_1, function(_2) { return _3; })<when> _1`ocltype Sequence
+
+_1 ->selectMinimals _2 |-->Ocl.selectMinimalsMap(_1, function(self) { return _2; } )<when> _1`ocltype Map
+_1 ->selectMinimals ( _2 | _3 ) |-->Ocl.selectMinimalsMap(_1, function(_2) { return _3; })<when> _1`ocltype Map
+
+
+_1 ->selectMaximals _2 |-->Ocl.selectMaximalsSet(_1, function(self) { return _2; } )<when> _1`ocltype Set
+_1 ->selectMaximals ( _2 | _3 ) |-->Ocl.selectMaximalsSet(_1, function(_2) { return _3; })<when> _1`ocltype Set
+
+_1 ->selectMaximals _2 |-->Ocl.selectMaximalsSequence(_1, function(self) { return _2; } )<when> _1`ocltype Sequence
+_1 ->selectMaximals ( _2 | _3 ) |-->Ocl.selectMaximalsSequence(_1, function(_2) { return _3; })<when> _1`ocltype Sequence
+
+_1 ->selectMaximals _2 |-->Ocl.selectMaximalsMap(_1, function(self) { return _2; } )<when> _1`ocltype Map
+_1 ->selectMaximals ( _2 | _3 ) |-->Ocl.selectMaximalsMap(_1, function(_2) { return _3; })<when> _1`ocltype Map
 
 
 _1 _2 ( _4 )  |-->Ocl._2`nestedTfunc69( _1, _4 ) 
@@ -427,12 +528,15 @@ _1 ; _* |-->_1`staticProperty _*`recurse
 
 
 staticProperty::
-static attribute _2 : double   |--> static _2 = 0.0;
-static attribute _2 : String   |--> static _2 = ""; 
-static attribute _2 : int  |--> static _2 = 0;
-static attribute _2 : long  |--> static _2 = 0;
-static attribute _2 : _4  |--> static _2 = null; 
+static attribute _2 : double   |--> static _2 = 0.0;<action> _2 Number
+static attribute _2 : String   |--> static _2 = "";<action> _2 String 
+static attribute _2 : int  |--> static _2 = 0;<action> _2 Number
+static attribute _2 : long  |--> static _2 = 0;<action> _2 Number
 
+static attribute _2 : _4 := _6 |--> static _2 = _6;<action> _2 _4 
+static attribute _2 : _4  |--> static _2 = null;<action> _2 _4 
+
+attribute _2 : _4 := _6 |-->
 attribute _2 : _4 |-->
 
 static operation _2 ( ) : void pre: _3  post: _4  |--> static _2( ) { } ; 
@@ -461,17 +565,19 @@ _1 ; _* |-->_1 _*`recurse
 
 
 OclAttribute::
-attribute _2 : double   |--> this._2 = 0.0; <action> _2 Numeric
-attribute _2 : String   |--> this._2 = ""; <action> _2 String
-attribute _2 : int  |--> this._2 = 0; <action> _2 Numeric
-attribute _2 : long  |--> this._2 = 0; <action> _2 Numeric
+attribute _2 : String := _*  |--> this._2 = _*; <action> _2 String
+attribute _2 : String  |--> this._2 = ""; <action> _2 String
 
+attribute _2 : Set := _3  |--> this._2 = _3;<action> _2 Set
 attribute _2 : Set  |--> this._2 = new Set();<action> _2 Set
 
+attribute _2 : Sequence := _3 |--> this._2 = _3;<action> _2 Sequence
 attribute _2 : Sequence  |--> this._2 = [];<action> _2 Sequence
 
+attribute _2 : Map := _3  |--> this._2 = _3;<action> _2 Map
 attribute _2 : Map  |--> this._2 = new Map();<action> _2 Map
 
+attribute _2 : _4 := _6 |--> this._2 = _6;<action> _2 _4  
 attribute _2 : _4  |--> this._2 = _4`typInit;<action> _2 _4  
 
 static attribute _2 : _4  |--> 
@@ -507,6 +613,20 @@ return  |-->  return ;
 
 
 ocltype::
+_1 . setAt ( _2 ) |-->_1`ocltype
+Integer . subrange ( _2 ) |-->Sequence
+_1 . subrange ( _2 ) |-->_1`ocltype
+
+_1 . replace ( _2 ) |-->String
+_1 . replaceAll ( _2 ) |-->String
+_1 . replaceAllMatches ( _2 ) |-->String
+_1 . replaceFirstMatch ( _2 ) |-->String
+
+_1 . insertAt ( _2 ) |-->_1`ocltype
+_1 . insertInto ( _2 ) |-->_1`ocltype
+_1 . excludingSubrange ( _2 ) |-->_1`ocltype
+_1 . setSubrange ( _2 ) |-->_1`ocltype
+
 _1 + _2 |-->_1`ocltype
 _1 - _2 |-->_1`ocltype
 _1 * _2 |-->Number
@@ -535,6 +655,16 @@ _1 /= _2 |-->Boolean
 
 not _1 |-->Boolean
 
+_1 ->forAll ( _2 ) |-->Boolean
+_1 ->exists ( _2 ) |-->Boolean
+_1 ->exists1 ( _2 ) |-->Boolean
+_1 ->isUnique ( _2 ) |-->Boolean
+
+_1 ->forAll ( _2 | _3 ) |-->Boolean
+_1 ->exists ( _2 | _3 ) |-->Boolean
+_1 ->exists1 ( _2 | _3 ) |-->Boolean
+_1 ->isUnique ( _2 | _3 ) |-->Boolean
+
 _1 ->includes ( _2 ) |-->Boolean
 _1 ->excludes ( _2 ) |-->Boolean
 _1 ->includesAll ( _2 ) |-->Boolean
@@ -542,6 +672,9 @@ _1 ->excludesAll ( _2 ) |-->Boolean
 
 _1 ->including ( _2 ) |-->_1`ocltype
 _1 ->excluding ( _2 ) |-->_1`ocltype
+_1 ->excludingAt ( _2 ) |-->_1`ocltype
+_1 ->excludingFirst ( _2 ) |-->_1`ocltype
+
 _1 ->union ( _2 ) |-->_1`ocltype
 _1 ->intersection ( _2 ) |-->_1`ocltype
 _1 ->symmetricDifference ( _2 ) |-->_1`ocltype
@@ -558,6 +691,7 @@ _1 ->split ( _2 ) |-->Sequence
 _1 ->before ( _2 ) |-->String
 _1 ->after ( _2 ) |-->String
 _1 ->trim ( ) |-->String
+_1 ->characters ( ) |-->Sequence
 
 _1 ->hasMatch ( _2 ) |-->Boolean
 _1 ->isMatch ( _2 ) |-->Boolean
@@ -573,6 +707,11 @@ _1 ->antirestrict ( _2 ) |-->Map
 _1 ->keys ( ) |-->Set
 _1 ->values ( ) |-->Sequence
 
+_1 ->front ( ) |-->_1`ocltype
+_1 ->tail ( ) |-->_1`ocltype
+_1 ->reverse ( ) |-->_1`ocltype
+_1 ->sort ( ) |-->_1`ocltype
+
 _1 [ _3 ]  |-->_1`elementType
 _1 ->at ( _3 ) |-->_1`elementType
 _1 ->first ( ) |-->_1`elementType
@@ -582,6 +721,9 @@ _1 ->min ( ) |-->_1`elementType
 
 _1 ->any ( ) |-->_1`elementType
 _1 ->any ( _2 | _3 ) |-->_1`elementType
+
+_1 ->sum ( ) |-->_1`elementType
+_1 ->prd ( ) |-->_1`elementType
 
 _1 ->select ( _2 ) |-->_1`ocltype
 _1 ->select ( _2 | _3 ) |-->_1`ocltype
@@ -595,6 +737,15 @@ _1 ->collect ( _2 ) |-->Sequence
 _1 ->collect ( _2 | _3 ) |-->Map<when> _1`ocltype Map
 _1 ->collect ( _2 | _3 ) |-->Sequence
 
+_1 ->selectMinimals ( _2 ) |-->_1`ocltype
+_1 ->selectMinimals ( _2 | _3 ) |-->_1`ocltype
+
+_1 ->selectMaximals ( _2 ) |-->_1`ocltype
+_1 ->selectMaximals ( _2 | _3 ) |-->_1`ocltype
+
+_1 ->unionAll ( ) |-->_1`elementType
+_1 ->concatenateAll ( ) |-->Sequence
+_1 ->intersectAll ( ) |-->_1`elementType
 
 if _1 then _2 else _3 endif |-->_2`ocltype
 
