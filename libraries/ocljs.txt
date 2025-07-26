@@ -2,214 +2,218 @@
 
 class Ocl {
 
-static function newSet(...args)
-{ var res = new Set();
-  for (var x of args)
-  { res.add(x); }
-  return res;
-}
-
-static function newList(...args)
-{ var res = [];
-  for (var x of args)
-  { res.push(x); }
-  return res;
-}
-
-static function newMap(...args)
-{ var res = new Map();
-  for (var x of args)
-  { res.set(x.at(0), x.at(1)); }
-  return res;
-}
-
-static function sqr(x)  
-{ return x*x; }
-
-static function sqrt(x)  
-{ return Math.sqrt(x); }
-
-static function cbrt(x)  
-{ return Math.cbrt(x); }
-
-static function abs(x)  
-{ return Math.abs(x); } 
-
-static function gcd(xx,yy) 
-{ var x = Math.abs(xx);
-  var y = Math.abs(yy); 
-  while (x != 0 && y != 0) 
-  { z = y; 
-    y = x % y; 
-    x = z;
+  static newSet(...args)
+  { var res = new Set();
+    for (var x of args)
+    { res.add(x); }
+    return res;
   }
 
-  if (y == 0) 
-  { return x; }
+  static newList(...args)
+  { var res = [];
+    for (var x of args)
+    { res.push(x); }
+    return res;
+  }
+
+  static newMap(...args)
+  { var res = new Map();
+    for (var x of args)
+    { res.set(x.at(0), x.at(1)); }
+    return res;
+  }
+
+  static size(col) 
+  { var sq = Array.from(col);
+    return sq.length;
+  }
+
+  static sqr(x)  
+  { return x*x; }
+
+  static sqrt(x)  
+  { return Math.sqrt(x); }
+
+  static cbrt(x)  
+  { return Math.cbrt(x); }
+
+  static abs(x)  
+  { return Math.abs(x); } 
+
+  static gcd(xx,yy) 
+  { var x = Math.abs(xx);
+    var y = Math.abs(yy); 
+    while (x != 0 && y != 0) 
+    { z = y; 
+      y = x % y; 
+      x = z;
+    }
+
+    if (y == 0) 
+    { return x; }
   
-  if (x == 0) 
-  { return y; }
+    if (x == 0) 
+    { return y; }
  
-  return 0;
-}
+    return 0;
+  }
 
-static function roundTo(x,n) 
-{ if (n == 0) 
-  { return Math.round(x); }
-  var y = x*Math.pow(10,n); 
-  return Math.round(y)/Math.pow(10,n);
-} 
+  static roundTo(x,n) 
+  { if (n == 0) 
+    { return Math.round(x); }
+    var y = x*Math.pow(10,n); 
+    return Math.round(y)/Math.pow(10,n);
+  } 
 
-static function truncateTo(x,n) 
-{ if (n <= 0) 
-  { return Math.trunc(x); }
-  var y = x*Math.pow(10,n); 
-  return Math.trunc(y)/Math.pow(10,n); 
-}
+  static truncateTo(x,n) 
+  { if (n <= 0) 
+    { return Math.trunc(x); }
+    var y = x*Math.pow(10,n); 
+    return Math.trunc(y)/Math.pow(10,n); 
+  }
 
+  static isInteger(sx)  
+  { var ss = "" + sx; 
+    if (("" + parseInt(ss)) == ss) 
+    { return true; } 
+    return false; 
+  }
 
-static function isInteger(sx)  
-{ var ss = "" + sx; 
-  if (("" + parseInt(ss)) == ss) 
-  { return true; } 
-  return false; 
-}
+  static isLong(sx)  
+  { return isInteger(sx); } 
 
-static function isLong(sx)  
-{ return isInteger(sx); } 
+  static isReal(sx)  
+  { if (isInteger(sx)) 
+    { return true; } 
+    var ss = "" + sx; 
+    if (("" + parseFloat(ss)) == ss) 
+    { return true; } 
+    return false; 
+  } 
 
-static function isReal(sx)  
-{ if (isInteger(sx)) 
-  { return true; } 
-  var ss = "" + sx; 
-  if (("" + parseFloat(ss)) == ss) 
-  { return true; } 
-  return false; 
-} 
+  static oclIsTypeOf(x,typ) 
+  { if ("int" == typ || "long" == typ)
+    { return isInteger(x); }
+    if ("double" == typ)
+    { return isReal(x); }
+    if ("boolean" == typ)
+    { return (typeof x) == "boolean"; }
+    if ("String" == typ)
+    { return (typeof x) == "string"; }
+    if (typ.startsWith("Sequence("))
+    { return Array.isArray(x); }
+    if (typ.startsWith("Function("))
+    { return ((typeof x) == "function"); }
+    if (typ.startsWith("Ref("))
+    { return ((typeof x) == "symbol"); }
+    if (typ.startsWith("Set("))
+    { return x.toString().startsWith("[object Set"); }
+    if (typ.startsWith("Map("))
+    { return x.toString().startsWith("[object Map"); }
+    if (x == null)
+    { return typ == "void";}
+    if ((typeof x) == "object")
+    { return (x instanceof typ); }
+    return false;
+  }
 
-static function oclIsTypeOf(x,typ) 
-{ if ("int" == typ || "long" == typ)
-  { return isInteger(x); }
-  if ("double" == typ)
-  { return isReal(x); }
-  if ("boolean" == typ)
-  { return (typeof x) == "boolean"; }
-  if ("String" == typ)
-  { return (typeof x) == "string"; }
-  if (typ.startsWith("Sequence("))
-  { return Array.isArray(x); }
-  if (typ.startsWith("Function("))
-  { return ((typeof x) == "function"); }
-  if (typ.startsWith("Ref("))
-  { return ((typeof x) == "symbol"); }
-   if (typ.startsWith("Set("))
-  { return x.toString().startsWith("[object Set"); }
-  if (typ.startsWith("Map("))
-  { return x.toString().startsWith("[object Map"); }
-  if (x == null)
-  { return typ == "void";}
-  if ((typeof x) == "object")
-  { return (x instanceof typ); }
-  return false;
-}
-
-static function oclType(x) 
-{ if (isInteger(x))
-  { return "int"; }
-  if (isReal(x))
-  { return "double"; }
-  if ((typeof x) == "string")
-  { return "String"; }
-  if (Array.isArray(x))
-  { return "Sequence"; }
-  if ((typeof x) == "function")
-  { return "Function"; }
-  if (x.toString() == "[object Map]")
-  { return "Map"; }
-  if (x.toString() == "[object Set]")
-  { return "Set"; }
+  static oclType(x) 
+  { if (isInteger(x))
+    { return "int"; }
+    if (isReal(x))
+    { return "double"; }
+    if ((typeof x) == "string")
+    { return "String"; }
+    if (Array.isArray(x))
+    { return "Sequence"; }
+    if ((typeof x) == "function")
+    { return "Function"; }
+    if (x.toString().startsWith("[object Map"))
+    { return "Map"; }
+    if (x.toString().startsWith("[object Set")
+    { return "Set"; }
   // if ((typeof x) == "object")
   // { return ; }
-  return (typeof x);
-}
+    return (typeof x);
+  }
 
-static function toInteger(sx) 
-{ return parseInt("" + sx); }
+  static toInteger(sx) 
+  { return parseInt("" + sx); }
 
-static function toLong(sx) 
-{ return parseInt("" + sx); }
+  static toLong(sx) 
+  { return parseInt("" + sx); }
 
-static function toReal(sx) 
-{ return parseFloat("" + sx); }
+  static toReal(sx) 
+  { return parseFloat("" + sx); }
 
-static function toBoolean(xx)  
-{ if (xx == null || xx == 0 || xx == "") 
-  { return false; } 
-  if (xx == undefined) 
-  { return false; } 
-  if (Number.isNaN(xx)) 
-  { return false; }
-  if (("" + xx) == "false") 
-  { return false; } 
-  if ((typeof xx) == "number")
-  { return true; }
-  if (("" + xx) == "true") 
-  { return true; } 
-  return null; 
-} 
-
-
-static function char2byte(ch)  
-{ if (ch == "") 
-  { return -1; } 
-  return ch.charCodeAt(0); 
-} 
-
-static function byte2char(bb)  
-{ if (bb == -1) 
-  { return ""; } 
-  return String.fromCharCode(bb);  
-} 
-
-static function ord(lit)  
-{ if ((typeof lit) == "string")  
-  { return char2byte(lit); } 
-
-  if ((typeof lit) == "number")
-  { return lit; } 
-
-  return null; 
-}  // enum types?
-
-static function succ(lit)  
-{ if ((typeof lit) == "string") 
-  { var litord = char2byte(lit); 
-    return byte2char(litord + 1); 
+  static toBoolean(xx)  
+  { if (xx == null || xx == 0 || xx == "") 
+    { return false; } 
+    if (xx == undefined) 
+    { return false; } 
+    if (Number.isNaN(xx)) 
+    { return false; }
+    if (("" + xx) == "false") 
+    { return false; } 
+    if ((typeof xx) == "number")
+    { return true; }
+    if (("" + xx) == "true") 
+    { return true; } 
+    return null; 
   } 
 
-  if ((typeof lit) == "number")
-  { return lit + 1; } 
 
-  return null; 
-} 
-
-static function pred(lit)  
-{ if ((typeof lit) == "string") 
-  { var litord = char2byte(lit); 
-    return byte2char(litord - 1); 
+  static char2byte(ch)  
+  { if (ch == "") 
+    { return -1; } 
+    return ch.charCodeAt(0); 
   } 
 
-  if ((typeof lit) == "number")
-  { return lit - 1; }
+  static byte2char(bb)  
+  { if (bb == -1) 
+    { return ""; } 
+    return String.fromCharCode(bb);  
+  } 
+
+  static ord(lit)  
+  { if ((typeof lit) == "string")  
+    { return char2byte(lit); } 
+
+    if ((typeof lit) == "number")
+    { return lit; } 
+
+    return null; 
+  }  // enum types are ints
+
+  static succ(lit)  
+  { if ((typeof lit) == "string") 
+    { var litord = char2byte(lit); 
+      return byte2char(litord + 1); 
+    } 
+
+    if ((typeof lit) == "number")
+    { return lit + 1; } 
+
+    return null; 
+  } 
+
+  static pred(lit)  
+  { if ((typeof lit) == "string") 
+    { var litord = char2byte(lit); 
+      return byte2char(litord - 1); 
+    } 
+
+    if ((typeof lit) == "number")
+    { return lit - 1; }
  
-  return null; 
-} 
+    return null; 
+  } 
 
-static function asBag(sq)  
+static asBag(sq)  
 { return sq.toSorted(); } 
 // a bag is a sorted sequence
 
-static function mapAsBag(mp) 
+static mapAsBag(mp) 
 { // mp of type Map(T,int)
   var res = []; 
   for (var [k, v] of mp) 
@@ -220,7 +224,7 @@ static function mapAsBag(mp)
   return res.toSorted();
 }
     
-static function asOrderedSet(sq) 
+static asOrderedSet(sq) 
 { var elems = new Set();
   var res = []
   for (var x of sq)
@@ -233,7 +237,7 @@ static function asOrderedSet(sq)
   return res;
 }
 
-static function isUnique(s, f) 
+static isUnique(s, f) 
 { var st = new Set();
   for (var x of s)
   { var y = f(x);
@@ -244,7 +248,7 @@ static function isUnique(s, f)
   return true;
 }
 
-static function isUniqueMap(m, f) 
+static isUniqueMap(m, f) 
 { var st = new Set();
   for (var [k,x] of m)
   { var y = f(x);
@@ -255,20 +259,20 @@ static function isUniqueMap(m, f)
   return true;
 }
 
-static function any(s)  
+static any(s)  
 { var lst = Array.from(s);
   if (1 <= lst.length)  
   { return lst[0]; }
   return null;
 }
 
-static function anyMap(s)  
+static anyMap(s)  
 { for (var [k,v] of s) 
   { return v; }
   return null;
 }
 
-static function anyCollection(s, f)  
+static anyCollection(s, f)  
 { for (var v of s) 
   { if (f(v)) 
     { return v; }
@@ -276,7 +280,7 @@ static function anyCollection(s, f)
   return null;
 }
 
-static function anyMapElement(s, f)  
+static anyMapElement(s, f)  
 { for (var [k,v] of s) 
   { if (f(v)) 
     { return v; }
@@ -284,7 +288,7 @@ static function anyMapElement(s, f)
   return null;
 }
 
-static function includesAllSet(supset,subset) 
+static includesAllSet(supset,subset) 
 { for (var x of subset)
   { if (supset.has(x)) {}
     else 
@@ -293,7 +297,7 @@ static function includesAllSet(supset,subset)
   return true;
 }
 
-static function includesAllSequence(supset,subset) 
+static includesAllSequence(supset,subset) 
 { for (var x of subset)
   { if (supset.includes(x)) {}
     else 
@@ -302,7 +306,7 @@ static function includesAllSequence(supset,subset)
   return true;
 }
 
-static function excludesAllSet(supset,subset) 
+static excludesAllSet(supset,subset) 
 { for (var x of subset)
   { if (supset.has(x))
     { return false; }
@@ -310,7 +314,7 @@ static function excludesAllSet(supset,subset)
   return true;
 }
 
-static function excludesAllSequence(supset,subset) 
+static excludesAllSequence(supset,subset) 
 { for (var x of subset)
   { if (supset.includes(x))
     { return false; }
@@ -318,7 +322,7 @@ static function excludesAllSequence(supset,subset)
   return true;
 }
 
-static function includesValue(mp, x) 
+static includesValue(mp, x) 
 { for (var [k,v] of mp) 
   { if (v == x) 
     { return true; }
@@ -326,7 +330,7 @@ static function includesValue(mp, x)
   return false;
 }
 
-static function excludesValue(mp, x) 
+static excludesValue(mp, x) 
 { for (var [k,v] of mp)
   { if (v == x)
     { return false; }
@@ -334,7 +338,7 @@ static function excludesValue(mp, x)
   return true;
 }
 
-static function iterate(sq,init,f)  
+static iterate(sq,init,f)  
 { var acc = init;
   for (var x of sq) 
   { var g = f(x);
@@ -343,7 +347,7 @@ static function iterate(sq,init,f)
   return acc;
 }
 
-static function exists(col,f) 
+static exists(col,f) 
 { for (var x of col)
   { if (f(x))
     { return true; }
@@ -352,7 +356,7 @@ static function exists(col,f)
 }
 
 
-static function forAll(col,f)   
+static forAll(col,f)   
 { for (var x of col)
   { if (f(x)) { }
     else 
@@ -361,7 +365,7 @@ static function forAll(col,f)
   return true;
 }
 
-static function exists1(col,f) 
+static exists1(col,f) 
 { var found = false;
   for (var x of col)
   { if (f(x))
@@ -374,18 +378,18 @@ static function exists1(col,f)
   return found;
 }
 
-static function toLowerCase(str) 
+static toLowerCase(str) 
 { var s = "" + str;
   return s.toLowerCase();
 }
 
 
-static function toUpperCase(str) 
+static toUpperCase(str) 
 { var s = "" + str;
   return s.toUpperCase();
 }
 
-static function before(s,sep) 
+static before(s,sep) 
 { if (sep.length <= 0) 
   { return s; }
   var i = s.search(sep);
@@ -394,7 +398,7 @@ static function before(s,sep)
   return s.substring(0,i);
 }
 
-static function after(s,sep)  
+static after(s,sep)  
 { var j = sep.length;
   if (j <= 0) 
   { return ""; }
@@ -405,7 +409,7 @@ static function after(s,sep)
 }
 
 
-static function characters(str) 
+static characters(str) 
 { var res = [];
   var n = str.length;
   for (var x = 0; x < n; x++)
@@ -413,27 +417,27 @@ static function characters(str)
   return res;
 }
 
-static function insertAtString(x,i,s) 
+static insertAtString(x,i,s) 
 { // 1-based index i
   if (i <= 0) 
   { return x; }
-  var n = x.length:
+  var n = x.length;
   var x1 = x.substring(0,i-1);
   var x2 = x.substring(i-1, n);
   return x1 + s + x2;
 }
 
-static function setAtString(x,i,s) 
+static setAtString(x,i,s) 
 { // i must be > 0, s has length 1
   if (i <= 0) 
   { return x; }
-  var n = x.length:
+  var n = x.length;
   var x1 = x.substring(0, i-1);
   var x2 = x.substring(i, n);
   return x1 + s + x2;
 }
 
-static function reverseString(st) 
+static reverseString(st) 
 { var res = "";
   var n = st.length;
   for (var x = n-1; x >= 0; x--)
@@ -441,7 +445,7 @@ static function reverseString(st)
   return res;
 }  
 
-static function  subtractString(s1,s2)
+static  subtractString(s1,s2)
 { var res = ""; 
   var n = s1.length;
   for (var x = 0; x < n; x++)
@@ -454,13 +458,13 @@ static function  subtractString(s1,s2)
   return res;
 }
 
-static function equalsIgnoreCase(s1,s2) 
+static equalsIgnoreCase(s1,s2) 
 { if (s1.toLowerCase() == s2.toLowerCase())
   { return true; }
   return false;
 }
 
-static function compareTo(s1,s2) 
+static compareTo(s1,s2) 
 { var result = 0;
   if (s1 < s2)  
   { return -1; }
@@ -469,17 +473,17 @@ static function compareTo(s1,s2)
   return result;
 }
 
-static function indexOfSequence(sq,x)
+static indexOfSequence(sq,x)
 { var indx = sq.indexOf(x);
   return indx + 1;
 }
 
-static function lastIndexOfSequence(sq,x) 
+static lastIndexOfSequence(sq,x) 
 { var indx = sq.lastIndexOf(x);
   return indx + 1;
 }
 
-static function lastIndexOf(s,d) 
+static lastIndexOf(s,d) 
 { var result = 0
   var dlen = d.length;
   if (dlen == 0) 
@@ -490,13 +494,13 @@ static function lastIndexOf(s,d)
   return i+1;
 }
 
-static function lastIndexOfString(s, d) 
+static lastIndexOfString(s, d) 
 { return lastIndexOf(s,d); }
 
-static function hasPrefixSequence(sq,sq1)
+static hasPrefixSequence(sq,sq1)
 { return hasPrefixSubSequence(sq,sq1,0); }
 
-static function hasSuffixSequence(sq,sq1)
+static hasSuffixSequence(sq,sq1)
 { var m = sq1.length;
   var n = sq.length;
   if (m == 0 || n == 0 || n < m)
@@ -504,7 +508,7 @@ static function hasSuffixSequence(sq,sq1)
   return hasPrefixSubSequence(sq,sq1,n-m); 
 }
 
-static function hasPrefixSubSequence(sq,sq1,j) 
+static hasPrefixSubSequence(sq,sq1,j) 
 { // sq1 is a prefix of sq 
   // starting from position j
 
@@ -523,12 +527,12 @@ static function hasPrefixSubSequence(sq,sq1,j)
 }
 
 
-static function indexOfString(ss,sub) 
+static indexOfString(ss,sub) 
 { var n = ss.search(sub);
   return n + 1;
 }
 
-static function indexOfSubSequence(sq,sq1) 
+static indexOfSubSequence(sq,sq1) 
 { var m = sq1.length;
   var n = sq.length;
   if (m == 0 || n == 0 || 
@@ -544,7 +548,7 @@ static function indexOfSubSequence(sq,sq1)
 }
 
 
-static function lastIndexOfSubSequence(sq,sq1) 
+static lastIndexOfSubSequence(sq,sq1) 
 { var m = sq1.length;
   var n = sq.length;
   if (m == 0 || n == 0 || 
@@ -558,7 +562,7 @@ static function lastIndexOfSubSequence(sq,sq1)
   return n - i - m + 2;
 }
 
-static function at(sq,i) 
+static at(sq,i) 
 { if (i <= 0) 
   { return null; }
   if (sq.length > i) 
@@ -566,31 +570,31 @@ static function at(sq,i)
   return sq[i-1];
 }
 
-static function first(sq)  
+static first(sq)  
 { if (sq.length == 0) 
   { return null; }
   return sq.at(0);
 } // also for strings
 
-static function last(sq) 
+static last(sq) 
 { if (sq.length == 0) 
   { return null; }
   return sq.at(sq.length - 1);
 }
 
-static function front(sq) 
+static front(sq) 
 { if (sq.length == 0) 
   { return sq; } 
   return sq.slice(0, sq.length-1);
 }
 
-static function tail(sq) 
+static tail(sq) 
 { if (sq.length == 0) 
   { return sq; } 
   return sq.slice(1,sq.length);
 }
 
-static function firstSortedMap(mm) 
+static firstSortedMap(mm) 
 { if (mm.size == 0) 
   { return null; }
   for (var [i,v] of mm)
@@ -621,18 +625,18 @@ static function firstSortedMap(mm)
 //   return res
 
 
-static function trim(str) : 
+static trim(str) 
 { var res = "" + str;
   return res.trim();
 }
 
 
-static function replace(str,sub,rep) 
+static replace(str,sub,rep) 
 { var res = "" + str;
-  return res.replace(sub,rep)
+  return res.replace(sub,rep);
 }
 
-static function splitByAll(str, delimiters) 
+static splitByAll(str, delimiters) 
 { if (0 < delimiters.length)   
   { var delim = delimiters[0]; 
     var taildelims = delimiters.slice(1);
@@ -654,7 +658,7 @@ static function splitByAll(str, delimiters)
 }
 
 
-static function split(str, pattern) 
+static split(str, pattern) 
 { var splits = str.split(pattern);
   var res = []; 
   for (var st of splits) 
@@ -665,7 +669,7 @@ static function split(str, pattern)
 }
 
 
-static function isMatch(str, pattern) 
+static isMatch(str, pattern) 
 { var re = new RegExp(pattern);
   var mtchs = str.match(re);
   if (mtchs.length > 0)
@@ -676,7 +680,7 @@ static function isMatch(str, pattern)
   return false;
 }
 
-static function hasMatch(str, pattern) 
+static hasMatch(str, pattern) 
 { var re = new RegExp(pattern, 'g');
   var mtchs = str.match(re);
   if (mtchs.length > 0)
@@ -684,7 +688,7 @@ static function hasMatch(str, pattern)
   return false;
 }
 
-static function firstMatch(str, pattern) 
+static firstMatch(str, pattern) 
 { var re = new RegExp(pattern, 'g');
   var mtchs = str.match(re);
   if (mtchs.length > 0)
@@ -692,7 +696,7 @@ static function firstMatch(str, pattern)
   return null;
 } 
 
-static function allMatches(str, pattern) 
+static allMatches(str, pattern) 
 { var re = new RegExp(pattern, 'g');
   var mtchs = str.match(re);
   if (mtchs.length > 0)
@@ -700,24 +704,24 @@ static function allMatches(str, pattern)
   return null;
 }  
 
-static function replaceAll(str, pattern, repl) 
+static replaceAll(str, pattern, repl) 
 { var res = "" + str;
   res = res.replaceAll(pattern, repl);
   return res;
 }
 
 
-static function replaceAllMatches(str, pattern, repl) 
+static replaceAllMatches(str, pattern, repl) 
 { return replaceAll(str, pattern, repl); }
 
 
-static function replaceFirstMatch(str, pattern, repl) 
+static replaceFirstMatch(str, pattern, repl) 
 { var res = "" + str;
   res = str.replace(pattern, repl);
   return res;
 }
 
-static function insertInto(x,i,s) 
+static insertInto(x,i,s) 
 { // i must be > 0
   if (i <= 0) 
   { return x; }
@@ -727,7 +731,7 @@ static function insertInto(x,i,s)
   return res.concat(x2);
 } // for sequences
 
-static function excludingSubrange(x,i,j)
+static excludingSubrange(x,i,j)
 { // i must be > 0, i <= j
   if (i <= 0) 
   { return x; }
@@ -738,7 +742,7 @@ static function excludingSubrange(x,i,j)
   return x1.concat(x2);
 } // ok for strings, sequences
 
-static function setSubrange(x,i,j,v) :
+static setSubrange(x,i,j,v)
 { // sequences, strings. i must be > 0, i <= j
   if (i <= 0) 
   { return x; }
@@ -747,7 +751,7 @@ static function setSubrange(x,i,j,v) :
   return x.slice(0,i-1).concat(v).concat(x.slice(j));
 }
 
-static function sequenceSubrange(l, i, j)
+static sequenceSubrange(l, i, j)
 { // For lists. OCL indexing used for i, j
   var result = [];
   if (j < 0) 
@@ -763,7 +767,7 @@ static function sequenceSubrange(l, i, j)
   return result;
 }
 
-static function integerSubrange(i, j)
+static integerSubrange(i, j)
 { var result = [];
   for (var k = i; k <= j; k++)
   { result.push(k); }
@@ -771,7 +775,7 @@ static function integerSubrange(i, j)
 }
 
 
-static function insertAt(x,i,s) 
+static insertAt(x,i,s) 
 { // i must be > 0
   if (i <= 0) 
   { return x; }
@@ -780,7 +784,7 @@ static function insertAt(x,i,s)
   return sq.concat(x.slice(i-1));
 } // sequences
 
-static function insertAtString(x,i,s) 
+static insertAtString(x,i,s) 
 { // i must be > 0
   if (i <= 0) 
   { return x; }
@@ -789,33 +793,33 @@ static function insertAtString(x,i,s)
   return sq.concat(x.slice(i-1));
 } // string
 
-static function setAt(sq,i,val)  
+static setAt(sq,i,val)  
 { var res = sq;
   if (i >= 1 && i <= sq.length)  
   { res[i-1] = val; }
   return res;
 } // sequences
 
-static function removeAt(sq,i)  
+static removeAt(sq,i)  
 { 
   if (i >= 1 && i <= sq.length)
   { return sq.slice(0,i-1).concat(sq.slice(i)); }
   return sq;
 } // ok for sequences, strings
 
-static function setAtMap(sq,k,val) 
+static setAtMap(sq,k,val) 
 { var res = new Map(sq);
   res.set(k, val);
   return res;
 }
 
-static function removeAtMap(sq,k) 
+static removeAtMap(sq,k) 
 { var res = new Map(sq);
   res.delete(k);
   return res;
 }
 
-static function removeAtString(ss,i)  
+static removeAtString(ss,i)  
 { var res = "" + ss;
   if (i == 1 && i <= ss.length) 
   { return res.slice(1); }
@@ -824,11 +828,11 @@ static function removeAtString(ss,i)
   return res;
 }
 
-static function excludingAtString(ss,i) 
+static excludingAtString(ss,i) 
 { return removeAtString(ss,i); }
 
 
-static function excludingFirst(sq,x) 
+static excludingFirst(sq,x) 
 { var ind = sq.indexOf(x);
   if (ind < 0)
   { return sq; }
@@ -837,18 +841,18 @@ static function excludingFirst(sq,x)
 } // ok for sequences, strings
 
 
-static function includingSequence(s,x) :
+static includingSequence(s,x)
 { var res = [].concat(s);
   res.push(x);
   return res;
 }
 
-// def includingSortedSequence(s,x) :
+// def includingSortedSequence(s,x) 
 //  res = s.copy()
 //  res.add(x)
 //  return res
 
-static function includingSet(s,x) 
+static includingSet(s,x) 
 { var res = new Set();
   res = res.union(s);
   res.add(x);
@@ -861,7 +865,7 @@ static function includingSet(s,x)
 //  return res
 
 
-static function excludeAllSequence(s1,s2)
+static excludeAllSequence(s1,s2)
 { var res = [];
   for (var x of s1)
   { if (s2.includes(x))
@@ -872,17 +876,17 @@ static function excludeAllSequence(s1,s2)
   return res;
 }
 
-static function excludeAllSet(s1,s2) 
+static excludeAllSet(s1,s2) 
 { var res = new Set();
   res = res.union(s1);
   return res.difference(s2);
 }
 
-static function excludeAllSortedSet(s1,s2) 
+static excludeAllSortedSet(s1,s2) 
 { return s1.difference(s2); }
 
 
-static function excludingSequence(s,y) 
+static excludingSequence(s,y) 
 { var res = [];
   for (var x of s)
   { if (x == y) { }
@@ -892,32 +896,32 @@ static function excludingSequence(s,y)
   return res;
 }
 
-static function excludingSet(s,x) 
+static excludingSet(s,x) 
 { var res = new Set();
   res = res.union(s);
   res.delete(x);
   return res;
 }
 
-static function excludingSortedSet(s,x)
+static excludingSortedSet(s,x)
 { var xset = new Set(); 
   xset.add(x);
   return res.difference(xset);
 }
 
-static function prepend(s,x) 
+static prepend(s,x) 
 { var res = [x];
   return res.concat(s);
 }
 
-static function append(s,x) 
+static append(s,x) 
 { var res = [].concat(s)
   res.push(x);
   return res;
 }
 
 
-static function union(s,t) 
+static union(s,t) 
 { var res = [].concat(s);
   for (var x of t) 
   { if (s.includes(x)) 
@@ -928,12 +932,12 @@ static function union(s,t)
   return res;
 } // of sequences as sets
 
-static function unionSequence(s,t)
+static unionSequence(s,t)
 { var res = [].concat(s);
   return res.concat(t);
 }
 
-static function unionSet(s,t) 
+static unionSet(s,t) 
 { var res = new Set();
   res = res.union(s);
   return res.union(t);
@@ -944,13 +948,13 @@ static function unionSet(s,t)
 //  return res.union(t)
  
 
-static function concatenate(s,t) 
+static concatenate(s,t) 
 { var res = [].concat(s);
   return res.concat(t);
 }
  
 
-static function intersectionSequence(s,t) 
+static intersectionSequence(s,t) 
 { var res = [];
   for (var x of s)
   { if (t.includes(x))
@@ -959,13 +963,13 @@ static function intersectionSequence(s,t)
   return res;
 }
 
-static function intersectionSet(s,t) 
+static intersectionSet(s,t) 
 { return s.intersection(t); } 
 
-static function intersectionSortedSet(s,t) 
+static intersectionSortedSet(s,t) 
 { return s.intersection(t); } 
 
-static function concatenateAll(sq) 
+static concatenateAll(sq) 
 { var res = [];
   for (var s of sq) 
   { res = res.concat(s); }
@@ -973,40 +977,40 @@ static function concatenateAll(sq)
 }
 
 
-static function unionAll(sq) 
-{ var res = any(sq);
+static unionAll(sq) 
+{ var res = Ocl.any(sq);
   for (var s of sq) 
   { res = res.union(s); }
   return res;
 }
 
-static function intersectAllSet(sq) 
-{ var res = any(sq);
+static intersectAllSet(sq) 
+{ var res = Ocl.any(sq);
   for (var s of sq)
   { res = res.intersection(s); }
   return res;
 }
 
-static function intersectAllSequence(sq) 
-{ var res = any(sq);
+static intersectAllSequence(sq) 
+{ var res = Ocl.any(sq);
   for (var s of sq) 
   { res = intersectionSequence(res,s); }
   return res;
 }
 
 
-static function reverseSequence(s) 
+static reverseSequence(s) 
 { return s.toReversed(); }
 
 
-static function reverseSet(s) 
+static reverseSet(s) 
 { var res = new Set(); 
   var sq = Array.from(s);
   return res.union(sq.toReversed());
 } 
 
 
-static function sortSequence(s) 
+static sortSequence(s) 
 { if (s.length == 0) 
   { return []; } 
   
@@ -1019,7 +1023,7 @@ static function sortSequence(s)
 } 
 
 
-static function sortSet(s) 
+static sortSet(s) 
 { var res = Array.from(s); 
   res = sortSequence(res);
   var result = new Set();
@@ -1028,7 +1032,7 @@ static function sortSet(s)
   return result;
 }
 
-static function sortMap(s) 
+static sortMap(s) 
 { var ks = s.keys();
   var m = new Map();
   var res = Array.from(ks); 
@@ -1038,7 +1042,7 @@ static function sortMap(s)
   return m;
 }
 
-static function sortedBy(s, fields)
+static sortedBy(s, fields)
 { var n = fields.length;
   var p = Array.from(s);
   for (var ind = n-1; ind >= 0; ind--)
@@ -1049,7 +1053,7 @@ static function sortedBy(s, fields)
 } // for collections
 
 
-static function selectSet(s,f) 
+static selectSet(s,f) 
 { var res = new Set();
   for (var x of s)
   { if (f(x))
@@ -1058,13 +1062,13 @@ static function selectSet(s,f)
   return res;
 }
 
-static function selectSortedSet(s,f) 
+static selectSortedSet(s,f) 
 { return selectSet(s, f); }
 
-static function selectSequence(s,f) 
+static selectSequence(s,f) 
 { return s.filter(f); }
 
-static function rejectSet(s,f)  
+static rejectSet(s,f)  
 { var res = new Set();
   for (var x of s)
   { if (f(x)) { }
@@ -1074,23 +1078,23 @@ static function rejectSet(s,f)
   return res;
 }  
 
-static function rejectSortedSet(s,f) 
+static rejectSortedSet(s,f) 
 { return rejectSet(s, f); }
 
-static function rejectSequence(s,f) 
+static rejectSequence(s,f) 
 { return s.filter((x) => !(f(x))); }
 
-static function collectSet(s,f) 
+static collectSet(s,f) 
 { var res = [];
   for (var x of s)
   { res.push(f(x)); }
   return res;
 }
 
-static function collectSequence(s,f) 
+static collectSequence(s,f) 
 { return s.map(f); }
 
-static function any1(s,f) 
+static any1(s,f) 
 { for (var x of s) 
   { if (f(x)) 
     { return x; }
@@ -1098,7 +1102,7 @@ static function any1(s,f)
   return null;
 }
 
-static function selectMaximalsSequence(col,f)
+static selectMaximalsSequence(col,f)
 { var result = [];
   if (col.length == 0)
   { return result; }
@@ -1119,11 +1123,11 @@ static function selectMaximalsSequence(col,f)
   return result;
 }
  
-static function selectMaximalsSet(col,f) 
+static selectMaximalsSet(col,f) 
 { var result = new Set();
   if (col.size == 0)
   { return result; }
-  var elem = any(col);
+  var elem = Ocl.any(col);
   var maximal = f(elem);
   result.add(elem);
 
@@ -1142,7 +1146,7 @@ static function selectMaximalsSet(col,f)
   return result;
 }
 
-static function selectMinimalsSequence(col,f) 
+static selectMinimalsSequence(col,f) 
 { var result = [];
   if (col.length == 0)
   { return result; }
@@ -1164,11 +1168,11 @@ static function selectMinimalsSequence(col,f)
 }
 
 
-static function selectMinimalsSet(col,f)
+static selectMinimalsSet(col,f)
 { var result = new Set();
   if (col.size == 0)
   { return result; }
-  var elem = any(col);
+  var elem = Ocl.any(col);
   var minimal = f(elem);
   result.add(elem);
 
@@ -1187,11 +1191,11 @@ static function selectMinimalsSet(col,f)
   return result;
 }
 
-static function selectMinimalsMap(m,f)
+static selectMinimalsMap(m,f)
 { var result = new Map();
   if (m.size == 0)
   { return result; }
-  var elem = anyMap(m);
+  var elem = Ocl.anyMap(m);
   var minimal = f(elem);
 
   for (var [k,x] of m)
@@ -1209,11 +1213,11 @@ static function selectMinimalsMap(m,f)
   return result;
 }
 
-static function selectMaximalsMap(m,f)
+static selectMaximalsMap(m,f)
 { var result = new Map();
   if (m.size == 0)
   { return result; }
-  var elem = anyMap(m);
+  var elem = Ocl.anyMap(m);
   var maximal = f(elem);
 
   for (var [k,x] of m)
@@ -1231,7 +1235,7 @@ static function selectMaximalsMap(m,f)
   return result;
 }
 
-static function minSequence(sq) 
+static minSequence(sq) 
 { var result = sq[0];
   for (var x of sq)
   { if (x < result)
@@ -1240,8 +1244,8 @@ static function minSequence(sq)
   return result;
 }
 
-static function minSet(col) 
-{ var result = any(col);
+static minSet(col) 
+{ var result = Ocl.any(col);
   for (var x of col)
   { if (x < result)
     { result = x; }
@@ -1249,7 +1253,7 @@ static function minSet(col)
   return result;
 }
 
-static function maxSequence(sq) 
+static maxSequence(sq) 
 { var result = sq[0];
   for (var x of sq)
   { if (x > result)
@@ -1258,8 +1262,8 @@ static function maxSequence(sq)
   return result;
 }
 
-static function maxSet(col)
-{ var result = any(col);
+static maxSet(col)
+{ var result = Ocl.any(col);
   for (var x of col)
   { if (x > result)
     { result = x; }
@@ -1268,34 +1272,34 @@ static function maxSet(col)
 }
  
 
-static function sum(col) 
+static sum(col) 
 { var result = 0;
   for (var x of col) 
   { result = result + x; }
   return result;
 }
 
-static function sumint(col)
+static sumint(col)
 { return sum(col); }
 
-static function sumlong(col) 
+static sumlong(col) 
 { return sum(col); }
 
-static function sumdouble(col) 
+static sumdouble(col) 
 { var result = 0.0;
   for (var x of col) 
   { result = result + x; }
   return result;
 }
 
-static function sumString(col)  
+static sumString(col)  
 { var result = "";
   for (var x of col) 
   { result = result + x; }
   return result;
 }
 
-static function prd(col)  
+static prd(col)  
 { var result = 1;
   for (var x of col) 
   { result *= x; }
@@ -1303,7 +1307,7 @@ static function prd(col)
 }
 
 
-static function includesAllMap(supset,subset) 
+static includesAllMap(supset,subset) 
 { for (var [x,v] of subset)
   { if (supset.has(x) && 
         v == supset.get(x))
@@ -1315,7 +1319,7 @@ static function includesAllMap(supset,subset)
 }
 
 
-static function excludesAllMap(supset,subset) 
+static excludesAllMap(supset,subset) 
 { for (var [x,v] of subset)
   { if (supset.has(x))
     { if (v == supset.get(x))
@@ -1325,7 +1329,7 @@ static function excludesAllMap(supset,subset)
   return true;
 }
 
-static function existsMap(m,f) 
+static existsMap(m,f) 
 { for (var [x,v] of m)
   { if (f(v))
     { return true; }
@@ -1333,7 +1337,7 @@ static function existsMap(m,f)
   return false;
 }
 
-static function forAllMap(m,f) 
+static forAllMap(m,f) 
 { for (var [x,v] of m)
   { if (f(v)) { }
     else
@@ -1342,7 +1346,7 @@ static function forAllMap(m,f)
   return true;
 }
 
-static function exists1Map(m,f) 
+static exists1Map(m,f) 
 { var found = false;
   for (var [x,v] of m)
   { if (f(v))
@@ -1356,14 +1360,14 @@ static function exists1Map(m,f)
 }
 
 
-static function includingMap(m,x,y) 
+static includingMap(m,x,y) 
 { var res = new Map(m);
   res.set(x,y);
   return res;
 }
 
 
-static function excludeAllMap(s1,s2)
+static excludeAllMap(s1,s2)
 { var res = new Map();
   for (var [x,v] of s1)
   { if (s2.has(x))
@@ -1374,7 +1378,7 @@ static function excludeAllMap(s1,s2)
   return res;
 }
 
-static function excludingMapKey(m,y) 
+static excludingMapKey(m,y) 
 { var res = new Map();
   for (var [x,v] of m)  
   { if (x == y) { }
@@ -1384,7 +1388,7 @@ static function excludingMapKey(m,y)
   return res;
 }
 
-static function excludingMapValue(s,y) 
+static excludingMapValue(s,y) 
 { var res = new Map();
   for (var [x,v] of s)
   { if (v == y) { }
@@ -1394,7 +1398,7 @@ static function excludingMapValue(s,y)
   return res;
 }
 
-static function maxMap(col)
+static maxMap(col)
 { if (col.size == 0)
   { return null; }
   var result = null;
@@ -1407,7 +1411,7 @@ static function maxMap(col)
   return result;
 }
 
-static function minMap(col)
+static minMap(col)
 { if (col.size == 0)
   { return null; }
   var result = null;
@@ -1420,14 +1424,14 @@ static function minMap(col)
   return result;
 }
 
-static function unionMap(s,t)
+static unionMap(s,t)
 { var res = new Map(s);
   for (var [x,v] of t)
   { res.set(x, v); }
   return res;
 }
 
-static function unionAllMap(sq) 
+static unionAllMap(sq) 
 { var res = new Map();
   for (var s of sq) 
   { res = unionMap(res,s); }
@@ -1435,7 +1439,7 @@ static function unionAllMap(sq)
 }
 
 
-static function intersectionMap(s,t) 
+static intersectionMap(s,t) 
 { var res = new Map();
   for (var [x,v] of s)
   { if (t.has(x) && v == t.get(x))
@@ -1444,7 +1448,7 @@ static function intersectionMap(s,t)
   return res;
 }
 
-static function intersectAllMap(sq) 
+static intersectAllMap(sq) 
 { var res = new Map();
   if (sq.length == 0) 
   { return res; }
@@ -1455,7 +1459,7 @@ static function intersectAllMap(sq)
   return res;
 }
 
-static function selectMap(m,p) 
+static selectMap(m,p) 
 { var res = new Map();
   for (var [x,v] of m)
   { if (p(v))
@@ -1464,7 +1468,7 @@ static function selectMap(m,p)
   return res;
 }
 
-static function rejectMap(m,p) 
+static rejectMap(m,p) 
 { var res = new Map();
   for (var [x,v] of m)
   { if (p(v)) { }
@@ -1475,14 +1479,14 @@ static function rejectMap(m,p)
 }
 
 
-static function collectMap(m,e) 
+static collectMap(m,e) 
 { var res = new Map();
   for (var [x,v] of m)
   { res.set(x, e(v)); }
   return res;
 }
 
-static function restrict(m,ks) 
+static restrict(m,ks) 
 { var res = new Map();
   for (var [x,v] of m)
   { if (ks.has(x))
@@ -1491,7 +1495,7 @@ static function restrict(m,ks)
   return res;
 }
 
-static function antirestrict(m,ks) 
+static antirestrict(m,ks) 
 { var res = new Map();
   for (var [x,v] of m)
   { if (ks.has(x))
@@ -1502,7 +1506,7 @@ static function antirestrict(m,ks)
   return res;
 }
 
-static function excludingAtMap(m,k) 
+static excludingAtMap(m,k) 
 { var res = new Map();
   for (var [x,v] of m) 
   { if (x == k) { } 
@@ -1512,13 +1516,13 @@ static function excludingAtMap(m,k)
   return res;
 }
 
-static function keys(m) 
+static keys(m) 
 { var res = new Set(m.keys());
   return res;
 }
 
 
-static function values(m) 
+static values(m) 
 { var res = Array.from(m.values());
   return res;
 } // should be a sequence?
