@@ -879,12 +879,13 @@ public class ASTCompositeTerm extends ASTTerm
         Vector ents = new Vector(); 
 
         if (r.satisfiesAllConditions(args,eargs,ents,cgs))
-        { // System.out.println(">>>> Applying " + tag + 
+        { // System.out.println("|| Conditions satisfied, Applying " + tag + 
           //                   " rule " + r + " for " + this); 
+
           return r.applyRule(args,eargs,cgs); 
         }  
         else 
-        { // System.out.println(">!!> Conditions failed of rule " + r + " for " + this); 
+        { System.out.println(">!!> Conditions failed of rule " + r + " for " + this); 
         } 
       }
     }  

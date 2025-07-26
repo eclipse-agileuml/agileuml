@@ -2613,7 +2613,7 @@ class BasicExpression extends Expression
   public String toAST() 
   { String res = "(OclBasicExpression ";
     if (objectRef != null)
-    { res = res + objectRef.toAST() + " . " + data; } 
+    { res = res + objectRef.toAST() + " . (OclBasicExpression " + data + ")"; } 
     else 
     { res = res + data; } 
 
