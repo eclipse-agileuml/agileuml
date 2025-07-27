@@ -2338,7 +2338,9 @@ public class UCDArea extends JPanel
       ent.assertTypeInformation(); 
   
       String outtext = tt.cg(spec); 
-      results.add(outtext); 
+      String newt = CGRule.correctNewlines(outtext); 
+        
+      results.add(newt); 
     } 
 
     if (res.size() == 0) 
