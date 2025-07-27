@@ -26,7 +26,12 @@ class Ocl {
   static size(col) 
   { var sq = Array.from(col);
     return sq.length;
-  }
+  } // independent of col's type
+
+  static at(col,i) 
+  { var sq = Array.from(col);
+    return sq[i-1];
+  } // independent of col's type
 
   static sqr(x)  
   { return x*x; }
@@ -44,7 +49,7 @@ class Ocl {
   { var x = Math.abs(xx);
     var y = Math.abs(yy); 
     while (x != 0 && y != 0) 
-    { z = y; 
+    { var z = y; 
       y = x % y; 
       x = z;
     }
@@ -80,10 +85,10 @@ class Ocl {
   }
 
   static isLong(sx)  
-  { return isInteger(sx); } 
+  { return Ocl.isInteger(sx); } 
 
   static isReal(sx)  
-  { if (isInteger(sx)) 
+  { if (Ocl.isInteger(sx)) 
     { return true; } 
     var ss = "" + sx; 
     if (("" + parseFloat(ss)) == ss) 
@@ -93,9 +98,9 @@ class Ocl {
 
   static oclIsTypeOf(x,typ) 
   { if ("int" == typ || "long" == typ)
-    { return isInteger(x); }
+    { return Ocl.isInteger(x); }
     if ("double" == typ)
-    { return isReal(x); }
+    { return Ocl.isReal(x); }
     if ("boolean" == typ)
     { return (typeof x) == "boolean"; }
     if ("String" == typ)
@@ -111,16 +116,16 @@ class Ocl {
     if (typ.startsWith("Map("))
     { return x.toString().startsWith("[object Map"); }
     if (x == null)
-    { return typ == "void";}
+    { return typ == "void"; }
     if ((typeof x) == "object")
     { return (x instanceof typ); }
     return false;
   }
 
   static oclType(x) 
-  { if (isInteger(x))
+  { if (Ocl.isInteger(x))
     { return "int"; }
-    if (isReal(x))
+    if (Ocl.isReal(x))
     { return "double"; }
     if ((typeof x) == "string")
     { return "String"; }
@@ -132,6 +137,8 @@ class Ocl {
     { return "Map"; }
     if (x.toString().startsWith("[object Set")
     { return "Set"; }
+    if ((typeof x) == "symbol")
+    { return "Ref"; }
   // if ((typeof x) == "object")
   // { return ; }
     return (typeof x);
@@ -217,8 +224,7 @@ static mapAsBag(mp)
 { // mp of type Map(T,int)
   var res = []; 
   for (var [k, v] of mp) 
-  { var _i = 0;
-    for (_i = 0; _i < v; _i++) 
+  { for (var _i = 0; _i < v; _i++) 
     { res.push(k); }
   }
   return res.toSorted();
@@ -226,7 +232,7 @@ static mapAsBag(mp)
     
 static asOrderedSet(sq) 
 { var elems = new Set();
-  var res = []
+  var res = [];
   for (var x of sq)
   { if (elems.has(x)) {}
     else 
@@ -246,7 +252,7 @@ static isUnique(s, f)
     st.add(y);
   }
   return true;
-}
+} // for any collection s
 
 static isUniqueMap(m, f) 
 { var st = new Set();
@@ -264,7 +270,7 @@ static any(s)
   if (1 <= lst.length)  
   { return lst[0]; }
   return null;
-}
+} // sets, sequences s
 
 static anyMap(s)  
 { for (var [k,v] of s) 
@@ -278,7 +284,7 @@ static anyCollection(s, f)
     { return v; }
   }
   return null;
-}
+} // sets, sequences s
 
 static anyMapElement(s, f)  
 { for (var [k,v] of s) 
@@ -286,6 +292,22 @@ static anyMapElement(s, f)
     { return v; }
   }
   return null;
+}
+
+static includes(col, x)
+{ for (var y of col)
+  { if (x == y) 
+    { return true; }
+  }
+  return false;
+}
+
+static excludes(col, x)
+{ for (var y of col)
+  { if (x == y) 
+    { return false; }
+  }
+  return true;
 }
 
 static includesAllSet(supset,subset) 
@@ -306,6 +328,15 @@ static includesAllSequence(supset,subset)
   return true;
 }
 
+static includesAll(supset,subset) 
+{ for (var x of subset)
+  { if (Ocl.includes(supset,x)) {}
+    else 
+    { return false; }
+  }
+  return true;
+}
+
 static excludesAllSet(supset,subset) 
 { for (var x of subset)
   { if (supset.has(x))
@@ -317,6 +348,15 @@ static excludesAllSet(supset,subset)
 static excludesAllSequence(supset,subset) 
 { for (var x of subset)
   { if (supset.includes(x))
+    { return false; }
+  }
+  return true;
+}
+
+
+static excludesAll(supset,subset) 
+{ for (var x of subset)
+  { if (Ocl.includes(supset, x))
     { return false; }
   }
   return true;
@@ -859,6 +899,12 @@ static includingSet(s,x)
   return res;
 }
 
+static including(s, x)
+{ if (Array.isArray(s)) 
+  { return Ocl.includingSequence(s,x); }
+  return Ocl.includingSet(s,x);
+}
+
 // def includingSortedSet(s,x) :
 //  res = s.copy()
 //  res.add(x)
@@ -885,6 +931,11 @@ static excludeAllSet(s1,s2)
 static excludeAllSortedSet(s1,s2) 
 { return s1.difference(s2); }
 
+static excludeAll(s, x)
+{ if (Array.isArray(s)) 
+  { return Ocl.excludeAllSequence(s,x); }
+  return Ocl.excludeAllSet(s,x);
+}
 
 static excludingSequence(s,y) 
 { var res = [];
@@ -909,6 +960,12 @@ static excludingSortedSet(s,x)
   return res.difference(xset);
 }
 
+static excluding(s, x)
+{ if (Array.isArray(s)) 
+  { return Ocl.excludingSequence(s,x); }
+  return Ocl.excludingSet(s,x);
+}
+
 static prepend(s,x) 
 { var res = [x];
   return res.concat(s);
@@ -921,7 +978,7 @@ static append(s,x)
 }
 
 
-static union(s,t) 
+static unionOrderedSet(s,t) 
 { var res = [].concat(s);
   for (var x of t) 
   { if (s.includes(x)) 
@@ -941,6 +998,12 @@ static unionSet(s,t)
 { var res = new Set();
   res = res.union(s);
   return res.union(t);
+}
+
+static union(s, x)
+{ if (Array.isArray(s)) 
+  { return Ocl.unionSequence(s,x); }
+  return Ocl.unionSet(s,x);
 }
 
 // def unionSortedSet(s,t) :
@@ -969,6 +1032,12 @@ static intersectionSet(s,t)
 static intersectionSortedSet(s,t) 
 { return s.intersection(t); } 
 
+static intersection(s, x)
+{ if (Array.isArray(s)) 
+  { return Ocl.intersectionSequence(s,x); }
+  return Ocl.intersectionSet(s,x);
+}
+
 static concatenateAll(sq) 
 { var res = [];
   for (var s of sq) 
@@ -980,24 +1049,35 @@ static concatenateAll(sq)
 static unionAll(sq) 
 { var res = Ocl.any(sq);
   for (var s of sq) 
-  { res = res.union(s); }
+  { res = Ocl.union(res,s); }
   return res;
 }
 
 static intersectAllSet(sq) 
-{ var res = Ocl.any(sq);
+{ var res = Ocl.any(sq); 
+  if (res == null) 
+  { return new Set(); }
   for (var s of sq)
   { res = res.intersection(s); }
   return res;
 }
 
 static intersectAllSequence(sq) 
-{ var res = Ocl.any(sq);
+{ var res = Ocl.any(sq); 
+  if (res == null) 
+  { return []; }
+ 
   for (var s of sq) 
-  { res = intersectionSequence(res,s); }
+  { res = Ocl.intersectionSequence(res,s); }
   return res;
 }
 
+static intersectAll(s)
+{ var x = Ocl.any(s); 
+  if (Array.isArray(x)) 
+  { return Ocl.intersectAllSequence(s); }
+  return Ocl.intersectAllSet(s);
+}
 
 static reverseSequence(s) 
 { return s.toReversed(); }
