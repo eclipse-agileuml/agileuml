@@ -29,7 +29,7 @@ _1 ->min ( ) |-->Ocl.minSet(_1)<when> _1`ocltype Set
 _1 ->min ( ) |-->Ocl.minMap(_1)<when> _1`ocltype Map
 _1 ->min ( ) |-->Ocl.minSequence(_1)
 
-_1 ->sum ( ) |-->Ocl.sumString(_1)<when> _1`elementType String
+_1 ->sum ( ) |-->Ocl.sumString(_1)<when> _1`oclelemtype String
 _1 ->sum ( ) |-->Ocl.sum(_1)
 _1 ->prd ( ) |-->Ocl.prd(_1)
 
@@ -75,15 +75,18 @@ _1 ->sqr ( ) |-->((_1)*(_1))
 _1 ->sqrt ( ) |-->Math.sqrt(_1)
 _1 ->cbrt ( ) |-->Math.cbrt(_1)
 
-_1 ->unionAll ( ) |-->Ocl.unionAll(_1)<when> _1`oclelemtype Set
+_1 ->unionAll ( ) |-->Ocl.unionAllSet(_1)<when> _1`oclelemtype Set
 _1 ->unionAll ( ) |-->Ocl.concatenateAll(_1)<when> _1`oclelemtype Sequence
 _1 ->unionAll ( ) |-->Ocl.unionAllMap(_1)<when> _1`oclelemtype Map
+_1 ->unionAll ( ) |-->Ocl.unionAll(_1)
 
 _1 ->concatenateAll ( ) |-->Ocl.concatenateAll(_1)
 
-_1 ->intersectAll ( ) |-->Ocl.intersectAllSet(_1)<when> _1`elementType Set
-_1 ->intersectAll ( ) |-->Ocl.intersectAllSequence(_1)<when> _1`elementType Sequence
-_1 ->intersectAll ( ) |-->Ocl.intersectAllMap(_1)<when> _1`elementType Map
+_1 ->intersectAll ( ) |-->Ocl.intersectAllSet(_1)<when> _1`oclelemtype Set
+_1 ->intersectAll ( ) |-->Ocl.intersectAllSequence(_1)<when> _1`oclelemtype Sequence
+_1 ->intersectAll ( ) |-->Ocl.intersectAllMap(_1)<when> _1`oclelemtype Map
+_1 ->intersectAll ( ) |-->Ocl.intersectAll(_1)
+
 
 _1 _2 ( )  |-->Ocl._2`nestedTfunc68( _1 ) 
 _1 _2  |-->_1`func67 _2 
@@ -183,17 +186,17 @@ _* |-->_*`seq3ruleset76
 
 
 OclClass::
-class _2 { }  |-->class _2 { constructor( ) { } }  
-class _2 { _4 }  |-->class _2 { constructor( ) { _4 }  _4`staticClassContents } 
+class _2 { }  |-->class _2 {\n  constructor( ) { } }  
+class _2 { _4 }  |-->class _2 {\n  constructor( ) { _4 }\n_4`staticClassContents} 
 
-class _2 extends _4 { }  |-->class _2 extends _4 { constructor( ) { super(); } }  
-class _2 extends _4 { _6 }  |-->class _2 extends _4 { _6`staticClassContents constructor( ) { super(); _6 } }  
+class _2 extends _4 { }  |-->class _2 extends _4 {\n  constructor( ) { super(); }\n}  
+class _2 extends _4 { _6 }  |-->class _2 extends _4 {\n  constructor( ) { super(); _6 }\n_6`staticClassContents}  
 
 abstract class _2 { }  |-->class _2 { constructor( ) { } }  
-abstract class _2 { _4 }  |-->class _2 { _4`staticClassContents constructor( ) { _4 } }  
+abstract class _2 { _4 }  |-->class _2 {\n  constructor( ) { _4 }\n_4`staticClassContents}  
 
 abstract class _2 extends _4 { }  |-->class _2 extends _4 { constructor( ) { super(); } }  
-abstract class _2 extends _4 { _6 }  |-->class _2 extends _4 { _6`staticClassContents constructor( ) { super(); _6 } }  
+abstract class _2 extends _4 { _6 }  |-->class _2 extends _4 {\n constructor( ) { super(); _6 }\n_6`staticClassContents}  
 
 
 
@@ -346,7 +349,7 @@ _1 ->apply _2 |-->_1(_2)
 _1 ->at ( _2 ) |-->_1.at(_2-1)<when> _1`ocltype String
 _1 ->at ( _2 ) |-->_1[_2-1]<when> _1`ocltype Sequence
 _1 ->at ( _2 ) |-->_1.get(_2)<when> _1`ocltype Map 
-_1 ->at ( _2 ) |-->_1[_2] 
+_1 ->at ( _2 ) |-->Ocl.at(_1,_2) 
 
 _1 ->gcd ( _2 ) |-->Ocl.gcd(_1, _2)
 _1 ->pow ( _2 ) |-->(_1 ** (_2))
@@ -354,10 +357,12 @@ _1 ->pow ( _2 ) |-->(_1 ** (_2))
 _1 ->oclAsType ( _2 ) |-->_1
 
 _1 ->includes ( _2 ) |-->(_1.has(_2))<when> _1`ocltype Set
-_1 ->includes ( _2 ) |-->(_1.includes(_2))
+_1 ->includes ( _2 ) |-->(_1.includes(_2))<when> _1`ocltype Sequence
+_1 ->includes ( _2 ) |-->Ocl.includes(_1,_2)
 
 _1 ->excludes ( _2 ) |-->!(_1.has(_2))<when> _1`ocltype Set
-_1 ->excludes ( _2 ) |-->!(_1.includes(_2))
+_1 ->excludes ( _2 ) |-->!(_1.includes(_2))<whem> _1`ocltype Sequence
+_1 ->excludes ( _2 ) |-->Ocl.excludes(_1,_2)
 
 _1 ->indexOf ( _2 ) |-->Ocl.indexOfString(_1, _2)<when> _1`ocltype String
 _1 ->lastIndexOf ( _2 ) |-->Ocl.lastIndexOfString(_1, _2)<when> _1`ocltype String
@@ -379,27 +384,33 @@ _1 ->excludingFirst ( _2 ) |-->Ocl.excludingFirst(_1, _2)
 
 _1 ->includesAll ( _2 ) |-->Ocl.includesAllSet(_1,_2)<when> _1`ocltype Set
 _1 ->includesAll ( _2 ) |-->Ocl.includesAllMap(_1,_2)<when> _1`ocltype Map
-_1 ->includesAll ( _2 ) |-->Ocl.includesAllSequence(_1,_2)
+_1 ->includesAll ( _2 ) |-->Ocl.includesAllSequence(_1,_2)<when> _1`ocltype Sequence
+_1 ->includesAll ( _2 ) |-->Ocl.includesAll(_1,_2)
 
 _1 ->excludesAll ( _2 ) |-->Ocl.excludesAllSet(_1,_2)<when> _1`ocltype Set
 _1 ->excludesAll ( _2 ) |-->Ocl.excludesAllMap(_1,_2)<when> _1`ocltype Map
-_1 ->excludesAll ( _2 ) |-->Ocl.excludesAllSequence(_1,_2)
+_1 ->excludesAll ( _2 ) |-->Ocl.excludesAllSequence(_1,_2)<when> _1`ocltype Sequence
+_1 ->excludesAll ( _2 ) |-->Ocl.excludesAll(_1,_2)
 
 _1 ->including ( _2 ) |-->Ocl.includingSet(_1,_2)<when> _1`ocltype Set
-_1 ->including ( _2 ) |-->Ocl.includingSequence(_1,_2)
+_1 ->including ( _2 ) |-->Ocl.includingSequence(_1,_2)<when> _1`ocltype Sequence
+_1 ->including ( _2 ) |-->Ocl.including(_1,_2)
 
 _1 ->union ( _2 ) |-->Ocl.unionSet(_1,_2)<when> _1`ocltype Set
 _1 ->union ( _2 ) |-->Ocl.unionMap(_1,_2)<when> _1`ocltype Map
-_1 ->union ( _2 ) |-->Ocl.unionSequence(_1,_2)
+_1 ->union ( _2 ) |-->Ocl.unionSequence(_1,_2)<when> _1`ocltype Sequence
+_1 ->union ( _2 ) |-->Ocl.union(_1,_2)
 
 _1 ->concatenate ( _2 ) |-->Ocl.concatenate(_1,_2)
 
 _1 ->excluding ( _2 ) |-->Ocl.excludingSet(_1,_2)<when> _1`ocltype Set
-_1 ->excluding ( _2 ) |-->Ocl.excludingSequence(_1,_2)
+_1 ->excluding ( _2 ) |-->Ocl.excludingSequence(_1,_2)<when> _1`ocltype Sequence
+_1 ->excluding ( _2 ) |-->Ocl.excluding(_1,_2)
 
 _1 ->intersection ( _2 ) |-->Ocl.intersectionSet(_1,_2)<when> _1`ocltype Set
 _1 ->intersection ( _2 ) |-->Ocl.intersectionMap(_1,_2)<when> _1`ocltype Map
-_1 ->intersection ( _2 ) |-->Ocl.intersectionSequence(_1,_2)
+_1 ->intersection ( _2 ) |-->Ocl.intersectionSequence(_1,_2)<when> _1`ocltype Sequence
+_1 ->intersection ( _2 ) |-->Ocl.intersection(_1,_2)
 
 _1 ->forAll ( _2 ) |-->Ocl.forAllMap( _1, function(self) { return _2; } )<when> _1`ocltype Map 
 _1 ->forAll ( _2 ) |-->Ocl.forAll( _1, function(self) { return _2; } )
@@ -538,40 +549,40 @@ _1 ; _* |-->_1`staticProperty _*`recurse
 
 
 staticProperty::
-static attribute _2 : double   |--> static _2 = 0.0;<action> _2 Number
-static attribute _2 : String   |--> static _2 = "";<action> _2 String 
-static attribute _2 : int  |--> static _2 = 0;<action> _2 Number
-static attribute _2 : long  |--> static _2 = 0;<action> _2 Number
+static attribute _2 : double   |-->  static _2 = 0.0;\n<action> _2 Number
+static attribute _2 : String   |-->  static _2 = "";\n<action> _2 String 
+static attribute _2 : int  |-->  static _2 = 0;\n<action> _2 Number
+static attribute _2 : long  |-->  static _2 = 0;\n<action> _2 Number
 
-static attribute _2 : _4 := _6 |--> static _2 = _6;<action> _2 _4 
-static attribute _2 : _4  |--> static _2 = null;<action> _2 _4 
+static attribute _2 : _4 := _6 |-->  static _2 = _6;\n<action> _2 _4 
+static attribute _2 : _4  |-->  static _2 = null;\n<action> _2 _4 
 
 attribute _2 : _4 := _6 |--><action> _2 _4
 attribute _2 : _4 |--><action> _2 _4
 
-static operation _2 ( ) : void pre: _3  post: _4  |-->  static _2( ) { } 
-static operation _2 ( _* ) : void pre: _3  post: _4  |-->  static _2( _*`seq2ruleset141 ) { } 
+static operation _2 ( ) : void pre: _3  post: _4  |-->  static _2( ) { }\n 
+static operation _2 ( _* ) : void pre: _3  post: _4  |-->  static _2( _*`seq2ruleset141 ) { }\n 
 
-static query _2 ( ) : _3 pre: _4  post: _5  |-->  static _2( ) { } 
-static query _2 ( _* ) : _3 pre: _4  post: _5  |-->  static _2( _*`seq2ruleset115 ) { } 
+static query _2 ( ) : _3 pre: _4  post: _5  |-->  static _2( ) { }\n 
+static query _2 ( _* ) : _3 pre: _4  post: _5  |-->  static _2( _*`seq2ruleset115 ) { }\n 
 
-static operation _2 ( ) : void pre: _3  post: _4  activity: _5  |-->  static _2( ) { _5 } 
-static operation _2 ( _* ) : void pre: _3  post: _4  activity: _5  |-->  static _2( _*`seq2ruleset141 ) { _5 } 
+static operation _2 ( ) : void pre: _3  post: _4  activity: _5  |-->  static _2( ) { _5 }\n 
+static operation _2 ( _* ) : void pre: _3  post: _4  activity: _5  |-->  static _2( _*`seq2ruleset141 ) { _5 }\n 
 
-static query _2 ( ) : _3 pre: _4  post: _5  activity: _6  |-->  static _2( ) { _6 } 
-static query _2 ( _* ) : _3 pre: _4  post: _5  activity: _6  |-->  static _2( _*`seq2ruleset115 ) { _6 }
+static query _2 ( ) : _3 pre: _4  post: _5  activity: _6  |-->  static _2( ) { _6 }\n 
+static query _2 ( _* ) : _3 pre: _4  post: _5  activity: _6  |-->  static _2( _*`seq2ruleset115 ) { _6 }\n
 
-operation _2 ( ) : void pre: _3  post: _4  |-->  _2( ) { }  
-operation _2 ( _* ) : void pre: _3  post: _4  |-->  _2( _*`seq2ruleset141 ) { } 
+operation _2 ( ) : void pre: _3  post: _4  |-->  _2( ) { }\n  
+operation _2 ( _* ) : void pre: _3  post: _4  |-->  _2( _*`seq2ruleset141 ) { } \n
  
-query _2 ( ) : _3 pre: _4  post: _5  |-->  _2( ) { }  
-query _2 ( _* ) : _3 pre: _4  post: _5  |-->  _2( _*`seq2ruleset115 ) { } 
+query _2 ( ) : _3 pre: _4  post: _5  |-->  _2( ) { }\n  
+query _2 ( _* ) : _3 pre: _4  post: _5  |-->  _2( _*`seq2ruleset115 ) { } \n
 
-operation _2 ( ) : void pre: _3  post: _4  activity: _5  |-->  _2( ) { _5 } 
-operation _2 ( _* ) : void pre: _3  post: _4  activity: _5  |-->  _2( _*`seq2ruleset141 ) { _5 } 
+operation _2 ( ) : void pre: _3  post: _4  activity: _5  |-->  _2( ) { _5 } \n
+operation _2 ( _* ) : void pre: _3  post: _4  activity: _5  |-->  _2( _*`seq2ruleset141 ) { _5 } \n
 
-query _2 ( ) : _3 pre: _4  post: _5  activity: _6  |-->  _2( ) { _6 } 
-query _2 ( _* ) : _3 pre: _4  post: _5  activity: _6  |-->  _2( _*`seq2ruleset115 ) { _6 } 
+query _2 ( ) : _3 pre: _4  post: _5  activity: _6  |-->  _2( ) { _6 } \n
+query _2 ( _* ) : _3 pre: _4  post: _5  activity: _6  |-->  _2( _*`seq2ruleset115 ) { _6 } \n
 
 
 
@@ -585,27 +596,27 @@ _1 ; _* |-->_1 _*`recurse
 
 
 OclAttribute::
-attribute _2 : String := _3  |-->  this._2 = _3; <action> _2 String
-attribute _2 : String  |-->  this._2 = ""; <action> _2 String
+attribute _2 : String := _3  |-->  this._2 = _3;\n<action> _2 String
+attribute _2 : String  |-->  this._2 = "";\n<action> _2 String
 
-attribute _2 : Set := _3  |-->  this._2 = _3;<action> _2 Set
-attribute _2 : Set  |-->  this._2 = new Set();<action> _2 Set
+attribute _2 : Set := _3  |-->  this._2 = _3;\n<action> _2 Set
+attribute _2 : Set  |-->  this._2 = new Set();\n<action> _2 Set
 
-attribute _2 : Sequence := _3 |-->  this._2 = _3;<action> _2 Sequence
-attribute _2 : Sequence  |-->  this._2 = [];<action> _2 Sequence
+attribute _2 : Sequence := _3 |-->  this._2 = _3;\n<action> _2 Sequence
+attribute _2 : Sequence  |-->  this._2 = [];\n<action> _2 Sequence
 
-attribute _2 : Map := _3  |-->  this._2 = _3;<action> _2 Map
-attribute _2 : Map  |-->  this._2 = new Map();<action> _2 Map
+attribute _2 : Map := _3  |-->  this._2 = _3;\n<action> _2 Map
+attribute _2 : Map  |-->  this._2 = new Map();\n<action> _2 Map
 
-attribute _2 : _4 := _6 |-->  this._2 = _6;<action> _2 _4  
-attribute _2 : _4  |-->  this._2 = _4`typInit;<action> _2 _4  
+attribute _2 : _4 := _6 |-->  this._2 = _6;\n<action> _2 _4  
+attribute _2 : _4  |-->  this._2 = _4`typInit;\n<action> _2 _4  
 
 static attribute _2 : _4 := _6 |--> 
 static attribute _2 : _4 |--> 
 
 
 OclEnumeration::
-enumeration _2 { _4 }  |-->const _2 = _4`seq3subruleset152 <EOF> 
+enumeration _2 { _4 }  |-->const _2 = _4`seq3subruleset152\n
 
 OclStatement::
 skip |-->
@@ -744,18 +755,18 @@ _1 ->tail ( ) |-->_1`ocltype
 _1 ->reverse ( ) |-->_1`ocltype
 _1 ->sort ( ) |-->_1`ocltype
 
-_1 [ _3 ]  |-->_1`elementType
-_1 ->at ( _3 ) |-->_1`elementType
-_1 ->first ( ) |-->_1`elementType
-_1 ->last ( ) |-->_1`elementType
-_1 ->max ( ) |-->_1`elementType
-_1 ->min ( ) |-->_1`elementType
+_1 [ _3 ]  |-->_1`oclelemtype
+_1 ->at ( _3 ) |-->_1`oclelemtype
+_1 ->first ( ) |-->_1`oclelemtype
+_1 ->last ( ) |-->_1`oclelemtype
+_1 ->max ( ) |-->_1`oclelemtype
+_1 ->min ( ) |-->_1`oclelemtype
 
-_1 ->any ( ) |-->_1`elementType
-_1 ->any ( _2 | _3 ) |-->_1`elementType
+_1 ->any ( ) |-->_1`oclelemtype
+_1 ->any ( _2 | _3 ) |-->_1`oclelemtype
 
-_1 ->sum ( ) |-->_1`elementType
-_1 ->prd ( ) |-->_1`elementType
+_1 ->sum ( ) |-->_1`oclelemtype
+_1 ->prd ( ) |-->_1`oclelemtype
 
 _1 ->select ( _2 ) |-->_1`ocltype
 _1 ->select ( _2 | _3 ) |-->_1`ocltype
@@ -775,9 +786,9 @@ _1 ->selectMinimals ( _2 | _3 ) |-->_1`ocltype
 _1 ->selectMaximals ( _2 ) |-->_1`ocltype
 _1 ->selectMaximals ( _2 | _3 ) |-->_1`ocltype
 
-_1 ->unionAll ( ) |-->_1`elementType
+_1 ->unionAll ( ) |-->_1`oclelemtype
 _1 ->concatenateAll ( ) |-->Sequence
-_1 ->intersectAll ( ) |-->_1`elementType
+_1 ->intersectAll ( ) |-->_1`oclelemtype
 
 _1 ->byte2char ( ) |-->String
 _1 ->char2byte ( ) |-->Number
@@ -838,8 +849,35 @@ _1 . insertInto ( _2 ) |-->_1`oclelemtype
 _1 . excludingSubrange ( _2 ) |-->_1`oclelemtype
 _1 . setSubrange ( _2 ) |-->_1`oclelemtype
 
+_1 ->union ( _2 ) |-->_1`oclelemtype
+_1 ->intersection ( _2 ) |-->_1`oclelemtype
+_1 ->symmetricDifference ( _2 ) |-->_1`oclelemtype
+
+_1 ->concatenate ( _2 ) |-->_1`oclelemtype
+_1 ->append ( _2 ) |-->_1`oclelemtype
+_1 ->prepend ( _2 ) |-->_1`oclelemtype
+
+_1 ->including ( _2 ) |-->_1`oclelemtype
+_1 ->excluding ( _2 ) |-->_1`oclelemtype
+
+_1 ->select ( _2 ) |-->_1`oclelemtype
+_1 ->select ( _2 | _3 ) |-->_1`oclelemtype
+
+_1 ->reject ( _2 ) |-->_1`oclelemtype
+_1 ->reject ( _2 | _3 ) |-->_1`oclelemtype
+
+_1 ->collect ( _2 ) |-->_2`ocltype
+_1 ->collect ( _2 | _3 ) |-->_3`ocltype
+
+_1 ->selectMinimals ( _2 ) |-->_1`oclelemtype
+_1 ->selectMinimals ( _2 | _3 ) |-->_1`oclelemtype
+
+_1 ->selectMaximals ( _2 ) |-->_1`oclelemtype
+_1 ->selectMaximals ( _2 | _3 ) |-->_1`oclelemtype
+
 _1 |-->Set<when> _1`elementType Set
 _1 |-->Sequence<when> _1`elementType Sequence
+_1 |-->Map<when> _1`elementType Map
 _1 |-->String<when> _1`elementType String
 
 _1 |-->_1`elementType
