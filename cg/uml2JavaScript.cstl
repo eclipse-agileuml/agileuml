@@ -33,6 +33,7 @@ _1 ->sum ( ) |-->Ocl.sumString(_1)<when> _1`oclelemtype String
 _1 ->sum ( ) |-->Ocl.sum(_1)
 _1 ->prd ( ) |-->Ocl.prd(_1)
 
+_1 ->copy ( ) |-->Object.assign({}, _1)
 
 _1 ->any ( ) |-->Ocl.anyMap(_1)<when> _1`ocltype Map
 _1 ->any ( ) |-->Ocl.any(_1)
@@ -51,6 +52,8 @@ lambda _1 : _2 in _3 |-->function(_1) { return _3; }
 
 _1 ->abs ( ) |-->Math.abs(_1)
 _1 ->round ( ) |-->Math.fround(_1)
+_1 ->floor ( ) |-->Math.floor(_1)
+_1 ->ceil ( ) |-->Math.ceil(_1)
 
 _1 ->byte2char ( ) |-->Ocl.byte2char(_1)
 _1 ->char2byte ( ) |-->Ocl.char2byte(_1)
@@ -74,6 +77,8 @@ _1 ->tanh ( ) |-->Math.tanh(_1)
 _1 ->sqr ( ) |-->((_1)*(_1))
 _1 ->sqrt ( ) |-->Math.sqrt(_1)
 _1 ->cbrt ( ) |-->Math.cbrt(_1)
+
+_1 ->oclIsUndefined ( ) |-->(_1 == undefined || Number.isNaN(_1))
 
 _1 ->unionAll ( ) |-->Ocl.unionAllSet(_1)<when> _1`oclelemtype Set
 _1 ->unionAll ( ) |-->Ocl.concatenateAll(_1)<when> _1`oclelemtype Sequence
@@ -121,8 +126,8 @@ static query _2 ( _* ) : _3 pre: _4  post: _5  activity: _6  |-->
 
 
 seq3ruleset151::
-; |-->,
-literal _2  |-->_2 : _2`nestedTfunc150 
+; |-->
+literal _2 = _3 |-->  static _2 = _3;\n 
 _0 |-->_0
 
 
@@ -171,7 +176,7 @@ _1 |-->null
 
 
 nestedTfunc150::
-_1 |-->'_1'
+_1 |-->_1
 
 nestedSfunc64::
 this |-->self
@@ -252,6 +257,8 @@ nestedTfunc69::
 ->prepend |-->prepend
 ->pow |-->pow
 ->gcd |-->gcd
+->oclIsTypeOf |-->oclIsTypeOf
+->oclIsKindOf |-->oclIsTypeOf
 
 ->excludingValue |-->excludingMapValue
 ->excludingKey |-->excludingMapKey
@@ -616,7 +623,7 @@ static attribute _2 : _4 |-->
 
 
 OclEnumeration::
-enumeration _2 { _4 }  |-->const _2 = _4`seq3subruleset152\n
+enumeration _2 { _4 }  |-->class _2 _4`seq3subruleset152
 
 OclStatement::
 skip |-->
@@ -655,6 +662,7 @@ Sequence { } |-->Sequence
 Sequence { _3 }  |-->Sequence
 Map { } |-->Map
 Map { _3 } |-->Map 
+
 
 _1 . setAt ( _2 ) |-->_1`ocltype
 Integer . subrange ( _2 ) |-->Sequence
@@ -754,6 +762,7 @@ _1 ->front ( ) |-->_1`ocltype
 _1 ->tail ( ) |-->_1`ocltype
 _1 ->reverse ( ) |-->_1`ocltype
 _1 ->sort ( ) |-->_1`ocltype
+_1 ->copy ( ) |-->_1`ocltype
 
 _1 [ _3 ]  |-->_1`oclelemtype
 _1 ->at ( _3 ) |-->_1`oclelemtype
@@ -793,6 +802,11 @@ _1 ->intersectAll ( ) |-->_1`oclelemtype
 _1 ->byte2char ( ) |-->String
 _1 ->char2byte ( ) |-->Number
 
+_1 ->abs ( ) |-->Number
+_1 ->round ( ) |-->Number
+_1 ->floor ( ) |-->Number
+_1 ->ceil ( ) |-->Number
+
 _1 ->cos ( ) |-->Number
 _1 ->sin ( ) |-->Number
 _1 ->tan ( ) |-->Number
@@ -812,6 +826,13 @@ _1 ->tanh ( ) |-->Number
 _1 ->sqr ( ) |-->Number
 _1 ->sqrt ( ) |-->Number
 _1 ->cbrt ( ) |-->Number
+
+_1 ->oclType ( ) |-->String
+_1 ->oclIsTypeOf ( _2 ) |-->Boolean
+_1 ->oclIsKindOf ( _2 ) |-->Boolean
+
+
+lambda _1 : _2 in _3 |-->Function
 
 if _1 then _2 else _3 endif |-->_2`ocltype
 
@@ -849,6 +870,15 @@ _1 . insertInto ( _2 ) |-->_1`oclelemtype
 _1 . excludingSubrange ( _2 ) |-->_1`oclelemtype
 _1 . setSubrange ( _2 ) |-->_1`oclelemtype
 
+
+_1 ->sort ( ) |-->_1`oclelemtype
+_1 ->reverse ( ) |-->_1`oclelemtype
+_1 ->front ( ) |-->_1`oclelemtype
+_1 ->tail ( ) |-->_1`oclelemtype
+_1 ->values ( ) |-->_1`oclelemtype
+_1 ->copy ( ) |-->_1`oclelemtype
+_1 ->characters ( ) |-->String
+
 _1 ->union ( _2 ) |-->_1`oclelemtype
 _1 ->intersection ( _2 ) |-->_1`oclelemtype
 _1 ->symmetricDifference ( _2 ) |-->_1`oclelemtype
@@ -874,6 +904,9 @@ _1 ->selectMinimals ( _2 | _3 ) |-->_1`oclelemtype
 
 _1 ->selectMaximals ( _2 ) |-->_1`oclelemtype
 _1 ->selectMaximals ( _2 | _3 ) |-->_1`oclelemtype
+
+lambda _1 : _2 in _3 |-->_3`ocltype
+if _1 then _2 else _3 endif |-->_2`oclelemtype
 
 _1 |-->Set<when> _1`elementType Set
 _1 |-->Sequence<when> _1`elementType Sequence
