@@ -1148,6 +1148,12 @@ static selectSortedSet(s,f)
 static selectSequence(s,f) 
 { return s.filter(f); }
 
+static select(s,f)
+{ if (Array.isArray(s))
+  { return Ocl.selectSequence(s,f); }
+  return Ocl.selectSet(s,f);
+}
+
 static rejectSet(s,f)  
 { var res = new Set();
   for (var x of s)
@@ -1164,12 +1170,18 @@ static rejectSortedSet(s,f)
 static rejectSequence(s,f) 
 { return s.filter((x) => !(f(x))); }
 
+static reject(s,f)
+{ if (Array.isArray(s))
+  { return Ocl.rejectSequence(s,f); }
+  return Ocl.rejectSet(s,f);
+}
+
 static collectSet(s,f) 
 { var res = [];
   for (var x of s)
   { res.push(f(x)); }
   return res;
-}
+} // ok for sets, sequences
 
 static collectSequence(s,f) 
 { return s.map(f); }
@@ -1226,6 +1238,12 @@ static selectMaximalsSet(col,f)
   return result;
 }
 
+static selectMaximals(s,f)
+{ if (Array.isArray(s))
+  { return Ocl.selectMaximalsSequence(s,f); }
+  return Ocl.selectMaximalsSet(s,f);
+}
+
 static selectMinimalsSequence(col,f) 
 { var result = [];
   if (col.length == 0)
@@ -1269,6 +1287,12 @@ static selectMinimalsSet(col,f)
     }
   }
   return result;
+}
+
+static selectMinimals(s,f)
+{ if (Array.isArray(s))
+  { return Ocl.selectMinimalsSequence(s,f); }
+  return Ocl.selectMinimalsSet(s,f);
 }
 
 static selectMinimalsMap(m,f)
@@ -1316,7 +1340,9 @@ static selectMaximalsMap(m,f)
 }
 
 static minSequence(sq) 
-{ var result = sq[0];
+{ if (sq.length == 0)
+  { return null; }
+  var result = sq[0];
   for (var x of sq)
   { if (x < result)
     { result = x; }
@@ -1325,16 +1351,18 @@ static minSequence(sq)
 }
 
 static minSet(col) 
-{ var result = Ocl.any(col);
+{ var result = Ocl.any(col); 
   for (var x of col)
   { if (x < result)
     { result = x; }
   }
   return result;
-}
+} // ok for sets, sequences
 
 static maxSequence(sq) 
-{ var result = sq[0];
+{ if (sq.length == 0) 
+  { return null; }
+  var result = sq[0];
   for (var x of sq)
   { if (x > result)
     { result = x; }
@@ -1349,7 +1377,7 @@ static maxSet(col)
     { result = x; }
   }
   return result;
-}
+} // for sets, sequences
  
 
 static sum(col) 
@@ -1360,10 +1388,10 @@ static sum(col)
 }
 
 static sumint(col)
-{ return sum(col); }
+{ return Ocl.sum(col); }
 
 static sumlong(col) 
-{ return sum(col); }
+{ return Ocl.sum(col); }
 
 static sumdouble(col) 
 { var result = 0.0;
@@ -1514,7 +1542,7 @@ static unionMap(s,t)
 static unionAllMap(sq) 
 { var res = new Map();
   for (var s of sq) 
-  { res = unionMap(res,s); }
+  { res = Ocl.unionMap(res,s); }
   return res;
 }
 
@@ -1535,7 +1563,7 @@ static intersectAllMap(sq)
   res = sq[0];
 
   for (var s of sq) 
-  { res = intersectionMap(res,s); }
+  { res = Ocl.intersectionMap(res,s); }
   return res;
 }
 
