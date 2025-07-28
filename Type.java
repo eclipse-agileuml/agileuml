@@ -5625,11 +5625,13 @@ public class Type extends ModelElement
     String res = "(OclEnumeration enumeration "; 
     String nme = getName(); 
     res = res + nme + " { (OclLiterals ";
+
     for (int i = 0; i < values.size(); i++) 
-    { res = res + "(OclLiteral literal " + values.get(i) + ") "; 
+    { res = res + "(OclLiteral literal " + values.get(i) + " = " + i + ") "; 
       if (i < values.size() - 1) 
       { res = res + " ; "; } 
     }
+
     return res + " ) } )";  
   } 
 

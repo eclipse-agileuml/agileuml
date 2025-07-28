@@ -15177,7 +15177,8 @@ public class ASTCompositeTerm extends ASTTerm
            "ceil".equals(feature) || 
            "round".equals(feature) ||
            "pow".equals(feature) ||
-           "hypot".equals(feature) ||  
+           "hypot".equals(feature) ||
+           "sumPrecise".equals(feature) ||  
            "min".equals(feature) || "max".equals(feature); 
   } 
 
@@ -15339,6 +15340,15 @@ public class ASTCompositeTerm extends ASTTerm
       res.setType(new Type("double", null)); 
       Expression resx = 
           new UnaryExpression("->sqrt", res);
+      resx.setType(new Type("double", null)); 
+      return resx; 
+    }  
+
+    if ("sumPrecise".equals(feature) && pars.size() >= 1)
+    { Expression par1 = (Expression) pars.get(0); 
+      par1.setBrackets(true); 
+      Expression resx = 
+          new UnaryExpression("->sum", par1);
       resx.setType(new Type("double", null)); 
       return resx; 
     }  

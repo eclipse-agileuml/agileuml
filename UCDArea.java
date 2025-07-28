@@ -2253,10 +2253,19 @@ public class UCDArea extends JPanel
     // for use by a CSTL file that processes OclAttribute 
     // and OclExpression items. 
 
-    System.out.println(">>> ASTs of classes and use cases: "); 
+    System.out.println(">>> ASTs of types, classes and use cases: "); 
     System.out.println(); 
 
+    Vector typasts = new Vector(); 
     Vector entasts = new Vector(); 
+
+    for (int i = 0; i < types.size(); i++) 
+    { Type t = (Type) types.get(i); 
+      String typast = t.toDeclarationAST();
+      typasts.add(typast);  
+      System.out.println(typast); 
+      System.out.println(); 
+    } 
 
     for (int i = 0; i < entities.size(); i++)
     { Entity ent = (Entity) entities.get(i); 
@@ -2306,11 +2315,32 @@ public class UCDArea extends JPanel
       return; 
     } 
 
+    Vector typres = new Vector(); // ASTs of types
+    Vector actualtyps = new Vector(); // corresponding types
+
     Vector res = new Vector(); // ASTs of classes
     Vector actualents = new Vector(); // corresponding classes
 
     java.util.Date d1 = new java.util.Date(); 
     long t1 = d1.getTime(); 
+
+    for (int i = 0; i < typasts.size(); i++) 
+    { String s = (String) typasts.get(i); 
+      Compiler2 c = new Compiler2();    
+      ASTTerm xx =
+          c.parseGeneralAST(s); 
+
+      if (xx == null) 
+      { System.err.println("!! ERROR: Invalid text for general AST: " + s); 
+        System.err.println(c.lexicals); 
+          // return; 
+      }
+      else 
+      { typres.add(xx);
+        Type typ = (Type) types.get(i); 
+        actualtyps.add(typ); 
+      }
+    }
 
     for (int i = 0; i < entasts.size(); i++) 
     { String s = (String) entasts.get(i); 
@@ -2319,7 +2349,7 @@ public class UCDArea extends JPanel
           c.parseGeneralAST(s); 
 
       if (xx == null) 
-      { System.err.println("!!ERROR: Invalid text for general AST: " + s); 
+      { System.err.println("!! ERROR: Invalid text for general AST: " + s); 
         System.err.println(c.lexicals); 
           // return; 
       }
@@ -2331,6 +2361,15 @@ public class UCDArea extends JPanel
     }
 
     Vector results = new Vector(); 
+
+    for (int i = 0; i < typres.size(); i++) 
+    { ASTTerm tt = (ASTTerm) typres.get(i); 
+      
+      String outtext = tt.cg(spec); 
+      String newt = CGRule.correctNewlines(outtext); 
+        
+      results.add(newt); 
+    } 
 
     for (int i = 0; i < res.size(); i++) 
     { ASTTerm tt = (ASTTerm) res.get(i); 
