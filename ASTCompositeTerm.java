@@ -14607,6 +14607,58 @@ public class ASTCompositeTerm extends ASTTerm
 
     if ("splice".equals(feature) && 
         obj.isSequence() && 
+        pars.size() == 1)
+    { // lst.splice(i) is lst := lst.subrange(1,i)
+
+      Expression par1 = (Expression) pars.get(0); 
+      Vector rempars = new Vector(); 
+      rempars.add(new BasicExpression(1)); 
+      rempars.add(par1); 
+      Expression subrange1 = 
+        BasicExpression.newFunctionBasicExpression(
+          "subrange", obj, rempars);
+      subrange1.setType(obj.getType()); 
+      subrange1.setElementType(obj.getElementType());
+
+      AssignStatement stat = 
+        new AssignStatement(obj, subrange1); 
+      Vector cmds = new Vector(); 
+      cmds.add(stat); 
+      return cmds;
+    } 
+
+    if ("splice".equals(feature) && 
+        obj.isSequence() && 
+        pars.size() == 2)
+    { // lst.splice(i,d) is 
+      // execute (lst.subrange(i+1, i+d)->isDeleted())
+
+      Expression par1 = (Expression) pars.get(0); 
+      Expression par2 = (Expression) pars.get(1); 
+      Vector rempars = new Vector(); 
+      Expression expr1 = 
+         new BinaryExpression("+", par1, unitExpression); 
+      Expression expr2 = 
+         new BinaryExpression("+", par1, par2); 
+      rempars.add(expr1);
+      rempars.add(expr2); 
+ 
+      Expression subrange1 = 
+        BasicExpression.newFunctionBasicExpression(
+          "excludingSubrange", obj, rempars);
+      subrange1.setType(obj.getType()); 
+      subrange1.setElementType(obj.getElementType());
+            
+      AssignStatement stat = 
+        new AssignStatement(obj, subrange1); 
+      Vector cmds = new Vector(); 
+      cmds.add(stat); 
+      return cmds;
+    } 
+
+
+    if ("splice".equals(feature) && 
+        obj.isSequence() && 
         pars.size() > 1)
     { Expression par1 = (Expression) pars.get(0); 
       Expression par2 = (Expression) pars.get(1);
@@ -17941,25 +17993,73 @@ public class ASTCompositeTerm extends ASTTerm
 
     if ("toSpliced".equals(feature) && 
         obj.isSequence() && 
-        pars.size() > 1)
-    { Expression par1 = (Expression) pars.get(0); 
+        pars.size() == 1)
+    { // lst.toSpliced(i) is lst.subrange(1,i)
+
+      Expression par1 = (Expression) pars.get(0); 
+      Vector rempars = new Vector(); 
+      rempars.add(new BasicExpression(1)); 
+      rempars.add(par1); 
+      Expression subrange1 = 
+        BasicExpression.newFunctionBasicExpression(
+          "subrange", obj, rempars);
+      subrange1.setType(obj.getType()); 
+      subrange1.setElementType(obj.getElementType());
+      return subrange1; 
+    } 
+
+    if ("toSpliced".equals(feature) && 
+        obj.isSequence() && 
+        pars.size() == 2)
+    { // lst.toSpliced(i,d) is lst.excludingSubrange(i+1, i+d)
+
+      Expression par1 = (Expression) pars.get(0); 
+      Expression par2 = (Expression) pars.get(1); 
+      Vector rempars = new Vector(); 
+      Expression expr1 = 
+         new BinaryExpression("+", par1, unitExpression); 
+      Expression expr2 = 
+         new BinaryExpression("+", par1, par2); 
+      rempars.add(expr1);
+      rempars.add(expr2); 
+ 
+      Expression subrange1 = 
+        BasicExpression.newFunctionBasicExpression(
+          "excludingSubrange", obj, rempars);
+      subrange1.setType(obj.getType()); 
+      subrange1.setElementType(obj.getElementType());
+      return subrange1; 
+    } 
+
+
+    if ("toSpliced".equals(feature) && 
+        obj.isSequence() && 
+        pars.size() > 2)
+    { // lst.toSpliced(s,d,rempars) is 
+      // lst.subrange(1,s)^Sequence{rempars}^lst.subrange(s+d+1)
+
+      Expression par1 = (Expression) pars.get(0); 
       Expression par2 = (Expression) pars.get(1);
       Expression par1x = 
         new BinaryExpression("+", par1, unitExpression);  
       Expression par2x = 
-        new BinaryExpression("+", par1x, par2);  
+        new BinaryExpression("+", par1x, par2); // s + d + 1
+ 
       Vector rempars = new Vector(); 
       rempars.addAll(pars); 
       rempars.remove(0); 
       rempars.remove(0); 
+
       SetExpression inserted = 
-        new SetExpression(rempars,true); 
+        new SetExpression(rempars,true);
+ 
       inserted.setType(obj.getType()); 
       inserted.setElementType(obj.getElementType());
 
       Vector pars1x = new Vector(); 
       pars1x.add(unitExpression); 
       pars1x.add(par1);
+
       Expression subrange1 = 
         BasicExpression.newFunctionBasicExpression(
           "subrange", obj, pars1x);
@@ -17971,16 +18071,18 @@ public class ASTCompositeTerm extends ASTTerm
       Expression subrange2 = 
         BasicExpression.newFunctionBasicExpression(
           "subrange", obj, pars2x);
+
       Expression res = 
         new BinaryExpression("->union", subrange1, inserted); 
       res.setType(obj.getType()); 
       res.setElementType(obj.getElementType());
+
       Expression rhs = 
         new BinaryExpression("->union", res, subrange2); 
       rhs.setType(obj.getType()); 
       rhs.setElementType(obj.getElementType());
       return rhs; 
-    } // just replacement case
+    } // replacement case
 
 
     if ("filter".equals(feature) && 
