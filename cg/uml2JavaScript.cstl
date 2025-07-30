@@ -33,7 +33,7 @@ _1 ->sum ( ) |-->Ocl.sumString(_1)<when> _1`oclelemtype String
 _1 ->sum ( ) |-->Ocl.sum(_1)
 _1 ->prd ( ) |-->Ocl.prd(_1)
 
-_1 ->copy ( ) |-->Object.assign({}, _1)
+_1 ->copy ( ) |-->Ocl.copy(_1)
 
 _1 ->any ( ) |-->Ocl.anyMap(_1)<when> _1`ocltype Map
 _1 ->any ( ) |-->Ocl.any(_1)
@@ -54,6 +54,9 @@ _1 ->abs ( ) |-->Math.abs(_1)
 _1 ->round ( ) |-->Math.fround(_1)
 _1 ->floor ( ) |-->Math.floor(_1)
 _1 ->ceil ( ) |-->Math.ceil(_1)
+
+_1 ->isEmpty ( ) |-->(Ocl.size(_1) == 0)
+_1 ->notEmpty ( ) |-->(Ocl.size(_1) > 0)
 
 _1 ->byte2char ( ) |-->Ocl.byte2char(_1)
 _1 ->char2byte ( ) |-->Ocl.char2byte(_1)
@@ -78,7 +81,8 @@ _1 ->sqr ( ) |-->((_1)*(_1))
 _1 ->sqrt ( ) |-->Math.sqrt(_1)
 _1 ->cbrt ( ) |-->Math.cbrt(_1)
 
-_1 ->oclIsUndefined ( ) |-->(_1 == undefined || Number.isNaN(_1))
+_1 ->oclIsUndefined ( ) |-->Ocl.oclIsUndefined(_1)
+_1 ->oclIsInvalid ( ) |-->Ocl.oclIsInvalid(_1)
 
 _1 ->unionAll ( ) |-->Ocl.unionAllSet(_1)<when> _1`oclelemtype Set
 _1 ->unionAll ( ) |-->Ocl.concatenateAll(_1)<when> _1`oclelemtype Sequence
@@ -259,6 +263,9 @@ nestedTfunc69::
 ->gcd |-->gcd
 ->oclIsTypeOf |-->oclIsTypeOf
 ->oclIsKindOf |-->oclIsTypeOf
+
+->equalsIgnoreCase |-->equalsIgnoreCase
+->compareTo |-->compareTo
 
 ->excludingValue |-->excludingMapValue
 ->excludingKey |-->excludingMapKey
@@ -831,6 +838,14 @@ _1 ->oclType ( ) |-->String
 _1 ->oclIsTypeOf ( _2 ) |-->Boolean
 _1 ->oclIsKindOf ( _2 ) |-->Boolean
 
+_1 ->oclIsUndefined ( ) |-->Boolean
+_1 ->oclIsInvalid ( ) |-->Boolean
+
+_1 ->isEmpty ( ) |-->Boolean
+_1 ->notEmpty ( ) |-->Boolean
+
+_1 ->equalsIgnoreCase ( _2 ) |-->Boolean
+_1 ->compareTo ( _2 ) |-->Numeric
 
 lambda _1 : _2 in _3 |-->Function
 
