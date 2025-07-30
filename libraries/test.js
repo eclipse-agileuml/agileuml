@@ -148,6 +148,30 @@ class Ocl
     return (typeof x);
   }
 
+  static copy(x) 
+  { var typ = (typeof x); 
+    
+    if (typ == "number" || typ == "function" ||
+        typ == "symbol")
+    { return x; }    
+
+    if (typ == "string")
+    { return "" + x; }
+
+    if (Array.isArray(x))
+    { return [].concat(x); }
+
+    if (x.toString().startsWith("[object Map"))
+    { return new Map(x); }
+
+    if (x.toString().startsWith("[object Set"))
+    { return new Set(x); }
+
+    var res = Object.assign({}, x);
+    res.prototype = x.prototype; 
+    return res;  
+  }
+
   static toInteger(sx) 
   { return parseInt("" + sx); }
 
@@ -246,10 +270,324 @@ class Ocl
     return res;
   }
 
+  static oclIsInvalid(x) 
+  { return x === undefined || 
+           Number.isNaN(x); 
+  } 
+
+  static oclIsUndefined(x) 
+  { return x == null || x == undefined || 
+           Number.isNaN(x); 
+  } 
+
+  static isUnique(s, f) 
+  { var st = new Set();
+    for (var x of s)
+    { var y = f(x);
+      if (st.has(y))
+      { return false; }
+      st.add(y);
+    }
+    return true;
+  } // for any collection s
+
+  static isUniqueMap(m, f) 
+  { var st = new Set();
+    for (var [k,x] of m)
+    { var y = f(x);
+      if (st.has(y))
+      { return false; }
+      st.add(y);
+    }
+    return true;
+  }
+
+  static any(s)  
+  { var lst = Array.from(s);
+    if (1 <= lst.length)  
+    { return lst[0]; }
+    return null;
+  } // sets, sequences s
+
+  static anyMap(s)  
+  { for (var [k,v] of s) 
+    { return v; }
+    return null; 
+  }
+
+  static anyCollection(s, f)  
+  { for (var v of s) 
+    { if (f(v)) 
+      { return v; }
+    }
+    return null;
+  } // sets, sequences s
+
+  static anyMapElement(s, f)  
+  { for (var [k,v] of s) 
+    { if (f(v)) 
+      { return v; }
+    }
+    return null;
+  }
+
+  static includes(col, x)
+  { for (var y of col)
+    { if (x == y) 
+      { return true; }
+    }
+    return false;
+  }
+
+  static excludes(col, x)
+  { for (var y of col)
+    { if (x == y) 
+      { return false; }
+    }
+    return true;
+  }
+
+  static includesAllSet(supset,subset) 
+  { for (var x of subset)
+    { if (supset.has(x)) {}
+      else 
+      { return false; }
+    }
+    return true;
+  }
+
+  static includesAllSequence(supset,subset) 
+  { for (var x of subset)
+    { if (supset.includes(x)) {}
+      else 
+      { return false; }
+    }
+    return true;
+  }
+
+  static includesAll(supset,subset) 
+  { for (var x of subset)
+    { if (Ocl.includes(supset,x)) {}
+      else 
+      { return false; }
+    }
+    return true;
+  }
+
+  static excludesAllSet(supset,subset) 
+  { for (var x of subset)
+    { if (supset.has(x))
+      { return false; }
+    }
+    return true;
+  }
+
+  static excludesAllSequence(supset,subset) 
+  { for (var x of subset)
+    { if (supset.includes(x))
+      { return false; }
+    }
+    return true;
+  }
+
+  static excludesAll(supset,subset) 
+  { for (var x of subset)
+    { if (Ocl.includes(supset, x))
+      { return false; }
+    }
+    return true;
+  }
+
+
+  static includesValue(mp, x) 
+  { for (var [k,v] of mp) 
+    { if (v == x) 
+      { return true; }
+    }
+    return false;
+  }
+
+  static excludesValue(mp, x) 
+  { for (var [k,v] of mp)
+    { if (v == x)
+      { return false; }
+    }
+    return true;
+  }
+
+  static iterate(sq,init,f)  
+  { var acc = init;
+    for (var x of sq) 
+    { var g = f(x);
+      acc = g(acc); 
+    }
+    return acc;
+  }
+
+  static exists(col,f) 
+  { for (var x of col)
+    { if (f(x))
+      { return true; }
+    }
+    return false;
+  }
+
+  static forAll(col,f)   
+  { for (var x of col)
+    { if (f(x)) { }
+      else 
+      { return false; }
+    }
+    return true;
+  }
+
+  static exists1(col,f) 
+  { var found = false;
+    for (var x of col)
+    { if (f(x))
+      { if (found)
+        { return false; }
+        else 
+        { found = true; }
+      }
+    }
+    return found;
+  }
+
+  static toLowerCase(str) 
+  { var s = "" + str;
+    return s.toLowerCase();
+  }
+
+  static toUpperCase(str) 
+  { var s = "" + str;
+    return s.toUpperCase();
+  }
+
+  static before(s,sep) 
+  { if (sep.length <= 0) 
+    { return s; }
+    var i = s.search(sep);
+    if (i < 0)  
+    { return s; }
+    return s.substring(0,i);
+  }
+
+  static after(s,sep)  
+  { var j = sep.length;
+    if (j <= 0) 
+    { return ""; }
+    var i = s.search(sep);
+    if (i < 0) 
+    { return ""; }
+    return s.substring(i+j, s.length);
+  }
+
+  static characters(str) 
+  { var res = [];
+    var n = str.length;
+    for (var x = 0; x < n; x++)
+    { res.push(str.at(x)); }
+    return res;
+  }
+
+  static insertAtString(x,i,s) 
+  { // 1-based index i
+    if (i <= 0) 
+    { return x; }
+    var n = x.length;
+    var x1 = x.substring(0,i-1);
+    var x2 = x.substring(i-1, n);
+    return x1 + s + x2;
+  }
+
+  static setAtString(x,i,s) 
+  { // i must be > 0, s has length 1
+    if (i <= 0) 
+    { return x; }
+    var n = x.length;
+    var x1 = x.substring(0, i-1);
+    var x2 = x.substring(i, n);
+    return x1 + s + x2;
+  }
+
+  static reverseString(st) 
+  { var res = "";
+    var n = st.length;
+    for (var x = n-1; x >= 0; x--)
+    { res = res + st.at(x); }
+    return res;
+  }  
+
+  static subtractString(s1,s2)
+  { var res = ""; 
+    var n = s1.length;
+    for (var x = 0; x < n; x++)
+    { var sx = s1.at(x); 
+      var ind = s2.search(sx);
+      if (ind >= 0) { }
+      else 
+      { res = res + sx; }
+    }
+    return res;
+  }
+
+  static equalsIgnoreCase(s1,s2) 
+  { if (s1.toLowerCase() == s2.toLowerCase())
+    { return true; }
+    return false;
+  }
+
+  static compareTo(s1,s2) 
+  { var result = 0;
+    if (s1 < s2)  
+    { return -1; }
+    if (s1 > s2)
+    { return 1; }
+    return result;
+  }
+
+  static indexOfSequence(sq,x)
+  { var indx = sq.indexOf(x);
+    return indx + 1;
+  }
+
+  static lastIndexOfSequence(sq,x) 
+  { var indx = sq.lastIndexOf(x);
+    return indx + 1;
+  }
+
+static lastIndexOf(s,d) 
+{ var result = 0
+  var dlen = d.length;
+  if (dlen == 0) 
+  { return 0; }
+  var i = s.lastIndexOf(d);
+  if (i < 0)
+  { return 0; }
+  return i+1;
+}
+
+static lastIndexOfString(s, d) 
+{ return Ocl.lastIndexOf(s,d); }
+
+}
+
+class Person { 
+  constructor() { this.name  = "Bob"; this.age = 44; } 
+} 
+
+class CC {
+  constructor( ) {   this.col = [];
+   }
+   op1( ) {   result = Ocl.maxSequence(this.col) ; }
+   op2( ) {   result = Ocl.minSequence(Ocl.selectSequence(this.col, function(x) { return x > 0; })) ; }
 }
 
 function testFunction() 
-{ var pp = [1, 10, 1]; 
-  var xx = Ocl.asOrderedSet(pp);
-  return xx[2];   
+{ var col = new Map([[3,"a"],[5,"b"],[7,"c"]]);
+  var sub = new Map([[7,"a"], [8, "b"], [9,"c"]]);  
+  var sq = [1,4,5,7,5]; 
+  // var chrs = Ocl.subtractString("a Long String", "gnt");
+  return Ocl.indexOfSequence(sq, 9);    
 } 
