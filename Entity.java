@@ -12722,8 +12722,15 @@ System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
           intf.getName() + " <|.. " + nme + "\n\n"; 
     }    
 
-    String res =  inheritstring + 
+    String classHeader =  
                   "class " + nme + " {\n";
+
+    if (isInterface())
+    { classHeader = "interface " + nme + " {\n"; } 
+    else if (isAbstract())
+    { classHeader = "abstract " + classHeader; } 
+
+    String res =  inheritstring + classHeader;  
     
     for (int i = 0; i < attributes.size(); i++)
     { Attribute att = (Attribute) attributes.get(i);
