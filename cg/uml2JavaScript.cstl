@@ -21,22 +21,26 @@ _1 ->size ( ) |-->_1.size<when> _1`ocltype Set
 _1 ->size ( ) |-->_1.size<when> _1`ocltype Map
 _1 ->size ( ) |-->Ocl.size(_1)
 
-_1 ->max ( ) |-->Ocl.maxSet(_1)<when> _1`ocltype Set
 _1 ->max ( ) |-->Ocl.maxMap(_1)<when> _1`ocltype Map
-_1 ->max ( ) |-->Ocl.maxSequence(_1)
+_1 ->max ( ) |-->Ocl.maxCollection(_1)
 
-_1 ->min ( ) |-->Ocl.minSet(_1)<when> _1`ocltype Set
 _1 ->min ( ) |-->Ocl.minMap(_1)<when> _1`ocltype Map
-_1 ->min ( ) |-->Ocl.minSequence(_1)
+_1 ->min ( ) |-->Ocl.minCollection(_1)
 
 _1 ->sum ( ) |-->Ocl.sumString(_1)<when> _1`oclelemtype String
-_1 ->sum ( ) |-->Ocl.sum(_1)
+_1 ->sum ( ) |-->Ocl.sumNumeric(_1)
 _1 ->prd ( ) |-->Ocl.prd(_1)
 
 _1 ->copy ( ) |-->Ocl.copy(_1)
 
 _1 ->any ( ) |-->Ocl.anyMap(_1)<when> _1`ocltype Map
 _1 ->any ( ) |-->Ocl.any(_1)
+
+_1 ->first ( ) |-->Ocl.firstMap(_1)<when> _1`ocltype Map
+_1 ->first ( ) |-->Ocl.first(_1)
+
+_1 ->last ( ) |-->Ocl.lastMap(_1)<when> _1`ocltype Map
+_1 ->last ( ) |-->Ocl.last(_1)
 
 _1 ->reverse ( ) |-->Ocl.reverseString(_1)<when> _1`ocltype String
 _1 ->reverse ( ) |-->Ocl.reverseSequence(_1)<when> _1`ocltype Sequence
@@ -300,14 +304,12 @@ _1 . subrange ( _2 ) |-->_1.slice(_2`first-1, _2`last)
 
 _1 . setAt ( _2 ) |-->Ocl.setAtMap(_1, _2`first, _2`last)<when> _1`ocltype Map
 _1 . setAt ( _2 ) |-->Ocl.setAtString(_1, _2`first, _2`last)<when> _1`ocltype String
-_1 . setAt ( _2 ) |-->Ocl.setAt(_1, _2`first, _2`last)
+_1 . setAt ( _2 ) |-->Ocl.setAtSequence(_1, _2`first, _2`last)
 
 _1 . insertAt ( _2 ) |-->Ocl.insertAtString(_1, _2`first, _2`last)<when> _1`ocltype String
-_1 . insertAt ( _2 ) |-->Ocl.insertAt(_1, _2`first, _2`last)
+_1 . insertAt ( _2 ) |-->Ocl.insertAtSequence(_1, _2`first, _2`last)
 
-_1 . insertInto ( _2 ) |-->Ocl.insertAtString(_1, _2`first, _2`last)<when> _1`ocltype String
 _1 . insertInto ( _2 ) |-->Ocl.insertInto(_1, _2`first, _2`last)
-
 _1 . excludingSubrange ( _2 ) |-->Ocl.excludingSubrange(_1, _2`first, _2`last)
 _1 . setSubrange ( _2 ) |-->Ocl.setSubrange(_1, _2`first, _2`last)
 
@@ -338,12 +340,12 @@ _1 => _2 |-->(_1?_2:true)
 _1 * _3  |-->_1 * _3 
 _1 + _3  |-->_1 + _3 
 
+_1 - _3 |-->Ocl.subtractString(_1,_3)<when> _1`ocltype String
+_1 - _3 |-->Ocl.subtractString(_1,_3)<when> _3`ocltype String
+
 _1 - _3 |-->Ocl.excludeAllSet(_1,_3)<when> _1`ocltype Set
 _1 - _3 |-->Ocl.excludeAllSequence(_1,_3)<when> _1`ocltype Sequence
 _1 - _3 |-->Ocl.excludeAllMap(_1,_3)<when> _1`ocltype Map
-
-_1 - _3 |-->Ocl.subtractString(_1,_3)<when> _1`ocltype String
-_1 - _3 |-->Ocl.subtractString(_1,_3)<when> _3`ocltype String
 
 _1 - _3  |-->_1 - _3 
 
@@ -378,20 +380,20 @@ _1 ->excludes ( _2 ) |-->!(_1.has(_2))<when> _1`ocltype Set
 _1 ->excludes ( _2 ) |-->!(_1.includes(_2))<whem> _1`ocltype Sequence
 _1 ->excludes ( _2 ) |-->Ocl.excludes(_1,_2)
 
-_1 ->indexOf ( _2 ) |-->Ocl.indexOfString(_1, _2)<when> _1`ocltype String
-_1 ->lastIndexOf ( _2 ) |-->Ocl.lastIndexOfString(_1, _2)<when> _1`ocltype String
-
 _1 ->indexOf ( _2 ) |-->Ocl.indexOfSubSequence(_1, _2)<when> _1`ocltype Sequence, _2`ocltype Sequence
 _1 ->lastIndexOf ( _2 ) |-->Ocl.lastIndexOfSubSequence(_1, _2)<when> _1`ocltype Sequence, _2`ocltype Sequence
 
-_1 ->indexOf ( _2 ) |-->Ocl.indexOfSequence(_1, _2)
-_1 ->lastIndexOf ( _2 ) |-->Ocl.lastIndexOfSequence(_1, _2)
+_1 ->indexOf ( _2 ) |-->Ocl.indexOf(_1, _2)
+_1 ->lastIndexOf ( _2 ) |-->Ocl.lastIndexOf(_1, _2)
 
-_1 ->hasPrefix ( _2 ) |-->_1.startsWith(_2)<when> _1`ocltype String
 
-_1 ->hasSuffix ( _2 ) |-->_1.endsWith(_2)<when> _1`ocltype String
+_1 ->hasPrefix ( _2 ) |-->Ocl.hasPrefixSequence(_1,_2)<when> _1`ocltype Sequence
+_1 ->hasSuffix ( _2 ) |-->Ocl.hasSuffixSequence(_1,_2)<when> _1`ocltype Sequence
 
-_1 ->excludingAt ( _2 ) |-->Ocl.removeAtMap(_1, _2)<when> _1`ocltype Map
+_1 ->hasPrefix ( _2 ) |-->_1.startsWith(_2)
+_1 ->hasSuffix ( _2 ) |-->_1.endsWith(_2)
+
+_1 ->excludingAt ( _2 ) |-->Ocl.excludingAtMap(_1, _2)<when> _1`ocltype Map
 _1 ->excludingAt ( _2 ) |-->Ocl.removeAt(_1, _2)
 
 _1 ->excludingFirst ( _2 ) |-->Ocl.excludingFirst(_1, _2)
@@ -445,14 +447,12 @@ _1 ->exists1 ( _2 | _3 ) |-->Ocl.exists1Map( _1, function(_2) { return _3; } )<w
 _1 ->exists1 ( _2 | _3 ) |-->Ocl.exists1( _1, function(_2) { return _3; } )
 
 
-_1 ->collect _2 |-->Ocl.collectSequence(_1, function(self) { return _2; } )<when> _1`ocltype Sequence
-_1 ->collect ( _2 | _3 ) |-->Ocl.collectSequence(_1, function(_2) { return _3; })<when> _1`ocltype Sequence
-
 _1 ->collect _2 |-->Ocl.collectMap(_1, function(self) { return _2; } )<when> _1`ocltype Map
 _1 ->collect ( _2 | _3 ) |-->Ocl.collectMap(_1, function(_2) { return _3; })<when> _1`ocltype Map
 
-_1 ->collect _2 |-->Ocl.collectSet(_1, function(self) { return _2; } )
-_1 ->collect ( _2 | _3 ) |-->Ocl.collectSet(_1, function(_2) { return _3; })
+_1 ->collect _2 |-->Ocl.collect(_1, function(self) { return _2; } )
+_1 ->collect ( _2 | _3 ) |-->Ocl.collect(_1, function(_2) { return _3; })
+
 
 _1 ->any _2 |-->Ocl.anyMapElement(_1, function(self) { return _2; } )<when> _1`ocltype Map
 _1 ->any ( _2 | _3 ) |-->Ocl.anyMapElement(_1, function(_2) { return _3; })<when> _1`ocltype Map
@@ -465,6 +465,11 @@ _1 ->isUnique ( _2 | _3 ) |-->Ocl.isUniqueMap(_1, function(_2) { return _3; })<w
 
 _1 ->isUnique _2 |-->Ocl.isUnique(_1, function(self) { return _2; } )
 _1 ->isUnique ( _2 | _3 ) |-->Ocl.isUnique(_1, function(_2) { return _3; })
+
+
+_1 ->sortedBy _2 |-->Ocl.sortedBy(_1, function(self) { return _2; } )
+_1 ->sortedBy ( _2 | _3 ) |-->Ocl.sortedBy(_1, function(_2) { return _3; })
+
 
 _1 ->select _2 |-->Ocl.selectSet(_1, function(self) { return _2; } )<when> _1`ocltype Set
 _1 ->select ( _2 | _3 ) |-->Ocl.selectSet(_1, function(_2) { return _3; })<when> _1`ocltype Set
@@ -495,6 +500,8 @@ _1 ->selectMinimals ( _2 | _3 ) |-->Ocl.selectMinimalsSequence(_1, function(_2) 
 _1 ->selectMinimals _2 |-->Ocl.selectMinimalsMap(_1, function(self) { return _2; } )<when> _1`ocltype Map
 _1 ->selectMinimals ( _2 | _3 ) |-->Ocl.selectMinimalsMap(_1, function(_2) { return _3; })<when> _1`ocltype Map
 
+_1 ->selectMinimals _2 |-->Ocl.selectMinimals(_1, function(self) { return _2; } )
+_1 ->selectMinimals ( _2 | _3 ) |-->Ocl.selectMinimals(_1, function(_2) { return _3; })
 
 _1 ->selectMaximals _2 |-->Ocl.selectMaximalsSet(_1, function(self) { return _2; } )<when> _1`ocltype Set
 _1 ->selectMaximals ( _2 | _3 ) |-->Ocl.selectMaximalsSet(_1, function(_2) { return _3; })<when> _1`ocltype Set
@@ -505,6 +512,8 @@ _1 ->selectMaximals ( _2 | _3 ) |-->Ocl.selectMaximalsSequence(_1, function(_2) 
 _1 ->selectMaximals _2 |-->Ocl.selectMaximalsMap(_1, function(self) { return _2; } )<when> _1`ocltype Map
 _1 ->selectMaximals ( _2 | _3 ) |-->Ocl.selectMaximalsMap(_1, function(_2) { return _3; })<when> _1`ocltype Map
 
+_1 ->selectMaximals _2 |-->Ocl.selectMaximals(_1, function(self) { return _2; } )
+_1 ->selectMaximals ( _2 | _3 ) |-->Ocl.selectMaximals(_1, function(_2) { return _3; })
 
 _1 _2 ( _4 )  |-->Ocl._2`nestedTfunc69( _1, _4 ) 
 
@@ -919,6 +928,11 @@ _1 ->selectMinimals ( _2 | _3 ) |-->_1`oclelemtype
 
 _1 ->selectMaximals ( _2 ) |-->_1`oclelemtype
 _1 ->selectMaximals ( _2 | _3 ) |-->_1`oclelemtype
+
+_1 ->excludingValue ( _2 ) |-->_1`oclelemtype
+_1 ->excludingKey ( _2 ) |-->_1`oclelemtype
+_1 ->restrict ( _2 ) |-->_1`oclelemtype
+_1 ->antirestrict ( _2 ) |-->_1`oclelemtype
 
 lambda _1 : _2 in _3 |-->_3`ocltype
 if _1 then _2 else _3 endif |-->_2`oclelemtype
