@@ -670,6 +670,21 @@ break  |-->  break ;
 continue  |-->  continue ; 
 return  |-->  return ; 
 
+assert _1 do _2 |-->    if (_1) { }\n    else { throw new Error(_2); }\n
+assert _1 |-->    if (_1) { }\n    else { throw new Error("_1 fails here"); }\n
+error _1 |-->    throw _1;\n
+
+try _1 _2 _3 |-->    try { _1    }\n_2 _3\n
+try _1 _2 |-->    try { _1    }\n_2\n
+
+catch _1 do _2 |-->      catch (_1`jsCatchTest) { _2      }\n
+finally _1 |-->      finally { _1      }\n
+
+
+jsCatchTest::
+_1 : _2 |-->_1
+_1 |-->_1
+
 
 ocltype::
 Set { } |-->Set
