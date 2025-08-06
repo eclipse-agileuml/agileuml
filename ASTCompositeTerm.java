@@ -12918,6 +12918,16 @@ public class ASTCompositeTerm extends ASTTerm
       return res; 
     } 
 
+    if (terms.size() == 2 && 
+        "expressionSequence".equals(tag) && 
+        "console.error".equals(
+           ((ASTTerm) terms.get(0)).literalForm())) 
+    { ASTTerm arg = (ASTTerm) terms.get(1); 
+      Vector res = arg.jspostSideEffect(vartypes,
+                                varelemtypes,types,entities);
+      return res; 
+    } 
+
     if ("variableDeclarationList".equals(tag) && terms.size() >= 2)
     { Vector res = new Vector(); 
       for (int i = 1; i < terms.size(); i++)
@@ -13456,7 +13466,8 @@ public class ASTCompositeTerm extends ASTTerm
 
     if ("console".equals(obj + "") && 
         ("log".equals(feature) || 
-         "info".equals(feature)) && 
+         "info".equals(feature) ||
+         "error".equals(feature)) && 
         pars.size() > 0)
     { Expression par1 = (Expression) pars.get(0); 
       par1.setBrackets(true); 

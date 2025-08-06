@@ -61,7 +61,7 @@ method
 
 internalMethod 
     : ('{' modifier '}')? type? visibility? identifier '(' parameters? ')'
-    | ('{' modifier '}')? visibility? identifier '(' parameters? ')' (':' type)? 
+    | ('{' modifier '}')? visibility? identifier '(' parameters? ')' ':' type 
     ; 
 
 parameters
@@ -85,17 +85,13 @@ modifier
       | 'abstract'
       ; 
 
-idList
-     : (identifier ',')* identifier
-     ; 
-
 type
     : 'Sequence' '(' type ')'  
     | 'Set' '(' type ')'  
     | 'Bag' '(' type ')' 
     | 'OrderedSet' '(' type ')' 
     | 'SortedSet' '(' type ')' 
-    | type '[' integerLiteral? ']'  
+    | identifier '[' integerLiteral? ']'  
     | 'Map' '(' type ',' type ')' 
     | 'SortedMap' '(' type ',' type ')' 
     | 'Function' '(' type ',' type ')' 
@@ -123,7 +119,7 @@ rightAncestorSymbol
     ; 
 
 association
-    : identifier stringExpression? associationSymbol stringExpression? identifier lineAnnotation?
+    : identifier stringExpression? (associationSymbol | leftAssociationSymbol) stringExpression? identifier lineAnnotation?
     ; 
 
 associationSymbol
@@ -131,30 +127,46 @@ associationSymbol
     | '--'
     | '---' 
     | '-->' 
-    | '<--'
+    | '->' 
+    ; 
+
+leftAssociationSymbol
+    : '<--'
+    | '<-'
     ; 
 
 aggregation
-    : identifier stringExpression? aggregationSymbol stringExpression? identifier lineAnnotation?
+    : identifier stringExpression? (aggregationSymbol | leftAggregationSymbol) stringExpression? identifier lineAnnotation?
     ; 
 
 aggregationSymbol
-    : 'o--' 
-    | '--o' 
+    : 'o--'
+    | 'o->' 
     | 'o-->'
+    ; 
+
+leftAggregationSymbol
+    : '--o' 
+    | '<-o'
     | '<--o'
     ; 
 
 composition
-    : identifier stringExpression? compositionSymbol stringExpression? identifier lineAnnotation?
+    : identifier stringExpression? (compositionSymbol | leftCompositionSymbol) stringExpression? identifier lineAnnotation?
     ; 
 
 compositionSymbol
     : '*--' 
     | '*-' 
-    | '--*'
     | '*-->'
+    | '*->'
+    ; 
+
+leftCompositionSymbol
+    : '--*'
+    | '-*'
     | '<--*'
+    | '<-*'
     ; 
 
 dependency
@@ -165,6 +177,9 @@ dependencySymbol
     : '..'
     | '..>'
     | '<..'
+    | '...'
+    | '...>'
+    | '<...'
     ; 
 
 lineAnnotation
