@@ -5189,6 +5189,8 @@ public class BehaviouralFeature extends ModelElement
 
     if (isStatic())
     { out.print("    static operation "); } 
+    else if (isAbstract())
+    { out.print("    abstract operation "); } 
     else 
     { out.print("    operation "); } 
 
@@ -5246,6 +5248,8 @@ public class BehaviouralFeature extends ModelElement
 
     if (isStatic())
     { res = "    static" + res; } 
+    else if (isAbstract())
+    { res = "    abstract" + res; } 
     else 
     { res = "   " + res; }
 

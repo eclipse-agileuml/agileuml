@@ -28458,7 +28458,6 @@ public void produceCUI(PrintWriter out)
         System.out.println(); 
       } 
     } 
- 
   }  
 
   public void loadFromJavaScript()
@@ -28617,6 +28616,80 @@ public void produceCUI(PrintWriter out)
     tags.add("identifier"); // for JS
 
     compareModel2Program(xx, tags); 
+
+    repaint(); 
+  }
+
+  public void loadFromPlantUML()
+  { BufferedReader br = null;
+    Vector res = new Vector();
+    String s;
+    boolean eof = false;
+    File sourcefile = new File("output/ast.txt");  
+      /* default */ 
+
+    try
+    { br = new BufferedReader(new FileReader(sourcefile)); }
+    catch (FileNotFoundException _e)
+    { System.err.println("!! File not found: " + sourcefile);
+      return; 
+    }
+
+    String sourcestring = ""; 
+    int noflines = 0; 
+
+    while (!eof)
+    { try { s = br.readLine(); }
+      catch (IOException _ex)
+      { System.err.println("!! Reading AST file output/ast.txt failed.");
+        return; 
+      }
+      if (s == null) 
+      { eof = true; 
+        break; 
+      }
+      else 
+      { sourcestring = sourcestring + s + " "; } 
+      noflines++; 
+    }
+
+    System.out.println(">>> Read " + noflines + " lines"); 
+
+    Compiler2 c = new Compiler2();    
+
+    ASTTerm xx =
+      c.parseGeneralAST(sourcestring); 
+
+    if (xx == null) 
+    { System.err.println("!! Invalid text for general AST"); 
+      System.err.println(c.lexicals); 
+      return; 
+    } 
+   
+    if (xx instanceof ASTCompositeTerm)  { } 
+    else 
+    { System.err.println("!! Not a valid PlantUML AST:"); 
+      System.err.println(c.lexicals); 
+      return; 
+    } 
+  
+    File vb2uml = new File("cg/plantUML2KM3.cstl"); 
+    Vector vbs = new Vector(); 
+    CGSpec spec = loadCSTL(vb2uml,vbs); 
+
+    if (spec == null) 
+    { System.err.println("!! ERROR: No file " + vb2uml.getName()); 
+      return; 
+    } 
+
+    ASTTerm.metafeatures = new java.util.HashMap(); 
+    
+    String reskm3 = xx.cg(spec); 
+    String arg1 = CGRule.correctNewlines(reskm3);
+    System.out.println();  
+    System.out.println(arg1); 
+
+    loadKM3FromText(arg1); 
 
     repaint(); 
   }

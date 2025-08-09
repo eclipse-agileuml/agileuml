@@ -12413,8 +12413,11 @@ System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
   { String res = ""; 
 
     for (int i = 0; i < stereotypes.size(); i++) 
-    { String stereo = (String) stereotypes.get(i); 
-      res = res + "  stereotype " + stereo + ";\n"; 
+    { String stereo = (String) stereotypes.get(i);
+
+      if ("abstract".equals(stereo)) { } 
+      else  
+      { res = res + "  stereotype " + stereo + ";\n"; } 
     }
 
     return res; 
@@ -12489,8 +12492,10 @@ System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
     String res = "  " + nme + " {\n\r";
 
     for (int i = 0; i < stereotypes.size(); i++) 
-    { String stereo = (String) stereotypes.get(i); 
-      res = res + "  stereotype " + stereo + ";\n\r"; 
+    { String stereo = (String) stereotypes.get(i);
+      if ("abstract".equals(stereo)) { } 
+      else  
+      { res = res + "  stereotype " + stereo + ";\n\r"; }  
     }
 
     res = res + "\n\r";

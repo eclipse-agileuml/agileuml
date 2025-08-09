@@ -381,6 +381,14 @@ public void findPlugins()
       "Creates UML/OCL from AST produced by ANTLR SQLite parser, in output/ast.txt");
     fileMenu.add(fromSQL);
 
+    JMenuItem fromPlantUML = 
+      new JMenuItem("From PlantUML AST",openIcon);
+    fromPlantUML.addActionListener(this);
+    fromPlantUML.setToolTipText(
+      "Creates UML/OCL from AST produced by ANTLR PlantUML parser, in output/ast.txt");
+    // loadDataMI.setMnemonic(KeyEvent.VK_L);
+    fileMenu.add(fromPlantUML);
+
     fileMenu.addSeparator(); 
 
     JMenuItem randomModel = 
@@ -1922,6 +1930,10 @@ public void findPlugins()
       }
       else if (label.equals("From SQL AST")) 
       { ucdArea.loadFromSQL();
+        saved = true; 
+      }
+      else if (label.equals("From PlantUML AST")) 
+      { ucdArea.loadFromPlantUML();
         saved = true; 
       }
       else if (label.equals("Random model")) 
