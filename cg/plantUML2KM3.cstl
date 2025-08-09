@@ -225,7 +225,13 @@ _1 [ _2 ] |-->Sequence(_1)
 _1 [ ] |-->Sequence(_1)  
 Map ( _1 , _2 ) |-->Map(_1,_2) 
 SortedMap ( _1 , _2 ) |-->SortedMap(_1,_2) 
-Function ( _1 , _2 ) |-->Function(_1,_2) 
+Function ( _1 , _2 ) |-->Function(_1,_2)
+ 
+Date |-->OclDate
+Boolean |-->boolean
+Integer |-->int
+Long |-->long
+Real |-->double
 _1 |-->_1
 
 
