@@ -335,6 +335,13 @@ public void findPlugins()
       "Creates UML/OCL from source Python code");
     fileMenu.add(fromPython);
 
+    JMenuItem fromPlantUMLSource = 
+      new JMenuItem("From PlantUML Source",openIcon);
+    fromPlantUMLSource.addActionListener(this);
+    fromPlantUMLSource.setToolTipText(
+      "Creates UML/OCL from source PlantUML");
+    fileMenu.add(fromPlantUMLSource);
+
     fileMenu.addSeparator(); 
 
     JMenuItem fromCMI = 
@@ -381,13 +388,12 @@ public void findPlugins()
       "Creates UML/OCL from AST produced by ANTLR SQLite parser, in output/ast.txt");
     fileMenu.add(fromSQL);
 
-    JMenuItem fromPlantUML = 
+  /*  JMenuItem fromPlantUML = 
       new JMenuItem("From PlantUML AST",openIcon);
     fromPlantUML.addActionListener(this);
     fromPlantUML.setToolTipText(
       "Creates UML/OCL from AST produced by ANTLR PlantUML parser, in output/ast.txt");
-    // loadDataMI.setMnemonic(KeyEvent.VK_L);
-    fileMenu.add(fromPlantUML);
+    fileMenu.add(fromPlantUML); */ 
 
     fileMenu.addSeparator(); 
 
@@ -1906,6 +1912,11 @@ public void findPlugins()
       else if (label.equals("From Python Source")) 
       { String fname = JOptionPane.showInputDialog("Enter Python file name: "); 
         ucdArea.loadFromPython(fname);
+        saved = true; 
+      }
+      else if (label.equals("From PlantUML Source")) 
+      { String fname = JOptionPane.showInputDialog("Enter PlantUML file name: "); 
+        ucdArea.loadFromPlantUML(fname);
         saved = true; 
       }
       else if (label.equals("From C AST")) 

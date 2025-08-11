@@ -1,0 +1,7 @@
+@startuml
+
+interface Abs { op(x) : int }
+
+A --|> Abs
+
+@enduml

@@ -31,6 +31,8 @@ cdelement
     | composition
     | dependency
     | method
+    | circleInterface
+    | interfaceInheritance
     ;
 
 classDefinition
@@ -44,6 +46,11 @@ classElement
 
 enumDefinition
     : '{' identifier+ '}'
+    ; 
+
+circleInterface
+    : 'circle' identifier
+    | '(' ')' identifier
     ; 
 
 attribute
@@ -65,8 +72,13 @@ internalMethod
     ; 
 
 parameters
-      : (identifier ',')* identifier
+      : (parameter ',')* parameter
       ;
+
+parameter
+      : identifier ':' type 
+      | identifier
+      ; 
 
 stereotype 
       : '<<' identifier '>>'
@@ -91,7 +103,7 @@ type
     | 'Bag' '(' type ')' 
     | 'OrderedSet' '(' type ')' 
     | 'SortedSet' '(' type ')' 
-    | identifier '[' integerLiteral? ']'  
+    | type '[' integerLiteral? ']'  
     | 'Map' '(' type ',' type ')' 
     | 'SortedMap' '(' type ',' type ')' 
     | 'Function' '(' type ',' type ')' 
@@ -117,6 +129,21 @@ rightAncestorSymbol
     | '..|>' 
     | '--^' 
     ; 
+
+interfaceInheritance
+    : identifier (leftImplementsSymbol | rightImplementsSymbol) identifier
+    ; 
+
+leftImplementsSymbol 
+    : '()-' 
+    | '()--' 
+    ; 
+
+rightImplementsSymbol 
+    : '-()' 
+    | '--()' 
+    ; 
+
 
 association
     : identifier stringExpression? (associationSymbol | leftAssociationSymbol) stringExpression? identifier lineAnnotation?

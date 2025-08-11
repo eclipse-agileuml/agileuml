@@ -28620,6 +28620,114 @@ public void produceCUI(PrintWriter out)
     repaint(); 
   }
 
+  public void loadFromPlantUML(String sourcefile)
+  { if (sourcefile == null)
+    { loadFromPlantUML(); 
+      return; 
+    } 
+
+    BufferedReader br = null;
+    Vector res = new Vector();
+    String s;
+    
+    try
+    { br = new BufferedReader(new FileReader(sourcefile)); }
+    catch (FileNotFoundException _e)
+    { System.err.println("!! File not found: " + sourcefile);
+      return; 
+    }
+
+    String sline = ""; 
+    boolean eof = false; 
+    String jtext = ""; 
+    ASTTerm xx = null; 
+    String asttext = "";
+ 
+    while (!eof)
+    { try { sline = br.readLine(); }
+      catch (IOException _ex)
+      { System.err.println("!! Reading PlantUML file " + sourcefile + " failed.");
+        return; 
+      }
+
+      if (sline == null) 
+      { eof = true; 
+        break; 
+      }
+      else 
+      { jtext = jtext + sline + "\n"; } 
+    }
+
+    try { 
+      Runtime proc = Runtime.getRuntime(); 
+
+      Process p2 = proc.exec("java org.antlr.v4.gui.TestRig PlantUML classDiagram -tree"); 
+
+      OutputStream sout = p2.getOutputStream(); 
+      OutputStreamWriter outw = new OutputStreamWriter(sout); 
+      BufferedWriter brw = new BufferedWriter(outw);
+      brw.write(jtext + "\n"); 
+      brw.close();  
+  
+      InputStream sin2 = p2.getInputStream(); 
+      InputStreamReader inr2 = new InputStreamReader(sin2); 
+      BufferedReader ibr2 = new BufferedReader(inr2); 
+      String stext = "";
+ 
+      String oline2 = ibr2.readLine(); 
+        // System.out.println(">>> parsing .... " + jtext);
+      while (oline2 != null) 
+      { stext = oline2; 
+        oline2 = ibr2.readLine();
+      }
+
+      asttext = stext.trim();  
+      int exitjar2 = p2.waitFor(); 
+        // System.out.println(">>> Exit code: " + exitjar2);
+ 
+      System.out.println(asttext); 
+ 
+      Compiler2 cc = new Compiler2(); 
+      xx = cc.parseGeneralAST(asttext); 
+    } 
+    catch (Exception _expt) 
+    { _expt.printStackTrace(); } 
+
+    if (xx == null) 
+    { System.err.println("!! Invalid text for general AST: "); 
+      System.err.println(asttext); 
+      return; 
+    } 
+   
+    if (xx instanceof ASTCompositeTerm)  { } 
+    else 
+    { System.err.println("!! Not a valid PlantUML AST:"); 
+      System.err.println(asttext); 
+      return; 
+    } 
+  
+    File plantuml2km3 = new File("cg/plantUML2KM3.cstl"); 
+    Vector vbs = new Vector(); 
+    CGSpec spec = loadCSTL(plantuml2km3,vbs); 
+
+    if (spec == null) 
+    { System.err.println("!! ERROR: No file " + 
+                         plantuml2km3.getName()); 
+      return; 
+    } 
+
+    ASTTerm.metafeatures = new java.util.HashMap(); 
+    
+    String reskm3 = xx.cg(spec); 
+    String arg1 = CGRule.correctNewlines(reskm3);
+    System.out.println();  
+    System.out.println(arg1); 
+
+    loadKM3FromText(arg1); 
+
+    repaint(); 
+  }
+
   public void loadFromPlantUML()
   { BufferedReader br = null;
     Vector res = new Vector();
