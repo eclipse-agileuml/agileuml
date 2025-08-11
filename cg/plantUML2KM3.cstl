@@ -38,9 +38,19 @@ annotation _1 |-->
 _1 |-->_1
 
 
+circleInterface::
+circle _1 |-->interface _1 { } 
+( ) _1 |-->interface _1 { } 
+
+
 inheritance::
 _1 _2 _3 |-->class _3 extends _1 { }\n<when> _2 leftAncestorSymbol
 _1 _2 _3 |-->class _1 extends _3 { }\n<when> _2 rightAncestorSymbol
+
+
+interfaceInheritance::
+_1 _2 _3 |-->interface _1 { }\n\nclass _3 implements _1 { }<when> _2 leftImplementsSymbol
+_1 _2 _3 |-->interface _3 { }\n\nclass _1 implements _3 { }<when> _2 rightImplementsSymbol
 
 
 association::
@@ -194,8 +204,13 @@ _* |-->
 
 
 parameters::
+_1 |-->_1
+_1 , _* |-->_1, _*`recurse
+
+
+parameter::
+_1 : _2 |-->_1 : _2
 _1 |-->_1 : OclAny
-_1 , _* |-->_1 : OclAny, _*`recurse
 
 
 identifier::
@@ -227,6 +242,7 @@ Map ( _1 , _2 ) |-->Map(_1,_2)
 SortedMap ( _1 , _2 ) |-->SortedMap(_1,_2) 
 Function ( _1 , _2 ) |-->Function(_1,_2)
  
+Object |-->OclAny
 Date |-->OclDate
 Boolean |-->boolean
 Integer |-->int
@@ -243,8 +259,14 @@ _1 |-->_1
 leftAncestorSymbol::
 _1 |-->_1
 
-
 rightAncestorSymbol::
+_1 |-->_1
+
+
+leftImplementsSymbol::
+_1 |-->_1
+
+rightImplementsSymbol::
 _1 |-->_1
 
 
