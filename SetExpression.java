@@ -1647,6 +1647,17 @@ public class SetExpression extends Expression
     return res + 1; 
   }  
 
+  public int maximumReferenceChain() 
+  { int res = 0;
+
+    for (int i = 0; i < elements.size(); i++) 
+    { Expression elem = (Expression) elements.get(i);  
+      res = Math.max(res, elem.maximumReferenceChain());
+    } 
+
+    return res; 
+  }  
+
   public int cyclomaticComplexity()
   { return 0; } 
 

@@ -5179,6 +5179,8 @@ public static boolean conflictsReverseOp(String op1, String op2)
 
   public abstract int syntacticComplexity(); 
 
+  public abstract int maximumReferenceChain(); 
+
   public abstract int cyclomaticComplexity(); 
 
   public abstract Map energyUse(Map uses, 

@@ -1168,6 +1168,9 @@ public void findClones(java.util.Map clones,
     return res + 1; 
   } 
 
+  public int maximumReferenceChain() 
+  { return argument.maximumReferenceChain(); } 
+
   public int cyclomaticComplexity() 
   { int res = argument.cyclomaticComplexity(); 
     return res; 

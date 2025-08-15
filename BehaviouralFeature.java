@@ -4513,6 +4513,7 @@ public class BehaviouralFeature extends ModelElement
     
     out.println("*** Total complexity of operation " + nme + " = " + complexity); 
     out.println(); 
+
     if (cyc > TestParameters.cyclomaticComplexityLimit) 
     { System.err.println("!!! Code smell (CC): high cyclomatic complexity (" + cyc + ") for " + nme);
       System.err.println(">>> Recommend refactoring by splitting operation"); 

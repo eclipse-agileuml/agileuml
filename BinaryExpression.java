@@ -21756,6 +21756,13 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       res.set("amber", ascore+1);
     } 
 
+    /* int mchain = maximumReferenceChain(); 
+    if (mchain > TestParameters.referenceChainLimit)
+    { oUses.add("!! (LRC) flaw: The expression " + left + " has too many (" + maxleft + ") chained references"); 
+      int ascore = (int) res.get("amber"); 
+      res.set("amber", ascore+1); 
+    } */ 
+
     left.energyUse(res, rUses, aUses); 
     right.energyUse(res, rUses, aUses); 
 
@@ -22075,6 +22082,19 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
     return res; 
   } // and the left and right. 
 
+  public int maximumReferenceChain() 
+  { int maxleft = left.maximumReferenceChain();
+
+    if (maxleft > TestParameters.referenceChainLimit)
+    { System.out.println("!! (LRC) flaw: The expression " + left + " has too many (" + maxleft + ") chained references"); } 
+
+    int maxright = right.maximumReferenceChain();
+
+    if (maxright > TestParameters.referenceChainLimit)
+    { System.out.println("!! (LRC) flaw: The expression " + right + " has too many (" + maxright + ") chained references"); } 
+
+    return Math.max(maxleft, maxright); 
+  } 
 
   public int syntacticComplexity() 
   { int res = left.syntacticComplexity();

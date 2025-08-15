@@ -18058,8 +18058,15 @@ public Statement generateDesignSubtract(Expression rhs)
         int ascore = (int) res.get("amber"); 
         res.set("amber", ascore+1); 
       } 
-
     } 
+
+    int mchain = maximumReferenceChain(); 
+    if (mchain > TestParameters.referenceChainLimit)
+    { oUses.add("!! (LRC) flaw: The expression " + this + " has too many (" + mchain + ") chained references"); 
+      int ascore = (int) res.get("amber"); 
+      res.set("amber", ascore+1); 
+    } 
+
 
     if (umlkind == VALUE) {} 
     else if (umlkind == UPDATEOP || 
@@ -18138,6 +18145,17 @@ public Statement generateDesignSubtract(Expression rhs)
     return res; 
   } // and in the parameters and object ref
 
+  
+  public int maximumReferenceChain() 
+  { int res = 1; 
+
+    if (objectRef != null) 
+    { res = objectRef.maximumReferenceChain(); 
+      return res + 1; 
+    }
+
+    return res; 
+  } 
 
   public int syntacticComplexity() 
   { int res = 0; 

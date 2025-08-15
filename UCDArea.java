@@ -28369,7 +28369,9 @@ public void produceCUI(PrintWriter out)
   } 
   
   public void qualityCheck()
-  { for (int i = 0; i < types.size(); i++) 
+  { // Quality analysis
+
+    for (int i = 0; i < types.size(); i++) 
     { Type tt = (Type) types.get(i); 
       tt.checkEnumerationNames(); 
     } 

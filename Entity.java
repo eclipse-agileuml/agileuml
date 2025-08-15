@@ -4960,7 +4960,8 @@ public class Entity extends ModelElement implements Comparable
   } 
 
 
-  public int displayMeasures(PrintWriter out, java.util.Map clones)
+  public int displayMeasures(PrintWriter out, 
+                             java.util.Map clones)
   { String nme = getName(); 
 
     if (isDerived() || isComponent() || 
