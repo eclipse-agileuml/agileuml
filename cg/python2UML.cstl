@@ -1060,6 +1060,9 @@ trailer::
 . maxlen |-->->size()
 
 . _1 |-->._1
+
+. _1 _2 |-->.new_1().initialise_2<when> _1 Class
+
 . _1 _* |-->._1_*
 _1 |-->_1
 
@@ -2792,8 +2795,18 @@ _1 as _2 |-->
 
 
 functionDefinitions::
+_1 |-->_1_*`functionDefinitions<when> _1 funcdef
 _1 |-->_1<when> _1 funcdef
+
+_1 _* |-->_1`functionDefinitions_*`functionDefinitions<when> _1 compound_stmt
 _1 |-->_1`functionDefinitions<when> _1 compound_stmt
+
+_1 _* |-->_1`functionDefinitions_*`functionDefinitions<when> _1 stmt
+_1 |-->_1`functionDefinitions<when> _1 stmt
+
+_1 _* |-->_*`functionDefinitions<when> _1 classdef
+_1 |--><when> _1 classdef
+
 _1 |-->
 
 if _1 : _2 |-->
@@ -2801,6 +2814,7 @@ if _1 : _2 _3 |-->
 if _1 : _2 _* |-->
 while _1 : _2 |-->
 for _1 in _2 : _3 |-->
+
 _* |-->
 
 
@@ -2826,6 +2840,10 @@ def _1 ( ) : _2 |-->  operation _1(_position_ : int) : OclAny\n  pre: true post:
 def _1 ( ) : _2 |-->  operation _1() : OclAny\n  pre: true post: true\n  activity:\n_2;\n\n<when> _2`hasValueReturn true
 def _1 ( ) : _2 |-->  operation _1()\n  pre: true post: true\n  activity:\n_2;\n\n
 
+_1 |-->
+_* |-->
+
+
 
 methodDefinition::
 def __init__ ( _1 ) : _2 |-->_2`attributeDefinitions\n  operation initialise(_1`parametersTail) : _$\n  pre: true post: true\n  activity:\n_2;\n    return self;\n\n
@@ -2842,12 +2860,23 @@ def _1 ( ) : _2 |-->\n  static operation _1() : OclAny\n  pre: true post: true\n
 
 def _1 ( ) : _2 |-->\n  static operation _1()\n  pre: true post: true\n  activity:\n_2;\n\n
 
+_1 |-->
+_* |-->
 
 
 classDefinitions::
 _1 |-->_1<when> _1 classdef
+_1 _* |-->_1_*`classDefinitions<when> _1 classdef
+
+_1 |-->_1`classDefinitions<when> _1 stmt
+_1 _* |-->_1`classDefinitions_*`classDefinitions<when> _1 stmt
+
 _1 |-->_1`classDefinitions<when> _1 compound_stmt
+_1 _* |-->_1`classDefinitions_*`classDefinitions<when> _1 compound_stmt
+
 _1 |-->_1`classDefinitions<when> _1 funcdef
+_1 _* |-->_1`classDefinitions_*`classDefinitions<when> _1 funcdef
+
 _1 |-->
 
 async def _1 ( _2 ) -> _3 : _4 |-->class Async$_1 {\n  stereotype active;\n\n_2`typedargslistAttributes\n  static operation newAsync$_1(_2) : Async$_1\n  pre: true\n  post: Async$_1->exists( resx | _2`typedargslistSettings result = resx );\n\n  operation run()\n  pre: true post: true\n  activity:\n_4;\n\n}\n\n
@@ -2867,24 +2896,40 @@ _* |-->
 
 
 
+
 classdef::
 class _1 ( Enum ) : _3 |-->class _1 {\n  static operation new_1() : _1\n  pre: true\n  post: _1->exists( _x | result = _x );\n\n_3`classcontent}\n\n<action> _1 Class
 
-class _1 ( _2 ) : _3 |-->class _1 extends _2 {\n  static operation new_1() : _1\n  pre: true\n  post: _1->exists( _x | result = _x );\n\n_3`classcontent}\n\n<action> _1 Class
+class _1 ( _2 ) : _3 |-->class _1 extends _2 {\n  static operation new_1() : _1\n  pre: true\n  post: _1->exists( _x | result = _x );\n\n_3`classcontent}\n\n<action> _1 Class, _$ _1
 
-class _1 ( ) : _2 |-->class _1 {\n  static operation new_1() : _1\n  pre: true\n  post: _1->exists( _x | result = _x );\n\n_2`classcontent}\n\n<action> _1 Class
+class _1 ( ) : _2 |-->class _1 {\n  static operation new_1() : _1\n  pre: true\n  post: _1->exists( _x | result = _x );\n\n_2`classcontent}\n\n<action> _1 Class, _$ _1
 
-class _1 : _2 |-->class _1 {\n  static operation new_1() : _1\n  pre: true\n  post: _1->exists( _x | result = _x );\n\n_2`classcontent}\n\n<action> _1 Class, _$ _1
+class _1 : _2 |-->class _1 {\n  static operation new_1() : _1\n  pre: true\n  post: _1->exists( _x | result = _x );\n\n_2`classcontent}\n\n_2`classDefinitions<action> _1 Class, _$ _1
+
+
+innerclassConstructor::
+class _1 : _2 |-->  operation new_1() : _1\n  pre: true\n  post: _1->exists( _x | result = _x );\n\n
+
+class _1 ( ) : _2 |-->  operation new_1() : _1\n  pre: true\n  post: _1->exists( _x | result = _x );\n\n
+
+class _1 ( Enum ) : _3 |-->  operation new_1() : _1\n  pre: true\n  post: _1->exists( _x | result = _x );\n\n
+
+class _1 ( _2 ) : _3 |-->  operation new_1() : _1\n  pre: true\n  post: _1->exists( _x | result = _x );\n\n
+
 
 
 classcontent::
 _1 _* |-->_1`classcontent_*`classcontent<when> _1 stmt
 _1 |-->_1`classcontent<when> _1 stmt
+
 _1 |-->_1`classcontent<when> _1 simple_stmt
 _1 |-->_1`classcontent<when> _1 small_stmt
+
+_1 _* |-->_1`classcontent_*`classcontent<when> _1 compound_stmt
 _1 |-->_1`classcontent<when> _1 compound_stmt
 
 _1 |-->_1`methodDefinition<when> _1 funcdef
+_1 |-->_1`innerclassConstructor<when> _1 classdef
 
 _1 _2 |-->  static attribute _1 : _2`ocltype _2;\n<when> _2 assign_part <action> _1 _2`ocltype
 
@@ -2895,8 +2940,11 @@ _* |-->
 attributeDefinitions::
 _1 _* |-->_1`attributeDefinitions_*`attributeDefinitions<when> _1 stmt
 _1 |-->_1`attributeDefinitions<when> _1 stmt
+
 _1 |-->_1`attributeDefinitions<when> _1 simple_stmt
 _1 |-->_1`attributeDefinitions<when> _1 small_stmt
+
+_1 _* |-->_1`attributeDefinitions_*`attributeDefinitions<when> _1 compound_stmt
 _1 |-->_1`attributeDefinitions<when> _1 compound_stmt
 
 _1 |--><when> _1 funcdef
@@ -2910,11 +2958,18 @@ _* |-->
 nestedAttributeDefinitions::
 _1 _* |-->_1`nestedAttributeDefinitions_*`nestedAttributeDefinitions<when> _1 stmt
 _1 |-->_1`nestedAttributeDefinitions<when> _1 stmt
+
 _1 |-->_1`nestedAttributeDefinitions<when> _1 simple_stmt
 _1 |-->_1`nestedAttributeDefinitions<when> _1 small_stmt
+
+_1 _* |-->_1`nestedAttributeDefinitions_*`nestedAttributeDefinitions<when> _1 compound_stmt
 _1 |-->_1`nestedAttributeDefinitions<when> _1 compound_stmt
 
+_1 _* |-->_1`nestedAttributeDefinitions_*`nestedAttributeDefinitions<when> _1 funcdef
 _1 |-->_1`nestedAttributeDefinitions<when> _1 funcdef
+
+_1 _* |-->_1`nestedAttributeDefinitions_*`nestedAttributeDefinitions<when> _1 classdef
+_1 |-->_1`nestedAttributeDefinitions<when> _1 classdef
 
 async def _1 ( _2 ) -> _3 : _4 |-->_4`nestedAttributeDefinitions
 

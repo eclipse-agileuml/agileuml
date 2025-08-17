@@ -644,16 +644,16 @@ enumeration _2 { _4 }  |-->class _2 _4`seq3subruleset152
 OclStatement::
 skip |-->
 
-var _2 : Map ( _3  , _4  )   |-->  let _2 = new Map(); 
-var _2 : Set ( _3 )   |-->  let _2 = new Set(); 
-var _2 : Sequence ( _3 )   |-->  let _2 = []; 
+var _2 : Map ( _3  , _4  )   |-->  let _2 = new Map();<action> _2 Map 
+var _2 : Set ( _3 )   |-->  let _2 = new Set();<action> _2 Set 
+var _2 : Sequence ( _3 )   |-->  let _2 = []; <action> _2 Sequence
 
-var _2 : int   |-->  let _2 = 0 ; 
-var _2 : long   |-->  let _2 = 0 ; 
-var _2 : double   |-->  let _2 = 0.0 ; 
-var _2 : boolean   |-->  let _2 = false ; 
-var _2 : String   |-->  let _2 = "" ; 
-var _2 : _4   |-->  let _2 = _4`typInit ; 
+var _2 : int   |-->  let _2 = 0 ; <action> _2 Number
+var _2 : long   |-->  let _2 = 0 ; <action> _2 Number 
+var _2 : double   |-->  let _2 = 0.0 ; <action> _2 Number
+var _2 : boolean   |-->  let _2 = false ; <action> _2 Boolean
+var _2 : String   |-->  let _2 = "" ; <action> _2 String
+var _2 : _4   |-->  let _2 = _4`typInit ; <action> _2 _4
 
 ( _2 )  |-->{ _2`seq3subruleset77 } 
 return _2  |-->  return _2 ; 
