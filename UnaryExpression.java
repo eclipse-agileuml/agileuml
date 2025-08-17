@@ -773,6 +773,18 @@ public void findClones(java.util.Map clones,
 
     argument.energyUse(res, rUses, aUses); 
 
+    if (operator.equals("lambda") && 
+        accumulator != null) 
+    { Type typ = accumulator.getType(); 
+      if (typ != null && 
+          typ.complexity() > TestParameters.nestedTypeLimit)
+      { aUses.add("! Warning (MNC) flaw: complex type with complexity " + typ.complexity() + ": " + typ);
+        int ascore = (int) res.get("amber");
+        ascore = ascore + 1;
+        res.set("amber", ascore);
+      } 
+    } 
+
     if (operator.equals("->notEmpty") && 
         argument instanceof BinaryExpression)
     { // ->select(P)->notEmpty()  is  ->exists(P)
@@ -1164,8 +1176,15 @@ public void findClones(java.util.Map clones,
 
 
   public int syntacticComplexity() 
-  { int res = argument.syntacticComplexity(); 
-    return res + 1; 
+  { int res = argument.syntacticComplexity() + 1; 
+
+    if ("lambda".equals(operator) && accumulator != null) 
+    { Type typ = accumulator.getType(); 
+      if (typ != null) 
+      { res = res + typ.complexity(); } 
+    } 
+ 
+    return res; 
   } 
 
   public int maximumReferenceChain() 
@@ -1837,8 +1856,9 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
       return pre + "." + op + "()";
     } 
 
-    if ("let".equals(operator) && accumulator != null)
+    /* if ("let".equals(operator) && accumulator != null)
     { // let acc : T = init in argument is { acc; argumentUF }
+
       String accname = accumulator.getName(); 
       Expression init = accumulator.getInitialExpression(); 
       Type acctype = accumulator.getType(); 
@@ -1848,7 +1868,7 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
         accname + " = " + init.queryForm(env,local) + ";\n    " +
         argument.updateForm(env,local) + "  }\n"; 
       return res; 
-    } 
+    } */ 
 
     if ("->isDeleted".equals(operator))
     { if (argument.umlkind == CLASSID && 
@@ -1964,7 +1984,7 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
       return pre + "." + op + "()";
     } 
 
-    if ("let".equals(operator) && accumulator != null)
+    /* if ("let".equals(operator) && accumulator != null)
     { // let acc : T = init in argument is { acc; argumentUF }
       String accname = accumulator.getName(); 
       Expression init = accumulator.getInitialExpression(); 
@@ -1975,7 +1995,7 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
         accname + " = " + init.queryFormJava6(env,local) + ";\n    " +
         argument.updateFormJava6(env,local) + "  }\n"; 
       return res; 
-    } 
+    } */ 
 
     if ("->isDeleted".equals(operator))
     { if (argument.umlkind == CLASSID && (argument instanceof BasicExpression) && 
@@ -2611,7 +2631,20 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
   { return argument.innermostVariables(); } 
 
   public Vector allAttributesUsedIn()
-  { return argument.allAttributesUsedIn(); } 
+  { Vector res = argument.allAttributesUsedIn(); 
+
+    if (operator.equals("lambda") && 
+        accumulator != null)
+    { Vector removals = new Vector(); 
+      for (int i = 0; i < res.size(); i++) 
+      { if ((accumulator + "").equals(res.get(i) + ""))
+        { removals.add(res.get(i)); } 
+      } 
+      res.removeAll(removals); 
+    } 
+
+    return res; 
+  } 
 
   public Vector allVariableNames()
   { if (operator.equals("lambda"))
@@ -2635,12 +2668,18 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
 
   public Vector getVariableUses()
   { if (operator.equals("lambda"))
-    { Vector ss = argument.getVariableUses(); 
+    { Vector ss = argument.getVariableUses();
+ 
       Vector removals = new Vector(); 
       if (accumulator != null)
-      { removals.add(new BasicExpression(accumulator)); } 
-    
-      ss.removeAll(removals);
+      { for (int i = 0; i < ss.size(); i++) 
+        { Expression e1 = (Expression) ss.get(i); 
+          if ((e1 + "").equals(accumulator + ""))
+          { removals.add(e1); } 
+        } 
+        ss.removeAll(removals);
+      }
+
       return ss; 
     } 
     
@@ -2800,10 +2839,35 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
       Vector env1 = new Vector(); 
       env1.addAll(env); 
       env1.add(accumulator); 
-      boolean rtc = argument.typeCheck(typs,ents,context,env1);
-      type = new Type("Function",accumulator.getType(),argument.type);
-      elementType = argument.elementType; 
+      boolean rtc = 
+         argument.typeCheck(typs,ents,context,env1);
+      type = new Type("Function",
+                      accumulator.getType(),
+                      argument.type);
+      elementType = argument.elementType;
+
+      // if there are variables in argument other than 
+      // accumulator, issue a warning. 
+
+      Vector allvars = argument.getVariableUses(); 
+      for (int i = 0; i < allvars.size(); i++) 
+      { Expression var = (Expression) allvars.get(i); 
+        if ((var + "").equals(accumulator + "")) { } 
+        else 
+        { System.out.println("!Warning: " + var + " used in lambda body, only " + accumulator + " should be used"); } 
+      } 
+
+      Vector allatts = argument.allAttributesUsedIn(); 
+      for (int i = 0; i < allatts.size(); i++) 
+      { String var = "" + allatts.get(i); 
+        if (var.equals(accumulator + "")) { } 
+        else 
+        { System.out.println("!Warning: " + var + " used in lambda body, only " + accumulator + " should be used"); } 
+      } 
+
       System.out.println(">>> Typechecked lambda expression: " + rtc + " " + type); 
+      System.out.println(); 
+
       return true; 
     }
 
@@ -6927,7 +6991,8 @@ private BExpression subcollectionsBinvariantForm(BExpression bsimp)
     { out.println(id + ".elementType = " + tname); } 
 
     out.println(id + ".needsBracket = " + needsBracket); 
-    out.println(id + ".umlKind = " + umlkind); 
+    out.println(id + ".umlKind = " + umlkind);
+ 
     if (accumulator != null) 
     { out.println(id + ".variable = \"" + accumulator.getName() + "\""); 
       Type vtype = accumulator.getType(); 
@@ -7063,12 +7128,14 @@ private BExpression subcollectionsBinvariantForm(BExpression bsimp)
 
   public Expression simplify()
   { Expression argsimp = argument.simplify(); 
+
     if ("->size".equals(operator))
     { return simplifySize(argsimp); } 
+
     UnaryExpression clne = (UnaryExpression) clone(); 
     clne.argument = argsimp; 
     return clne; 
-  } 
+  } // also let x : T = e in expr when x not occuring in expr
 
 
   public Expression filter(final Vector vars)
@@ -7162,20 +7229,24 @@ private BExpression subcollectionsBinvariantForm(BExpression bsimp)
       if ((argument + "").equals(right + ""))  // l : e & e->isDeleted()
       { return true; } 
     } 
+
     if ("->isDeleted".equals(operator) && op.equals("->includes"))
     { if ((argument + "").equals(right + ""))   // e->includes(l) & l->isDeleted()
       { return true; } 
       if ((argument + "").equals(left + ""))  // e->includes(r) & e->isDeleted()
       { return true; } 
     } 
+
     if ("->isEmpty".equals(operator) && op.equals(":"))
     { if ((argument + "").equals(right + ""))  // l : e & e->isEmpty()
       { return true; } 
     } 
+
     if ("->isEmpty".equals(operator) && op.equals("->includes"))
     { if ((argument + "").equals(left + ""))  // e->includes(l) & e->isEmpty()
       { return true; } 
     } 
+
     return false; 
   } 
 

@@ -8526,7 +8526,16 @@ class CreationStatement extends Statement
   }  
 
   public Map energyUse(Map uses, Vector rUses, Vector aUses)
-  { if (initialExpression != null) 
+  { if (instanceType != null) 
+    { int tcomp = instanceType.complexity(); 
+      if (tcomp > TestParameters.nestedTypeLimit) 
+      { int acount = (int) uses.get("amber"); 
+        uses.set("amber", acount + 1); 
+        aUses.add("! Warning (MNC) flaw: complex type with complexity " + tcomp + ": " + instanceType); 
+      } 
+    } 
+
+    if (initialExpression != null) 
     { initialExpression.energyUse(uses, rUses, aUses); 
 
       int syncomp = initialExpression.syntacticComplexity(); 
@@ -8544,10 +8553,12 @@ class CreationStatement extends Statement
   public java.util.Map collectionOperatorUses(int lev, 
                                  java.util.Map uses,
                                  Vector vars)
-  { if (initialExpression != null) 
+  { 
+    if (initialExpression != null) 
     { initialExpression.collectionOperatorUses(lev, 
                                         uses, vars); 
     } 
+
     return uses; 
   } 
 

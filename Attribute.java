@@ -400,8 +400,9 @@ public class Attribute extends ModelElement
  
       if (type != null)
       { System.out.println(">> Type of attribute: " + name + 
-          " is " + type + "(" + elementType + ") {" + 
-                                type.isSorted() + ")");
+          " is " + type + " Element type: " + 
+          elementType + " Is sorted: " + 
+          type.isSorted());
       } 
       else 
       { System.err.println("!! No type for " + name); } 
@@ -1725,11 +1726,47 @@ public class Attribute extends ModelElement
   public int syntacticComplexity()
   { // att : T = init
     int result = 3; 
-	if (type != null)  
-	{ result = result + type.complexity(); }  
+
+    if (type != null)  
+    { int tcomp = type.complexity();
+
+      if (tcomp > TestParameters.nestedTypeLimit) 
+      { System.out.println("! Warning (MNC) flaw: complex type: " + type); 
+      } 
+ 
+      result = result + tcomp; 
+    }
+  
     if (initialExpression != null) 
     { result += initialExpression.syntacticComplexity(); } 
     return result; 
+  } 
+
+  public Map energyUse(Vector reds, Vector ambers)
+  { // att : T = init
+    
+    Map res = new Map(); 
+    res.set("red", 0); 
+    res.set("amber", 0); 
+
+    if (type != null)  
+    { int tcomp = type.complexity();
+
+      if (tcomp > TestParameters.nestedTypeLimit) 
+      { ambers.add("! Warning (MNC) flaw: complex type with complexity " + tcomp + ": " + type);
+        int ascore = (int) res.get("amber");
+        ascore = ascore + 1;
+        res.set("amber", ascore);
+      } 
+    }
+  
+    if (initialExpression != null) 
+    { res = 
+        initialExpression.energyUse(res, 
+                                    reds, ambers); 
+    }
+ 
+    return res; 
   } 
 
   public boolean isSensor()  // or internal

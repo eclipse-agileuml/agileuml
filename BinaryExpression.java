@@ -21341,6 +21341,9 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
     if ("->at".equals(operator)) 
     { return Expression.simplifyAt(lexpr, rexpr); } 
 
+    if ("let".equals(operator)) 
+    { return Expression.simplifyLet(accumulator, lexpr, rexpr); } 
+
     if ("|C".equals(operator))
     { BinaryExpression beleft = (BinaryExpression) lexpr; 
       Expression lvar = beleft.getLeft(); 
@@ -21766,6 +21769,26 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
     left.energyUse(res, rUses, aUses); 
     right.energyUse(res, rUses, aUses); 
 
+    if ("let".equals(operator))
+    { if (accumulator == null) 
+      { aUses.add("! >> OCL efficiency smell (OES): Redundant let expression: " + this + "\n");
+        int ascore = (int) res.get("amber"); 
+        res.set("amber", ascore+1);
+      }
+      else 
+      { Vector names = new Vector(); 
+        names.add(accumulator + "");
+        Vector evars = right.variablesUsedIn(names); 
+
+        if (evars.size() == 0) 
+        { aUses.add("! >> OCL efficiency smell (OES): Redundant let expression: " + this + "\n");
+          int ascore = (int) res.get("amber"); 
+          res.set("amber", ascore+1);
+        }
+      }
+    } 
+
+       
     if (("&".equals(operator) || "or".equals(operator)) && 
         synLeft > synRight)
     { aUses.add("! >> OCL efficiency smell (OES): Possibly inefficient execution order: " + this + "\n>> c(left) = " + synLeft + ", c(right) = " + synRight);
@@ -22099,6 +22122,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
   public int syntacticComplexity() 
   { int res = left.syntacticComplexity();
     res = res + right.syntacticComplexity(); 
+
     if (operator.equals("#") || operator.equals("#1") || 
         operator.equals("#LC") || operator.equals("!") ||
         operator.equals("|") || operator.equals("|R") || 
@@ -22110,6 +22134,13 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         operator.equals("|selectMaximals")
        )
     { return res; }  
+
+    if ("let".equals(operator) && accumulator != null) 
+    { Expression init = accumulator.getInitialExpression(); 
+      if (init != null) 
+      { res = res + init.syntacticComplexity(); } 
+      return res + 2; 
+    } 
 
     if (operator.equals("->iterate"))
     { if (accumulator != null) 
@@ -22131,13 +22162,18 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
              operator.equals("or") || operator.equals("=>"))
     { return left.cyclomaticComplexity() + right.cyclomaticComplexity(); }  
 
-    if (operator.equals("->iterate"))
-    { int res = left.cyclomaticComplexity() + right.cyclomaticComplexity();
+    if (operator.equals("->iterate") || 
+        operator.equals("let"))
+    { int res = 
+                left.cyclomaticComplexity() + 
+                right.cyclomaticComplexity();
+
       if (accumulator != null) 
       { Expression init = accumulator.getInitialExpression(); 
         if (init != null) 
         { res = res + init.cyclomaticComplexity(); } 
       }
+
       return res;  
     } 
 
@@ -22146,7 +22182,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
 
   // assume outermost operator is an exists
   public Expression isExistsForall(Vector foralls, Expression tracest)
-  { if (operator.equals("#") || operator.equals("#LC") || operator.equals("#1"))
+  { if (operator.equals("#") || operator.equals("#LC") || 
+        operator.equals("#1"))
     { Expression rem = right.isExistsForall(foralls, tracest);
       if (rem == null) { return null; }
       else

@@ -4019,6 +4019,30 @@ abstract class Expression
     return new UnaryExpression("->tail", src); 
   } 
 
+  public static Expression simplifyLet(Attribute x, 
+                                       Expression init,
+                                       Expression arg)
+  { // let x : T = v in expr is just expr if x doesn't 
+    // occur in expr
+
+    if (x == null) 
+    { return arg; } 
+
+    Vector names = new Vector(); 
+    names.add(x + "");
+    Vector evars = arg.variablesUsedIn(names); 
+
+    if (evars.size() == 0) 
+    { return arg; } 
+
+    BinaryExpression res = 
+      new BinaryExpression("let", init, arg);
+    res.setAccumulator(x); 
+    return res;  
+  }  
+
+     
+
   public static Expression simplifySize(Expression arg)
   { // Integer.subrange(1,n)->size() is n
     // Integer.subrange(n,m)->size() is m-n+1

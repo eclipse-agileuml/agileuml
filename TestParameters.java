@@ -37,7 +37,10 @@ public class TestParameters
   public static int statementNestingLimit = 5;  
   public static int cyclomaticComplexityLimit = 10; 
   public static int referenceChainLimit = 2; 
+  public static int nestedTypeLimit = 3; 
 
+  public static int superclassesLimit = 4; 
+  public static int inheritanceChainLimit = 3; 
   public static int numberOfDataFeaturesLimit = 20; 
   public static int numberOfOperationsLimit = 15; 
   public static int numberOfParametersLimit = 8; 
