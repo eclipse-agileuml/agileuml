@@ -1959,6 +1959,9 @@ abstract class Expression
   } 
 
   public static boolean isString(String data)
+  { return isStringValue(data); }
+
+  public static boolean isStringValue(String data)
   { int len = data.length();
     if (len > 1 &&
         data.charAt(0) == '\"' &&
@@ -2139,7 +2142,8 @@ abstract class Expression
         d.equals("abs") || d.equals("max") || 
         d.equals("subcollections") || d.equals("Prd") || 
         d.equals("size") || d.equals("toLowerCase") || 
-        d.equals("pow") || d.equals("gcd") || d.equals("Sum") ||
+        d.equals("pow") || d.equals("gcd") || 
+        d.equals("Sum") || d.equals("split") ||
         d.equals("replace") || d.equals("replaceAll") ||
         d.equals("replaceAllMatches") ||
         d.equals("replaceFirstMatch") || 
@@ -2908,6 +2912,10 @@ abstract class Expression
     else if (op.equals(":")) { res = simplifyIn(e1,e2); } 
     else if (op.equals("->apply")) { res = simplifyApply(e1,e2); } 
     else if (comparitors.contains(op)) { res = simplifyIneq(op,e1,e2); } 
+    else if (op.equals("+")) { res = simplifyPlus(e1,e2); }
+    else if (op.equals("*")) { res = simplifyMult(e1,e2); } 
+    else if (op.equals("/")) { res = simplifyDivide(e1,e2); } 
+    else if (op.equals("-")) { res = simplifyMinus(e1,e2); }
     else { res = new BinaryExpression(op,e1,e2); } 
     res.setBrackets(needsBrackets); 
     return res; 
@@ -2973,15 +2981,32 @@ abstract class Expression
     if (isInteger("" + e1) && isInteger("" + e2))
     { int v1 = convertInteger("" + e1); 
       int v2 = convertInteger("" + e2);
+
+      if (v2 == 0 && v1 > 0)
+      { return new BasicExpression("Math_PINFINITY"); } 
+      if (v2 == 0 && v1 < 0)
+      { return new BasicExpression("Math_NINFINITY"); }
+      if (v2 == 0 && v1 == 0)
+      { return new BasicExpression("Math_NaN"); } 
+       
       // case of v2 = 0 
       return new BasicExpression(v1 / v2); 
     }
     else if (isNumber("" + e1) && isNumber("" + e2))
     { double v1 = convertNumber("" + e1); 
       double v2 = convertNumber("" + e2); 
+
+      if (v2 == 0 && v1 > 0)
+      { return new BasicExpression("Math_PINFINITY"); } 
+      if (v2 == 0 && v1 < 0)
+      { return new BasicExpression("Math_NINFINITY"); }
+      if (v2 == 0 && v1 == 0)
+      { return new BasicExpression("Math_NaN"); } 
       // case of v2 = 0 
+
       return new BasicExpression(v1 / v2); 
     } 
+
     return new BinaryExpression("/", e1, e2); 
   }  
 
@@ -3240,7 +3265,7 @@ abstract class Expression
     } 
 
     if (src instanceof BasicExpression && 
-        Expression.isString(
+        Expression.isStringValue(
             ((BasicExpression) src).getData()))
     { BasicExpression usrc = (BasicExpression) src; 
       String dat = usrc.getData(); 
@@ -3250,6 +3275,10 @@ abstract class Expression
       int slen = dat.length(); 
       if (slen >= 2)
       { return new BasicExpression("\"" + dat.charAt(slen-2) + "\""); } 
+      else 
+      { return 
+          BasicExpression.newValueBasicExpression("null"); 
+      } 
     } 
 
     if (src instanceof UnaryExpression && 
@@ -3361,14 +3390,19 @@ abstract class Expression
     }
 
     if (src instanceof BasicExpression && 
-        Expression.isString(
+        Expression.isStringValue(
            ((BasicExpression) src).getData()))
     { BasicExpression usrc = (BasicExpression) src; 
       String dat = usrc.getData(); 
 
       System.out.println("! OES: Inefficient ->first operation: " + src + "->first()");
  
-      return new BasicExpression("\"" + dat.charAt(1) + "\""); 
+      if (dat.length() >= 2)
+      { return new BasicExpression("\"" + dat.charAt(1) + "\""); } 
+      else 
+      { return 
+          BasicExpression.newValueBasicExpression("null"); 
+      }
     } 
 
     if (src instanceof UnaryExpression && 
@@ -5251,10 +5285,17 @@ public static boolean conflictsReverseOp(String op1, String op2)
   } // but omit initialisations for parameters
 
   public static void main(String[] args) 
-  { if (Expression.isLong("10000000000000L"))
+  { /* if (Expression.isLong("10000000000000L"))
     { long xx = Expression.convertLong("10000000000000L"); 
       System.out.println(xx); 
-    }
+    } */ 
+
+    BinaryExpression ss = new BinaryExpression("/", 
+        new BasicExpression(3.0), new BasicExpression(5.0));
+    BinaryExpression pp = new BinaryExpression("+", ss, 
+                                new BasicExpression(0.5));  
+    Expression res = pp.simplify(); 
+    System.out.println("" + res); 
   }   
 } 
 

@@ -6206,6 +6206,7 @@ public abstract class ASTTerm
     return lit; // for numbers only 
   }  
 
+  /* For MathOCL */ 
   public static String symbolicEvaluation(ASTTerm e1)
   { String a = ""; 
     String e1lit = e1.literalForm(); 

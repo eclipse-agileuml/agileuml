@@ -18913,8 +18913,10 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
 
   public Expression substitute(final Expression oldE,
                                final Expression newE)
-  { if (operator.equals("#") || operator.equals("#1") || operator.equals("!") || operator.equals("|A") ||
-        operator.equals("#LC") || operator.equals("|") || operator.equals("|C") || operator.equals("|R"))
+  { if (operator.equals("#") || operator.equals("#1") || 
+        operator.equals("!") || operator.equals("|A") ||
+        operator.equals("#LC") || operator.equals("|") || 
+        operator.equals("|C") || operator.equals("|R"))
     { Expression var = ((BinaryExpression) left).left; 
       Vector vars = oldE.getVariableUses();
       Vector vars1 = newE.getVariableUses(); 

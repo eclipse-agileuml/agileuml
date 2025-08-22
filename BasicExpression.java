@@ -3941,6 +3941,7 @@ class BasicExpression extends Expression
         !data.equals("excludingSubrange") && 
         !data.equals("setSubrange") && 
         !(data.equals("replace")) && 
+        !(data.equals("split")) && 
         !(data.equals("replaceFirstMatch")) && 
         !(data.equals("replaceAll")) && 
         !(data.equals("replaceAllMatches")) && 
@@ -4314,6 +4315,25 @@ class BasicExpression extends Expression
         type = par1.elementType; // Type is the casted type
         elementType = type; 
       } 
+      else if (data.equals("split"))
+      { type = new Type("Sequence", null); 
+        elementType = new Type("String", null); 
+        type.elementType = elementType;
+
+        if (objectRef.isString())
+        { } 
+        else 
+        { System.err.println("! objectRef of " + this +
+              " must be string");
+          objectRef.setType(new Type("String", null)); 
+        }  
+
+        if (objectRef instanceof BasicExpression) 
+        { vartypes.put(
+              ((BasicExpression) objectRef).basicString(),
+              objectRef.getType());
+        }  
+      }  
       else if (data.equals("subrange"))
       { // 3 cases - Integer.subrange, 
         // str.subrange, col.subrange
@@ -5728,7 +5748,7 @@ class BasicExpression extends Expression
         !data.equals("setSubrange") && 
         !data.equals("insertAt") && 
         !data.equals("insertInto") && 
-        // !(data.equals("split")) && 
+        !(data.equals("split")) && 
         !(data.equals("replace")) && 
         !(data.equals("replaceFirstMatch")) && 
         !(data.equals("replaceAll")) && 
@@ -5740,7 +5760,6 @@ class BasicExpression extends Expression
     { // data must be an event of the owning class, the elementType of 
       // the objectRef, or of an ancestor of it. 
       BehaviouralFeature bf; 
-
 
       for (int i = 0; i < context.size(); i++) 
       { Entity e = (Entity) context.get(i); 
@@ -5929,12 +5948,19 @@ class BasicExpression extends Expression
         return true;  
       } 
 
+      if (data.equals("split"))
+      { type = new Type("Sequence", null); 
+        elementType = new Type("String", null); 
+        type.elementType = elementType; 
+        return true; 
+      } 
+
       if (data.equals("toLong") || data.equals("gcd"))
       { type = new Type("long", null); 
         elementType = type; 
       } 
       else if (data.equals("size") || 
-               data.equals("floor") || data.equals("count") ||
+          data.equals("floor") || data.equals("count") ||
           data.equals("toInteger") || 
           data.equals("indexOf") || 
           data.equals("ceil") || data.equals("round"))
@@ -16831,17 +16857,32 @@ public Statement generateDesignSubtract(Expression rhs)
       { SetExpression se = (SetExpression) ors; 
         return se.getLastElement(); 
       } 
-      else if (data.equals("first") && 
-               (ors instanceof SetExpression))
+
+      if (data.equals("last") && 
+          Expression.isStringValue("" + ors))
+      { return Expression.simplifyLast(ors); } 
+
+      if (data.equals("first") && 
+          (ors instanceof SetExpression))
       { SetExpression se = (SetExpression) ors; 
         return se.getFirstElement(); 
       }
-      else if (data.equals("size") && 
-               (ors instanceof SetExpression))
+
+      if (data.equals("first") && 
+          Expression.isStringValue("" + ors))
+      { return Expression.simplifyFirst(ors); } 
+
+      if (data.equals("size") && 
+          (ors instanceof SetExpression))
       { SetExpression se = (SetExpression) ors; 
         return new BasicExpression(se.size()); 
       }
-      else if (data.equals("subrange") && 
+
+      if (data.equals("size") && 
+          Expression.isStringValue("" + ors))
+      { return Expression.simplifySize(ors); }
+
+      if (data.equals("subrange") && 
          ors instanceof BasicExpression && 
          ((BasicExpression) ors).objectRef != null &&
          ((BasicExpression) ors).data.equals("subrange"))
@@ -16880,13 +16921,14 @@ public Statement generateDesignSubtract(Expression rhs)
     if (arrayIndex == null) { return this; } 
 
     Expression ai = arrayIndex.simplify(); 
-    if (isNumber("" + ai) && isString(data))
+    if (isNumber("" + ai) && isStringValue(data))
     { int i = Integer.parseInt("" + ai); 
       String ss = data.substring(i-1,i);
       BasicExpression res = new BasicExpression("\"" + ss + "\""); 
       return res; 
       // and type check it?
     }  
+
     if (isNumber("" + ai) && isSequence(data))
     { int i = Integer.parseInt("" + ai); 
       SetExpression se = (SetExpression) buildSetExpression(data); 
@@ -16894,10 +16936,13 @@ public Statement generateDesignSubtract(Expression rhs)
       return res; 
       // and type check it?
     }  
+
     if (objectRef == null)
     { return this; }
+
     Expression ors = objectRef.simplify(); 
     objectRef = ors; 
+
     if (isNumber("" + ai) && (ors instanceof SetExpression))
     { int i = Integer.parseInt("" + ai); 
       Expression ob = ((SetExpression) ors).getElement(i-1); 
@@ -16912,7 +16957,8 @@ public Statement generateDesignSubtract(Expression rhs)
   public Vector getBaseEntityUses()
   { Vector res = new Vector();
     if (objectRef == null) 
-    { if (umlkind == ROLE || umlkind == QUERY || umlkind == ATTRIBUTE)
+    { if (umlkind == ROLE || umlkind == QUERY || 
+          umlkind == ATTRIBUTE)
       { if (entity != null) 
         { if (entity.isStaticFeature(data)) 
           { System.err.println("!! ERROR: Static feature should have class name objectref: " + this); }  
