@@ -2795,17 +2795,17 @@ _1 as _2 |-->
 
 
 functionDefinitions::
-_1 |-->_1_*`functionDefinitions<when> _1 funcdef
 _1 |-->_1<when> _1 funcdef
+_1 _* |-->_1_*`functionDefinitions<when> _1 funcdef
 
-_1 _* |-->_1`functionDefinitions_*`functionDefinitions<when> _1 compound_stmt
 _1 |-->_1`functionDefinitions<when> _1 compound_stmt
+_1 _* |-->_1`functionDefinitions_*`functionDefinitions<when> _1 compound_stmt
 
-_1 _* |-->_1`functionDefinitions_*`functionDefinitions<when> _1 stmt
 _1 |-->_1`functionDefinitions<when> _1 stmt
+_1 _* |-->_1`functionDefinitions_*`functionDefinitions<when> _1 stmt
 
-_1 _* |-->_*`functionDefinitions<when> _1 classdef
 _1 |--><when> _1 classdef
+_1 _* |-->_*`functionDefinitions<when> _1 classdef
 
 _1 |-->
 
