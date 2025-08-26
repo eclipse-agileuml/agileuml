@@ -126,6 +126,13 @@ class MatrixLib :
       return [MatrixLib.elementwiseApply(list(_r), f) for _r in m]
     return [f(float(z)) for z in m]
 
+  def elementwiseNot(m: list) -> list:
+    if len(m) == 0:
+      return []
+    elif isinstance(m[0], list):
+      return [MatrixLib.elementwiseNot(list(_r)) for _r in m]
+    return [not(z) for z in m]
+
   def elementwiseMult(m: list, x: float) -> list:
     if len(m) == 0:
       return []
@@ -133,12 +140,26 @@ class MatrixLib :
       return [MatrixLib.elementwiseMult(list(_r), x) for _r in m]
     return [float(z) * x for z in m]
 
+  def elementwisePower(m: list, x: float) -> list:
+    if len(m) == 0:
+      return []
+    elif isinstance(m[0], list):
+      return [MatrixLib.elementwisePower(list(_r), x) for _r in m]
+    return [float(z) ** x for z in m]
+
   def elementwiseAdd(m: list, x: float) -> list:
     if len(m) == 0:
       return []
     elif isinstance(m[0], list):
       return [MatrixLib.elementwiseAdd(list(_r), x) for _r in m]
     return [float(z) + x for z in m]
+
+  def elementwiseSubtract(m: list, x: float) -> list:
+    if len(m) == 0:
+      return []
+    elif isinstance(m[0], list):
+      return [MatrixLib.elementwiseSubtract(list(_r), x) for _r in m]
+    return [float(z) - x for z in m]
 
   def elementwiseDivide(m: list, x: float) -> list:
     if len(m) == 0:
@@ -263,14 +284,22 @@ class MatrixLib :
   def matrixGreater(m1: list, m2: list) -> list:
     return [MatrixLib.rowGreater(r1, r2) for r1, r2 in zip(m1, m2)]
 
+  def rowMaximum(m1: list, m2: list) -> list:
+    if isinstance(m1[0], list):
+      return [MatrixLib.rowMaximum(m1i, m2i) for m1i, m2i in zip(m1, m2)]
+    return [(m1j if (m1j > m2j) else m2j) for m1j, m2j in zip(m1, m2)]
+
+  def matrixMaximum(m1: list, m2: list) -> list:
+    return [MatrixLib.rowMaximum(r1, r2) for r1, r2 in zip(m1, m2)]
+
   def transpose(m: list) -> list:
     if not isinstance(m[0], list):
       return m
     return [MatrixLib.column(m, i) for i, _ in enumerate(m)]
 
-def main():
-  print(MatrixLib.matrixMultiplication([[1,2], [3,4]], [[5,6], [7,8]]))
-  print(MatrixLib.identityMatrix(5))
+# def main():
+#   print(MatrixLib.matrixMultiplication([[1,2], [3,4]], [[5,6], [7,8]]))
+#   print(MatrixLib.identityMatrix(5))
 
-if __name__=="__main__":
-  main()
+# if __name__=="__main__":
+#   main()
