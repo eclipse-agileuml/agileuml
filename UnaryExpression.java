@@ -2942,18 +2942,25 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
           (argumentType.isMapType() || 
            argumentType.isStringType()))
       { type = argumentType; } 
+      else if (argumentType != null && 
+               argumentType.elementType != null) 
+      { type = argumentType.elementType; } 
       else 
       { type = argument.elementType; }
- 
+
+      
       if (type != null && 
-          (type.isCollectionType() || 
-           type.isMapType()) 
-         )
+          type.isStringType())
+      { elementType = new Type("String", null); } 
+      else if (type != null && 
+        (type.isCollectionType() || 
+         type.isMapType()) 
+        )
       { multiplicity = ModelElement.MANY; 
         elementType = type.getElementType(); 
       } 
       else if (type == null)
-      { System.err.println("!! ERROR: No type for: " + this); 
+      { System.err.println("!! ERROR: Argument type is " + argumentType + " No type for: " + this); 
         type = new Type("OclAny", null); 
       } 
       else 
@@ -3529,12 +3536,19 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
     if (operator.equals("->last") || 
         operator.equals("->first"))
     { type = argument.elementType; 
-      if (type != null && type.isCollectionType())
+
+      if (type == null && argument.getType() != null)
+      { Type argTyp = argument.getType(); 
+        type = argTyp.getElementType(); 
+      } 
+
+      if (type != null && (type.isCollectionType() || 
+                           type.isMapType()))
       { multiplicity = ModelElement.MANY; 
         elementType = type.getElementType(); 
       } 
       else if (type == null)
-      { System.err.println("!! ERROR: No type for: " + this); 
+      { System.err.println("!! ERROR: Argument type is " + argument.getType() + " No type for: " + this); 
         type = new Type("OclAny", null); 
       } 
       else 

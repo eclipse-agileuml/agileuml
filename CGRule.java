@@ -643,13 +643,16 @@ public class CGRule
     if ("type".equals(mffeat))
     { String repl = ASTTerm.getType(term);
 
-      if (repl == null && term.hasMetafeature("type"))
+      if ((repl == null || "OclAny".equals(repl)) && 
+          term.hasMetafeature("type"))
       { repl = term.getMetafeatureValue("type"); } 
          
-      if (repl == null) 
+      if (repl == null || "OclAny".equals(repl)) 
       { Type tt = term.deduceType();
         repl = tt + ""; 
       } 
+
+      System.out.println(">>> Deduced type " + repl + " for " + term); 
 
       return repl;  
     }   
@@ -1414,15 +1417,17 @@ public class CGRule
           
           if ("type".equals(mffeat))
           { String repl = ASTTerm.getType(term);
-            if (repl == null) 
+
+            if (repl == null || "OclAny".equals(repl)) 
             { repl = ASTTerm.getTaggedValue(term,"type"); 
-              if (repl == null)
+              if (repl == null || "OclAny".equals(repl))
               { Type tt = term.deduceType();
                 repl = tt + "";
               } 
             } 
-            // System.out.println(">-->--> Type of " + term + " is " + repl); 
-            // System.out.println(); 
+
+            System.out.println(">-->--> Type of " + term + " is " + repl); 
+            System.out.println(); 
  
             if (repl != null)   
             { res = replaceByMetafeatureValue(res,mf,repl); }  

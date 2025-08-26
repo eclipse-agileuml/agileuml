@@ -494,16 +494,18 @@ public class ASTBasicTerm extends ASTTerm
 
 
   public Type deduceType()
-  { if (Expression.isString(value))
+  { System.out.println(">>> Deduce basic term type for " + this); 
+
+    if (Expression.isStringValue(value))
     { return new Type("String",null); }
    
-    if (Expression.isInteger(value))
+    if (Expression.isIntegerValue(value))
     { return new Type("int",null); }
 
-    if (Expression.isLong(value))
+    if (Expression.isLongValue(value))
     { return new Type("long",null); }
 
-    if (Expression.isDouble(value))
+    if (Expression.isDoubleValue(value))
     { return new Type("double",null); }
 
     if ("true".equals(value) || "false".equals(value))
@@ -513,7 +515,7 @@ public class ASTBasicTerm extends ASTTerm
   } 
 
   public Type deduceElementType()
-  { if (Expression.isString(value))
+  { if (Expression.isStringValue(value))
     { return new Type("String",null); }
    
     return new Type("OclAny", null); 

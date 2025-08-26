@@ -3230,6 +3230,34 @@ public class BehaviouralFeature extends ModelElement
     pars.addAll(extrapars); 
   } // Used in code generation, eg., for Swift. 
 
+  public void setFormalParameters(Vector pars, java.util.Map vartypes)
+  { if (pars == null || parameters == null) 
+    { return; }
+ 
+    Vector extrapars = new Vector(); 
+
+    for (int i = 0; i < parameters.size(); i++) 
+    { Attribute par = (Attribute) parameters.get(i); 
+      Type pt = par.getType(); 
+
+      if (i < pars.size())
+      { Expression arg = (Expression) pars.get(i); 
+        arg.formalParameter = par;
+        if (arg instanceof BasicExpression && 
+            pt != null)
+        { vartypes.put(arg + "", pt); } 
+      } 
+      else 
+      { Expression nullInit = 
+          Type.nullInitialValueExpression(pt); 
+        nullInit.formalParameter = par; 
+        extrapars.add(nullInit); 
+      } 
+    } 
+
+    pars.addAll(extrapars); 
+  } // Used in code generation, eg., for Swift. 
+
   public Expression substituteParameters(Expression e, Vector arguments) 
   { if (e == null) 
     { return new BasicExpression(true); }
@@ -3713,14 +3741,18 @@ public class BehaviouralFeature extends ModelElement
               types,localEntities,contexts,env,localvartypes);
     } 
 
+    System.out.println(); 
     System.out.println(">>> Typed variables = " + 
                        localvartypes); 
+    System.out.println(); 
 
     Type rtype = (Type) localvartypes.get("result"); 
     if ((resultType == null || 
          "OclAny".equals(resultType + "")) && 
         rtype != null) 
-    { resultType = rtype; } 
+    { resultType = rtype;
+      elementType = rtype.getElementType(); 
+    } 
 
     for (int i = 0; i < parameters.size(); i++) 
     { Attribute par = (Attribute) parameters.get(i); 

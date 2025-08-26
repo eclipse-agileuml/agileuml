@@ -1737,6 +1737,9 @@ abstract class Expression
     return res; 
   } 
 
+  public static boolean isIntegerValue(Object ob) 
+  { return isInteger(ob); } 
+
   public static boolean isInteger(Object ob) 
   { if (ob == null) 
     { return false; } 
@@ -1795,6 +1798,8 @@ abstract class Expression
     { return false; } 
   } 
 
+  public static boolean isLongValue(Object ob) 
+  { return isLong(ob); } 
 
   public static boolean isLong(Object ob) 
   { if (ob == null) 
@@ -1930,6 +1935,9 @@ abstract class Expression
       return 0; 
     }  
   } 
+
+  public static boolean isDoubleValue(Object ob) 
+  { return isDouble(ob); } 
 
   public static boolean isDouble(Object ob) 
   { try
@@ -3273,7 +3281,7 @@ abstract class Expression
       System.out.println("! OES: Inefficient ->last operation: " + src + "->last()");
  
       int slen = dat.length(); 
-      if (slen >= 2)
+      if (slen > 2)
       { return new BasicExpression("\"" + dat.charAt(slen-2) + "\""); } 
       else 
       { return 
@@ -3397,7 +3405,7 @@ abstract class Expression
 
       System.out.println("! OES: Inefficient ->first operation: " + src + "->first()");
  
-      if (dat.length() >= 2)
+      if (dat.length() > 2)
       { return new BasicExpression("\"" + dat.charAt(1) + "\""); } 
       else 
       { return 
@@ -5296,6 +5304,8 @@ public static boolean conflictsReverseOp(String op1, String op2)
                                 new BasicExpression(0.5));  
     Expression res = pp.simplify(); 
     System.out.println("" + res); 
+
+    System.out.println(Expression.isDoubleValue("3.0")); 
   }   
 } 
 

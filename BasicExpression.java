@@ -3623,7 +3623,7 @@ class BasicExpression extends Expression
       return true;
     }
 
-    if (Expression.isLong(data))
+    if (Expression.isLongValue(data))
     { type = new Type("long",null);
       elementType = type; 
       entity = null;
@@ -3634,7 +3634,7 @@ class BasicExpression extends Expression
       return true;
     }
 
-    if (isDouble(data))
+    if (Expression.isDoubleValue(data))
     { type = new Type("double",null);
       elementType = type; 
       entity = null;
@@ -3644,7 +3644,7 @@ class BasicExpression extends Expression
       return true;
     }
 
-    if (isString(data))
+    if (Expression.isStringValue(data))
     { type = new Type("String",null);
       elementType = type; 
       entity = null;
@@ -3830,7 +3830,7 @@ class BasicExpression extends Expression
               "Type warning", JOptionPane.WARNING_MESSAGE); 
           }  
 
-          bf.setFormalParameters(parameters); 
+          bf.setFormalParameters(parameters, vartypes); 
           System.out.println("** Setting formal parameters of " + this);
 
           type = bf.getResultType(); 
@@ -3959,7 +3959,7 @@ class BasicExpression extends Expression
         bf = e.getDefinedOperation(data,parameters);
   
         if (bf != null) 
-        { System.out.println("*>>* Type of " + data + " is operation, of class: " + e);
+        { System.out.println("*>>* Type of " + data + " is operation, of class: " + e + " result type = " + bf.getType() + " " + bf.getElementType());
           entity = e;
           if (bf.parametersMatch(parameters)) { } 
           else 
@@ -3972,7 +3972,7 @@ class BasicExpression extends Expression
           System.out.println("** Setting formal parameters of " + data + " operation: " + parameters);
           System.out.println(); 
 
-          bf.setFormalParameters(parameters); 
+          bf.setFormalParameters(parameters, vartypes); 
 
           if (bf.isQuery())
           { umlkind = QUERY; 
@@ -4036,7 +4036,7 @@ class BasicExpression extends Expression
             { type = bf.getResultType(); 
               elementType = bf.getElementType(); 
             
-              bf.setFormalParameters(parameters); 
+              bf.setFormalParameters(parameters, vartypes); 
 
               if (bf.isQuery())
               { umlkind = QUERY; }
@@ -5030,7 +5030,7 @@ class BasicExpression extends Expression
       return true;
     } // double values that represent invalid doubles
 
-    if (isInteger(data))
+    if (Expression.isIntegerValue(data))
     { type = new Type("int",null);
       elementType = type; 
       entity = null;
@@ -5041,7 +5041,7 @@ class BasicExpression extends Expression
       return true;
     }
 
-    if (Expression.isLong(data))
+    if (Expression.isLongValue(data))
     { type = new Type("long",null);
       elementType = type; 
       entity = null;
@@ -5052,7 +5052,7 @@ class BasicExpression extends Expression
       return true;
     }
 
-    if (isDouble(data))
+    if (Expression.isDoubleValue(data))
     { type = new Type("double",null);
       elementType = type; 
       entity = null;
@@ -5062,7 +5062,7 @@ class BasicExpression extends Expression
       return true;
     }
 
-    if (isString(data))
+    if (Expression.isStringValue(data))
     { type = new Type("String",null);
       elementType = type; 
       entity = null;
@@ -5766,8 +5766,9 @@ class BasicExpression extends Expression
         bf = e.getDefinedOperation(data,parameters);
   
         if (bf != null) 
-        { System.out.println("** Type of " + data + " is operation, of: " + e);
+        { System.out.println("** Type of " + data + " is operation, of: " + e + " result type " + bf.getType() + " " + bf.getElementType());
           entity = e;
+
           if (bf.parametersMatch(parameters)) { } 
           else 
           { JOptionPane.showMessageDialog(null, 
@@ -6772,7 +6773,7 @@ class BasicExpression extends Expression
     { Entity e = (Entity) entities.get(i); 
       BehaviouralFeature bf = e.getOperation(data);  
       if (bf != null) 
-      { System.out.println("**Type of " + data + " is operation, of: " + e);
+      { System.out.println("**Type of " + data + " is operation, of: " + e + " type: " + bf.getType() + " " + bf.getElementType());
         entity = e;
         if (bf.isQuery())
         { umlkind = QUERY; 
@@ -18020,6 +18021,14 @@ public Statement generateDesignSubtract(Expression rhs)
     Vector v = new Vector();  
     expr1.typeCheck(t,e,v);  
     System.out.println(">>> Type of " + expr1 + " is: " + expr1.type + " ( " + expr1.elementType + " )"); 
+
+    BasicExpression be = new BasicExpression("\"\""); 
+    BasicExpression be1 = new BasicExpression("first"); 
+    be1.objectRef = be; 
+    be1.typeCheck(t,e,v);  
+    
+    System.out.println(be1.simplify()); 
+    
 
   } 
 

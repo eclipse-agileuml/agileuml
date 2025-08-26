@@ -246,7 +246,25 @@ public class ASTSymbolTerm extends ASTTerm
   { return null; }
 
   public Type deduceType()
-  { return new Type("void", null); } 
+  { /* System.out.println(">>> Deduce symbol term type for " + this); 
+
+    if (Expression.isStringValue(symbol))
+    { return new Type("String",null); }
+   
+    if (Expression.isIntegerValue(symbol))
+    { return new Type("int",null); }
+
+    if (Expression.isLongValue(symbol))
+    { return new Type("long",null); }
+
+    if (Expression.isDoubleValue(symbol))
+    { return new Type("double",null); }
+
+    if ("true".equals(symbol) || "false".equals(symbol))
+    { return new Type("boolean", null); } */ 
+
+    return new Type("OclAny", null); 
+  } 
 
   public Type deduceElementType()
   { return new Type("void", null); } 

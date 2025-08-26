@@ -885,7 +885,7 @@ public class ASTCompositeTerm extends ASTTerm
           return r.applyRule(args,eargs,cgs); 
         }  
         else 
-        { System.out.println(">!!> Conditions failed of rule " + r + " for " + this); 
+        { // System.out.println(">!!> Conditions failed of rule " + r + " for " + this); 
         } 
       }
     }  
@@ -1050,7 +1050,9 @@ public class ASTCompositeTerm extends ASTTerm
   } 
 
   public Type deduceType()
-  { if (terms.size() == 1)
+  { System.out.println("=== deduce type for " + this); 
+
+    if (terms.size() == 1)
     { ASTTerm t = (ASTTerm) terms.get(0); 
       return t.deduceType(); 
     } 
