@@ -1697,6 +1697,13 @@ abstract class Expression
     return false; 
   }  
 
+  public static boolean isNumberValue(Object ob) 
+  { return 
+      (Expression.isIntegerValue(ob) || 
+       Expression.isLongValue(ob) ||
+       Expression.isDoubleValue(ob)); 
+  } 
+
   public static boolean isNumber(Object ob) 
   { try
     { double nn = Double.parseDouble("" + ob); 
@@ -1949,20 +1956,27 @@ abstract class Expression
   } 
 
   public static boolean isValue(Object ob)
-  { if (isNumber(ob)) { return true; } 
+  { if (Expression.isNumberValue(ob)) 
+    { return true; } 
+
     if (ob instanceof String) 
-    { if (isString((String) ob)) { return true; } 
-      if (isBoolean((String) ob)) { return true; }
+    { if (Expression.isStringValue((String) ob)) 
+      { return true; } 
+
+      if (Expression.isBooleanValue((String) ob)) 
+      { return true; }
     }  
+
     return false; 
-  } // and values of enum types? 
+  } // and values of collection, map, enum types? 
 
   public boolean isValue()
   { return umlkind == VALUE; } 
 
   public static boolean isConstant(String s)
   { // it is all capitals
-    if (s == null || s.length() == 0) { return false; } 
+    if (s == null || s.length() == 0) 
+    { return false; } 
     return (s.toUpperCase().equals(s)); 
   } 
 
@@ -2089,6 +2103,9 @@ abstract class Expression
     return null; 
   } 
 
+  public static boolean isBooleanValue(String data)
+  { return Expression.isBoolean(data); } 
+
   public static boolean isBoolean(String data)
   { return data.equals("true") || data.equals("false"); }
 
@@ -2104,6 +2121,11 @@ abstract class Expression
   }
 
   // a more precise check, isSetValue, is needed. 
+  public static boolean isSetValue(String data)
+  { return Expression.isSet(data); } 
+
+  public static boolean isSequenceValue(String data)
+  { return Expression.isSequence(data); } 
 
   public static boolean isSequence(String data)
   { int len = data.length();
@@ -2122,6 +2144,9 @@ abstract class Expression
     { return true; }
     return false;
   }
+
+  public static boolean isMapValue(String data)
+  { return Expression.isMap(data); } 
 
   // a more precise check, isMapValue, is needed. 
 
@@ -4272,7 +4297,28 @@ abstract class Expression
         }
       } 
     } 
+
+    if (Expression.isIntegerValue("" + par1) && 
+        Expression.isIntegerValue("" + par2) && 
+        Expression.isStringValue("" + src)) 
+    { int ind1 = Expression.convertInteger(par1 + "");
+      int ind2 = Expression.convertInteger(par2 + "");
+      String res = ("" + src).substring(ind1, ind2+1); 
+      BasicExpression expr = 
+        BasicExpression.newValueBasicExpression(
+                                      "\"" + res + "\""); 
+      expr.setType(new Type("String", null)); 
+      return expr; 
+    } 
         
+    if (Expression.isIntegerValue("" + par1) && 
+        Expression.isIntegerValue("" + par2) && 
+        src instanceof SetExpression) 
+    { int ind1 = Expression.convertInteger(par1 + "");
+      int ind2 = Expression.convertInteger(par2 + "");
+      return ((SetExpression) src).subrange(ind1, ind2); 
+    } 
+
     Vector pars = new Vector(); 
     pars.add(par1); 
     pars.add(par2);  
@@ -4372,6 +4418,22 @@ abstract class Expression
       }  
     } 
 
+    if (Expression.isIntegerValue("" + par1) && 
+        Expression.isStringValue("" + src)) 
+    { int ind1 = Expression.convertInteger(par1 + "");
+      String res = ("" + src).substring(ind1); 
+      BasicExpression expr = 
+        BasicExpression.newValueBasicExpression(
+                                     "\"" + res + "\""); 
+      expr.setType(new Type("String", null)); 
+      return expr; 
+    } 
+
+    if (Expression.isIntegerValue("" + par1) && 
+        src instanceof SetExpression) 
+    { int ind1 = Expression.convertInteger(par1 + "");
+      return ((SetExpression) src).subrange(ind1); 
+    } 
         
     Vector pars = new Vector(); 
     pars.add(par1); 

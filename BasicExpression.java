@@ -16885,6 +16885,7 @@ public Statement generateDesignSubtract(Expression rhs)
 
       if (data.equals("subrange") && 
          ors instanceof BasicExpression && 
+         parameters != null && 
          ((BasicExpression) ors).objectRef != null &&
          ((BasicExpression) ors).data.equals("subrange"))
       { // e.subrange(a,b).subrange(c,d) is 
@@ -16919,10 +16920,20 @@ public Statement generateDesignSubtract(Expression rhs)
       return this;  
     }       
 
+    if (data.equals("subrange") && 
+        parameters != null && 
+        parameters.size() > 1 && 
+        objectRef != null) 
+    { Expression p1 = (Expression) parameters.get(0); 
+      Expression p2 = (Expression) parameters.get(1);
+      return Expression.simplifySubrange(objectRef, p1, p2); 
+    } 
+
     if (arrayIndex == null) { return this; } 
 
     Expression ai = arrayIndex.simplify(); 
-    if (isNumber("" + ai) && isStringValue(data))
+    if (Expression.isIntegerValue("" + ai) && 
+        Expression.isStringValue(data))
     { int i = Integer.parseInt("" + ai); 
       String ss = data.substring(i-1,i);
       BasicExpression res = new BasicExpression("\"" + ss + "\""); 
@@ -16930,7 +16941,8 @@ public Statement generateDesignSubtract(Expression rhs)
       // and type check it?
     }  
 
-    if (isNumber("" + ai) && isSequence(data))
+    if (Expression.isIntegerValue("" + ai) && 
+        Expression.isSequenceValue(data))
     { int i = Integer.parseInt("" + ai); 
       SetExpression se = (SetExpression) buildSetExpression(data); 
       Expression res = se.getElement(i-1); 
@@ -16944,13 +16956,15 @@ public Statement generateDesignSubtract(Expression rhs)
     Expression ors = objectRef.simplify(); 
     objectRef = ors; 
 
-    if (isNumber("" + ai) && (ors instanceof SetExpression))
+    if (Expression.isIntegerValue("" + ai) && 
+        (ors instanceof SetExpression))
     { int i = Integer.parseInt("" + ai); 
       Expression ob = ((SetExpression) ors).getElement(i-1); 
       BasicExpression res = new BasicExpression(data); 
       res.objectRef = ob;  // and copy the object ref of ors? 
       return res; 
     } 
+
     arrayIndex = ai; 
     return this; 
   }
@@ -18012,7 +18026,7 @@ public Statement generateDesignSubtract(Expression rhs)
   public static void main(String[] args)
   { // System.out.println(Math.log10(100)); 
     // System.out.println(Math.log(100)/Math.log(10)); 
-    BasicExpression expr = new BasicExpression("x@100"); 
+    /* BasicExpression expr = new BasicExpression("x@100"); 
     System.out.println(expr); 
     BasicExpression expr1 = new BasicExpression("0xFFFFFFFFFFFFFFFFFFFF"); 
     System.out.println(expr1);
@@ -18027,9 +18041,7 @@ public Statement generateDesignSubtract(Expression rhs)
     be1.objectRef = be; 
     be1.typeCheck(t,e,v);  
     
-    System.out.println(be1.simplify()); 
-    
-
+    System.out.println(be1.simplify()); */ 
   } 
 
   public Expression simplifyOCL() 
