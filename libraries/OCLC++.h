@@ -11,6 +11,7 @@
 #include <map>
 #include <ctime>
 #include <cmath>
+#include <iostream>
 #include <iosfwd>
 
 using namespace std;
