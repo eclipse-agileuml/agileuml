@@ -13,6 +13,7 @@
 #include <cmath>
 #include <iostream>
 #include <iosfwd>
+#include <regex>
 
 using namespace std;
 
