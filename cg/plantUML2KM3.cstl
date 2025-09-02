@@ -54,16 +54,16 @@ _1 _2 _3 |-->interface _3 { }\n\nclass _1 implements _3 { }<when> _2 rightImplem
 
 
 association::
-_1 _2 _3 _4 _5 _6 |-->class _5 { reference ref_1 [_2] : _1; }\n<when> _3 leftAssociationSymbol
-_1 _2 _3 _4 _5 _6 |-->class _1 { reference ref_5 [_4] : _5; }\n
+_1 _2 _3 _4 _5 _6 |-->class _5 { reference ref_1 _2 : _1; }\n<when> _3 leftAssociationSymbol
+_1 _2 _3 _4 _5 _6 |-->class _1 { reference ref_5 _4 : _5; }\n
 
-_1 _2 _3 _4 _5 |-->class _5 { reference ref_1 [_2] : _1; }\n<when> _5 identifier, _3 leftAssociationSymbol
-_1 _2 _3 _4 _5 |-->class _1 { reference ref_5 [_4] : _5; }\n<when> _5 identifier
+_1 _2 _3 _4 _5 |-->class _5 { reference ref_1 _2 : _1; }\n<when> _5 identifier, _3 leftAssociationSymbol
+_1 _2 _3 _4 _5 |-->class _1 { reference ref_5 _4 : _5; }\n<when> _5 identifier
 
 _1 _2 _3 _4 |-->class _4 { reference ref_1 [1] : _1; }\n<when> _3 stringExpression, _2 leftAssociationSymbol
-_1 _2 _3 _4 |-->class _1 { reference ref_4 [_3] : _4; }\n<when> _3 stringExpression
+_1 _2 _3 _4 |-->class _1 { reference ref_4 _3 : _4; }\n<when> _3 stringExpression
 
-_1 _2 _3 _4 |-->class _4 { reference ref_1 [_2] : _1; }\n<when> _3 leftAssociationSymbol
+_1 _2 _3 _4 |-->class _4 { reference ref_1 _2 : _1; }\n<when> _3 leftAssociationSymbol
 _1 _2 _3 _4 |-->class _1 { reference ref_3 [1] : _3; }\n<when> _4 lineAnnotation
 _1 _2 _3 _4 |-->class _1 { reference ref_4 [1] : _4; }\n
 
@@ -72,16 +72,16 @@ _1 _2 _3 |-->class _1 { reference ref_3 [1] : _3; }\n
 
 
 aggregation::
-_1 _2 _3 _4 _5 _6 |-->class _5 { reference ref_1 [_2] : _1; }\n<when> _3 leftAggregationSymbol
-_1 _2 _3 _4 _5 _6 |-->class _1 { reference ref_5 [_4] : _5; }\n
+_1 _2 _3 _4 _5 _6 |-->class _5 { reference ref_1 _2 : _1; }\n<when> _3 leftAggregationSymbol
+_1 _2 _3 _4 _5 _6 |-->class _1 { reference ref_5 _4 : _5; }\n
 
-_1 _2 _3 _4 _5 |-->class _5 { reference ref_1 [_2] : _1; }\n<when> _5 identifier, _3 leftAggregationSymbol
-_1 _2 _3 _4 _5 |-->class _1 { reference ref_5 [_4] : _5; }\n<when> _5 identifier
+_1 _2 _3 _4 _5 |-->class _5 { reference ref_1 _2 : _1; }\n<when> _5 identifier, _3 leftAggregationSymbol
+_1 _2 _3 _4 _5 |-->class _1 { reference ref_5 _4 : _5; }\n<when> _5 identifier
 
 _1 _2 _3 _4 |-->class _4 { reference ref_1 [1] : _1; }\n<when> _3 stringExpression, _2 leftAggregationSymbol
-_1 _2 _3 _4 |-->class _1 { reference ref_4 [_3] : _4; }\n<when> _3 stringExpression
+_1 _2 _3 _4 |-->class _1 { reference ref_4 _3 : _4; }\n<when> _3 stringExpression
 
-_1 _2 _3 _4 |-->class _4 { reference ref_1 [_2] : _1; }\n<when> _3 leftAggregationSymbol
+_1 _2 _3 _4 |-->class _4 { reference ref_1 _2 : _1; }\n<when> _3 leftAggregationSymbol
 _1 _2 _3 _4 |-->class _1 { reference ref_3 [1] : _3; }\n<when> _4 lineAnnotation
 _1 _2 _3 _4 |-->class _1 { reference ref_3 [1] : _3; }\n
 
@@ -90,16 +90,16 @@ _1 _2 _3 |-->class _1 { reference ref_3 [1] : _3; }\n
 
 
 composition::
-_1 _2 _3 _4 _5 _6 |-->class _5 { reference ref_1 [_2] container : _1; }\n<when> _3 leftCompositionSymbol
-_1 _2 _3 _4 _5 _6 |-->class _1 { reference ref_5 [_4] container : _5; }\n
+_1 _2 _3 _4 _5 _6 |-->class _5 { reference ref_1 _2 container : _1; }\n<when> _3 leftCompositionSymbol
+_1 _2 _3 _4 _5 _6 |-->class _1 { reference ref_5 _4 container : _5; }\n
 
-_1 _2 _3 _4 _5 |-->class _5 { reference ref_1 [_2] container : _1; }\n<when> _5 identifier, _3 leftCompositionSymbol
-_1 _2 _3 _4 _5 |-->class _1 { reference ref_5 [_4] container : _5; }\n<when> _5 identifier
+_1 _2 _3 _4 _5 |-->class _5 { reference ref_1 _2 container : _1; }\n<when> _5 identifier, _3 leftCompositionSymbol
+_1 _2 _3 _4 _5 |-->class _1 { reference ref_5 _4 container : _5; }\n<when> _5 identifier
 
 _1 _2 _3 _4 |-->class _4 { reference ref_1 [1] container : _1; }\n<when> _3 stringExpression, _2 leftCompositionSymbol
-_1 _2 _3 _4 |-->class _1 { reference ref_4 [_3] container : _4; }\n<when> _3 stringExpression
+_1 _2 _3 _4 |-->class _1 { reference ref_4 _3 container : _4; }\n<when> _3 stringExpression
 
-_1 _2 _3 _4 |-->class _4 { reference ref_1 [_2] container : _1; }\n<when> _3 leftCompositionSymbol
+_1 _2 _3 _4 |-->class _4 { reference ref_1 _2 container : _1; }\n<when> _3 leftCompositionSymbol
 _1 _2 _3 _4 |-->class _1 { reference ref_3 [1] container : _3; }\n<when> _4 lineAnnotation
 _1 _2 _3 _4 |-->class _1 { reference ref_4 [1] container : _4; }\n
 
@@ -218,11 +218,13 @@ _1 |-->_1
 
 
 stringExpression::
-"many" |-->*
-"*" |-->*
-"one" |-->1
-"1" |-->1
-_1 |-->_1
+"many" |-->[*]
+"*" |-->[*]
+"* {ordered}" |-->[*] ordered
+"one" |-->[1]
+"1" |-->[1]
+"0..1" |-->[0-1]
+_1 |-->[_1]
 
 
 lineAnnotation::
