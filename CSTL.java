@@ -147,7 +147,7 @@ public class CSTL
       }         
     }
 
-    System.err.println(">>> Parsed " + rulesetCount + " rulesets and " + ruleCount + " rules"); 
+    System.err.println(">>> Parsed " + lines.size() + " lines " + rulesetCount + " rulesets and " + ruleCount + " rules"); 
     
     return res; 
   } 
@@ -157,6 +157,7 @@ public class CSTL
     BufferedReader br = null;
     String s;
     boolean eof = false;
+    int lineCount = 0; 
     
     try
     { br = new BufferedReader(new FileReader(file)); }
@@ -165,7 +166,6 @@ public class CSTL
       return null; 
     }
 
-    int noflines = 0; 
     String mode = "none"; 
     String category = null; 
 
@@ -185,6 +185,7 @@ public class CSTL
       }
       
       s = s.trim(); 
+      lineCount++; 
 
       if (s.startsWith("/*") && s.endsWith("*/")) 
       { } 
@@ -426,7 +427,7 @@ public class CSTL
       }         
     }
 
-    System.err.println(">>> Parsed " + rulesetCount + " rulesets and " + ruleCount + " rules"); 
+    System.err.println(">>> Parsed " + lineCount + " lines " + rulesetCount + " rulesets and " + ruleCount + " rules"); 
     return res; 
   }
 
