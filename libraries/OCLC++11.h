@@ -1744,7 +1744,7 @@ public:
         return ex; 
       }
 
-      const char* what() const { return message; }
+      const char* what() const noexcept { return message; }
 
       string getMessage() { return string(message); }
 
@@ -1773,7 +1773,7 @@ public:
         return ex; 
       }
 
-      const char* what() const { return message; }
+      const char* what() const noexcept { return message; }
 
       string getMessage() { return string(message); }
 
@@ -1802,7 +1802,7 @@ public:
         return ex; 
       }
 
-      const char* what() const { return message; }
+      const char* what() const noexcept { return message; }
 
       string getMessage() { return string(message); }
 
@@ -1831,7 +1831,7 @@ public:
         return ex; 
       }
 
-      const char* what() const { return message; }
+      const char* what() const noexcept { return message; }
 
       string getMessage() { return string(message); }
 

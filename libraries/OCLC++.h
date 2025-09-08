@@ -2668,7 +2668,7 @@ public:
         return ex;
     }
 
-    const char* what() const { return message; }
+    const char* what() const throw() { return message; }
 
     string getMessage() { return string(message); }
 
@@ -2704,7 +2704,7 @@ public:
         return ex;
     }
 
-    const char* what() const { return message; }
+    const char* what() const throw() { return message; }
 
     string getMessage() { return string(message); }
 
@@ -2740,7 +2740,7 @@ public:
         return ex;
     }
 
-    const char* what() const { return message; }
+    const char* what() const throw() { return message; }
 
     string getMessage() { return string(message); }
 
@@ -2776,7 +2776,7 @@ public:
         return ex;
     }
 
-    const char* what() const { return message; }
+    const char* what() const throw() { return message; }
 
     string getMessage() { return string(message); }
 
