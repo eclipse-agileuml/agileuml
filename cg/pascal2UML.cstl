@@ -230,6 +230,11 @@ cos ( _1 ) |-->double
 
 odd ( _1 ) |-->boolean
 
+Sin ( _1 ) |-->double
+Cos ( _1 ) |-->double
+
+Odd ( _1 ) |-->boolean
+
 arctan ( _1 ) |-->double
 
 abs ( _1 ) |-->double
@@ -238,17 +243,37 @@ ln ( _1 ) |-->double
 round ( _1 ) |-->int
 trunc ( _1 ) |-->int
 
+Arctan ( _1 ) |-->double
+
+Abs ( _1 ) |-->double
+Exp ( _1 ) |-->double
+Ln ( _1 ) |-->double
+Round ( _1 ) |-->int
+Trunc ( _1 ) |-->int
+
 sqr ( _1 ) |-->double
 sqrt ( _1 ) |-->double
 
+Sqr ( _1 ) |-->double
+Sqrt ( _1 ) |-->double
+
 chr ( _1 ) |-->String
 eof ( _1 ) |-->boolean
+
+Chr ( _1 ) |-->String
+Eof ( _1 ) |-->boolean
 
 ord ( _1 ) |-->int
 succ ( _1 ) |-->_1`ocltype
 pred ( _1 ) |-->_1`ocltype
 
+Ord ( _1 ) |-->int
+Succ ( _1 ) |-->_1`ocltype
+Pred ( _1 ) |-->_1`ocltype
+
 random ( _1 ) |-->int
+
+Random ( _1 ) |-->int
 
 _1 ( _2 ) |-->OclAny
 
@@ -968,17 +993,38 @@ get ( _1 ) |-->\n    _1_buffer := _1.read()
 put ( output ) |-->\n    output.print(output_buffer)
 put ( _1 ) |-->\n    _1.write(_1_buffer)
 
+Get ( _1 ) |-->\n    _1_buffer := _1.read()
+Put ( output ) |-->\n    output.print(output_buffer)
+Put ( _1 ) |-->\n    _1.write(_1_buffer)
+
 writeln |-->\n    execute ""->display()
 readln |-->\n    execute ""->display()
+
+Writeln |-->\n    execute ""->display()
+Readln |-->\n    execute ""->display()
+
+WriteLn |-->\n    execute ""->display()
+ReadLn |-->\n    execute ""->display()
 
 read ( _1 ) |-->_1`readStatement
 readln ( _1 ) |-->_1`readlnStatement
 
+Read ( _1 ) |-->_1`readStatement
+Readln ( _1 ) |-->_1`readlnStatement
+ReadLn ( _1 ) |-->_1`readlnStatement
+
 write ( _1 ) |-->_1`writeStatement
 writeln ( _1 ) |-->_1`writelnStatement
+
+Write ( _1 ) |-->_1`writeStatement
+Writeln ( _1 ) |-->_1`writelnStatement
+WriteLn ( _1 ) |-->_1`writelnStatement
     
 rewrite ( _1 ) |-->_1`rewriteStatement
 reset ( _1 ) |-->_1`resetStatement
+
+Rewrite ( _1 ) |-->_1`rewriteStatement
+Reset ( _1 ) |-->_1`resetStatement
 
 new ( _1 ) |-->\n    _1 := _1`typName{1}; !_1 := _1`referredType.new_1`referredType()<when> _1`isObjectPointer true
 new ( _1 ) |-->\n    _1 := _1`typName{1}
@@ -1379,6 +1425,12 @@ tan ( _1 ) |-->(_1)->tan()
 
 odd ( _1 ) |-->((_1 mod 2) = 1)
 
+Sin ( _1 ) |-->(_1)->sin()
+Cos ( _1 ) |-->(_1)->cos()
+Tan ( _1 ) |-->(_1)->tan()
+
+Odd ( _1 ) |-->((_1 mod 2) = 1)
+
 arctan ( _1 ) |-->(_1)->atan()
 
 abs ( _1 ) |-->(_1)->abs()
@@ -1387,29 +1439,60 @@ ln ( _1 ) |-->(_1)->log()
 round ( _1 ) |-->(_1)->round()
 trunc ( _1 ) |-->(_1)->oclAsType(int)
 
+Arctan ( _1 ) |-->(_1)->atan()
+
+Abs ( _1 ) |-->(_1)->abs()
+Exp ( _1 ) |-->(_1)->exp()
+Ln ( _1 ) |-->(_1)->log()
+Round ( _1 ) |-->(_1)->round()
+Trunc ( _1 ) |-->(_1)->oclAsType(int)
+
 sqr ( _1 ) |-->(_1)->sqr()
 sqrt ( _1 ) |-->(_1)->sqrt()
 
 chr ( _1 ) |-->(_1)->byte2char()
 
+Sqr ( _1 ) |-->(_1)->sqr()
+Sqrt ( _1 ) |-->(_1)->sqrt()
+
+Chr ( _1 ) |-->(_1)->byte2char()
+
 ord ( true ) |-->1
 ord ( false ) |-->0
+
+Ord ( true ) |-->1
+Ord ( false ) |-->0
 
 ord ( _1 ) |-->(_1)->char2byte()<when> _1`ocltype String
 ord ( _1 ) |-->_1<when> _1`ocltype int
 ord ( _1 ) |-->_1->ord()
 
+Ord ( _1 ) |-->(_1)->char2byte()<when> _1`ocltype String
+Ord ( _1 ) |-->_1<when> _1`ocltype int
+Ord ( _1 ) |-->_1->ord()
+
 
 succ ( _1 ) |-->((_1)->char2byte() + 1)->byte2char()<when> _1`ocltype String
 succ ( _1 ) |-->_1->succ()
 
+Succ ( _1 ) |-->((_1)->char2byte() + 1)->byte2char()<when> _1`ocltype String
+Succ ( _1 ) |-->_1->succ()
+
 pred ( _1 ) |-->((_1)->char2byte() - 1)->byte2char()<when> _1`ocltype String
 pred ( _1 ) |-->_1->pred()
+
+Pred ( _1 ) |-->((_1)->char2byte() - 1)->byte2char()<when> _1`ocltype String
+Pred ( _1 ) |-->_1->pred()
 
 eof ( _1 ) |-->_1.getEof()
 eoln ( _1 ) |-->(_1_buffer->char2byte() = 10)
 
+Eof ( _1 ) |-->_1.getEof()
+Eoln ( _1 ) |-->(_1_buffer->char2byte() = 10)
+
 random ( _1 ) |-->_random.nextInt(_1)
+
+Random ( _1 ) |-->_random.nextInt(_1)
 
 _1 ( _2 ) |-->_1_2`cascadedApply<when> _1 Function
 _1 ( _2 ) |-->_1_operation(_2)
