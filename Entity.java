@@ -75,6 +75,20 @@ public class Entity extends ModelElement implements Comparable
   public Entity mergeEntity(Entity ent)
   { // Combine features of this with priority over ent
 
+    if (typeParameters == null && 
+        ent.typeParameters != null)
+    { typeParameters = ent.typeParameters; } // or copy
+    else if (ent.typeParameters != null) 
+    { for (int i = 0; i < ent.typeParameters.size(); i++) 
+      { Type tp = (Type) ent.typeParameters.get(i); 
+        if (VectorUtil.containsEqualString(tp.getName(),
+                                           typeParameters))
+        { } 
+        else 
+        { typeParameters.add(tp); } 
+      } 
+    } 
+
     for (int i = 0; i < ent.attributes.size(); i++) 
     { Attribute attr = (Attribute) ent.attributes.get(i); 
       if (hasAttribute(attr.getName())) { } 
@@ -239,7 +253,7 @@ public class Entity extends ModelElement implements Comparable
   public void addGenericTypeParameters(Vector gpars, Vector ents)
   { for (int i = 0; i < gpars.size(); i++) 
     { ModelElement mt = (ModelElement) gpars.get(i);
-	  if (mt == null) { continue; }
+      if (mt == null) { continue; }
 	  
       Entity newT = null; 
       if (mt instanceof Type && 
@@ -252,6 +266,8 @@ public class Entity extends ModelElement implements Comparable
       newT.genericParameter = true; 
       addTypeParameter(new Type(newT));
     }
+
+    // JOptionPane.showInputDialog("Generic type parameters of " + this + " are: " + typeParameters); 
   }      
 
   public void setIsParameter(boolean gen)
@@ -588,6 +604,8 @@ public class Entity extends ModelElement implements Comparable
     { ModelElement x = (ModelElement) tpars.get(i);
       addTypeParameter(x);
     }
+
+    // JOptionPane.showInputDialog("~~~ set type parameters of " + this + " to " + typeParameters); 
   } 
 
   public boolean hasTypeParameters(Vector tpars) 
@@ -1206,7 +1224,7 @@ public class Entity extends ModelElement implements Comparable
   { if (e != null) 
     { e.genericParameter = true; 
       Type t = new Type(e); 
-      this.addTypeParameter(t); 
+      typeParameters.add(t); 
     } 
   } 
 
@@ -6783,11 +6801,11 @@ System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 
         Expression expr = new BasicExpression(att);
       
-        JOptionPane.showMessageDialog(null, 
+        /* JOptionPane.showMessageDialog(null, 
               ">> Attribute " + att + " Width: " + awidth + 
               " Multiplicity: " + amult, 
               "", 
-              JOptionPane.INFORMATION_MESSAGE);
+              JOptionPane.INFORMATION_MESSAGE); */ 
 
         if (att.isSequence())
         { Expression xvar = 
@@ -6837,11 +6855,11 @@ System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
             atype.setFixedSize(true, widthExpr);  
           } 
 
-          JOptionPane.showMessageDialog(null, 
+          /* JOptionPane.showMessageDialog(null, 
              ">> Attribute " + att + " Type: " + atype + 
              " Type is fixed size: " + atype.hasFixedSize(), 
              "", 
-             JOptionPane.INFORMATION_MESSAGE);
+             JOptionPane.INFORMATION_MESSAGE); */ 
         } 
  
         sumExpr = 
@@ -12531,7 +12549,10 @@ System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
   public String getKM3()
   { String nme = "class " + getName();
 
-    if (typeParameters.size() > 0)
+    // JOptionPane.showInputDialog("]]] Class " + nme + " has parameters " + typeParameters); 
+
+    if (typeParameters != null && 
+        typeParameters.size() > 0)
     { String tp = ""; 
       for (int i = 0; i < typeParameters.size(); i++) 
       { tp = tp + ((ModelElement) typeParameters.get(i)).getName();

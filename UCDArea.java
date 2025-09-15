@@ -16142,16 +16142,16 @@ public void produceCUI(PrintWriter out)
     xx.enumtypes = new Vector(); 
     xx.enumtypes.addAll(types); 
 
-    xx.toKM3();
+    String ocltext = xx.toKM3();
  
     // System.out.println(); 
-    // System.out.println(); 
+    System.out.println(); 
 
     // Date d1 = new Date(); 
     // long time1 = d1.getTime(); 
 
     // String tt = xx.cg(spec); 
-    // System.out.println(tt); 
+    System.out.println(ocltext); 
     // System.out.println(); 
 
     // System.out.println(xx.toKM3()); 
@@ -16163,7 +16163,9 @@ public void produceCUI(PrintWriter out)
 
     // System.out.println(">>> Time for abstraction = " + (time2-time1)); 
 
-    // System.out.println(">>> System classes are: " + ASTTerm.entities); 
+    System.out.println(">>> System classes are: " + ASTTerm.entities); 
+
+    System.out.println(">>> System model elements are: " + xx.modelElements); 
 
     Vector newentities = new Vector(); 
     String pname = ASTTerm.packageName; 
@@ -16194,6 +16196,7 @@ public void produceCUI(PrintWriter out)
     else if (xx.modelElements != null) 
     { for (int i = 0; i < xx.modelElements.size(); i++) 
       { ModelElement me = (ModelElement) xx.modelElements.get(i); 
+
         if (me instanceof Entity) 
         { Entity newent = (Entity) me; 
           if (newent.isInterface() ||
@@ -16203,6 +16206,7 @@ public void produceCUI(PrintWriter out)
           { newent.addDefaultConstructor(); } 
 
           addEntity(newent, 100+(i*50), 100 + (150*i % 600));
+
           newentities.add(newent); 
         } 
         else if (me instanceof BehaviouralFeature)

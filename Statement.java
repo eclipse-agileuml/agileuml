@@ -6344,7 +6344,6 @@ class WhileStatement extends Statement
 
   public void setBody(Statement stat)
   { body = stat; } 
- 
 
   public void setLoopKind(int lk)
   { loopKind = lk; } 
