@@ -116,6 +116,7 @@ CharSequence |-->String
 Character |-->String
 InetAddress |-->String
 
+Boolean |-->boolean
 AtomicBoolean |-->boolean
 AtomicInteger |-->int
 AtomicLong |-->long
@@ -471,11 +472,16 @@ _1 |-->_66
 
 enumDeclaration::
 enum _1 { _2 } |-->  enumeration _1 {_2 }\n\n
-enum _1 { _2 , _3 } |-->  class _1 { _2`asObjects\n_3  }\n\n
-enum _1 { _2 _3 } |-->  class _1 { _2`asObjects\n_3  }\n\n
+
+enum _1 { _2 , _3 } |-->  class _1 { _2`asObjects\n_3  }\n\n_2`allEnumNestedClasses<action> _$ _1
+
+enum _1 { _2 _3 } |-->  class _1 { _2`asObjects\n_3  }\n\n_2`allEnumNestedClasses<action> _$ _1
+
 enum _1 implements _2 { _3 } |-->  enumeration _1 {_3 }\n\n
-enum _1 implements _2 { _3 , _4 } |-->  class _1 implements _2 { _3`asObjects\n_4  }\n\n
-enum _1 implements _2 { _3 _4 } |-->  class _1 implements _2 { _3`asObjects\n_4  }\n\n
+
+enum _1 implements _2 { _3 , _4 } |-->  class _1 implements _2 { _3`asObjects\n_4  }\n\n_3`allEnumNestedClasses<action> _$ _1
+
+enum _1 implements _2 { _3 _4 } |-->  class _1 implements _2 { _3`asObjects\n_4  }\n\n_3`allEnumNestedClasses<action> _$ _1
 
 
 enumConstants::
@@ -492,14 +498,32 @@ asObjects::
 _1 , _* |-->_1`asObject_*`recurse
 _1 |-->_1`asObject\n
 
+
+allEnumNestedClasses::
+_1 , _* |-->_1`enumNestedClasses_*`recurse
+_1 |-->_1`enumNestedClasses\n
+
+
 asObject::
-_1 |-->    static attribute _1 : SelfClass := SelfClass.newSelfClass();\n
+_1 |-->    static attribute _1 : _$ := _$.new_$();\n
 _1 _* |-->_*`recurse<when> _1 annotation
 
-_1 _2 |-->    static attribute _1 : SelfClass := SelfClass.newSelfClass_2;\n<when> _2 arguments
-_1 _2 |-->    class _1class extends SelfClass _2\n    static attribute _1 : _1class := _1class.new_1class();\n\n<when> _2 classBody
-_1 _2 _3 |-->    class _1class extends SelfClass _3\n    static attribute _1 : _1class := _1class.new_1class_2;\n\n
+_1 _2 |-->    static attribute _1 : _$ := _$.new_$_2;\n<when> _2 arguments
 
+_1 _2 |-->    static attribute _1 : _1class := _1class.new_1class();\n\n<when> _2 classBody
+
+_1 _2 _3 |-->    static attribute _1 : _1class := _1class.new_1class_2;\n\n
+
+
+enumNestedClasses::
+_1 |-->
+_1 _* |-->_*`recurse<when> _1 annotation
+
+_1 _2 |--> <when> _2 arguments
+
+_1 _2 |-->  class _1class extends _$ _2\n<when> _2 classBody
+
+_1 _2 _3 |-->    class _1class extends _$ _3\n
 
 
 
@@ -2099,8 +2123,8 @@ isLetter ( _1 ) |-->(_1 + "")->isMatch("[a-zA-Z]")
 isLetterOrDigit ( _1 ) |-->(_1 + "")->isMatch("[a-zA-Z0-9]")
 isLowerCase ( _1 ) |-->(_1->toLowerCase() = _1)
 isUpperCase ( _1 ) |-->(_1->toUpperCase() = _1)
-isJavaIdentifierPart ( _1 ) |-->(_1->isMatch("[0-9a-zA-Z_$]")
-isJavaIdentifierStart ( _1 ) |-->(_1->isMatch("[a-zA-Z_$]")
+isJavaIdentifierPart ( _1 ) |-->(_1->isMatch("[0-9a-z_A-Z$]")
+isJavaIdentifierStart ( _1 ) |-->(_1->isMatch("[a-z_A-Z$]")
 isSpaceChar ( _1 ) |-->(_1->isMatch("[\\t\\n ]")
 isWhitespace ( _1 ) |-->(_1->isMatch("[\\t\\n ]")
 toString ( _1 ) |-->(_1 + "")
@@ -3638,7 +3662,7 @@ _1 . _2 |-->    skip<when> _1 File
 _1 . _2 |-->    _1`updatedObject := _1_2`methodCallSideEffect<when> _2 updatesObject
 
 
-_1 . _2 |-->_1`preSideEffect_2`preSideEffect    _1`queryForm_2`methodCallQueryForm<when> _2 methodCall
+/* _1 . _2 |-->_1`preSideEffect_2`preSideEffect    _1`queryForm_2`methodCallQueryForm<when> _2 methodCall */
 
 
 _1 . _2 |-->_1`preSideEffect_2`preSideEffect    _1`queryForm._2
