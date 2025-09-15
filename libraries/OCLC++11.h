@@ -1849,16 +1849,3 @@ public:
    private: 
      const char* message;
   };
-
-
-   
-};
-
-
-
-
-
-
-
-
-
