@@ -42,7 +42,7 @@ public:
 
     static bool isSubset(set<_T>* s1, set<_T>* s2)
     { bool res = true; 
-      for (set<_T>::iterator _pos = s1->begin(); _pos != s1->end(); ++_pos)
+      for (typename set<_T>::iterator _pos = s1->begin(); _pos != s1->end(); ++_pos)
       { if (isIn(*_pos, s2)) { } 
         else { return false; } 
       }
@@ -51,7 +51,7 @@ public:
 
     static bool isSubset(set<_T>* s1, vector<_T>* s2)
     { bool res = true; 
-      for (set<_T>::iterator _pos = s1->begin(); _pos != s1->end(); ++_pos)
+      for (typename set<_T>::iterator _pos = s1->begin(); _pos != s1->end(); ++_pos)
       { if (isIn(*_pos, s2)) { }
         else { return false; } 
       }
@@ -60,7 +60,7 @@ public:
 
     static bool isSubset(vector<_T>* s1, vector<_T>* s2)
     { bool res = true; 
-      for (vector<_T>::iterator _pos = s1->begin(); _pos != s1->end(); ++_pos)
+      for (typename vector<_T>::iterator _pos = s1->begin(); _pos != s1->end(); ++_pos)
       { if (isIn(*_pos, s2)) { }
         else { return false; } 
       }
@@ -69,7 +69,7 @@ public:
 
     static bool isSubset(vector<_T>* s1, set<_T>* s2)
     { bool res = true; 
-      for (vector<_T>::iterator _pos = s1->begin(); _pos != s1->end(); ++_pos)
+      for (typename vector<_T>::iterator _pos = s1->begin(); _pos != s1->end(); ++_pos)
       { if (isIn(*_pos, s2)) { }
         else { return false; } 
       }
@@ -104,7 +104,7 @@ public:
 
     static vector<_T>* asSequence(set<_T>* c)
     { vector<_T>* res = new vector<_T>();
-      for (set<_T>::iterator _pos = c->begin(); _pos != c->end(); ++_pos)
+      for (typename set<_T>::iterator _pos = c->begin(); _pos != c->end(); ++_pos)
       { res->push_back(*_pos); } 
       return res;
    }
@@ -151,7 +151,7 @@ public:
 
   static map<string,_T>* copyMap(map<string,_T>* m)
   { map<string,_T>* res = new map<string,_T>();
-    map<string,_T>::iterator iter; 
+    typename map<string,_T>::iterator iter; 
     for (iter = m->begin(); iter != m->end(); ++iter)
     { string key = iter->first;
       (*res)[key] = iter->second;  
@@ -162,7 +162,7 @@ public:
   static string collectionToString(vector<_T>* c)
   { ostringstream buff;
     buff << "Sequence{";
-    for (vector<_T>::iterator _pos = c->begin(); _pos != c->end(); ++_pos)
+    for (typename vector<_T>::iterator _pos = c->begin(); _pos != c->end(); ++_pos)
     { buff << *_pos;
       if (_pos + 1 < c->end())
       { buff << ", "; }
@@ -174,7 +174,7 @@ public:
   static string collectionToString(set<_T>* c)
   { ostringstream buff;
     buff << "Set{"; 
-    for (set<_T>::iterator _pos = c->begin(); _pos != c->end(); ++_pos)
+    for (typename set<_T>::iterator _pos = c->begin(); _pos != c->end(); ++_pos)
     { buff << *_pos;
       if (_pos + 1 < c->end())
       { buff << ", "; }
@@ -276,7 +276,7 @@ public:
 
   static set<_T>* subtract(set<_T>* a, set<_T>* b)
   { set<_T>* res = new set<_T>(); 
-    for (set<_T>::iterator _pos = a->begin(); _pos != a->end(); ++_pos)
+    for (typename set<_T>::iterator _pos = a->begin(); _pos != a->end(); ++_pos)
     { if (UmlRsdsLib<_T>::isIn(*_pos,b)) { }
       else
       { res->insert(*_pos); }
@@ -286,7 +286,7 @@ public:
 
   static set<_T>* subtract(set<_T>* a, vector<_T>* b)
   { set<_T>* res = new set<_T>(); 
-    for (set<_T>::iterator _pos = a->begin(); _pos != a->end(); ++_pos)
+    for (typename set<_T>::iterator _pos = a->begin(); _pos != a->end(); ++_pos)
     { if (UmlRsdsLib<_T>::isIn(*_pos,b)) { }
       else
       { res->insert(*_pos); }
@@ -304,7 +304,7 @@ public:
 
   static set<_T>* intersection(set<_T>* a, set<_T>* b)
   { set<_T>* res = new set<_T>(); 
-    for (set<_T>::iterator _pos = a->begin(); _pos != a->end(); ++_pos)
+    for (typename set<_T>::iterator _pos = a->begin(); _pos != a->end(); ++_pos)
     { if (UmlRsdsLib<_T>::isIn(*_pos, b))
       { res->insert(*_pos); }
     }
@@ -313,7 +313,7 @@ public:
 
   static set<_T>* intersection(set<_T>* a, vector<_T>* b)
   { set<_T>* res = new set<_T>(); 
-    for (set<_T>::iterator _pos = a->begin(); _pos != a->end(); ++_pos)
+    for (typename set<_T>::iterator _pos = a->begin(); _pos != a->end(); ++_pos)
     { if (UmlRsdsLib<_T>::isIn(*_pos, b))
       { res->insert(*_pos); }
     }
@@ -355,7 +355,7 @@ public:
 
     static set<_T>* symmetricDifference(set<_T>* a, vector<_T>* b)
     { set<_T>* res = new set<_T>();
-      for (set<_T>::iterator _pos = a->begin(); _pos != a->end(); _pos++)
+      for (typename set<_T>::iterator _pos = a->begin(); _pos != a->end(); _pos++)
       { if (UmlRsdsLib<_T>::isIn(*_pos, b)) { }
         else { res->insert(*_pos); }
       }
@@ -372,7 +372,7 @@ public:
       { if (UmlRsdsLib<_T>::isIn((*a)[i], b)) { }
         else { res->insert((*a)[i]); }
       }
-      for (set<_T>::iterator _pos = b->begin(); _pos != b->end(); _pos++)
+      for (typename set<_T>::iterator _pos = b->begin(); _pos != b->end(); _pos++)
       { if (UmlRsdsLib<_T>::isIn(*_pos, a)) { }
         else { res->insert(*_pos); }
       }
@@ -381,11 +381,11 @@ public:
 
     static set<_T>* symmetricDifference(set<_T>* a, set<_T>* b)
     { set<_T>* res = new set<_T>();
-      for (set<_T>::iterator _pos = a->begin(); _pos != a->end(); _pos++)
+      for (typename set<_T>::iterator _pos = a->begin(); _pos != a->end(); _pos++)
       { if (UmlRsdsLib<_T>::isIn(*_pos, b)) { }
         else { res->insert(*_pos); }
       }
-      for (set<_T>::iterator _pos = b->begin(); _pos != b->end(); _pos++)
+      for (typename set<_T>::iterator _pos = b->begin(); _pos != b->end(); _pos++)
       { if (UmlRsdsLib<_T>::isIn(*_pos, a)) { }
         else { res->insert(*_pos); }
       }
@@ -459,7 +459,7 @@ public:
 
   static _T sum(set<_T>* a)
   { _T _sum(0); 
-    set<_T>::iterator _pos;
+    typename set<_T>::iterator _pos;
     for (_pos = a->begin(); _pos != a->end(); ++_pos)
     { _sum += *_pos; }
     return _sum; }
@@ -474,7 +474,7 @@ public:
 
   static _T prd(set<_T>* a)
   { _T _prd(1); 
-    set<_T>::iterator _pos;
+    typename set<_T>::iterator _pos;
     for (_pos = a->begin(); _pos != a->end(); ++_pos)
     { _prd *= *_pos; }
     return _prd; }
@@ -509,7 +509,7 @@ public:
 
     static vector<_T>* asOrderedSet(vector<_T>* c)
     { vector<_T>* res = new vector<_T>();
-      for (vector<_T>::iterator _pos = c->begin(); _pos != c->end(); ++_pos)
+      for (typename vector<_T>::iterator _pos = c->begin(); _pos != c->end(); ++_pos)
       { if (isIn(*_pos, res)) { }
         else 
         { res->push_back(*_pos); }
@@ -519,14 +519,14 @@ public:
 
     static vector<_T>* asOrderedSet(set<_T>* c)
     { vector<_T>* res = new vector<_T>();
-      for (set<_T>::iterator _pos = c->begin(); _pos != c->end(); ++_pos)
+      for (typename set<_T>::iterator _pos = c->begin(); _pos != c->end(); ++_pos)
       { res->push_back(*_pos); }
       return res;
     }
 
     static vector<_T>* randomiseSequence(vector<_T>* sq)
     { vector<_T>* res = new vector<_T>();
-      for (vector<_T>::iterator _pos = sq->begin(); _pos != sq->end(); ++_pos)
+      for (typename vector<_T>::iterator _pos = sq->begin(); _pos != sq->end(); ++_pos)
       { res->push_back(*_pos); }
       random_shuffle(res->begin(), res->end());
       return res; 
@@ -551,7 +551,7 @@ public:
   static vector<_T>* front(vector<_T>* a)
   { vector<_T>* res = new vector<_T>(); 
     if (a->size() == 0) { return res; } 
-    vector<_T>::iterator _pos = a->end(); 
+    typename vector<_T>::iterator _pos = a->end(); 
     _pos--; 
     res->insert(res->end(), a->begin(), _pos); 
     return res; }
@@ -560,7 +560,7 @@ public:
   static vector<_T>* tail(vector<_T>* a)
   { vector<_T>* res = new vector<_T>(); 
     if (a->size() == 0) { return res; } 
-    vector<_T>::iterator _pos = a->begin(); 
+    typename vector<_T>::iterator _pos = a->begin(); 
     _pos++; 
     res->insert(res->end(), _pos, a->end()); 
     return res; }
@@ -661,7 +661,7 @@ public:
 
   static _T any(set<_T>* v)
     { if (v->size() == 0) { return 0; }
-      set<_T>::iterator _pos = v->begin();
+      typename set<_T>::iterator _pos = v->begin();
       return *_pos;
     }
 
@@ -674,7 +674,7 @@ public:
 
   static _T first(set<_T>* v)
     { if (v->size() == 0) { return 0; }
-      set<_T>::iterator _pos = v->begin();
+      typename set<_T>::iterator _pos = v->begin();
       return *_pos;
     }
 
@@ -687,7 +687,7 @@ public:
 
   static _T last(set<_T>* v)
   { if (v->size() == 0) { return 0; }
-    set<_T>::iterator _pos = v->end();
+    typename set<_T>::iterator _pos = v->end();
     _pos--;
     return *_pos;
   }
@@ -851,7 +851,7 @@ public:
   static set<_T>* intersectAll(set<set<_T>*>* se)
   { set<_T>* res = new set<_T>(); 
     if (se->size() == 0) { return res; }
-    set<set<_T>*>::iterator _pos = se->begin();
+    typename set<set<_T>*>::iterator _pos = se->begin();
     set<_T>* frst = *_pos;
     res->insert(frst->begin(), frst->end());
     ++_pos; 
@@ -863,7 +863,7 @@ public:
   static set<_T>* intersectAll(set<vector<_T>*>* se)
   { set<_T>* res = new set<_T>(); 
     if (se->size() == 0) { return res; }
-    set<vector<_T>*>::iterator _pos = se->begin();
+    typename set<vector<_T>*>::iterator _pos = se->begin();
     vector<_T>* frst = *_pos;
     res->insert(frst->begin(), frst->end());
     ++_pos; 
@@ -897,7 +897,7 @@ public:
   static set<_T>* unionAll(set<set<_T>*>* se)
   { set<_T>* res = new set<_T>(); 
     if (se->size() == 0) { return res; }
-    set<set<_T>*>::iterator _pos;
+    typename set<set<_T>*>::iterator _pos;
     for (_pos = se->begin(); _pos != se->end(); ++_pos)
     { res = UmlRsdsLib<_T>::unionSet(res, *_pos); }
     return res;
@@ -906,7 +906,7 @@ public:
   static set<_T>* unionAll(set<vector<_T>*>* se)
   { set<_T>* res = new set<_T>(); 
     if (se->size() == 0) { return res; }
-    set<vector<_T>*>::iterator _pos;
+    typename set<vector<_T>*>::iterator _pos;
     for (_pos = se->begin(); _pos != se->end(); ++_pos)
     { res = UmlRsdsLib<_T>::unionSet(res, *_pos); }
     return res;
@@ -1354,10 +1354,10 @@ public:
     }
 
   static bool includesAllMap(map<string,_T>* sup, map<string,_T>* sub) 
-  { map<string,_T>::iterator iter; 
+  { typename map<string,_T>::iterator iter; 
     for (iter = sub->begin(); iter != sub->end(); ++iter) 
     { string key = iter->first; 
-      map<string,_T>::iterator f = sup->find(key); 
+      typename map<string,_T>::iterator f = sup->find(key); 
       if (f != sup->end())  
       { if (iter->second == f->second) {} 
         else 
@@ -1371,10 +1371,10 @@ public:
 
 
   static bool excludesAllMap(map<string,_T>*  sup, map<string,_T>* sub) 
-  { map<string,_T>::iterator iter; 
+  { typename map<string,_T>::iterator iter; 
     for (iter = sub->begin(); iter != sub->end(); ++iter) 
     { string key = iter->first; 
-      map<string,_T>::iterator f = sup->find(key); 
+      typename map<string,_T>::iterator f = sup->find(key); 
       if (f != sup->end())  
       { if (iter->second == f->second) 
         { return false; } 
@@ -1386,7 +1386,7 @@ public:
 
    static map<string,_T>* includingMap(map<string,_T>* m, string src, _T trg) 
    { map<string,_T>* copy = new map<string,_T>(); 
-     map<string,_T>::iterator iter; 
+     typename map<string,_T>::iterator iter; 
      for (iter = m->begin(); iter != m->end(); ++iter) 
      { string key = iter->first; 
        (*copy)[key] = iter->second; 
@@ -1398,10 +1398,10 @@ public:
 
    static map<string,_T>* excludeAllMap(map<string,_T>* m1, map<string,_T>* m2) 
    { map<string,_T>* res = new map<string,_T>(); 
-     map<string,_T>::iterator iter; 
+     typename map<string,_T>::iterator iter; 
      for (iter = m1->begin(); iter != m1->end(); ++iter) 
      { string key = iter->first; 
-       map<string,_T>::iterator f = m2->find(key); 
+       typename map<string,_T>::iterator f = m2->find(key); 
        if (f != m2->end())  
        { if (iter->second == f->second)  {  } 
          else  
@@ -1417,7 +1417,7 @@ public:
   static map<string,_T>* excludingMapKey(map<string,_T>* m, string k) 
   { // m - { k |-> m(k) }  
     map<string,_T>* res = new map<string,_T>(); 
-    map<string,_T>::iterator iter; 
+    typename map<string,_T>::iterator iter; 
     for (iter = m->begin(); iter != m->end(); ++iter) 
     { string key = iter->first; 
       if (key == k) {} 
@@ -1431,7 +1431,7 @@ public:
   static map<string,_T>* excludingMapValue(map<string,_T>* m, _T v) 
   { // m - { k |-> v }  
     map<string,_T>* res = new map<string,_T>(); 
-    map<string,_T>::iterator iter; 
+    typename map<string,_T>::iterator iter; 
     for (iter = m->begin(); iter != m->end(); ++iter) 
     { string key = iter->first; 
       if (iter->second == v) {} 
@@ -1444,7 +1444,7 @@ public:
 
   static map<string,_T>* unionMap(map<string,_T>* m1, map<string,_T>* m2)  
   { map<string,_T>* res = new map<string,_T>(); 
-    map<string,_T>::iterator iter; 
+    typename map<string,_T>::iterator iter; 
     for (iter = m1->begin(); iter != m1->end(); ++iter) 
     { string key = iter->first; 
       if (m2->count(key) == 0) 
@@ -1460,7 +1460,7 @@ public:
 
   static map<string,_T>* intersectionMap(map<string,_T>* m1, map<string,_T>* m2) 
   { map<string,_T>* res = new map<string,_T>(); 
-    map<string,_T>::iterator iter; 
+    typename map<string,_T>::iterator iter; 
     for (iter = m1->begin(); iter != m1->end(); ++iter) 
     { string key = iter->first; 
       if (m2->count(key) > 0) 
@@ -1473,7 +1473,7 @@ public:
 
 
   static set<string>* keys(map<string,_T>* s)
-  { map<string,_T>::iterator iter;
+  { typename map<string,_T>::iterator iter;
     set<string>* res = new set<string>();
   
     for (iter = s->begin(); iter != s->end(); ++iter)
@@ -1485,7 +1485,7 @@ public:
 
 
   static vector<_T>* values(map<string,_T>* s)
-  { map<string,_T>::iterator iter;
+  { typename map<string,_T>::iterator iter;
     vector<_T>* res = new vector<_T>();
   
     for (iter = s->begin(); iter != s->end(); ++iter)
@@ -1498,7 +1498,7 @@ public:
 
   static map<string,_T>* restrict(map<string,_T>* m1, set<string>* ks)
   { map<string,_T>* res = new map<string,_T>();
-    map<string,_T>::iterator iter;
+    typename map<string,_T>::iterator iter;
     for (iter = m1->begin(); iter != m1->end(); ++iter)
     { string key = iter->first;
       if (ks->find(key) != ks->end())
@@ -1509,7 +1509,7 @@ public:
 
   static map<string,_T>* antirestrict(map<string,_T>* m1, set<string>* ks)
   { map<string,_T>* res = new map<string,_T>();
-    map<string,_T>::iterator iter;
+    typename map<string,_T>::iterator iter;
     for (iter = m1->begin(); iter != m1->end(); ++iter)
     { string key = iter->first;
       if (ks->find(key) == ks->end())
