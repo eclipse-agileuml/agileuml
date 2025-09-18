@@ -6380,6 +6380,9 @@ class WhileStatement extends Statement
   public Statement getLoopBody()
   { return body; } 
 
+  public Expression getLoopVar()
+  { return loopVar; } 
+
   public Expression getTest()
   { return loopTest; } 
 
@@ -6409,6 +6412,40 @@ class WhileStatement extends Statement
     res.setVariant(var); 
 
     return res; 
+  } 
+
+  public Statement loopContinuation()
+  { // FOR i : Integer.subrange(a,b) loop: 
+    //   while i < b do (i := i + 1; loopBody)
+    // Other loops, just the loop itself
+
+    if (loopKind == Statement.FOR)
+    { Expression lv = null; 
+      if (loopVar != null) 
+      { lv = (Expression) loopVar.clone(); } 
+ 
+      BasicExpression lr = null; 
+      if (loopRange != null && 
+          (loopRange + "").startsWith("Integer.subrange(") &&
+          loopRange.getParameters() != null) 
+      { lr = (BasicExpression) loopRange.clone(); 
+        Expression par2 = lr.getParameter(1); 
+        Expression newtest = new BinaryExpression("<", lv, par2); 
+        Statement newassign = 
+           new AssignStatement(lv, 
+             new BinaryExpression("+", lv, 
+                                  new BasicExpression(1)));  
+        SequenceStatement newbody = new SequenceStatement(); 
+        newbody.addStatement(newassign); 
+        newbody.addStatement(body); 
+        WhileStatement ws = 
+           new WhileStatement(newtest, newbody); 
+        ws.setLoopKind(Statement.WHILE); 
+        return ws; 
+      } 
+    } 
+  
+    return (Statement) this.clone(); 
   } 
 
   public Statement dereference(BasicExpression var)

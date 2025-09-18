@@ -2270,11 +2270,19 @@ public class ASTCompositeTerm extends ASTTerm
     if ("typedefName".equals(tag))
     { String nme = ((ASTTerm) terms.get(0)).literalForm();
       Entity tent = (Entity) ModelElement.lookupByName(nme, entities); 
+
       if (tent != null) 
       { return new Type(tent); } 
+
       Type typ = (Type) ModelElement.lookupByName(nme,types);
       if (typ != null) 
       { return typ; } 
+
+      // if ("ptrdiff_t".equals(nme))
+      // { typ = new Type("long", null); 
+      //   return typ; 
+      // } 
+
       return new Attribute(nme, new Type("OclAny", null), 
                            ModelElement.INTERNAL); 
     } 
@@ -40041,10 +40049,16 @@ public class ASTCompositeTerm extends ASTTerm
             new BasicExpression(bf);
           becall.setObjectRef(new BasicExpression("self")); 
 
-          // if (bf.hasReturnValue())
-          // { statement = new ReturnStatement(becall); } 
-          // else  
-          { statement = new InvocationStatement(becall); }
+          if (bf.hasReturnValue())
+          { statement = new ReturnStatement(becall); } 
+          else  
+          { statement = new SequenceStatement(); 
+            Statement invoc = new InvocationStatement(becall);
+            Statement rets = new ReturnStatement(); 
+            // call followed by return; 
+            ((SequenceStatement) statement).addStatement(invoc); 
+            ((SequenceStatement) statement).addStatement(rets); 
+          }
 
           parstring = bf.parametersString();  
         } 
@@ -40053,7 +40067,12 @@ public class ASTCompositeTerm extends ASTTerm
             BasicExpression.newCallBasicExpression(
                                             "continue_" + lbl); 
           becall.setObjectRef(new BasicExpression("self")); 
-          statement = new InvocationStatement(becall); 
+          statement = new SequenceStatement(); 
+          Statement invoc = new InvocationStatement(becall);
+          Statement rets = new ReturnStatement(); 
+            // call followed by return; 
+          ((SequenceStatement) statement).addStatement(invoc); 
+          ((SequenceStatement) statement).addStatement(rets);  
         } 
 
         return "  self.continue_" + lbl + "(" + parstring + ")"; 
@@ -40098,7 +40117,12 @@ public class ASTCompositeTerm extends ASTTerm
             BasicExpression.newCallBasicExpression(
                                                 "break_" + lbl); 
           becall.setObjectRef(new BasicExpression("self")); 
-          statement = new InvocationStatement(becall); 
+          statement = new SequenceStatement(); 
+          Statement invoc = new InvocationStatement(becall);
+          Statement rets = new ReturnStatement(); 
+            // call followed by return; 
+          ((SequenceStatement) statement).addStatement(invoc); 
+          ((SequenceStatement) statement).addStatement(rets);  
         } 
 
         return "  self.break_" + lbl + "(" + parsString + ")"; 
@@ -44876,7 +44900,9 @@ public class ASTCompositeTerm extends ASTTerm
             bfcontinue.setOwner(ent); 
           }
 
-          bfcontinue.setParameters(vars); 
+          java.util.Map localvars = 
+            (java.util.Map) ((java.util.HashMap) vars).clone(); 
+          // bfcontinue.setParameters(vars); 
           bfcontinue.setPre(new BasicExpression(true)); 
           bfcontinue.setPost(new BasicExpression(true)); 
           bfcontinue.addStereotype("unsafe"); 
@@ -44920,20 +44946,37 @@ public class ASTCompositeTerm extends ASTTerm
           if (labstat != null && labstat.statement != null) 
           { Statement labelstat = labstat.statement; 
             if (labelstat instanceof WhileStatement)
-            { Statement loopBody = 
-                 ((WhileStatement) labelstat).getLoopBody(); 
-              continueaction.addStatement(loopBody); 
+            { Statement loopContinuation = 
+                 ((WhileStatement) labelstat).loopContinuation(); 
+              continueaction.addStatement(loopContinuation); 
+              Expression lv = 
+                 ((WhileStatement) labelstat).getLoopVar();
+              if (lv != null)
+              { localvars.put(lv + "", 
+                              new Attribute(lv + "", 
+                                    new Type("int", null), 
+                                    ModelElement.INTERNAL));
+              }  
             }
             else if (labelstat instanceof SequenceStatement)
             { labelstat = ((SequenceStatement) labelstat).getStatement(0); 
               if (labelstat instanceof WhileStatement)
               { Statement loopBody = 
-                   ((WhileStatement) labelstat).getLoopBody(); 
-                continueaction.addStatement(loopBody); 
-              }
+                  ((WhileStatement) labelstat).loopContinuation(); 
+                continueaction.addStatement(loopBody);
+
+                Expression lv = 
+                  ((WhileStatement) labelstat).getLoopVar();
+                if (lv != null)
+                { localvars.put(lv + "", 
+                              new Attribute(lv + "", 
+                                    new Type("int", null), 
+                                    ModelElement.INTERNAL));
+                } 
+              } 
             }
  
-            continueaction.addStatement(labelstat);
+            bfcontinue.setParameters(localvars);
 
             BasicExpression breakcall = 
                new BasicExpression(bfbreak); 

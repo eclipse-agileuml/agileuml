@@ -424,7 +424,8 @@ public class ASTBasicTerm extends ASTTerm
           "double".equals(tname) || "void".equals(tname))
       { return new Type(tname,null); } 
       if ("time_t".equals(tname) || "clock_t".equals(tname) ||
-          "size_t".equals(tname) || "fpos_t".equals(tname))
+          "size_t".equals(tname) || "fpos_t".equals(tname) ||
+          "ptrdiff_t".equals(tname))
       { return new Type("long",null); }  
       
     
