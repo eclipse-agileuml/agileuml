@@ -840,6 +840,10 @@ public void findPlugins()
     ddepsItem.addActionListener(this);
     analyseMenu.add(ddepsItem);
 
+    JMenuItem simulate = new JMenuItem("Simulate"); 
+    simulate.addActionListener(this);
+    analyseMenu.add(simulate);
+
     /* View Menu */ 
     JMenu viewMenu = new JMenu("View"); 
     viewMenu.setToolTipText(
@@ -2559,6 +2563,8 @@ public void findPlugins()
       }  
       else if (label.equals("Energy analysis"))
       { ucdArea.energyAnalysis(); }  
+      else if (label.equals("Simulate"))
+      { simulatedExecution(); } 
       else if (label.equals("Clean architecture properties"))
       { ucdArea.cleanArchitectureCheck(); }
       else if (label.equals("Data dependencies"))
@@ -3970,6 +3976,31 @@ public void findPlugins()
         if (vals[i] instanceof Entity)
         { Entity ent = (Entity) vals[i]; 
           ent.makeSingleton(); 
+        } 
+        else 
+        { System.out.println(vals[i] + " is not a class"); }
+      } 
+    } 
+  }
+
+  private void simulatedExecution()
+  { if (listShowDialog == null)
+    { listShowDialog = new ListShowDialog(this);
+      listShowDialog.pack();
+      listShowDialog.setLocationRelativeTo(this); 
+    }
+    listShowDialog.setOldFields(ucdArea.getEntities()); 
+    thisLabel.setText("Select entities to simulate"); 
+    
+    listShowDialog.setVisible(true); 
+
+    Object[] vals = listShowDialog.getSelectedValues();
+    if (vals != null && vals.length > 0)
+    { for (int i = 0; i < vals.length; i++) 
+      { System.out.println(vals[i]);
+        if (vals[i] instanceof Entity)
+        { Entity ent = (Entity) vals[i]; 
+          ucdArea.simulatedExecution(ent); 
         } 
         else 
         { System.out.println(vals[i] + " is not a class"); }

@@ -316,6 +316,9 @@ class BasicExpression extends Expression
     { type = new Type(obj.getEntity());
       elementType = type; 
     } 
+    else 
+    { type = new Type("OclAny", null); } 
+
     // multiplicity = ModelElement.MANY; 
     umlkind = VALUE; 
   } 
@@ -7159,16 +7162,23 @@ class BasicExpression extends Expression
       { Expression se = buildSetExpression(data); 
         if (arrayIndex != null)
         { String ind = arrayIndex.queryForm(env,local); 
-          String indopt = evaluateString("-",ind,"1"); 
+          String indopt = 
+                    Expression.evaluateString("-",ind,"1"); 
           if (se.elementType != null)
           { if (Type.isPrimitiveType(se.elementType))
-            { return se.unwrap(se.queryForm(env,local) + ".get(" + indopt + ")"); }
+            { return se.unwrap(se.queryForm(env,local) + 
+                               ".get(" + indopt + ")"); 
+            }
             else 
             { String jtype = se.elementType.getJava(); 
-              return "((" + jtype + ") " + se.queryForm(env,local) + ".get(" + indopt + "))"; 
+              return "((" + jtype + ") " + 
+                se.queryForm(env,local) + 
+                ".get(" + indopt + "))"; 
             } 
           }  
-          return se.queryForm(env,local) + ".get(" + indopt + ")";
+
+          return se.queryForm(env,local) + 
+                 ".get(" + indopt + ")";
         }
         return se.queryForm(env,local); 
       } 
@@ -7177,7 +7187,8 @@ class BasicExpression extends Expression
 
       if (isString(data) && arrayIndex != null)
       { String ind = arrayIndex.queryForm(env,local); 
-        String indopt = evaluateString("-",ind,"1"); 
+        String indopt = 
+                  Expression.evaluateString("-",ind,"1"); 
         return "(\"" + "\" + " + data + ".charAt(" + indopt + "))"; 
       } 
 
@@ -7208,14 +7219,16 @@ class BasicExpression extends Expression
       else // entity == null) 
       if (arrayIndex != null)
       { String ind = arrayIndex.queryForm(env,local); 
-        String indopt = evaluateString("-",ind,"1"); 
+        String indopt = 
+                  Expression.evaluateString("-",ind,"1"); 
         if (type != null)
         { if (variable != null && "String".equals(variable.getType() + ""))
           { return "(" + data + ".charAt(" + indopt + ") + \"\")"; } 
           if (arrayIndex.type != null && arrayIndex.type.getName().equals("int"))
 		  // if (Type.isPrimitiveType(type))
           { return unwrap(data + ".get(" + indopt + ")"); }
-          else if (arrayIndex.type != null && arrayIndex.type.getName().equals("String"))
+          else if (arrayIndex.type != null && 
+                   arrayIndex.type.getName().equals("String"))
           { return unwrap(data + ".get(" + ind + ")"); }
 		   
           String jType = type.getJava(); 
@@ -7567,7 +7580,9 @@ class BasicExpression extends Expression
             String ind = arrayIndex.queryForm(env,local); 
             if (isQualified())
             { return "get" + data + "(" + ind + ")"; } 
-            String indopt = evaluateString("-",ind,"1"); // not for qualified ones
+            String indopt = 
+              Expression.evaluateString("-",ind,"1"); 
+              // not for qualified ones
             if (type.getName().equals("String"))
             { return "(\"\" + " + 
                    data + ".charAt(" + indopt + "))";
@@ -7589,7 +7604,9 @@ class BasicExpression extends Expression
         if (entity.isClassScope(data))   // entity cannot be an interface
         { if (arrayIndex != null) 
           { String ind = arrayIndex.queryForm(env,local); 
-            String indopt = evaluateString("-",ind,"1"); // not for qualified ones
+            String indopt = 
+               Expression.evaluateString("-",ind,"1"); 
+               // not for qualified ones
             if (type.getName().equals("String"))
             { return "(\"\" + " + 
                    nme + "." + data + ".charAt(" + indopt + "))";
@@ -7616,7 +7633,9 @@ class BasicExpression extends Expression
           if (isQualified())
           { return var + ".get" + data + "(" + ind + ")"; } 
 
-          String indopt = evaluateString("-",ind,"1"); // not for qualified   
+          String indopt = 
+            Expression.evaluateString("-",ind,"1"); 
+            // not for qualified   
           if (type.getName().equals("String"))
           { return "(\"\" + " + 
                    res + ".charAt(" + indopt + "))";
@@ -7674,7 +7693,9 @@ class BasicExpression extends Expression
 
         if (isQualified())
         { return "(" + res + ").get(" + ind + ")"; } 
-        String indopt = evaluateString("-",ind,"1"); // not for qualified, Strings
+        String indopt = 
+           Expression.evaluateString("-",ind,"1"); 
+           // not for qualified, Strings
 
         if (type.getName().equals("String"))
         { return "(\"\" + " + 
@@ -7747,7 +7768,8 @@ class BasicExpression extends Expression
       { Expression se = buildSetExpression(data); 
         if (arrayIndex != null)
         { String ind = arrayIndex.queryFormJava6(env,local); 
-          String indopt = evaluateString("-",ind,"1"); 
+          String indopt = 
+            Expression.evaluateString("-",ind,"1"); 
           if (se.elementType != null)
           { if (Type.isPrimitiveType(se.elementType))
             { return se.unwrapJava6(
@@ -7767,7 +7789,8 @@ class BasicExpression extends Expression
 
       if (isString(data) && arrayIndex != null)
       { String ind = arrayIndex.queryFormJava6(env,local); 
-        String indopt = evaluateString("-",ind,"1"); 
+        String indopt = 
+          Expression.evaluateString("-",ind,"1"); 
         return "(\"" + "\" + " + data + ".charAt(" + indopt + "))"; 
       } 
    
@@ -7793,7 +7816,8 @@ class BasicExpression extends Expression
       else // entity == null) 
       if (arrayIndex != null)
       { String ind = arrayIndex.queryFormJava6(env,local); 
-        String indopt = evaluateString("-",ind,"1"); 
+        String indopt = 
+          Expression.evaluateString("-",ind,"1"); 
         if (type != null)
         { if (variable != null && "String".equals(variable.getType() + ""))
           { return "(" + data + ".charAt(" + indopt + ") + \"\")"; } 
@@ -7810,7 +7834,9 @@ class BasicExpression extends Expression
         }         
         return data + ".get(" + indopt + ")";
       } // unwrap it, also for primitive types
-      else if (parameters != null && variable != null && variable.getType().isFunctionType()) // application of a Function(S,T)
+      else if (parameters != null && variable != null && 
+               variable.getType().isFunctionType()) 
+      // application of a Function(S,T)
       { String pars = ""; 
         for (int h = 0; h < parameters.size(); h++) 
         { Expression par = (Expression) parameters.get(h); 
@@ -8112,7 +8138,9 @@ class BasicExpression extends Expression
           { String ind = arrayIndex.queryFormJava6(env,local); 
             if (isQualified())
             { return "get" + data + "(" + ind + ")"; } 
-            String indopt = evaluateString("-",ind,"1"); // not for qualified ones
+            String indopt = 
+              Expression.evaluateString("-",ind,"1"); 
+              // not for qualified ones
             if (type.getName().equals("String"))
             { return "(\"\" + " + 
                    data + ".charAt(" + indopt + "))";
@@ -8132,7 +8160,9 @@ class BasicExpression extends Expression
         if (entity.isClassScope(data))   // entity cannot be an interface
         { if (arrayIndex != null) 
           { String ind = arrayIndex.queryFormJava6(env,local); 
-            String indopt = evaluateString("-",ind,"1"); // not for qualified ones
+            String indopt = 
+              Expression.evaluateString("-",ind,"1"); 
+              // not for qualified ones
             if (type.getName().equals("String"))
             { return "(\"\" + " + 
                    nme + "." + data + ".charAt(" + indopt + "))";
@@ -8159,7 +8189,9 @@ class BasicExpression extends Expression
           if (isQualified())
           { return var + ".get" + data + "(" + ind + ")"; } 
 
-          String indopt = evaluateString("-",ind,"1"); // not for qualified   
+          String indopt = 
+            Expression.evaluateString("-",ind,"1"); 
+            // not for qualified   
           if (type.getName().equals("String"))
           { return "(\"\" + " + 
                    res + ".charAt(" + indopt + "))";
@@ -8214,7 +8246,9 @@ class BasicExpression extends Expression
       { String ind = arrayIndex.queryFormJava6(env,local); 
         if (isQualified())
         { return "(" + res + ").get(" + ind + ")"; } 
-        String indopt = evaluateString("-",ind,"1"); // not for qualified ones
+        String indopt = 
+          Expression.evaluateString("-",ind,"1"); 
+          // not for qualified ones
         if (type.getName().equals("String"))
         { return "(\"\" + " + 
                  res + ".charAt(" + indopt + "))";
@@ -8289,7 +8323,8 @@ class BasicExpression extends Expression
       { Expression se = buildSetExpression(data); 
         if (arrayIndex != null)
         { String ind = arrayIndex.queryFormJava7(env,local); 
-          String indopt = evaluateString("-",ind,"1"); 
+          String indopt = 
+            Expression.evaluateString("-",ind,"1"); 
           if (se.elementType != null)
           { if (Type.isPrimitiveType(se.elementType))
             { return se.unwrapJava7(
@@ -8308,7 +8343,8 @@ class BasicExpression extends Expression
 	  
       if (isString(data) && arrayIndex != null)
       { String ind = arrayIndex.queryFormJava7(env,local); 
-        String indopt = evaluateString("-",ind,"1"); 
+        String indopt = 
+          Expression.evaluateString("-",ind,"1"); 
         return "(\"" + "\" + " + data + ".charAt(" + indopt + "))"; 
       } 
 
@@ -8336,7 +8372,8 @@ class BasicExpression extends Expression
       else // entity == null) 
       if (arrayIndex != null)
       { String ind = arrayIndex.queryFormJava7(env,local); 
-        String indopt = evaluateString("-",ind,"1"); 
+        String indopt = 
+          Expression.evaluateString("-",ind,"1"); 
         if (type != null)
         { if (variable != null && 
               "String".equals(variable.getType() + ""))
@@ -8680,7 +8717,9 @@ class BasicExpression extends Expression
           { String ind = arrayIndex.queryFormJava7(env,local); 
             if (isQualified())
             { return "get" + data + "(" + ind + ")"; } 
-            String indopt = evaluateString("-",ind,"1"); // not for qualified ones
+            String indopt = 
+               Expression.evaluateString("-",ind,"1"); 
+               // not for qualified ones
 
             if (arrayIndex.isString())
             { return unwrapJava7(data + ".get(\"\" + " + ind + ")"); }
@@ -8711,7 +8750,9 @@ class BasicExpression extends Expression
         if (entity.isClassScope(data))   // entity cannot be an interface
         { if (arrayIndex != null) 
           { String ind = arrayIndex.queryFormJava7(env,local); 
-            String indopt = evaluateString("-",ind,"1"); // not for qualified ones
+            String indopt =
+              Expression.evaluateString("-",ind,"1"); 
+              // not for qualified ones
             if (arrayIndex.isString())
             { return unwrapJava7(nme + "." + data + ".get(\"\" + " + ind + ")"); }
 
@@ -8741,7 +8782,9 @@ class BasicExpression extends Expression
           if (isQualified())
           { return var + ".get" + data + "(" + ind + ")"; } 
 
-          String indopt = evaluateString("-",ind,"1"); // not for qualified   
+          String indopt = 
+            Expression.evaluateString("-",ind,"1"); 
+            // not for qualified   
           
           if (arrayType != null && arrayType.isMap())
           { return unwrapJava7(var + ".get" + data + "().get(" + ind + ")"); }
@@ -8804,7 +8847,9 @@ class BasicExpression extends Expression
       { String ind = arrayIndex.queryFormJava7(env,local); 
         if (isQualified())
         { return "(" + res + ").get(" + ind + ")"; } 
-        String indopt = evaluateString("-",ind,"1"); // not for qualified ones
+        String indopt = 
+          Expression.evaluateString("-",ind,"1"); 
+          // not for qualified ones
         if (type.getName().equals("String"))
         { return "(\"\" + " + 
                  res + ".charAt(" + indopt + "))";
@@ -8827,7 +8872,8 @@ class BasicExpression extends Expression
     if (umlkind == VARIABLE)
     { if (arrayIndex != null)
       { String ind = arrayIndex.queryFormJava7(env,local); 
-        String indopt = evaluateString("-",ind,"1"); 
+        String indopt = 
+          Expression.evaluateString("-",ind,"1"); 
         if (type != null)
         { if (arrayIndex.type != null && arrayIndex.type.getName().equals("int"))
           { return data + "[" + indopt + "]"; }
@@ -8846,7 +8892,9 @@ class BasicExpression extends Expression
           { String ind = arrayIndex.queryFormJava7(env,local); 
             if (isQualified())
             { return data + "[" + ind + "]"; } 
-            String indopt = evaluateString("-",ind,"1"); // not for qualified ones
+            String indopt = 
+              Expression.evaluateString("-",ind,"1"); 
+              // not for qualified ones
 
             if (arrayIndex.isString())
             { return data + "[" + ind + "]"; }
@@ -8866,7 +8914,9 @@ class BasicExpression extends Expression
         if (entity.isClassScope(data))   // entity cannot be an interface
         { if (arrayIndex != null) 
           { String ind = arrayIndex.queryFormJava7(env,local); 
-            String indopt = evaluateString("-",ind,"1"); // not for qualified ones
+            String indopt = 
+              Expression.evaluateString("-",ind,"1"); 
+              // not for qualified ones
             if (arrayIndex.isString())
             { return nme + "." + data + "[" + ind + "]"; }
 
@@ -8887,7 +8937,9 @@ class BasicExpression extends Expression
           if (isQualified())
           { return var + "." + data + "[" + ind + "]"; } 
 
-          String indopt = evaluateString("-",ind,"1"); // not for qualified   
+          String indopt = 
+            Expression.evaluateString("-",ind,"1"); 
+            // not for qualified   
           if (arrayType != null && arrayType.isMap())
           { return var + "." + data + "[" + ind + "]"; }
           else if (arrayType != null && arrayType.isSequence())
@@ -8921,7 +8973,9 @@ class BasicExpression extends Expression
       { String ind = arrayIndex.queryFormJava7(env,local); 
         if (isQualified())
         { return "(" + res + ")[" + ind + "]"; } 
-        String indopt = evaluateString("-",ind,"1"); // not for qualified ones
+        String indopt = 
+          Expression.evaluateString("-",ind,"1"); 
+          // not for qualified ones
         return res + "[" + indopt + "]"; 
       } 
       return res; 
@@ -9112,16 +9166,19 @@ class BasicExpression extends Expression
       { Expression se = buildSetExpression(data); 
         if (arrayIndex != null)
         { String ind = arrayIndex.queryFormCSharp(env,local); 
-          String indopt = evaluateString("-",ind,"1"); 
+          String indopt = 
+            Expression.evaluateString("-",ind,"1"); 
           String cstype = type.getCSharp(); 
           return "((" + cstype + ") " + se.queryFormCSharp(env,local) + "[" + indopt + "])";
         }
+
         return se.queryFormCSharp(env,local); 
       } 
 
       if (isString(data) && arrayIndex != null)
       { String ind = arrayIndex.queryFormCSharp(env,local); 
-        String indopt = evaluateString("-",ind,"1"); 
+        String indopt = 
+          Expression.evaluateString("-",ind,"1"); 
         return "(\"" + "\" + " + data + "[" + indopt + "])"; 
       } 
 
@@ -9149,7 +9206,8 @@ class BasicExpression extends Expression
       else // entity == null) 
       if (arrayIndex != null)
       { String ind = arrayIndex.queryFormCSharp(env,local); 
-        String indopt = evaluateString("-",ind,"1");
+        String indopt = 
+          Expression.evaluateString("-",ind,"1");
 
         // JOptionPane.showMessageDialog(null, "Variable: " + this + " arrayType: " + arrayType + " variable: " + variable, 
         //    "Error", JOptionPane.ERROR_MESSAGE); 
@@ -9502,7 +9560,8 @@ class BasicExpression extends Expression
         
             if (isQualified())
             { return "((" + etype + ") " + data + "[" + ind + "])"; } 
-            String indopt = evaluateString("-",ind,"1"); 
+            String indopt = 
+              Expression.evaluateString("-",ind,"1"); 
             // not for qualified ones
 
             if (arrayIndex.isString())
@@ -9534,7 +9593,8 @@ class BasicExpression extends Expression
         { if (arrayIndex != null) 
           { String ind = 
               arrayIndex.queryFormCSharp(env,local); 
-            String indopt = evaluateString("-",ind,"1"); 
+            String indopt = 
+              Expression.evaluateString("-",ind,"1"); 
                 // not for qualified ones
             String etype = type.getCSharp(); 
             
@@ -9578,7 +9638,8 @@ class BasicExpression extends Expression
               " type: " + type, 
               "Error", JOptionPane.ERROR_MESSAGE); */ 
 
-          String indopt = evaluateString("-",ind,"1"); // not for qualified   
+          String indopt = 
+            Expression.evaluateString("-",ind,"1"); // not for qualified   
    
           if (arrayType != null && arrayType.isMap())
           { return "((" + etype + ") " + var + ".get" + data + "()[" + ind + "])"; }
@@ -9637,7 +9698,8 @@ class BasicExpression extends Expression
       { String ind = arrayIndex.queryFormCSharp(env,local); 
         if (isQualified())
         { return res + "[" + ind + "]"; } 
-        String indopt = evaluateString("-",ind,"1"); // not for qualified, Strings
+        String indopt = 
+          Expression.evaluateString("-",ind,"1"); // not for qualified, Strings
         if (type.getName().equals("String"))
         { return res + ".Substring(" + indopt + ", 1)"; } 
         String cstype = type.getCSharp(); 
@@ -16844,6 +16906,46 @@ public Statement generateDesignSubtract(Expression rhs)
 
   public Expression simplify(final Vector vars) 
   { return simplify(); }
+
+  public Expression evaluate(
+                ModelSpecification sigma, ModelState beta)
+  { if (umlkind == VARIABLE)
+    { String nme = getData(); 
+      Expression expr = beta.getVariableValue(nme); 
+
+      if (expr != null) 
+      { if (arrayIndex != null && 
+            expr instanceof SetExpression) 
+        { // expect a sequence
+
+          Expression indval = arrayIndex.evaluate(sigma,beta);
+          int indx = Integer.parseInt("" + indval); 
+          return ((SetExpression) expr).getExpression(indx); 
+        } 
+      } 
+
+      return expr; 
+    }
+
+    if (umlkind == ATTRIBUTE && objectRef != null)
+    { String nme = getData(); 
+      Expression obj = objectRef.evaluate(sigma,beta);
+ 
+      if (obj != null) 
+      { return sigma.getObjectAttributeValue(obj + "", nme); }       
+    } // and with arrayIndex != null
+
+    if (umlkind == ATTRIBUTE && objectRef == null)
+    { // attribute of self
+      String nme = getData(); 
+      Expression obj = beta.getVariableValue("self");
+ 
+      if (obj != null) 
+      { return sigma.getObjectAttributeValue(obj + "", nme); }       
+    } // and with arrayIndex != null
+
+    return this;  
+  } 
 
   public Expression simplify() 
   { if (umlkind == FUNCTION)

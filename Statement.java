@@ -477,6 +477,9 @@ abstract class Statement implements Cloneable
     return stat; 
   } 
 
+  public void execute(ModelSpecification sigma, ModelState beta)
+  { } // default is to do nothing
+
   public static Statement cumulativeCode(Expression var,
                                          Expression rng, 
                                          Statement st)
@@ -5941,8 +5944,9 @@ class ImplicitInvocationStatement extends Statement
 
 
   public String bupdateForm()
-  { return " " + callExp; }   // ANY vars' WHERE callExp[vars'/vars] THEN vars := vars' 
-                              // where vars are variables of callExp 
+  { return " " + callExp; }   
+  // ANY vars' WHERE callExp[vars'/vars] THEN vars := vars' 
+  // where vars are variables of callExp 
 
   public BStatement bupdateForm(java.util.Map env, boolean local)
   { return callExp.bupdateForm(env,local); 
@@ -6006,7 +6010,9 @@ class ImplicitInvocationStatement extends Statement
 
   public boolean typeInference(Vector types, Vector entities, Vector ctxs, Vector env, java.util.Map vartypes)
   { if (callExp != null)
-    { callExp.typeInference(types,entities,ctxs,env,vartypes); } 
+    { callExp.typeInference(types,entities,
+                            ctxs,env,vartypes); 
+    } 
     return true;
   }  
 
@@ -6429,7 +6435,7 @@ class WhileStatement extends Statement
           (loopRange + "").startsWith("Integer.subrange(") &&
           loopRange.getParameters() != null) 
       { lr = (BasicExpression) loopRange.clone(); 
-        Expression par2 = lr.getParameter(1); 
+        Expression par2 = lr.getParameter(2); 
         Expression newtest = new BinaryExpression("<", lv, par2); 
         Statement newassign = 
            new AssignStatement(lv, 
@@ -8547,6 +8553,21 @@ class CreationStatement extends Statement
     return res; 
   } 
 
+  public void execute(ModelSpecification sigma, ModelState beta)
+  { // add assignsTo as new variable, set to initialExpression
+
+    if (initialExpression != null) 
+    { Expression val = initialExpression.evaluate(sigma, beta); 
+      beta.addVariable(assignsTo, val);
+    } // else use default value 
+    else if (instanceType != null)  
+    { Expression defaultInit = 
+        Type.defaultInitialValueExpression(instanceType);
+      Expression val = defaultInit.evaluate(sigma, beta); 
+      beta.addVariable(assignsTo, val);
+    }
+  } 
+
   public Expression definedness()
   { if (initialExpression != null) 
     { return initialExpression.definedness(); } 
@@ -9862,6 +9883,20 @@ class SequenceStatement extends Statement
     res.setBrackets(brackets); 
     return res;  
   } 
+
+  public void execute(ModelSpecification sigma, ModelState beta)
+  { // create new environment, then execute each statement 
+    // in turn.
+
+    ModelState local = (ModelState) beta.clone(); 
+    local.addNewEnvironment(); 
+
+    for (int i = 0; i < statements.size(); i++) 
+    { Statement stat = (Statement) statements.get(i); 
+      stat.execute(sigma, local); 
+    } 
+  } 
+
 
   public Expression definedness()
   { Expression res = new BasicExpression(true); 
@@ -14802,6 +14837,54 @@ class AssignStatement extends Statement
     // rhs.elementType = t; 
   } 
 
+  public void execute(ModelSpecification sigma, ModelState beta)
+  { Expression rhsValue = rhs.evaluate(sigma, beta); 
+
+    if (lhs instanceof BasicExpression)
+    { BasicExpression lbe = (BasicExpression) lhs;
+      Expression obj = lbe.getObjectRef(); 
+      Expression indx = lbe.getArrayIndex(); 
+      String var = lbe.getData(); 
+
+      // System.out.println("LHS: " + obj + "." + var + indx + " " + lhs.isAttribute() + " " + beta); 
+      
+      if (obj == null && 
+          indx == null)
+      { // simple variable or attribute
+
+        if (lhs.isAttribute()) // of "self"
+        { Expression oid = beta.getVariableValue("self"); 
+          ObjectSpecification ref = 
+                sigma.getObjectSpec("" + oid); 
+          if (ref != null)
+          { ref.setOCLValue(var, rhsValue); }
+        }   
+        else 
+        { beta.setVariableValue(var, rhsValue); } 
+      } 
+      else if (obj == null)
+      { // simple array variable 
+        Expression indv = indx.evaluate(sigma, beta); 
+        Expression arr = beta.getVariableValue(var); 
+
+        if (arr instanceof SetExpression)
+        { int indval = Integer.parseInt("" + indv); 
+          ((SetExpression) arr).setExpression(indval, rhsValue); 
+        } 
+      }  
+      else if (obj != null && 
+          indx == null)
+      { // object attribute
+        Expression oid = obj.evaluate(sigma, beta); 
+        ObjectSpecification ref = sigma.getObjectSpec("" + oid); 
+        if (ref != null)
+        { ref.setOCLValue(var, rhsValue); }   
+      } 
+    } 
+
+    System.out.println(">> Updated state: " + beta); 
+  } 
+
   public Expression definedness()
   { Expression ldef = lhs.definedness(); 
     Expression rdef = rhs.definedness(); 
@@ -16151,6 +16234,13 @@ class ConditionalStatement extends Statement
     return new ConditionalStatement(tst,stat,els); 
   } 
 
+  public void execute(ModelSpecification sigma, ModelState beta)
+  { Expression tval = test.evaluate(sigma, beta); 
+    if ("true".equals(tval + ""))
+    { ifPart.execute(sigma, beta); } 
+    else 
+    { elsePart.execute(sigma, beta); } 
+  } // assuming no side-effects in the test. 
 
   public String cg(CGSpec cgs)
   { String etext = this + "";

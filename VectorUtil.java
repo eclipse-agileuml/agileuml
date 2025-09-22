@@ -637,19 +637,25 @@ class VectorUtil
     return res;
   }
 
-  public static boolean test(String op, int x, int y)
+  public static boolean test(String op, double x, double y)
   { if (op.equals("="))
     { return x == y; }  // already handled in Expression
+
     if (op.equals("<"))
     { return x < y; }
-    if (op.equals("!="))
+
+    if (op.equals("!=") || op.equals("/="))
     { return x != y; }
+
     if (op.equals("<="))
     { return x <= y; }
+
     if (op.equals(">"))
     { return x > y; }
+
     if (op.equals(">="))
     { return x >= y; }
+
     return false;
   }
 

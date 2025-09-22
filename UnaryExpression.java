@@ -2454,24 +2454,35 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
   { Vector res = new Vector(); 
  
     if ("->isDeleted".equals(operator))
-    { if (argument.umlkind == CLASSID && (argument instanceof BasicExpression)) 
+    { if (argument instanceof BasicExpression) 
       { BasicExpression arg = (BasicExpression) argument; 
         res.add(arg.getData()); 
-        if (arg.getEntity() != null) 
-        { res.addAll(arg.getEntity().allDataDependents(new Vector())); } 
+
+        if (argument.umlkind == CLASSID && 
+            arg.getEntity() != null) 
+        { Entity argent = arg.getEntity(); 
+          res.addAll(argent.allDataDependents(new Vector())); 
+        } 
+
         return res;  
       } 
+
       String eename = argument.type + ""; 
-      if (argument.isMultiple()) 
+      if (argument.isMultiple() && 
+          argument.elementType != null && 
+          argument.elementType.isEntity()) 
       { 
         eename = argument.elementType + ""; 
+        res.add(eename);
       } 
-      res.add(eename); 
+ 
       res.addAll(argument.wr(new Vector())); 
-      if (argument.elementType != null && argument.elementType.isEntity())
+      if (argument.elementType != null && 
+          argument.elementType.isEntity())
       { res.addAll(argument.elementType.getEntity().allDataDependents(new Vector())); } 
       return res; 
     }
+
     return res; 
   }   // default. lambda should not have a write frame. 
 

@@ -360,6 +360,20 @@ public class Entity extends ModelElement implements Comparable
   public Type getType() 
   { return new Type("OclType", null); } 
 
+  public ObjectSpecification initialisedObject(String nme)
+  { ObjectSpecification res = 
+      new ObjectSpecification(nme, this);
+ 
+    for (int i = 0; i < attributes.size(); i++) 
+    { Attribute attr = (Attribute) attributes.get(i); 
+      String aname = attr.getName(); 
+      Expression aval = attr.getInitialisation(); 
+      res.setOCLValue(aname, aval); 
+    }
+ 
+    return res; 
+  } 
+
   public String cg(CGSpec cgs)
   { String etext = this + "";
     Vector args = new Vector();
@@ -4984,6 +4998,8 @@ public class Entity extends ModelElement implements Comparable
       Vector args = op.getParameterExpressions(); 
       op.definedness(args);
       op.determinate(args);  
+      op.isSideEffecting();
+      System.out.println();  
     } 
   } 
 
@@ -19828,11 +19844,14 @@ public BehaviouralFeature designKillOp(Vector assocs)
     { Statement delcode = ast.delete2Op(this);
       ss.addStatement(delcode);
     }
-    if (this == ast.getEntity1() && ast.getRole1() != null && ast.getRole1().length() > 0)
+
+    if (this == ast.getEntity1() && ast.getRole1() != null && 
+        ast.getRole1().length() > 0)
     { Statement delcode = ast.delete1Op(this);
       ss.addStatement(delcode);
     }
-    else if (this == ast.getEntity1() && ast.isAggregation() && ast.getCard1() == ZEROONE)
+    else if (this == ast.getEntity1() && ast.isAggregation() && 
+             ast.getCard1() == ZEROONE)
     { Statement delagg = ast.deleteAggregationOp(this,ex);
       ss.addStatement(delagg);
     }

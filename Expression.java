@@ -179,6 +179,9 @@ abstract class Expression
   public int getUMLKind()
   { return umlkind; } 
 
+  public boolean isAttribute()
+  { return umlkind == ATTRIBUTE; } 
+
   public static String ofKind(int umlkind)
   { if (umlkind == UNKNOWN) { return "UNKNOWN"; } 
  
@@ -2857,6 +2860,11 @@ abstract class Expression
 
   abstract public Expression simplify(); 
 
+  public Expression evaluate(ModelSpecification sigma, 
+                             ModelState beta)
+  { return this; }  
+
+
   public Expression simplifyOCL()
   { return simplify(); } 
 
@@ -2911,22 +2919,35 @@ abstract class Expression
                             final Vector vars)
   { if (e1 == null)  { return e2; }
     if (e2 == null)  { return e1; }
+
     if (op.equals("+")) { return simplifyPlus(e1,e2); } 
+
     if (op.equals("-")) { return simplifyMinus(e1,e2); } 
+
     if (op.equals("*")) { return simplifyMult(e1,e2); } 
+
     if (op.equals("/")) { return simplifyDivide(e1,e2); } 
+
     if (op.equals("#&")) { return simplifyExistsAnd(e1,e2); } 
+
     if (op.equals("&")) { return simplifyAnd(e1,e2); } 
+
     if (op.equals("or")) { return simplifyOr(e1,e2); }
-    if (op.equals("=>")) { return simplifyImp(e1,e2); } 
+
+    if (op.equals("=>")) { return simplifyImp(e1,e2); }
+ 
     if (op.equals("=")) { return simplifyEq(e1,e2,vars); }
     // if (op.equals("->apply")) { return simplifyApply(e1,e2,vars); }
+
     if (op.equals("!=") || op.equals("/=")) 
-    { return simplifyNeq(e1,e2,vars); } 
+    { return simplifyNeq(e1,e2,vars); }
+ 
     if (op.equals(":")) 
     { return simplifyIn(e1,e2,vars); }
+
     if (comparitors.contains(op)) 
     { return simplifyIneq(op,e1,e2); } 
+
     return new BinaryExpression(op,e1,e2);
   }
 
@@ -2941,10 +2962,13 @@ abstract class Expression
     else if (op.equals("or")) { res = simplifyOr(e1,e2); }
     else if (op.equals("=>")) { res = simplifyImp(e1,e2); } 
     else if (op.equals("=")) { res = simplifyEq(e1,e2); }
-    else if (op.equals("!=") || op.equals("/=")) { res = simplifyNeq(e1,e2); } 
+    else if (op.equals("!=") || op.equals("/=")) 
+    { res = simplifyNeq(e1,e2); } 
     else if (op.equals(":")) { res = simplifyIn(e1,e2); } 
-    else if (op.equals("->apply")) { res = simplifyApply(e1,e2); } 
-    else if (comparitors.contains(op)) { res = simplifyIneq(op,e1,e2); } 
+    else if (op.equals("->apply")) 
+    { res = simplifyApply(e1,e2); } 
+    else if (comparitors.contains(op)) 
+    { res = simplifyIneq(op,e1,e2); } 
     else if (op.equals("+")) { res = simplifyPlus(e1,e2); }
     else if (op.equals("*")) { res = simplifyMult(e1,e2); } 
     else if (op.equals("/")) { res = simplifyDivide(e1,e2); } 
@@ -4627,35 +4651,42 @@ abstract class Expression
                                         final Vector vars)
   { if (e1.equals(e2))
     { return new BasicExpression(false); }
-    /* else 
-    { boolean b1 = vars.contains(e1.toString());
-      if (!b1)
-      { boolean b2 = vars.contains(e2.toString());
-        if (!b2) // they are both primitive values, not equal
-        { return new BasicExpression("true"); }
-      }
-    } */ 
-    return new BinaryExpression("!=",e1,e2);
+
+    try { 
+      double x = Double.parseDouble("" + e1); 
+      double y = Double.parseDouble("" + e2);
+      boolean res = VectorUtil.test("/=", x, y); 
+      return new BasicExpression(res); 
+    } catch (Exception _e) 
+      { return new BinaryExpression("!=",e1,e2); }
   }
 
   private static Expression simplifyEq(final Expression e1,
                                        final Expression e2)
   { if (e1.equals(e2))
     { return new BasicExpression(true); }
-    // else if (e1.getKind() == VALUE && e2.getKind() == VALUE)
-    // { return new BasicExpression("false"); } 
-                   
-    return new BinaryExpression("=",e1,e2); 
+
+    try { 
+      double x = Double.parseDouble("" + e1); 
+      double y = Double.parseDouble("" + e2);
+      boolean res = VectorUtil.test("=", x, y); 
+      return new BasicExpression(res); 
+    } catch (Exception _e) 
+      { return new BinaryExpression("=",e1,e2); }
   }  
 
   private static Expression simplifyNeq(final Expression e1,
                                         final Expression e2)
   { if (e1.equals(e2))
     { return new BasicExpression(false); }
-    // else if (e1.getKind() == VALUE && e2.getKind() == VALUE)
-    // { return new BasicExpression("true"); } 
 
-    return new BinaryExpression("!=",e1,e2);
+    try { 
+      double x = Double.parseDouble("" + e1); 
+      double y = Double.parseDouble("" + e2);
+      boolean res = VectorUtil.test("/=", x, y); 
+      return new BasicExpression(res); 
+    } catch (Exception _e) 
+      { return new BinaryExpression("!=",e1,e2); }
   }
   
   public static Expression negate(Expression e)
@@ -4781,26 +4812,40 @@ abstract class Expression
   }
 
 
-  private static Expression simplifyIneq(String op, Expression left, 
+  private static Expression simplifyIneq(String op, 
+                                         Expression left, 
                                          Expression right)
   { String lval = left.toString(); 
     String rval = right.toString(); 
+
     if (op.equals("<") || op.equals(">"))
     { if (lval.equals(rval)) 
       { return new BasicExpression(false); } 
     }
-    else if (op.equals("<=") || op.equals(">=") || op.equals("<:"))
+    else if (op.equals("<=") || op.equals(">=") || 
+             op.equals("<:"))
     { if (lval.equals(rval))
       { return new BasicExpression(true); } 
     } 
+
     try 
     { int x = Integer.parseInt(lval); 
       int y = Integer.parseInt(rval); 
       boolean val = VectorUtil.test(op,x,y);  
-      return new BasicExpression("" + val); 
+      return new BasicExpression(val); 
     } // and for long ints. 
     catch (Exception e) 
-    { return new BinaryExpression(op,left,right); } 
+    { try 
+      { double xx = Double.parseDouble(lval); 
+        double yy = Double.parseDouble(rval); 
+        boolean vald = VectorUtil.test(op,xx,yy);  
+        return new BasicExpression(vald); 
+      } 
+      catch (Exception _x)
+      { return new BinaryExpression(op,left,right); }
+    }  
+
+    // return new BinaryExpression(op,left,right);
   } 
 
   public boolean equals(Object obj) 
@@ -5358,7 +5403,7 @@ public static boolean conflictsReverseOp(String op1, String op2)
   { /* if (Expression.isLong("10000000000000L"))
     { long xx = Expression.convertLong("10000000000000L"); 
       System.out.println(xx); 
-    } */ 
+    }  
 
     BinaryExpression ss = new BinaryExpression("/", 
         new BasicExpression(3.0), new BasicExpression(5.0));
@@ -5367,7 +5412,12 @@ public static boolean conflictsReverseOp(String op1, String op2)
     Expression res = pp.simplify(); 
     System.out.println("" + res); 
 
-    System.out.println(Expression.isDoubleValue("3.0")); 
+    System.out.println(Expression.isDoubleValue("3.0")); */ 
+
+    System.out.println(Expression.simplify("/=", 
+            new BasicExpression(3.0), new BasicExpression(5.0), 
+            false)); 
+
   }   
 } 
 

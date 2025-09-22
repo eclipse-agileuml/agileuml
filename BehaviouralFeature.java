@@ -139,6 +139,31 @@ public class BehaviouralFeature extends ModelElement
     return UnaryExpression.newLambdaUnaryExpression(be,this); 
   } 
 
+  public void execute(ModelSpecification sigma, ModelState beta,
+                      Vector parValues)
+  { if (activity == null) 
+    { return; } 
+
+    ModelState local = (ModelState) beta.clone();
+ 
+    // add the parameters: 
+    for (int i = 0; i < parameters.size(); i++) 
+    { Attribute par = (Attribute) parameters.get(i); 
+      Type typ = par.getType(); 
+      String pname = par.getName(); 
+      if (i < parValues.size())
+      { Expression pval = (Expression) parValues.get(i); 
+        local.addVariable(pname, pval); 
+      } 
+      else if (typ != null) 
+      { Expression def = Type.defaultInitialValueExpression(typ); 
+        local.addVariable(pname, def); 
+      }    
+    } 
+
+    activity.execute(sigma,local); 
+  } 
+
   public void jsClassFromConstructor(Entity ent, Entity cclass, Vector inits, Vector entities) 
   { // For each statement  self.att := expr  in activity
     // make att an attribute of ent, with initialisation expr
@@ -2518,12 +2543,16 @@ public class BehaviouralFeature extends ModelElement
     return res; 
   }         
 
-  public Vector getWriteFrame(Vector assocs)
-  { if (writefr != null) { return writefr; }   // to avoid recursion
+  public Vector getWriteFrame()
+  { if (writefr != null) 
+    { return writefr; }   // to avoid recursion
+
     writefr = new Vector(); 
     Vector res = new Vector(); 
+
     if (post != null) 
-    { res.addAll(post.wr(assocs)); }  
+    { res.addAll(post.writeFrame()); }
+  
     if (activity != null) 
     { res.addAll(activity.writeFrame()); } 
 
@@ -2537,6 +2566,74 @@ public class BehaviouralFeature extends ModelElement
     writefr = res; 
     return res; 
   }         
+
+  public Vector getWriteFrame(Vector assocs)
+  { if (writefr != null) 
+    { return writefr; }   // to avoid recursion
+
+    writefr = new Vector(); 
+    Vector res = new Vector(); 
+
+    if (post != null) 
+    { res.addAll(post.wr(assocs)); }
+  
+    if (activity != null) 
+    { res.addAll(activity.writeFrame()); } 
+
+    // subtract each params name:
+    for (int p = 0; p < parameters.size(); p++) 
+    { String par = "" + parameters.get(p); 
+      res.remove(par); 
+    } 
+
+    // System.out.println("Invocation " + this + " WRITE FRAME= " + res); 
+    writefr = res; 
+    return res; 
+  }         
+
+  public boolean isSideEffecting()
+  { // if there is a object-valued or collection-valued parameter
+    // or if an attribute is written (not a local parameter). 
+
+    Vector writtenVars = new Vector(); 
+    if (post != null) 
+    { writtenVars.addAll(post.writeFrame()); }
+  
+    if (activity != null) 
+    { writtenVars.addAll(activity.writeFrame()); } 
+
+    Vector removals = new Vector(); 
+
+    System.err.println(">> Write frame of " + this + " is " + 
+                       writtenVars); 
+
+    for (int p = 0; p < parameters.size(); p++) 
+    { Attribute par = (Attribute) parameters.get(p); 
+      String pname = par.getName(); 
+      removals.add(pname); 
+
+      if (writtenVars.contains(pname))
+      { Type ptype = par.getType(); 
+        if (Type.isCollectionType(ptype) || 
+            Type.isMapType(ptype) || 
+            Type.isRefType(ptype))
+        { System.err.println("! Warning: operation " + this + 
+             " writes parameter of reference type: " + pname); 
+          return true; 
+        } 
+      } 
+    } 
+
+    writtenVars.removeAll(removals); 
+    if (writtenVars.size() > 0)
+    { System.err.println("! Warning: operation " + this + 
+                     " writes non-local variable(s) " + 
+                     writtenVars); 
+    }     
+    
+    return false; 
+  } 
+
 
   public Statemachine getSm()
   { return sm; } 
@@ -3114,7 +3211,6 @@ public class BehaviouralFeature extends ModelElement
 
       if (instanceScope == false && entity != null)
       { selfexpr1 = entity.getName() + "." + selfexpr; }
-
 
       if (VectorUtil.containsEqualString(selfexpr, calls) ||
           VectorUtil.containsEqualString(selfexpr1, calls))

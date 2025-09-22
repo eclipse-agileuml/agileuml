@@ -41364,7 +41364,9 @@ public class ASTCompositeTerm extends ASTTerm
             if (haslfs)
             { labelfunctions = 
                ((ASTCompositeTerm) tt).javaLabelFunctions(bf);
-              JOptionPane.showInputDialog(">>> Operation " + bf + " has label functions " + labelfunctions);
+              /* JOptionPane.showInputDialog(">>> Operation " + 
+                   bf + " has label functions " + 
+                   labelfunctions); */ 
               modelElements.addAll(labelfunctions);
               ASTTerm.functionsInScope = new Vector(); 
               ASTTerm.functionsInScope.addAll(labelfunctions); 

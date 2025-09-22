@@ -155,6 +155,11 @@ public class SetExpression extends Expression
     return null; 
   } 
 
+  public void setExpression(int i, Expression expr) 
+  { if (0 <= i-1 && i-1 < elements.size())
+    { elements.set(i-1, expr); } 
+  } 
+
   public Expression getInnerObjectRef()
   { return this; } 
 

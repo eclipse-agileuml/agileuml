@@ -18905,6 +18905,13 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
     return simplify(operator,lsimp,rsimp,vars); 
   }
 
+  public Expression evaluate(ModelSpecification sigma, 
+                             ModelState beta)
+  { Expression lft = left.evaluate(sigma, beta); 
+    Expression rgt = right.evaluate(sigma, beta); 
+    return simplify(operator, lft, rgt, false); 
+  } 
+
   public Expression simplify() 
   { Expression lsimp = left.simplify();
     Expression rsimp = right.simplify();
@@ -20524,8 +20531,20 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       { BasicExpression bel = (BasicExpression) left; 
         res.add(bel.getData()); 
       } 
+  
       return res; 
     }   
+
+    if (operator.equals(":") || operator.equals("<:") || 
+        operator.equals("/:") || 
+        operator.equals("/<:"))
+    { if (right instanceof BasicExpression) 
+      { BasicExpression ber = (BasicExpression) right; 
+        res.add(ber.getData()); 
+      } 
+  
+      return res; 
+    } // direct updates  
 
     if (operator.equals("&") || operator.equals("xor"))
     { res = left.writeFrame(); 
@@ -20533,7 +20552,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       return res; 
     } 
 
-    if (operator.equals("#") || operator.equals("#LC") || operator.equals("#1"))
+    if (operator.equals("#") || operator.equals("#LC") || 
+        operator.equals("#1"))
     { res = right.writeFrame();
       if (left instanceof BinaryExpression) 
       { BinaryExpression leftbe = (BinaryExpression) left; 
@@ -20556,6 +20576,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         } 
         return VectorUtil.union(res,wrleft);  
       }
+  
       return res; 
     } 
 
@@ -20592,7 +20613,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
     if (operator.equals("&") || operator.equals("xor"))
     { return VectorUtil.union(left.wr(assocs),right.wr(assocs)); } 
 
-    if (operator.equals("#") || operator.equals("#LC") || operator.equals("#1"))
+    if (operator.equals("#") || operator.equals("#LC") || 
+        operator.equals("#1"))
     { // left is not written if it is preform, abstract class or not a class
       res = right.wr(assocs); 
       if (left instanceof BinaryExpression) 

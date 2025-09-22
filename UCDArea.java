@@ -3664,6 +3664,30 @@ public class UCDArea extends JPanel
     }
   }
 
+  public void simulatedExecution(Entity cls)
+  { String op = JOptionPane.showInputDialog("Enter name of operation to simulate: "); 
+    BehaviouralFeature bf = cls.getOperation(op); 
+
+    if (bf != null) 
+    { ModelSpecification ms = new ModelSpecification(); 
+      ModelState beta = new ModelState();
+      Vector pvals = new Vector(); 
+      beta.addNewEnvironment();
+
+      // add self : cls object to the environment
+      // with attribute initialisations.
+      String oid = Identifier.newIdentifier("oid_");  
+      ObjectSpecification obj = cls.initialisedObject(oid); 
+      ms.addObject(obj);
+      beta.addVariable("self", new BasicExpression(obj));   
+      System.out.println(">> Initial state = " + ms + "; " + beta); 
+  
+      bf.execute(ms, beta, pvals); 
+      System.out.println(); 
+      System.out.println(">> Resulting state = " + ms + "; " + beta); 
+    } 
+  } 
+
   public void energyAnalysis()
   { java.util.Map clnes = new java.util.HashMap(); 
     energyAnalysis(clnes); 
