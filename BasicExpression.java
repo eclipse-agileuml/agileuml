@@ -16944,6 +16944,58 @@ public Statement generateDesignSubtract(Expression rhs)
       { return sigma.getObjectAttributeValue(obj + "", nme); }       
     } // and with arrayIndex != null
 
+    if (umlkind == QUERY || 
+        umlkind == UPDATEOP)
+    { // call returning a value 
+      Expression obj = this.getObjectRef(); 
+      // if null, it is a call on self. 
+      String op = this.getData(); 
+      Vector actualPars = this.getParameters(); 
+      int npars = actualPars.size(); 
+
+      Expression selfobject; 
+
+      if (obj != null) 
+      { selfobject = obj.evaluate(sigma, beta); } 
+      else 
+      { selfobject = beta.getVariableValue("self"); } 
+
+      if (selfobject == null) // error
+      { return this; } 
+
+      ObjectSpecification ospec = 
+                 sigma.getObjectSpec("" + selfobject);
+
+      if (ospec == null) // error
+      { return this; }
+ 
+      Entity ent = ospec.getEntity(); 
+
+      if (ent == null) 
+      { return this; } 
+
+      BehaviouralFeature bf = ent.getOperation(op, npars);
+      // assume not static:  
+
+      if (bf == null) 
+      { return this; } 
+
+      ModelState opstackframe = (ModelState) beta.clone(); 
+      opstackframe.addNewEnvironment(); 
+      opstackframe.addVariable("self", selfobject); 
+
+      Vector parValues = new Vector(); 
+      for (int i = 0; i < actualPars.size(); i++) 
+      { Expression pval = (Expression) actualPars.get(i); 
+        Expression parval = pval.evaluate(sigma, beta); 
+        parValues.add(parval); // could be null; 
+      } 
+
+      Expression res = 
+         bf.execute(sigma, opstackframe, parValues);  
+      return res; 
+    } 
+
     return this;  
   } 
 

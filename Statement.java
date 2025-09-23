@@ -3937,6 +3937,14 @@ class ReturnStatement extends Statement
   public Expression getValue() 
   { return value; } 
 
+  public void execute(ModelSpecification sigma, 
+                      ModelState beta)
+  { if (value != null)
+    { Expression expr = value.evaluate(sigma, beta); 
+      beta.setVariableValue("result", expr); 
+    } 
+  } 
+
   public Expression definedness()
   { if (value != null) 
     { return value.definedness(); } 
@@ -4937,6 +4945,64 @@ class InvocationStatement extends Statement
     res.parameters = new Vector();
     res.callExp = expr;
     return res;  
+  } 
+
+  public void execute(ModelSpecification sigma, 
+                      ModelState beta)
+  { if (callExp == null) 
+    { return; } 
+
+    if ("skip".equals(callExp + "")) 
+    { return; } 
+
+    if (callExp instanceof BasicExpression)
+    { BasicExpression cexpr = (BasicExpression) callExp; 
+      Expression obj = cexpr.getObjectRef(); 
+      // if null, it is a call on self. 
+      String op = cexpr.getData(); 
+      Vector actualPars = cexpr.getParameters(); 
+      int npars = actualPars.size(); 
+
+      Expression selfobject; 
+
+      if (obj != null) 
+      { selfobject = obj.evaluate(sigma, beta); } 
+      else 
+      { selfobject = beta.getVariableValue("self"); } 
+
+      if (selfobject == null) // error
+      { return; } 
+
+      ObjectSpecification ospec = 
+                 sigma.getObjectSpec("" + selfobject);
+
+      if (ospec == null) // error
+      { return; }
+ 
+      Entity ent = ospec.getEntity(); 
+
+      if (ent == null) 
+      { return; } 
+
+      BehaviouralFeature bf = ent.getOperation(op, npars);
+      // assume not static:  
+
+      if (bf == null) 
+      { return; } 
+
+      ModelState opstackframe = (ModelState) beta.clone(); 
+      opstackframe.addNewEnvironment(); 
+      opstackframe.addVariable("self", selfobject); 
+
+      Vector parValues = new Vector(); 
+      for (int i = 0; i < actualPars.size(); i++) 
+      { Expression pval = (Expression) actualPars.get(i); 
+        Expression parval = pval.evaluate(sigma, beta); 
+        parValues.add(parval); // could be null; 
+      } 
+
+      bf.execute(sigma, opstackframe, parValues);  
+    }
   } 
 
   public Statement removeSlicedParameters(

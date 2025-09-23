@@ -139,13 +139,22 @@ public class BehaviouralFeature extends ModelElement
     return UnaryExpression.newLambdaUnaryExpression(be,this); 
   } 
 
-  public void execute(ModelSpecification sigma, ModelState beta,
+  public Expression execute(ModelSpecification sigma, 
+                      ModelState beta,
                       Vector parValues)
   { if (activity == null) 
-    { return; } 
+    { return null; } 
+
+    // return value is that computed by this operation,
+    // if it returns a value. 
 
     ModelState local = (ModelState) beta.clone();
  
+    System.out.println(">> Executing operation " + this + 
+                       " on parameters " + parValues + 
+                       " in environment " + sigma + ", " +
+                       beta); 
+
     // add the parameters: 
     for (int i = 0; i < parameters.size(); i++) 
     { Attribute par = (Attribute) parameters.get(i); 
@@ -161,7 +170,18 @@ public class BehaviouralFeature extends ModelElement
       }    
     } 
 
+    if (resultType != null) 
+    { Expression res = 
+         Type.defaultInitialValueExpression(resultType);
+      local.addVariable("result", res); 
+    } 
+
     activity.execute(sigma,local); 
+
+    if (resultType != null) 
+    { return local.getVariableValue("result"); } 
+
+    return null; 
   } 
 
   public void jsClassFromConstructor(Entity ent, Entity cclass, Vector inits, Vector entities) 
