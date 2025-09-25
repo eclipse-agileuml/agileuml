@@ -176,7 +176,7 @@ public class BehaviouralFeature extends ModelElement
       local.addVariable("result", res); 
     } 
 
-    activity.execute(sigma,local); 
+    int status = activity.execute(sigma,local); 
 
     if (resultType != null) 
     { return local.getVariableValue("result"); } 

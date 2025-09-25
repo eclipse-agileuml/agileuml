@@ -20,9 +20,17 @@ abstract class Statement implements Cloneable
   protected boolean brackets = false; 
   protected boolean unusedStatement = false; 
 
+  // Enumeration of loop kinds: 
   public static final int WHILE = 0; 
   public static final int FOR = 1; 
   public static final int REPEAT = 2; 
+
+  // Enumeration of execution status: 
+  public static final int NORMAL = 0; 
+  public static final int CONTINUE = 1; 
+  public static final int BREAK = 2;
+  public static final int RETURN = 3; 
+  public static final int EXCEPTION = 4; 
 
   public static final String[] spaces = { "", "  ", "    ", "      ", "        ", "          ", "            ", "              ", "                ", "                  ", "                    " }; 
   // spaces[i] is i*2 spaces
@@ -477,8 +485,8 @@ abstract class Statement implements Cloneable
     return stat; 
   } 
 
-  public void execute(ModelSpecification sigma, ModelState beta)
-  { } // default is to do nothing
+  public int execute(ModelSpecification sigma, ModelState beta)
+  { return Statement.NORMAL; } // default is to do nothing
 
   public static Statement cumulativeCode(Expression var,
                                          Expression rng, 
@@ -3937,12 +3945,14 @@ class ReturnStatement extends Statement
   public Expression getValue() 
   { return value; } 
 
-  public void execute(ModelSpecification sigma, 
+  public int execute(ModelSpecification sigma, 
                       ModelState beta)
   { if (value != null)
     { Expression expr = value.evaluate(sigma, beta); 
       beta.setVariableValue("result", expr); 
     } 
+
+    return Statement.RETURN; 
   } 
 
   public Expression definedness()
@@ -4415,6 +4425,9 @@ class BreakStatement extends Statement
     return res;  
   } 
 
+  public int execute(ModelSpecification sigma, ModelState beta)
+  { return Statement.BREAK; } 
+
   public boolean containsSubexpression(Expression expr) 
   { return false; } 
 
@@ -4605,6 +4618,9 @@ class ContinueStatement extends Statement
 
   public String toString() 
   { return "continue"; } 
+
+  public int execute(ModelSpecification sigma, ModelState beta)
+  { return Statement.CONTINUE; } 
 
   public String toAST()
   { String res = "(OclStatement continue)"; 
@@ -4947,13 +4963,15 @@ class InvocationStatement extends Statement
     return res;  
   } 
 
-  public void execute(ModelSpecification sigma, 
+  public int execute(ModelSpecification sigma, 
                       ModelState beta)
-  { if (callExp == null) 
-    { return; } 
+  { int res = Statement.NORMAL; 
+
+    if (callExp == null) 
+    { return res; } 
 
     if ("skip".equals(callExp + "")) 
-    { return; } 
+    { return res; } 
 
     if (callExp instanceof BasicExpression)
     { BasicExpression cexpr = (BasicExpression) callExp; 
@@ -4971,24 +4989,24 @@ class InvocationStatement extends Statement
       { selfobject = beta.getVariableValue("self"); } 
 
       if (selfobject == null) // error
-      { return; } 
+      { return res; } 
 
       ObjectSpecification ospec = 
                  sigma.getObjectSpec("" + selfobject);
 
       if (ospec == null) // error
-      { return; }
+      { return res; }
  
       Entity ent = ospec.getEntity(); 
 
       if (ent == null) 
-      { return; } 
+      { return res; } 
 
       BehaviouralFeature bf = ent.getOperation(op, npars);
       // assume not static:  
 
       if (bf == null) 
-      { return; } 
+      { return res; } 
 
       ModelState opstackframe = (ModelState) beta.clone(); 
       opstackframe.addNewEnvironment(); 
@@ -5003,6 +5021,8 @@ class InvocationStatement extends Statement
 
       bf.execute(sigma, opstackframe, parValues);  
     }
+
+    return res; 
   } 
 
   public Statement removeSlicedParameters(
@@ -6485,6 +6505,90 @@ class WhileStatement extends Statement
 
     return res; 
   } 
+
+  public int execute(ModelSpecification sigma, 
+                      ModelState beta)
+  { int res = Statement.NORMAL; 
+
+    if (loopKind == Statement.WHILE)
+    { Expression testvalue = 
+         loopTest.evaluate(sigma, beta); 
+      while ("true".equals(testvalue + ""))
+      { res = body.execute(sigma, beta);
+        System.out.println("---> iteration of while loop: " + sigma + ", " + beta + " " + res);
+
+        if (res == Statement.BREAK)
+        { return Statement.NORMAL; } 
+
+        if (res == Statement.RETURN)
+        { return res; }   
+
+        testvalue = loopTest.evaluate(sigma, beta); 
+      } 
+
+      return Statement.NORMAL; 
+    } 
+    else if (loopKind == Statement.REPEAT)
+    { res = body.execute(sigma, beta); 
+
+      if (res == Statement.BREAK)
+      { return Statement.NORMAL; } 
+
+      if (res == Statement.RETURN)
+      { return res; }   
+
+      Expression testvalue = 
+         loopTest.evaluate(sigma, beta); 
+      while ("false".equals(testvalue + ""))
+      { res = body.execute(sigma, beta);
+        System.out.println("---> iteration of repeat loop: " + sigma + ", " + beta + " " + res);
+
+        if (res == Statement.BREAK)
+        { return Statement.NORMAL; } 
+
+        if (res == Statement.RETURN)
+        { return res; }   
+  
+        testvalue = loopTest.evaluate(sigma, beta); 
+      }
+
+      return Statement.NORMAL;  
+    } 
+    else if (loopKind == Statement.FOR)
+    { Expression rng = loopRange.evaluate(sigma, beta); 
+      // must be a SetExpression
+      if (rng instanceof SetExpression)
+      { SetExpression serange = (SetExpression) rng;   
+        int n = serange.size();     
+
+        // ModelState local = (ModelState) beta.clone(); 
+
+        String lv = "" + loopVar; 
+        beta.addNewEnvironment(); 
+        beta.addVariable(lv, new BasicExpression("null")); 
+   
+        for (int i = 0; i < n; i++) 
+        { Expression val = serange.getElement(i); 
+          beta.setVariableValue(lv, val); 
+          res = body.execute(sigma, beta); 
+          System.out.println("---> iteration of for loop: " + sigma + ", " + beta + " " + res);
+
+          if (res == Statement.BREAK)
+          { return Statement.NORMAL; } 
+
+          if (res == Statement.RETURN)
+          { return res; }   
+        } 
+     
+        beta.removeLastEnvironment();
+
+        return Statement.NORMAL;  
+      } 
+    } 
+
+    return Statement.NORMAL; 
+  } 
+
 
   public Statement loopContinuation()
   { // FOR i : Integer.subrange(a,b) loop: 
@@ -8619,7 +8723,7 @@ class CreationStatement extends Statement
     return res; 
   } 
 
-  public void execute(ModelSpecification sigma, ModelState beta)
+  public int execute(ModelSpecification sigma, ModelState beta)
   { // add assignsTo as new variable, set to initialExpression
 
     if (initialExpression != null) 
@@ -8632,6 +8736,8 @@ class CreationStatement extends Statement
       Expression val = defaultInit.evaluate(sigma, beta); 
       beta.addVariable(assignsTo, val);
     }
+
+    return Statement.NORMAL; 
   } 
 
   public Expression definedness()
@@ -9950,17 +10056,28 @@ class SequenceStatement extends Statement
     return res;  
   } 
 
-  public void execute(ModelSpecification sigma, ModelState beta)
+  public int execute(ModelSpecification sigma, ModelState beta)
   { // create new environment, then execute each statement 
     // in turn.
 
-    ModelState local = (ModelState) beta.clone(); 
-    local.addNewEnvironment(); 
+    int res = Statement.NORMAL; 
+
+    // ModelState local = (ModelState) beta.clone(); 
+    beta.addNewEnvironment(); 
 
     for (int i = 0; i < statements.size(); i++) 
     { Statement stat = (Statement) statements.get(i); 
-      stat.execute(sigma, local); 
+      res = stat.execute(sigma, beta);
+
+      if (res == Statement.BREAK || res == Statement.RETURN ||
+          res == Statement.CONTINUE)
+      { beta.removeLastEnvironment();
+        return res; 
+      }   
     } 
+
+    beta.removeLastEnvironment();
+    return Statement.NORMAL;  
   } 
 
 
@@ -14903,7 +15020,7 @@ class AssignStatement extends Statement
     // rhs.elementType = t; 
   } 
 
-  public void execute(ModelSpecification sigma, ModelState beta)
+  public int execute(ModelSpecification sigma, ModelState beta)
   { Expression rhsValue = rhs.evaluate(sigma, beta); 
 
     if (lhs instanceof BasicExpression)
@@ -14948,7 +15065,8 @@ class AssignStatement extends Statement
       } 
     } 
 
-    System.out.println(">> Updated state: " + beta); 
+    System.out.println(">> Updated state: " + beta);
+    return Statement.NORMAL;  
   } 
 
   public Expression definedness()
@@ -16300,12 +16418,16 @@ class ConditionalStatement extends Statement
     return new ConditionalStatement(tst,stat,els); 
   } 
 
-  public void execute(ModelSpecification sigma, ModelState beta)
+  public int execute(ModelSpecification sigma, ModelState beta)
   { Expression tval = test.evaluate(sigma, beta); 
     if ("true".equals(tval + ""))
-    { ifPart.execute(sigma, beta); } 
+    { int res = ifPart.execute(sigma, beta); 
+      return res; 
+    } 
     else 
-    { elsePart.execute(sigma, beta); } 
+    { int res = elsePart.execute(sigma, beta); 
+      return res; 
+    } 
   } // assuming no side-effects in the test. 
 
   public String cg(CGSpec cgs)

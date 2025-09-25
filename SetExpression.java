@@ -1089,6 +1089,22 @@ public class SetExpression extends Expression
     return res;
   }
 
+  public SetExpression reverse()
+  { // OCL indexing i : 1..elements.size()
+
+    SetExpression res = new SetExpression();
+    for (int k = elements.size() - 1; k >= 0; k--)
+    { Expression e = (Expression) elements.get(k);
+      res.addElement(e);
+    }
+ 
+    res.setType(type); 
+    res.setElementType(elementType); 
+
+    res.setOrdered(isOrdered());
+    return res;
+  }
+
   public String updateForm(java.util.Map env,boolean local)
   { return "{} // no update form for: " + this; } 
 
@@ -1707,6 +1723,31 @@ public class SetExpression extends Expression
     }
     return etext;
   }
+
+  public Expression evaluate(ModelSpecification sigma, 
+                             ModelState beta)
+  { SetExpression res = new SetExpression(); 
+
+    for (int i = 0; i < elements.size(); i++) 
+    { Expression expr = (Expression) elements.get(i); 
+      Expression val = expr.evaluate(sigma, beta); 
+      res.addElement(val); 
+    } 
+
+    res.setType(type); 
+    res.setElementType(elementType); 
+
+    res.setOrdered(isOrdered());
+    return res;
+  } 
+
+  public static void main(String[] args)
+  { SetExpression expr = new SetExpression(); 
+    expr.addElement(new BasicExpression(1)); 
+    expr.addElement(new BasicExpression(2)); 
+    expr.addElement(new BasicExpression(3)); 
+    System.out.println(expr.reverse()); 
+  } 
 
 }
 

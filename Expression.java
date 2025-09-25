@@ -2914,6 +2914,62 @@ abstract class Expression
   }
 
   static public Expression simplify(final String op, 
+                                    Expression arg)
+  { if (arg == null) { return arg; }
+    
+    if (op.equals("+")) { return arg; } 
+
+    if (op.equals("-")) { return simplifyUnaryMinus(arg); }
+
+    if (op.equals("not")) { return simplifyNot(arg); }
+
+    if (op.equals("front") && arg instanceof SetExpression)
+    { SetExpression se = (SetExpression) arg; 
+      return se.front(); 
+    } 
+
+    if (op.equals("tail") && arg instanceof SetExpression)
+    { SetExpression se = (SetExpression) arg; 
+      return se.tail(); 
+    } 
+
+    if (op.equals("reverse") && arg instanceof SetExpression)
+    { SetExpression se = (SetExpression) arg; 
+      return se.reverse(); 
+    } 
+
+    return arg; 
+  } 
+
+  public static Expression simplifyUnaryMinus(Expression e1) 
+  { if (e1 == null) { return e1; } 
+
+    if (isInteger("" + e1))
+    { int v1 = convertInteger("" + e1); 
+      return new BasicExpression(-v1); 
+    }
+
+    if (isNumber("" + e1))
+    { double v1 = convertNumber("" + e1); 
+      return new BasicExpression(-v1); 
+    } 
+
+    return new UnaryExpression("-", e1); 
+  }  
+ 
+  public static Expression simplifyNot(Expression e1) 
+  { if (e1 == null) { return e1; } 
+
+    if ("false".equals("" + e1))
+    { return new BasicExpression(true); } 
+
+    if ("true".equals("" + e1))
+    { return new BasicExpression(false); }
+ 
+    return new UnaryExpression("not", e1); 
+  }  
+
+  static public Expression simplify(final String op, 
                             final Expression e1, 
                             final Expression e2,
                             final Vector vars)
@@ -2927,6 +2983,12 @@ abstract class Expression
     if (op.equals("*")) { return simplifyMult(e1,e2); } 
 
     if (op.equals("/")) { return simplifyDivide(e1,e2); } 
+
+    if (op.equals("mod")) { return simplifyMod(e1,e2); } 
+
+    if (op.equals("div")) { return simplifyDiv(e1,e2); } 
+
+    if (op.equals("->pow")) { return simplifyPower(e1,e2); } 
 
     if (op.equals("#&")) { return simplifyExistsAnd(e1,e2); } 
 
@@ -2954,9 +3016,11 @@ abstract class Expression
   // should extend to deal with evaluation of +, *, -, /, :, etc
   static public Expression simplify(final String op, 
                             final Expression e1, 
-                            final Expression e2, boolean needsBrackets)
+                            final Expression e2, 
+                            boolean needsBrackets)
   { if (e1 == null)  { return e2; }
     if (e2 == null)  { return e1; }
+
     Expression res; 
     if (op.equals("&")) { res = simplifyAnd(e1,e2); } 
     else if (op.equals("or")) { res = simplifyOr(e1,e2); }
@@ -2973,8 +3037,13 @@ abstract class Expression
     else if (op.equals("*")) { res = simplifyMult(e1,e2); } 
     else if (op.equals("/")) { res = simplifyDivide(e1,e2); } 
     else if (op.equals("-")) { res = simplifyMinus(e1,e2); }
+    else if (op.equals("mod")) { res = simplifyMod(e1,e2); } 
+    else if (op.equals("div")) { res = simplifyDiv(e1,e2); } 
+    else if (op.equals("->pow")) { res = simplifyPower(e1,e2); } 
     else { res = new BinaryExpression(op,e1,e2); } 
+
     res.setBrackets(needsBrackets); 
+
     return res; 
   }
 
@@ -2998,7 +3067,7 @@ abstract class Expression
   }  
 
   public static Expression simplifyMinus(Expression e1, Expression e2) 
-  { if (e1 == null) { return e2; } 
+  { if (e1 == null) { return simplifyUnaryMinus(e2); } 
     if (e2 == null) { return e1; } 
 
     if (isInteger("" + e1) && isInteger("" + e2))
@@ -3015,8 +3084,8 @@ abstract class Expression
   }  
 
   public static Expression simplifyMult(Expression e1, Expression e2) 
-  { if (e1 == null) { return e2; } 
-    if (e2 == null) { return e1; } 
+  { if (e1 == null) { return null; } 
+    if (e2 == null) { return null; } 
 
     if (isInteger("" + e1) && isInteger("" + e2))
     { int v1 = convertInteger("" + e1); 
@@ -3031,9 +3100,28 @@ abstract class Expression
     return new BinaryExpression("*", e1, e2); 
   }  
 
+  public static Expression simplifyPower(Expression e1, Expression e2) 
+  { if (e1 == null) { return null; } 
+    if (e2 == null) { return null; } 
+
+    if (isInteger("" + e1) && isInteger("" + e2))
+    { int v1 = convertInteger("" + e1); 
+      int v2 = convertInteger("" + e2); 
+      return new BasicExpression((int) Math.pow(v1,v2)); 
+    }
+
+    if (isNumber("" + e1) && isNumber("" + e2))
+    { double v1 = convertNumber("" + e1); 
+      double v2 = convertNumber("" + e2); 
+      return new BasicExpression(Math.pow(v1,v2)); 
+    } // but (-1)->pow(0.5) undefined
+
+    return new BinaryExpression("->pow", e1, e2); 
+  }  
+
   public static Expression simplifyDivide(Expression e1, Expression e2) 
-  { if (e1 == null) { return e2; } 
-    if (e2 == null) { return e1; } 
+  { if (e1 == null) { return null; } 
+    if (e2 == null) { return null; } 
 
     if (isInteger("" + e1) && isInteger("" + e2))
     { int v1 = convertInteger("" + e1); 
@@ -3065,6 +3153,78 @@ abstract class Expression
     } 
 
     return new BinaryExpression("/", e1, e2); 
+  }  
+
+  public static Expression simplifyDiv(Expression e1, Expression e2) 
+  { if (e1 == null) { return null; } 
+    if (e2 == null) { return null; } 
+
+    if (isInteger("" + e1) && isInteger("" + e2))
+    { int v1 = convertInteger("" + e1); 
+      int v2 = convertInteger("" + e2);
+
+      if (v2 == 0 && v1 > 0)
+      { return new BasicExpression("Math_PINFINITY"); } 
+      if (v2 == 0 && v1 < 0)
+      { return new BasicExpression("Math_NINFINITY"); }
+      if (v2 == 0 && v1 == 0)
+      { return new BasicExpression("Math_NaN"); } 
+       
+      // case of v2 = 0 
+      return new BasicExpression(v1 / v2); 
+    }
+    else if (isNumber("" + e1) && isNumber("" + e2))
+    { double v1 = convertNumber("" + e1); 
+      double v2 = convertNumber("" + e2); 
+
+      if (v2 == 0 && v1 > 0)
+      { return new BasicExpression("Math_PINFINITY"); } 
+      if (v2 == 0 && v1 < 0)
+      { return new BasicExpression("Math_NINFINITY"); }
+      if (v2 == 0 && v1 == 0)
+      { return new BasicExpression("Math_NaN"); } 
+      // case of v2 = 0 
+
+      return new BasicExpression((int) (v1 / v2)); 
+    } 
+
+    return new BinaryExpression("div", e1, e2); 
+  }  
+
+  public static Expression simplifyMod(Expression e1, 
+                                       Expression e2) 
+  { if (e1 == null) { return null; } 
+    if (e2 == null) { return null; } 
+
+    if (isInteger("" + e1) && isInteger("" + e2))
+    { int v1 = convertInteger("" + e1); 
+      int v2 = convertInteger("" + e2);
+
+      if (v2 == 0 && v1 > 0)
+      { return new BasicExpression("Math_PINFINITY"); } 
+      if (v2 == 0 && v1 < 0)
+      { return new BasicExpression("Math_NINFINITY"); }
+      if (v2 == 0 && v1 == 0)
+      { return new BasicExpression("Math_NaN"); } 
+       
+      return new BasicExpression(v1 % v2); 
+    }
+    else if (isNumber("" + e1) && isNumber("" + e2))
+    { double v1 = convertNumber("" + e1); 
+      double v2 = convertNumber("" + e2); 
+
+      if (v2 == 0 && v1 > 0)
+      { return new BasicExpression("Math_PINFINITY"); } 
+      if (v2 == 0 && v1 < 0)
+      { return new BasicExpression("Math_NINFINITY"); }
+      if (v2 == 0 && v1 == 0)
+      { return new BasicExpression("Math_NaN"); } 
+      // case of v2 = 0 
+
+      return new BasicExpression(((int) v1) % ((int) v2)); 
+    } 
+
+    return new BinaryExpression("mod", e1, e2); 
   }  
 
   public static List simplifyAnd(final List e1s, final List e2s) 
@@ -3264,6 +3424,31 @@ abstract class Expression
     return new BinaryExpression("or",e1,e2); 
   }  // if (e1.subformulaOf(e2)) { return e1; }
 
+  public static Expression simplifyXor(final Expression e1,
+                                      final Expression e2)
+  { if (e1.isTrueString() && e2.isFalseString())
+    { return new BasicExpression(true); }
+
+    if (e1.isFalseString() && e2.isTrueString())
+    { return new BasicExpression(true); }
+
+    if (e2.isFalseString())
+    { return e1; }
+
+    if (e1.isFalseString())
+    { return e2; }
+
+    if (e2.isTrueString())
+    { return simplifyNot(e1); }
+
+    if (e1.isTrueString())
+    { return simplifyNot(e2); }
+
+    if (e1.equals(e2))
+    { return new BasicExpression(false); }
+
+    return new BinaryExpression("xor",e1,e2); 
+  }  
 
   public static Expression simplifyImp(final Expression ante,
                                        final Expression succ)

@@ -1842,6 +1842,15 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
     return pre + ""; 
   } 
   
+  public Expression evaluate(ModelSpecification sigma, 
+                             ModelState beta)
+  { // Special cases for !e and ?x in sandboxed memory 
+    // space in sigma. 
+
+    Expression pre = argument.evaluate(sigma, beta);
+    return Expression.simplify(operator, pre); 
+  } 
+
   public String updateForm(java.util.Map env, boolean local)
   { String cont = "Controller.inst()"; 
     String pre = argument.queryForm(env,local);

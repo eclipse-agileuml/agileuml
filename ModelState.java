@@ -37,6 +37,12 @@ public class ModelState
     variableValues.add(env); 
   } 
 
+  public void removeLastEnvironment()
+  { int n = variableValues.size(); 
+    if (n > 0)
+    { variableValues.remove(n-1); } 
+  } 
+
   public void addVariable(String var, Expression expr)
   { int n = variableValues.size(); 
 
