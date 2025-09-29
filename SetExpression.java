@@ -1322,6 +1322,124 @@ public class SetExpression extends Expression
     return res;
   }
 
+  public static SetExpression excludingSubrange(
+                                 SetExpression col, int i, int j)
+  { // OCL indexing i : 1..elements.size()
+
+    Vector elems = col.getElements(); 
+    SetExpression res = new SetExpression();
+
+    for (int k = 0; k < i-1; k++) 
+    { Expression expr = (Expression) elems.get(k); 
+      res.addElement(expr); 
+    } 
+
+    for (int k = j; k < elems.size(); k++)
+    { Expression e = (Expression) elems.get(k);
+      res.addElement(e);
+    }
+ 
+    res.setType(col.type); 
+    res.setElementType(col.elementType); 
+
+    res.setOrdered(col.isOrdered());
+    return res;
+  }
+
+  public static SetExpression setSubrange(
+                                 SetExpression col, int i, int j, 
+                                 SetExpression val)
+  { // OCL indexing i : 1..elements.size()
+    // similar to insertInto
+
+    Vector elems = col.getElements(); 
+    SetExpression res = new SetExpression();
+
+    for (int k = 0; k < i-1; k++) 
+    { Expression expr = (Expression) elems.get(k); 
+      res.addElement(expr); 
+    } 
+
+    Vector velems = val.getElements(); 
+
+    for (int k = 0; k < velems.size(); k++) 
+    { Expression velem = (Expression) velems.get(k); 
+      res.addElement(velem); 
+    } 
+
+    for (int k = j; k < elems.size(); k++)
+    { Expression e = (Expression) elems.get(k);
+      res.addElement(e);
+    }
+ 
+    res.setType(col.type); 
+    res.setElementType(col.elementType); 
+
+    res.setOrdered(col.isOrdered());
+    return res;
+  }
+
+  public static SetExpression insertInto(
+                                 SetExpression col, int i,  
+                                 SetExpression val)
+  { // OCL indexing i : 1..elements.size()
+    // similar to insertInto
+
+    Vector elems = col.getElements(); 
+    SetExpression res = new SetExpression();
+
+    for (int k = 0; k < i-1; k++) 
+    { Expression expr = (Expression) elems.get(k); 
+      res.addElement(expr); 
+    } 
+
+    Vector velems = val.getElements(); 
+
+    for (int k = 0; k < velems.size(); k++) 
+    { Expression velem = (Expression) velems.get(k); 
+      res.addElement(velem); 
+    } 
+
+    for (int k = i; k < elems.size(); k++)
+    { Expression e = (Expression) elems.get(k);
+      res.addElement(e);
+    }
+ 
+    res.setType(col.type); 
+    res.setElementType(col.elementType); 
+
+    res.setOrdered(col.isOrdered());
+    return res;
+  }
+
+  public static SetExpression insertAt(
+                                 SetExpression col, int i,  
+                                 Expression val)
+  { // OCL indexing i : 1..elements.size()
+    // similar to insertInto
+
+    Vector elems = col.getElements(); 
+    SetExpression res = new SetExpression();
+
+    for (int k = 0; k < i-1; k++) 
+    { Expression expr = (Expression) elems.get(k); 
+      res.addElement(expr); 
+    } 
+
+    res.addElement(val); 
+
+    for (int k = i; k < elems.size(); k++)
+    { Expression e = (Expression) elems.get(k);
+      res.addElement(e);
+    }
+ 
+    res.setType(col.type); 
+    res.setElementType(col.elementType); 
+
+    res.setOrdered(col.isOrdered());
+    return res;
+  }
+
   public SetExpression subrange(int i)
   { // OCL indexing i : 1..elements.size()
 
@@ -2030,8 +2148,13 @@ public class SetExpression extends Expression
     expr.addElement(new BasicExpression(1)); 
     expr.addElement(new BasicExpression(2)); 
     expr.addElement(new BasicExpression(3));
-    System.out.println(SetExpression.excludingAt(expr, 3));  
-    System.out.println(SetExpression.excludingFirst(expr, new BasicExpression(2))); 
+
+    SetExpression val = new SetExpression(); 
+    val.addElement(new BasicExpression(0)); 
+    val.addElement(new BasicExpression(0)); 
+
+    System.out.println(SetExpression.setSubrange(expr, 2, 4, val));  
+    System.out.println(expr.subrange(2,4)); 
   } 
 
 }
