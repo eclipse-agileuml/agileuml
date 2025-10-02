@@ -1986,6 +1986,15 @@ abstract class Expression
   public static boolean isString(String data)
   { return isStringValue(data); }
 
+  public static boolean isStringValue(Expression expr)
+  { if (expr instanceof BasicExpression) 
+    { String s = "" + expr; 
+      return Expression.isStringValue(s); 
+    } 
+
+    return false; 
+  } 
+
   public static boolean isStringValue(String data)
   { int len = data.length();
     if (len > 1 &&
@@ -2923,19 +2932,73 @@ abstract class Expression
 
     if (op.equals("not")) { return simplifyNot(arg); }
 
-    if (op.equals("front") && arg instanceof SetExpression)
+    if (op.equals("->front") && arg instanceof SetExpression)
     { SetExpression se = (SetExpression) arg; 
       return se.front(); 
     } 
 
-    if (op.equals("tail") && arg instanceof SetExpression)
+    if (op.equals("->tail") && arg instanceof SetExpression)
     { SetExpression se = (SetExpression) arg; 
       return se.tail(); 
     } 
 
-    if (op.equals("reverse") && arg instanceof SetExpression)
+    if (op.equals("->last") && arg instanceof SetExpression)
+    { SetExpression se = (SetExpression) arg; 
+      return se.last(); 
+    } 
+
+    if (op.equals("->first") && arg instanceof SetExpression)
+    { SetExpression se = (SetExpression) arg; 
+      return se.first(); 
+    } 
+
+    if (op.equals("->reverse") && arg instanceof SetExpression)
     { SetExpression se = (SetExpression) arg; 
       return se.reverse(); 
+    } 
+
+    if (op.equals("->sum") && arg instanceof SetExpression)
+    { SetExpression se = (SetExpression) arg; 
+      return se.sum(); 
+    } 
+
+    if (op.equals("->prd") && arg instanceof SetExpression)
+    { SetExpression se = (SetExpression) arg; 
+      return se.prd(); 
+    } 
+
+    if (op.equals("->max") && arg instanceof SetExpression)
+    { SetExpression se = (SetExpression) arg; 
+      return se.max(); 
+    } 
+
+    if (op.equals("->min") && arg instanceof SetExpression)
+    { SetExpression se = (SetExpression) arg; 
+      return se.min(); 
+    } 
+
+    if (op.equals("->size") && arg instanceof SetExpression)
+    { SetExpression se = (SetExpression) arg; 
+      int n = se.size();
+      return new BasicExpression(n);  
+    } 
+
+    if (op.equals("->size") && isStringValue(arg))
+    { String se = "" + arg; 
+      int n = se.length();
+      return new BasicExpression(n-2);  
+    } 
+    // or a string: length - 2
+
+
+    if (op.equals("->keys") && arg instanceof SetExpression)
+    { SetExpression se = (SetExpression) arg; 
+      return SetExpression.keys(se); 
+    } 
+
+    if (op.equals("->values") && arg instanceof SetExpression)
+    { SetExpression se = (SetExpression) arg; 
+      return SetExpression.values(se); 
     } 
 
     return arg; 
@@ -2944,13 +3007,13 @@ abstract class Expression
   public static Expression simplifyUnaryMinus(Expression e1) 
   { if (e1 == null) { return e1; } 
 
-    if (isInteger("" + e1))
-    { int v1 = convertInteger("" + e1); 
+    if (Expression.isInteger("" + e1))
+    { int v1 = Expression.convertInteger("" + e1); 
       return new BasicExpression(-v1); 
     }
 
-    if (isNumber("" + e1))
-    { double v1 = convertNumber("" + e1); 
+    if (Expression.isNumber("" + e1))
+    { double v1 = Expression.convertNumber("" + e1); 
       return new BasicExpression(-v1); 
     } 
 
@@ -2976,7 +3039,8 @@ abstract class Expression
   { if (e1 == null)  { return e2; }
     if (e2 == null)  { return e1; }
 
-    if (op.equals("+")) { return simplifyPlus(e1,e2); } 
+    if (op.equals("+")) 
+    { return Expression.simplifyPlus(e1,e2); } 
 
     if ("-".equals(op) && 
         e1 instanceof SetExpression && 
@@ -3018,32 +3082,80 @@ abstract class Expression
     if (op.equals("->includes")) 
     { return simplifyIn(e2,e1,vars); }
 
-    if (op.equals("->count") & 
+    if (op.equals("->includesKey") && 
+             e1 instanceof SetExpression) 
+    { SetExpression se1 = (SetExpression) e1; 
+      return SetExpression.includesKey(se1,e2);   
+    }
+    
+    if (op.equals("->excludesKey") && 
+             e1 instanceof SetExpression) 
+    { SetExpression se1 = (SetExpression) e1; 
+      return SetExpression.excludesKey(se1,e2);   
+    }
+    
+    if (op.equals("->includesValue") && 
+             e1 instanceof SetExpression) 
+    { SetExpression se1 = (SetExpression) e1; 
+      return SetExpression.includesValue(se1, e2);
+    }
+
+    if (op.equals("->excludesValue") && 
+             e1 instanceof SetExpression) 
+    { SetExpression se1 = (SetExpression) e1; 
+      return SetExpression.includesValue(se1, e2);
+    }
+    
+    if (op.equals("->includesAll") && 
+             e1 instanceof SetExpression && 
+             e2 instanceof SetExpression) 
+    { SetExpression se1 = (SetExpression) e1; 
+      SetExpression se2 = (SetExpression) e2; 
+      return SetExpression.includesAll(se1, se2); 
+    }
+
+    if (op.equals("->excludesAll") && 
+             e1 instanceof SetExpression && 
+             e2 instanceof SetExpression) 
+    { SetExpression se1 = (SetExpression) e1; 
+      SetExpression se2 = (SetExpression) e2; 
+      return SetExpression.excludesAll(se1, se2); 
+    }
+
+    if (op.equals("->count") && 
         e1 instanceof SetExpression) 
     { SetExpression col = (SetExpression) e1; 
       int cnt = col.count(e2);
       return new BasicExpression(cnt);  
     }
 
-    if (op.equals("->including") & 
+    if (op.equals("->including") && 
         e1 instanceof SetExpression) 
     { SetExpression col = (SetExpression) e1; 
       return SetExpression.including(col, e2);  
     }
 
-    if (op.equals("->excluding") & 
+    if (op.equals("<:") &&
+        e2 instanceof SetExpression &&  
+        e1 instanceof SetExpression) 
+    { SetExpression se1 = (SetExpression) e1; 
+      SetExpression se2 = (SetExpression) e2; 
+      return SetExpression.includesAll(se2, se1);  
+    }
+
+    if (op.equals("->excluding") && 
         e1 instanceof SetExpression) 
     { SetExpression col = (SetExpression) e1; 
       return SetExpression.excluding(col, e2);  
     }
 
-    if (op.equals("->excludingFirst") & 
+    if (op.equals("->excludingFirst") && 
         e1 instanceof SetExpression) 
     { SetExpression col = (SetExpression) e1; 
       return SetExpression.excludingFirst(col, e2);  
     }
 
-    if (op.equals("->excludingAt") & 
+    if (op.equals("->excludingAt") && 
         e1 instanceof SetExpression) 
     { SetExpression col = (SetExpression) e1;
       try { 
@@ -3054,13 +3166,13 @@ abstract class Expression
       { return new BinaryExpression("->excludingAt", col, e2); }  
     }
 
-    if (op.equals("->excludingKey") & 
+    if (op.equals("->excludingKey") && 
         e1 instanceof SetExpression) 
     { SetExpression col = (SetExpression) e1; 
       return SetExpression.excludingKey(col, e2);  
     }
 
-    if (op.equals("->excludingValue") & 
+    if (op.equals("->excludingValue") && 
         e1 instanceof SetExpression) 
     { SetExpression col = (SetExpression) e1; 
       return SetExpression.excludingValue(col, e2);  
@@ -3098,6 +3210,22 @@ abstract class Expression
       return s1.atExpression(indx); 
     } // not for sorted collections, maps 
 
+    if ("->restrict".equals(op) && 
+        e1 instanceof SetExpression && 
+        e2 instanceof SetExpression)
+    { SetExpression s1 = (SetExpression) e1; 
+      SetExpression s2 = (SetExpression) e2; 
+      return SetExpression.restrict(s1, s2); 
+    }  
+
+    if ("->antirestrict".equals(op) && 
+        e1 instanceof SetExpression && 
+        e2 instanceof SetExpression)
+    { SetExpression s1 = (SetExpression) e1; 
+      SetExpression s2 = (SetExpression) e2; 
+      return SetExpression.antirestrict(s1, s2); 
+    }  
+
     return new BinaryExpression(op,e1,e2);
   }
 
@@ -3116,12 +3244,14 @@ abstract class Expression
     else if (op.equals("=")) { res = simplifyEq(e1,e2); }
     else if (op.equals("!=") || op.equals("/=")) 
     { res = simplifyNeq(e1,e2); } 
-    else if (op.equals(":")) { res = simplifyIn(e1,e2); } 
+    else if (op.equals(":")) 
+    { res = simplifyIn(e1,e2); } 
     else if (op.equals("->apply")) 
     { res = simplifyApply(e1,e2); } 
     else if (comparitors.contains(op)) 
     { res = simplifyIneq(op,e1,e2); } 
-    else if (op.equals("+")) { res = simplifyPlus(e1,e2); }
+    else if (op.equals("+")) 
+    { res = Expression.simplifyPlus(e1,e2); }
     else if (op.equals("*")) { res = simplifyMult(e1,e2); } 
     else if (op.equals("/")) { res = simplifyDivide(e1,e2); } 
     else if ("-".equals(op) && 
@@ -3136,30 +3266,71 @@ abstract class Expression
     else if (op.equals("div")) { res = simplifyDiv(e1,e2); } 
     else if (op.equals("->pow")) 
     { res = simplifyPower(e1,e2); } 
+    else if (op.equals("->includesKey") && 
+             e1 instanceof SetExpression) 
+    { SetExpression se1 = (SetExpression) e1; 
+      res = SetExpression.includesKey(se1,e2);   
+    }
+    else if (op.equals("->excludesKey") && 
+             e1 instanceof SetExpression) 
+    { SetExpression se1 = (SetExpression) e1; 
+      res = SetExpression.excludesKey(se1,e2);   
+    }
+    else if (op.equals("->includesValue") && 
+             e1 instanceof SetExpression) 
+    { SetExpression se1 = (SetExpression) e1; 
+      res = SetExpression.includesValue(se1, e2);
+    }
+    else if (op.equals("->excludesValue") && 
+             e1 instanceof SetExpression) 
+    { SetExpression se1 = (SetExpression) e1; 
+      res = SetExpression.excludesValue(se1, e2); 
+    }
     else if (op.equals("->includes")) 
     { res = simplifyIn(e2,e1,null); }
-    else if (op.equals("->count") & 
+    else if (op.equals("->count") && 
         e1 instanceof SetExpression) 
     { SetExpression col = (SetExpression) e1; 
       int cnt = col.count(e2);
       res = new BasicExpression(cnt);  
     }
-    else if (op.equals("->including") & 
+    else if (op.equals("->including") && 
         e1 instanceof SetExpression) 
     { SetExpression col = (SetExpression) e1; 
       res = SetExpression.including(col, e2);  
     }
-    else if (op.equals("->excluding") & 
+    else if (op.equals("->excluding") && 
         e1 instanceof SetExpression) 
     { SetExpression col = (SetExpression) e1; 
       res = SetExpression.excluding(col, e2);  
     }
-    else if (op.equals("->excludingFirst") & 
+    else if (op.equals("->includesAll") && 
+             e1 instanceof SetExpression && 
+             e2 instanceof SetExpression) 
+    { SetExpression se1 = (SetExpression) e1; 
+      SetExpression se2 = (SetExpression) e2; 
+      res = SetExpression.includesAll(se1, se2); 
+    }
+    else if (op.equals("<:") &&
+        e2 instanceof SetExpression &&  
+        e1 instanceof SetExpression) 
+    { SetExpression se1 = (SetExpression) e1; 
+      SetExpression se2 = (SetExpression) e2; 
+      res = SetExpression.includesAll(se2, se1);  
+    }
+    else if (op.equals("->excludesAll") && 
+             e1 instanceof SetExpression && 
+             e2 instanceof SetExpression) 
+    { SetExpression se1 = (SetExpression) e1; 
+      SetExpression se2 = (SetExpression) e2; 
+      res = SetExpression.excludesAll(se1, se2); 
+    }
+    else if (op.equals("->excludingFirst") && 
         e1 instanceof SetExpression) 
     { SetExpression col = (SetExpression) e1; 
       res = SetExpression.excludingFirst(col, e2);  
     }
-    else if (op.equals("->excludingAt") & 
+    else if (op.equals("->excludingAt") && 
         e1 instanceof SetExpression) 
     { SetExpression col = (SetExpression) e1;
       try { 
@@ -3169,16 +3340,30 @@ abstract class Expression
       catch (Exception _e)
       { res = new BinaryExpression("->excludingAt", col, e2); }  
     }
-    else if (op.equals("->excludingKey") & 
+    else if (op.equals("->excludingKey") && 
         e1 instanceof SetExpression) 
     { SetExpression col = (SetExpression) e1; 
       res = SetExpression.excludingKey(col, e2);  
     }
-    else if (op.equals("->excludingValue") & 
+    else if (op.equals("->excludingValue") && 
         e1 instanceof SetExpression) 
     { SetExpression col = (SetExpression) e1; 
       res = SetExpression.excludingValue(col, e2);  
     }
+    else if ("->restrict".equals(op) && 
+        e1 instanceof SetExpression && 
+        e2 instanceof SetExpression)
+    { SetExpression s1 = (SetExpression) e1; 
+      SetExpression s2 = (SetExpression) e2; 
+      res = SetExpression.restrict(s1, s2); 
+    }  
+    else if ("->antirestrict".equals(op) && 
+        e1 instanceof SetExpression && 
+        e2 instanceof SetExpression)
+    { SetExpression s1 = (SetExpression) e1; 
+      SetExpression s2 = (SetExpression) e2; 
+      res = SetExpression.antirestrict(s1, s2); 
+    }  
     else if (op.equals("/:")) 
     { res = simplifyNotIn(e1,e2,null); }
     else if (op.equals("->excludes")) 
@@ -3212,19 +3397,66 @@ abstract class Expression
   }
 
 
-  public static Expression simplifyPlus(Expression e1, Expression e2) 
+  public static Expression simplifyPlus(
+                              Expression e1, Expression e2) 
   { if (e1 == null) { return e2; } 
     if (e2 == null) { return e1; } 
+
+    if (Expression.isStringValue(e1) && 
+        Expression.isStringValue(e2))
+    { String s1 = "" + e1; 
+      String s2 = "" + e2; 
+      int n1 = s1.length(); 
+      String s = s1.substring(0,n1-1) + s2.substring(1); 
+      return new BasicExpression(s); 
+    } 
+
+    if (Expression.isStringValue(e1) && 
+        Expression.isInteger(e2))
+    { String s1 = "" + e1; 
+      String s2 = "" + e2; 
+      int n1 = s1.length(); 
+      String s = s1.substring(0,n1-1) + s2 + "\""; 
+      return new BasicExpression(s); 
+    } 
+
+    if (Expression.isStringValue(e1) && 
+        Expression.isNumber(e2))
+    { String s1 = "" + e1; 
+      String s2 = "" + e2; 
+      int n1 = s1.length(); 
+      String s = s1.substring(0,n1-1) + s2 + "\""; 
+      return new BasicExpression(s); 
+    } 
 
     if (isInteger("" + e1) && isInteger("" + e2))
     { int v1 = convertInteger("" + e1); 
       int v2 = convertInteger("" + e2); 
       return new BasicExpression(v1 + v2); 
     }
-    else if (isNumber("" + e1) && isNumber("" + e2))
+    
+    if (isNumber("" + e1) && isNumber("" + e2))
     { double v1 = convertNumber("" + e1); 
       double v2 = convertNumber("" + e2); 
       return new BasicExpression(v1 + v2); 
+    } 
+
+    if (Expression.isInteger(e1) && 
+        Expression.isStringValue(e2))
+    { String s1 = "" + e1; 
+      String s2 = "" + e2; 
+      int n1 = s2.length(); 
+      String s = "\"" + s1 + s2.substring(1); 
+      return new BasicExpression(s); 
+    } 
+
+    if (Expression.isNumber(e1) && 
+        Expression.isStringValue(e2))
+    { String s1 = "" + e1; 
+      String s2 = "" + e2; 
+      int n1 = s2.length(); 
+      String s = "\"" + s1 + s2.substring(1); 
+      return new BasicExpression(s); 
     } 
 
     return new BinaryExpression("+", e1, e2); 
@@ -3234,16 +3466,20 @@ abstract class Expression
   { if (e1 == null) { return simplifyUnaryMinus(e2); } 
     if (e2 == null) { return e1; } 
 
+    // also for strings
+
     if (isInteger("" + e1) && isInteger("" + e2))
     { int v1 = convertInteger("" + e1); 
       int v2 = convertInteger("" + e2); 
       return new BasicExpression(v1 - v2); 
     }
-    else if (isNumber("" + e1) && isNumber("" + e2))
+    
+    if (isNumber("" + e1) && isNumber("" + e2))
     { double v1 = convertNumber("" + e1); 
       double v2 = convertNumber("" + e2); 
       return new BasicExpression(v1 - v2); 
-    } 
+    }
+ 
     return new BinaryExpression("-", e1, e2); 
   }  
 
@@ -3256,11 +3492,13 @@ abstract class Expression
       int v2 = convertInteger("" + e2); 
       return new BasicExpression(v1 * v2); 
     }
-    else if (isNumber("" + e1) && isNumber("" + e2))
+    
+    if (isNumber("" + e1) && isNumber("" + e2))
     { double v1 = convertNumber("" + e1); 
       double v2 = convertNumber("" + e2); 
       return new BasicExpression(v1 * v2); 
-    } 
+    }
+ 
     return new BinaryExpression("*", e1, e2); 
   }  
 
@@ -3301,7 +3539,8 @@ abstract class Expression
       // case of v2 = 0 
       return new BasicExpression(v1 / v2); 
     }
-    else if (isNumber("" + e1) && isNumber("" + e2))
+    
+    if (isNumber("" + e1) && isNumber("" + e2))
     { double v1 = convertNumber("" + e1); 
       double v2 = convertNumber("" + e2); 
 
@@ -3337,7 +3576,8 @@ abstract class Expression
       // case of v2 = 0 
       return new BasicExpression(v1 / v2); 
     }
-    else if (isNumber("" + e1) && isNumber("" + e2))
+    
+    if (isNumber("" + e1) && isNumber("" + e2))
     { double v1 = convertNumber("" + e1); 
       double v2 = convertNumber("" + e2); 
 
@@ -3373,7 +3613,8 @@ abstract class Expression
        
       return new BasicExpression(v1 % v2); 
     }
-    else if (isNumber("" + e1) && isNumber("" + e2))
+    
+    if (isNumber("" + e1) && isNumber("" + e2))
     { double v1 = convertNumber("" + e1); 
       double v2 = convertNumber("" + e2); 
 
@@ -5797,8 +6038,13 @@ public static boolean conflictsReverseOp(String op1, String op2)
     System.out.println(Expression.isDoubleValue("3.0")); */ 
 
     System.out.println(Expression.simplify("/=", 
-            new BasicExpression(3.0), new BasicExpression(5.0), 
+            new BasicExpression(5.0), new BasicExpression(5), 
             false)); 
+
+    BasicExpression s1 = new BasicExpression("\"long\""); 
+    BasicExpression s2 = new BasicExpression("1554"); 
+
+    System.out.println(Expression.simplify("+", s2, s1, null)); 
 
   }   
 } 

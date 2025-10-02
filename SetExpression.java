@@ -293,6 +293,138 @@ public class SetExpression extends Expression
     return res;
   }
 
+  public static Expression includesAll(
+                                SetExpression left, 
+                                SetExpression right)
+  { // ->includesAll of two literal collections, maps
+
+    Type typ = left.getType(); 
+    Vector elems1 = left.getElements(); 
+    Vector elems2 = right.getElements(); 
+    Vector newelems = new Vector(); 
+    
+    boolean allincluded = true; 
+
+    if (Type.isSequenceType(typ) || Type.isSetType(typ))
+    { for (int i = 0; i < elems2.size(); i++) 
+      { Expression e2 = (Expression) elems2.get(i); 
+        if (VectorUtil.containsEqualExpression(
+                               e2 + "", elems1)) 
+        { }
+        else 
+        { allincluded = false;
+          break;
+        }  
+      }
+
+      if (allincluded) 
+      { return new BasicExpression(true); } 
+
+      Expression res = 
+        new BinaryExpression("->includesAll", left, right); 
+      return res; 
+    } 
+   
+    for (int i = 0; i < elems2.size(); i++) 
+    { BinaryExpression maplet2 = 
+          (BinaryExpression) elems2.get(i); 
+      Expression key2 = maplet2.getLeft();
+
+      for (int j = 0; j < elems1.size(); j++) 
+      { BinaryExpression maplet1 = 
+          (BinaryExpression) elems1.get(j); 
+        Expression key1 = maplet1.getLeft();
+ 
+        if ((key1 + "").equals(key2 + ""))
+        { // if maplet2 is same as maplet1, ok
+          if (("" + maplet1.getRight()).equals(
+               "" + maplet2.getRight()))
+          { } 
+          else 
+          { allincluded = false; 
+            break; 
+          } 
+          // An element of right is not in left.  
+        }
+
+        if (!allincluded) 
+        { break; } 
+      }
+
+      if (allincluded) 
+      { return new BasicExpression(true); } 
+    }
+
+    Expression res = 
+      new BinaryExpression("->includesAll", left, right); 
+    return res;
+  }
+
+  public static Expression excludesAll(
+                                SetExpression left, 
+                                SetExpression right)
+  { // ->excludesAll of two literal collections, maps
+
+    Type typ = left.getType(); 
+    Vector elems1 = left.getElements(); 
+    Vector elems2 = right.getElements(); 
+    Vector newelems = new Vector(); 
+    
+    boolean anyincluded = false; 
+
+    if (Type.isSequenceType(typ) || Type.isSetType(typ))
+    { for (int i = 0; i < elems2.size(); i++) 
+      { Expression e2 = (Expression) elems2.get(i); 
+        if (VectorUtil.containsEqualExpression(
+                               e2 + "", elems1)) 
+        { anyincluded = true; 
+          break; 
+        }
+          
+      }
+
+      if (anyincluded) 
+      { return new BasicExpression(false); } 
+
+      Expression res = 
+        new BinaryExpression("->excludesAll", left, right); 
+      return res; 
+    } 
+   
+    for (int i = 0; i < elems2.size(); i++) 
+    { BinaryExpression maplet2 = 
+          (BinaryExpression) elems2.get(i); 
+      Expression key2 = maplet2.getLeft();
+
+      for (int j = 0; j < elems1.size(); j++) 
+      { BinaryExpression maplet1 = 
+          (BinaryExpression) elems1.get(j); 
+        Expression key1 = maplet1.getLeft();
+ 
+        if ((key1 + "").equals(key2 + ""))
+        { // if maplet2 is same as maplet1, ok
+          if (("" + maplet1.getRight()).equals(
+               "" + maplet2.getRight()))
+          { anyincluded = true; 
+            break; 
+          } 
+           
+          // An element of right is in left.  
+        }
+
+        if (anyincluded) 
+        { break; } 
+      }
+
+      if (anyincluded) 
+      { return new BasicExpression(false); } 
+    }
+
+    Expression res = 
+      new BinaryExpression("->excludesAll", left, right); 
+    return res;
+  }
+
   public static SetExpression subtractSetExpressions(
                                 SetExpression left, 
                                 SetExpression right)
@@ -348,6 +480,116 @@ public class SetExpression extends Expression
     return res;
   }
 
+  public static SetExpression keys(SetExpression left)
+  { // for maps
+    Type ltype = left.getType(); 
+    Type typ = new Type("Set", null);
+
+    if (ltype != null)
+    { typ.setElementType(ltype.getKeyType()); } 
+    else 
+    { typ.setElementType(new Type("OclAny", null)); } 
+ 
+    Vector elems1 = left.getElements(); 
+       
+    Vector mapkeys = new Vector(); 
+    for (int i = 0; i < elems1.size(); i++) 
+    { BinaryExpression maplet1 = 
+          (BinaryExpression) elems1.get(i); 
+      Expression key1 = maplet1.getLeft();
+      key1.setBrackets(false); 
+      mapkeys.add(key1); 
+    }
+
+    SetExpression res = new SetExpression(mapkeys,typ); 
+    return res;
+  }
+
+  public static Expression includesKey(SetExpression left, 
+                                    Expression key)
+  { // for maps
+    Vector elems1 = left.getElements(); 
+       
+    for (int i = 0; i < elems1.size(); i++) 
+    { BinaryExpression maplet1 = 
+          (BinaryExpression) elems1.get(i); 
+      Expression key1 = maplet1.getLeft();
+      if (VectorUtil.test("=", "" + key1, "" + key))
+      { return new BasicExpression(true); }  
+    }
+
+    return new BinaryExpression("->includesKey", left, key);
+  }
+
+  public static Expression excludesKey(SetExpression left, 
+                                    Expression key)
+  { // for maps
+    Vector elems1 = left.getElements(); 
+       
+    for (int i = 0; i < elems1.size(); i++) 
+    { BinaryExpression maplet1 = 
+          (BinaryExpression) elems1.get(i); 
+      Expression key1 = maplet1.getLeft();
+      if (VectorUtil.test("=", "" + key1, "" + key))
+      { return new BasicExpression(false); }  
+    }
+
+    return new BinaryExpression("->excludesKey", left, key);
+  }
+
+  public static Expression includesValue(SetExpression left, 
+                                         Expression val)
+  { // for maps
+    Vector elems1 = left.getElements(); 
+       
+    for (int i = 0; i < elems1.size(); i++) 
+    { BinaryExpression maplet1 = 
+          (BinaryExpression) elems1.get(i); 
+      Expression val1 = maplet1.getRight();
+      if (VectorUtil.test("=", "" + val1, "" + val))
+      { return new BasicExpression(true); }  
+    }
+
+    return new BinaryExpression("->includesValue", left, val);
+  }
+
+  public static Expression excludesValue(SetExpression left, 
+                                         Expression val)
+  { // for maps
+    Vector elems1 = left.getElements(); 
+       
+    for (int i = 0; i < elems1.size(); i++) 
+    { BinaryExpression maplet1 = 
+          (BinaryExpression) elems1.get(i); 
+      Expression val1 = maplet1.getRight();
+      if (VectorUtil.test("=", "" + val1, "" + val))
+      { return new BasicExpression(false); }  
+    }
+
+    return new BinaryExpression("->excludesValue", left, val);
+  }
+
+  public static SetExpression values(SetExpression left)
+  { // for maps
+
+    Type typ = new Type("Set", null);
+    typ.setElementType(left.getElementType()); 
+ 
+    Vector elems1 = left.getElements(); 
+       
+    Vector mapvalues = new Vector(); 
+    for (int i = 0; i < elems1.size(); i++) 
+    { BinaryExpression maplet1 = 
+          (BinaryExpression) elems1.get(i); 
+      Expression val = maplet1.getRight();
+      val.setBrackets(false); 
+      mapvalues.add(val); 
+    }
+
+    SetExpression res = new SetExpression(mapvalues,typ); 
+    return res;
+  }
+
   public static SetExpression excludingKey(
                                 SetExpression left, 
                                 Expression right)
@@ -365,6 +607,56 @@ public class SetExpression extends Expression
       key1.setBrackets(false); 
 
       if (VectorUtil.test("=", (key1 + ""), (right + "")))
+      { } 
+      else 
+      { mapelems.add(maplet1); } 
+    }
+
+    SetExpression res = new SetExpression(mapelems,typ); 
+    return res;
+  }
+
+  public static SetExpression restrict(
+                                SetExpression left, 
+                                SetExpression right)
+  { // for maps  left->restrict(right)
+
+    Type typ = left.getType(); 
+    Vector elems1 = left.getElements(); 
+    Vector keys = right.getElements(); 
+       
+    Vector mapelems = new Vector(); 
+    for (int i = 0; i < elems1.size(); i++) 
+    { BinaryExpression maplet1 = 
+          (BinaryExpression) elems1.get(i); 
+      Expression key1 = maplet1.getLeft();
+      key1.setBrackets(false); 
+
+      if (VectorUtil.containsEqualExpression((key1 + ""), keys))
+      { mapelems.add(maplet1); } 
+    }
+
+    SetExpression res = new SetExpression(mapelems,typ); 
+    return res;
+  }
+
+  public static SetExpression antirestrict(
+                                SetExpression left, 
+                                SetExpression right)
+  { // for maps  left->antirestrict(right)
+
+    Type typ = left.getType(); 
+    Vector elems1 = left.getElements(); 
+    Vector keys = right.getElements(); 
+       
+    Vector mapelems = new Vector(); 
+    for (int i = 0; i < elems1.size(); i++) 
+    { BinaryExpression maplet1 = 
+          (BinaryExpression) elems1.get(i); 
+      Expression key1 = maplet1.getLeft();
+      key1.setBrackets(false); 
+
+      if (VectorUtil.containsEqualExpression((key1 + ""), keys))
       { } 
       else 
       { mapelems.add(maplet1); } 
@@ -529,6 +821,140 @@ public class SetExpression extends Expression
     Expression res = new SetExpression(newelems,ordered);
     res.setType(type); 
     res.setElementType(elementType); 
+    return res;  
+  } 
+
+  public SetExpression copy()
+  { Vector newelems = new Vector(); 
+
+    for (int i = 0; i < elements.size(); i++) 
+    { Expression elem = (Expression) elements.get(i); 
+      newelems.add(elem);  
+    }
+
+    SetExpression res = new SetExpression(newelems,ordered);
+    res.setType(type); 
+    res.setElementType(elementType); 
+    return res;  
+  } 
+
+  public Expression sum()
+  { Expression res = null; 
+
+    if ("int".equals(elementType + "") || 
+        "long".equals(elementType + ""))
+    { res = new BasicExpression(0); } 
+    else if ("double".equals(elementType + ""))
+    { res = new BasicExpression(0.0); } 
+    else 
+    { res = new BasicExpression("\"\""); }  
+
+    for (int i = 0; i < elements.size(); i++) 
+    { Expression elem = (Expression) elements.get(i); 
+      res = Expression.simplifyPlus(res, elem);  
+    }
+
+    return res;  
+  } 
+
+  public Expression prd()
+  { Expression res = null; 
+
+    if ("int".equals(elementType + "") || 
+        "long".equals(elementType + ""))
+    { res = new BasicExpression(1); } 
+    else if ("double".equals(elementType + ""))
+    { res = new BasicExpression(1.0); } 
+    else 
+    { res = new BasicExpression("Invalid"); 
+      return res; 
+    }  
+
+    for (int i = 0; i < elements.size(); i++) 
+    { Expression elem = (Expression) elements.get(i); 
+      res = Expression.simplifyMult(res, elem);  
+    }
+
+    return res;  
+  } 
+
+  public Expression max()
+  { Expression res = null;
+
+    if (elements.size() == 0) 
+    { return new BasicExpression("Invalid"); } 
+
+    res = (Expression) elements.get(0);  
+    String resv = "" + res; 
+
+    for (int i = 1; i < elements.size(); i++) 
+    { Expression elem = (Expression) elements.get(i); 
+      String es = "" + elem; 
+
+      if (Expression.isStringValue(resv) && 
+          Expression.isStringValue(es))
+      { String s1 = resv.substring(0, resv.length()-1); 
+        String s2 = es.substring(0, es.length()-1); 
+
+        if (s1.compareTo(s2) < 0)
+        { res = elem; 
+          resv = es; 
+        } 
+      } 
+      else if (Expression.isNumber(resv) && 
+               Expression.isNumber(es))
+      { double dr = Expression.convertNumber(resv); 
+        double de = Expression.convertNumber(es);
+ 
+        if (dr < de)
+        { res = elem; 
+          resv = es; 
+        }
+      }
+      else 
+      { return new UnaryExpression("->max", this); }  
+    }
+
+    return res;  
+  } 
+
+  public Expression min()
+  { Expression res = null;
+
+    if (elements.size() == 0) 
+    { return new BasicExpression("Invalid"); } 
+
+    res = (Expression) elements.get(0);  
+    String resv = "" + res; 
+
+    for (int i = 1; i < elements.size(); i++) 
+    { Expression elem = (Expression) elements.get(i); 
+      String es = "" + elem; 
+
+      if (Expression.isStringValue(resv) && 
+          Expression.isStringValue(es))
+      { String s1 = resv.substring(0, resv.length()-1); 
+        String s2 = es.substring(0, es.length()-1); 
+
+        if (s2.compareTo(s1) < 0)
+        { res = elem; 
+          resv = es; 
+        } 
+      } 
+      else if (Expression.isNumber(resv) && 
+               Expression.isNumber(es))
+      { double dr = Expression.convertNumber(resv); 
+        double de = Expression.convertNumber(es); 
+
+        if (de < dr)
+        { res = elem; 
+          resv = es; 
+        }
+      }
+      else 
+      { return new UnaryExpression("->min", this); }  
+    }
+
     return res;  
   } 
 
@@ -1294,7 +1720,7 @@ public class SetExpression extends Expression
       for (int i = 0; i < elements.size(); i++)
       { Expression elem = (Expression) elements.get(i);
         BasicExpression vari = (BasicExpression) var.clone();
-        SetExpression prev = subrange(1,i-1);
+        SetExpression prev = this.subrange(1,i-1);
         BinaryExpression subt = new BinaryExpression("-", vari, prev);
         UnaryExpression varelem = new UnaryExpression("->any", subt); 
         BinaryExpression seti = new BinaryExpression("=", elem, varelem );
@@ -1319,6 +1745,22 @@ public class SetExpression extends Expression
     res.setElementType(elementType); 
 
     res.setOrdered(isOrdered());
+    return res;
+  }
+
+  public static SetExpression integerSubrange(int i, int j)
+  { // OCL indexing Integer.subrange(i,j)
+
+    SetExpression res = new SetExpression();
+    for (int k = i; k <= j; k++)
+    { Expression e = new BasicExpression(k);
+      res.addElement(e);
+    }
+ 
+    res.setType(new Type("Sequence", null)); 
+    res.setElementType(new Type("int", null)); 
+
+    res.setOrdered(true);
     return res;
   }
 
@@ -1413,6 +1855,34 @@ public class SetExpression extends Expression
   }
 
   public static SetExpression insertAt(
+                                 SetExpression col, int i,  
+                                 Expression val)
+  { // OCL indexing i : 1..elements.size()
+    // similar to insertInto
+
+    Vector elems = col.getElements(); 
+    SetExpression res = new SetExpression();
+
+    for (int k = 0; k < i-1; k++) 
+    { Expression expr = (Expression) elems.get(k); 
+      res.addElement(expr); 
+    } 
+
+    res.addElement(val); 
+
+    for (int k = i-1; k < elems.size(); k++)
+    { Expression e = (Expression) elems.get(k);
+      res.addElement(e);
+    }
+ 
+    res.setType(col.type); 
+    res.setElementType(col.elementType); 
+
+    res.setOrdered(col.isOrdered());
+    return res;
+  }
+
+  public static SetExpression setAt(
                                  SetExpression col, int i,  
                                  Expression val)
   { // OCL indexing i : 1..elements.size()
@@ -2144,17 +2614,23 @@ public class SetExpression extends Expression
   { SetExpression expr = new SetExpression(); 
     expr.addElement(new BasicExpression(1)); 
     expr.addElement(new BasicExpression(2)); 
-    expr.addElement(new BasicExpression(3)); 
+    expr.addElement(new BasicExpression(7)); 
     expr.addElement(new BasicExpression(1)); 
     expr.addElement(new BasicExpression(2)); 
     expr.addElement(new BasicExpression(3));
+    expr.setType(new Type("Sequence", null));
+    expr.setElementType(new Type("int", null));  
 
     SetExpression val = new SetExpression(); 
-    val.addElement(new BasicExpression(0)); 
-    val.addElement(new BasicExpression(0)); 
+    val.addElement(new BasicExpression("\"aa\"")); 
+    val.addElement(new BasicExpression("\"z\"")); 
+    val.addElement(new BasicExpression("\"xa\"")); 
+    val.setType(new Type("Sequence", null)); 
+    val.setElementType(new Type("String", null));  
 
-    System.out.println(SetExpression.setSubrange(expr, 2, 4, val));  
-    System.out.println(expr.subrange(2,4)); 
+    System.out.println(expr.min());  
+
+    System.out.println(val.min());  
   } 
 
 }

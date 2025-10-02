@@ -16996,6 +16996,217 @@ public Statement generateDesignSubtract(Expression rhs)
       return res; 
     } 
 
+    if (umlkind == Expression.FUNCTION)
+    { if (data.equals("insertInto")) 
+      { Expression obj = this.getObjectRef(); 
+        Expression col = obj.evaluate(sigma, beta); 
+
+        Expression indx = (Expression) parameters.get(0); 
+        Expression valx = (Expression) parameters.get(1); 
+
+        Expression ind = indx.evaluate(sigma, beta); 
+        Expression val = valx.evaluate(sigma, beta); 
+
+        if (col instanceof SetExpression && 
+            Expression.isIntegerValue("" + ind) && 
+            val instanceof SetExpression) 
+        { int index = Expression.convertInteger("" + ind); 
+          return SetExpression.insertInto(
+                    (SetExpression) col, index, 
+                    (SetExpression) val); 
+        } 
+        else 
+        { Vector vect = new Vector(); 
+          vect.add(ind); 
+          vect.add(val); 
+          return BasicExpression.newFunctionBasicExpression(
+                      "insertInto", col, vect); 
+        } 
+      } 
+
+      if (data.equals("insertAt")) 
+      { Expression obj = this.getObjectRef(); 
+        Expression col = obj.evaluate(sigma, beta); 
+
+        Expression indx = (Expression) parameters.get(0); 
+        Expression valx = (Expression) parameters.get(1); 
+
+        Expression ind = indx.evaluate(sigma, beta); 
+        Expression val = valx.evaluate(sigma, beta); 
+
+        if (col instanceof SetExpression && 
+            Expression.isIntegerValue("" + ind)) 
+        { int index = Expression.convertInteger("" + ind); 
+          return SetExpression.insertAt(
+                    (SetExpression) col, index, 
+                    val); 
+        } 
+        else 
+        { Vector vect = new Vector(); 
+          vect.add(ind); 
+          vect.add(val); 
+          return BasicExpression.newFunctionBasicExpression(
+                      "insertAt", col, vect); 
+        } 
+      } 
+
+      if (data.equals("setAt")) 
+      { Expression obj = this.getObjectRef(); 
+        Expression col = obj.evaluate(sigma, beta); 
+
+        Expression indx = (Expression) parameters.get(0); 
+        Expression valx = (Expression) parameters.get(1); 
+
+        Expression ind = indx.evaluate(sigma, beta); 
+        Expression val = valx.evaluate(sigma, beta); 
+
+        if (col instanceof SetExpression && 
+            Expression.isIntegerValue("" + ind)) 
+        { int index = Expression.convertInteger("" + ind); 
+          return SetExpression.setAt(
+                    (SetExpression) col, index, 
+                    val); 
+        } 
+        else 
+        { Vector vect = new Vector(); 
+          vect.add(ind); 
+          vect.add(val); 
+          return BasicExpression.newFunctionBasicExpression(
+                      "setAt", col, vect); 
+        } 
+      } 
+
+      if (data.equals("excludingSubrange")) 
+      { Expression obj = this.getObjectRef(); 
+        Expression col = obj.evaluate(sigma, beta); 
+
+        Expression ind1x = (Expression) parameters.get(0); 
+        Expression ind2x = (Expression) parameters.get(1); 
+
+        Expression ind1 = ind1x.evaluate(sigma, beta); 
+        Expression ind2 = ind2x.evaluate(sigma, beta); 
+
+        if (col instanceof SetExpression && 
+            Expression.isIntegerValue("" + ind1) && 
+            Expression.isIntegerValue("" + ind2)) 
+        { int index1 = Expression.convertInteger("" + ind1); 
+          int index2 = Expression.convertInteger("" + ind2); 
+          return SetExpression.excludingSubrange(
+                    (SetExpression) col, index1, index2); 
+        } 
+        else 
+        { Vector vect = new Vector(); 
+          vect.add(ind1); 
+          vect.add(ind2); 
+          return BasicExpression.newFunctionBasicExpression(
+                      "excludingSubrange", col, vect); 
+        } 
+      } 
+
+      if (data.equals("subrange") && 
+          "Integer".equals("" + objectRef))
+      { Expression par1 = (Expression) parameters.get(0); 
+        Expression par2 = (Expression) parameters.get(1); 
+ 
+        Expression val1 = par1.evaluate(sigma, beta); 
+        Expression val2 = par2.evaluate(sigma, beta); 
+
+        if (Expression.isIntegerValue("" + val1) && 
+            Expression.isIntegerValue("" + val2))
+        { int v1 = Expression.convertInteger("" + val1); 
+          int v2 = Expression.convertInteger("" + val2); 
+          
+          return SetExpression.integerSubrange(v1, v2);
+        } 
+        else 
+        { Vector vect = new Vector(); 
+          vect.add(val1); 
+          vect.add(val2); 
+          return BasicExpression.newFunctionBasicExpression(
+                      "subrange", "Integer", vect); 
+        } 
+      } 
+
+      if (data.equals("subrange") && parameters.size() == 2) 
+      { Expression obj = this.getObjectRef(); 
+        Expression col = obj.evaluate(sigma, beta); 
+
+        Expression ind1x = (Expression) parameters.get(0); 
+        Expression ind2x = (Expression) parameters.get(1); 
+
+        Expression ind1 = ind1x.evaluate(sigma, beta); 
+        Expression ind2 = ind2x.evaluate(sigma, beta); 
+
+        if (col instanceof SetExpression && 
+            Expression.isIntegerValue("" + ind1) && 
+            Expression.isIntegerValue("" + ind2)) 
+        { int index1 = Expression.convertInteger("" + ind1); 
+          int index2 = Expression.convertInteger("" + ind2); 
+          return ((SetExpression) col).subrange(index1, index2); 
+        } 
+        else 
+        { Vector vect = new Vector(); 
+          vect.add(ind1); 
+          vect.add(ind2); 
+          return BasicExpression.newFunctionBasicExpression(
+                      "subrange", col, vect); 
+        } 
+      } // or subrange of a string
+
+      if (data.equals("subrange") && parameters.size() == 1) 
+      { Expression obj = this.getObjectRef(); 
+        Expression col = obj.evaluate(sigma, beta); 
+
+        Expression ind1x = (Expression) parameters.get(0); 
+ 
+        Expression ind1 = ind1x.evaluate(sigma, beta); 
+ 
+        if (col instanceof SetExpression && 
+            Expression.isIntegerValue("" + ind1)) 
+        { int index1 = Expression.convertInteger("" + ind1); 
+          return ((SetExpression) col).subrange(index1); 
+        } 
+        else 
+        { Vector vect = new Vector(); 
+          vect.add(ind1); 
+          return BasicExpression.newFunctionBasicExpression(
+                      "subrange", col, vect); 
+        } 
+      } // could also be a string
+
+      if (data.equals("setSubrange")) 
+      { Expression obj = this.getObjectRef(); 
+        Expression col = obj.evaluate(sigma, beta); 
+
+        Expression ind1x = (Expression) parameters.get(0); 
+        Expression ind2x = (Expression) parameters.get(1); 
+        Expression valx = (Expression) parameters.get(2); 
+
+        Expression ind1 = ind1x.evaluate(sigma, beta); 
+        Expression ind2 = ind2x.evaluate(sigma, beta); 
+        Expression val = valx.evaluate(sigma, beta); 
+
+        if (col instanceof SetExpression && 
+            Expression.isIntegerValue("" + ind1) && 
+            Expression.isIntegerValue("" + ind2) && 
+            val instanceof SetExpression) 
+        { int index1 = Expression.convertInteger("" + ind1); 
+          int index2 = Expression.convertInteger("" + ind2); 
+          return SetExpression.setSubrange(
+                    (SetExpression) col, index1, index2, 
+                    (SetExpression) val); 
+        } 
+        else 
+        { Vector vect = new Vector(); 
+          vect.add(ind1); 
+          vect.add(ind2); 
+          vect.add(val); 
+          return BasicExpression.newFunctionBasicExpression(
+                      "setSubrange", col, vect); 
+        } 
+      } 
+    } 
+
     return this;  
   } 
 
