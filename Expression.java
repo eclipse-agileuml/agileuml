@@ -1621,6 +1621,30 @@ abstract class Expression
     return "SystemTypes.makeSet(" + obj + ")";
   }
 
+  public String makeSetCSharp()
+  { String obj = "" + this; 
+
+    return "SystemTypes.makeSet(" + obj + ")";
+  }
+
+  public String makeSequenceCSharp(String qf)
+  { String obj = qf; 
+
+    return "SystemTypes.makeSequence(" + obj + ")";
+  }
+
+  public String makeSortedSetCSharp(String qf)
+  { String obj = qf; 
+
+    return "SystemTypes.makeSortedSet(" + obj + ")";
+  }
+
+  public String makeSortedSetCSharp()
+  { String obj = "" + this; 
+
+    return "SystemTypes.makeSortedSet(" + obj + ")";
+  }
+
   public String makeSetCPP(String qf)
   { String obj = qf; 
 
@@ -2999,6 +3023,23 @@ abstract class Expression
     if (op.equals("->values") && arg instanceof SetExpression)
     { SetExpression se = (SetExpression) arg; 
       return SetExpression.values(se); 
+    } 
+
+    if (op.equals("->asSet") && arg instanceof SetExpression)
+    { SetExpression se = (SetExpression) arg; 
+      return SetExpression.asSet(se); 
+    } 
+
+    if (op.equals("->isEmpty") && arg instanceof SetExpression)
+    { SetExpression se = (SetExpression) arg; 
+      boolean emp = se.isEmpty();
+      return new BasicExpression(emp);  
+    } 
+
+    if (op.equals("->notEmpty") && arg instanceof SetExpression)
+    { SetExpression se = (SetExpression) arg; 
+      boolean emp = se.notEmpty();
+      return new BasicExpression(emp);  
     } 
 
     return arg; 

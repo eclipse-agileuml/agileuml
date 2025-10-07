@@ -853,10 +853,20 @@ public class Association extends ModelElement
   public void generateCSharp(PrintWriter out)
   { String qual = ""; 
     String initialiser = " = new ArrayList()"; 
+
+    if (entity2 == null) { return; } // invalid association
+
+    String e2name = entity2.getName(); 
+
+    if (ordered) { } 
+    else 
+    { initialiser = " = new HashSet<" + e2name + ">"; } 
+
     if (frozen) 
     { qual = "const ";
       initialiser = ""; 
     }
+
     if (role2 != null)  // attribute of entity1
     { if (entity1.isAbstract())
       { out.print("  protected " + qual); } 
@@ -866,12 +876,16 @@ public class Association extends ModelElement
       if (qualifier != null)
       { out.println("Hashtable " + role2 + " = new Hashtable();"); } 
       else if (card2 == ONE)
-      { out.println(entity2.getName() + " " + role2 + ";"); }
-      else
+      { out.println(e2name + " " + role2 + ";"); }
+      else if (ordered)
       { out.println("ArrayList " +
-                    role2 + initialiser + "; // of " +
-                    entity2.getName());
+                 role2 + initialiser + "; // of " + e2name);
       }
+      else 
+      { out.println("HashSet<" + e2name + "> " + 
+                 role2 + initialiser + "; // of " + e2name);
+      }
+
     }
   }  // not valid for a..b a > 0. Should be array then?
 
@@ -1013,22 +1027,28 @@ String qual = "";
   { out.print(" // "); 
     String qual = ""; 
     String initialiser = " = new ArrayList()"; 
+
     if (frozen) 
     { qual = "const ";
       initialiser = ""; 
     }
+
     if (role2 != null)  // attribute of entity1
-    { out.print("  protected " + qual);  
+    { String e2name = entity2.getName(); 
+
+      out.print("  protected " + qual);  
       if (qualifier != null)
       { out.println("Hashtable " + role2 + " = new Hashtable();"); } 
       else if (card2 == ONE)
-      { out.println(entity2.getName() + " " +
-                    role2 + ";");
-      }
-      else
+      { out.println(e2name + " " + role2 + ";"); }
+      else if (ordered)
       { out.println("ArrayList " +
                     role2 + initialiser + "; // of " +
-                    entity2.getName());
+                    e2name);
+      }
+      else 
+      { out.println("HashSet<" + e2name + "> " + 
+                    role2 + " = new HashSet<" + e2name + ">()");
       }
     }
   }  // not valid for a..b a > 0. Should be array then?
@@ -1073,11 +1093,16 @@ String qual = "";
 
   public String constructorParameterCSharp()
   { if (role2 != null && qualifier == null)
-    { if (card2 == ONE)
-      { return entity2.getName() + " " + role2; }  // and for a..b, a>0
+    { String e2name = entity2.getName(); 
+
+      if (card2 == ONE)
+      { return e2name + " " + role2; }  // and for a..b, a>0
+      else if (frozen && ordered)
+      { return "ArrayList " + role2; }
       else if (frozen)
-      { return "ArrayList " + role2; } 
+      { return "HashSet<" + e2name + "> " + role2; }  
     }
+
     return null; 
   }
 
@@ -1754,11 +1779,16 @@ String qual = "";
   public String setOperationCSharp(Entity ent, Vector cons,
                              Vector entities, Vector types)
   { if (role2 == null) { return ""; }
+
+    if (entity2 == null) { return ""; }
+
     if (frozen) { return ""; } 
+
     if (qualifier != null) 
     { return qualifiedSetOperationCSharp(ent,cons,entities,types); } 
 
     String nme = role2; 
+    String e2name = entity2.getName(); 
     String val = nme + "_xx"; 
     BasicExpression valbe = new BasicExpression(val); 
 
@@ -1817,9 +1847,11 @@ String qual = "";
           code = code + update + "\n";
         } 
       }
-      else if (cc.getEvent() == null && cc.involvesFeature(nme))
-      { Constraint cpre = (Constraint) cc.substituteEq(nme,valbe); 
-        System.out.println("Possible precond for set" + nme + ": " + cpre); 
+      else if (cc.getEvent() == null && 
+               cc.involvesFeature(nme))
+      { Constraint cpre = 
+          (Constraint) cc.substituteEq(nme,valbe); 
+        // System.out.println("+++> Possible precond for set" + nme + ": " + cpre); 
       }
 
     }
@@ -1831,7 +1863,7 @@ String qual = "";
     //                    role2 + "xx) != null) { return; }\n";
     if (card2 == ONE)
     { return "public " + sync + "void set" + role2 + "(" +
-             entity2.getName() + " " + val + 
+             e2name + " " + val + 
              ") { " + assign + "\n" + code + "  }";
     }
     else  // but not a set/sequence type in pars? 
@@ -1853,7 +1885,8 @@ String qual = "";
           { cntxs.add(cnew.getOwner()); } 
           boolean typed = cnew.typeCheck(types,entities,cntxs); 
           if (typed)
-          { String update = cnew.updateOperationCSharp(ent,nme,true);  
+          { String update = 
+              cnew.updateOperationCSharp(ent,nme,true);  
             addcode = addcode + update + "\n";
           } 
         }
@@ -1871,7 +1904,8 @@ String qual = "";
           { cntxs.add(cnew.getOwner()); } 
           boolean typed = cnew.typeCheck(types,entities,cntxs); 
           if (typed)
-          { String update = cnew.updateOperationCSharp(ent,nme,true);  
+          { String update = 
+              cnew.updateOperationCSharp(ent,nme,true);  
             removecode = removecode + update + "\n";
           } 
         }
@@ -1880,24 +1914,36 @@ String qual = "";
       String setindop = ""; 
 
       if (ordered)
-      { setindop = " public " + sync + "void set" + role2 + "(int ind_x," + 
-                                 entity2.getName() + " " + val + 
-                   ") { if (ind_x >= 0 && ind_x < " + role2 + ".size()) { " + role2 + "[ind_x] = " + val + "; } }\n\n"; 
+      { setindop = 
+        " public " + sync + "void set" + role2 + 
+            "(int ind_x," + e2name + " " + val + 
+        ") { if (ind_x >= 0 && ind_x < " + role2 + ".size()) { " + role2 + "[ind_x] = " + val + "; } }\n\n"; 
       }
 
       if (card2 == ZEROONE)
-      { if (addOnly)
+      { if (addOnly && ordered)
         { return "public " + sync + "void set" + role2 + "(ArrayList " +
              val +
              ") { if (" + val + ".Count > 1) { return; } \n" +
              "    " + assign + "\n" + code + "  }" + "\n \n " + setindop + 
              " public " + sync + "void add" + role2 + "(" +
-             entity2.getName() + " " + val + 
+             e2name + " " + val + 
              ") { if (" + role2 + ".Count > 0) { return; } \n" +
              "    " + addassign +
              "\n  " + addcode + "  }" + "\n \n ";
         } 
-        else 
+        else if (addOnly)
+        { return "public " + sync + "void set" + role2 + 
+             "(HashSet<" + e2name + "> " + val +
+             ") { if (" + val + ".Count > 1) { return; } \n" +
+             "    " + assign + "\n" + code + "  }" + "\n \n " + setindop + 
+             " public " + sync + "void add" + role2 + "(" +
+             e2name + " " + val + 
+             ") { if (" + role2 + ".Count > 0) { return; } \n" +
+             "    " + addassign +
+             "\n  " + addcode + "  }" + "\n \n ";
+        } 
+        else if (ordered)
         { return "public " + sync + "void set" + role2 + "(ArrayList " +
              val +
              ") { if (" + val + ".Count > 1) { return; } \n" +
@@ -1912,27 +1958,65 @@ String qual = "";
              entity2.getName() + " " + val +
              ") { " + remassign + "\n  " + removecode + "  }";
         }
+        else // set
+        { return "public " + sync + "void set" + role2 + 
+             "(HashSet<" + e2name + "> " + val +
+             ") { if (" + val + ".Count > 1) { return; } \n" +
+             "    " + assign + "\n" + code + "  }" + "\n \n " +
+             setindop + 
+             " public " + sync + "void add" + role2 + "(" +
+             e2name + " " + val + 
+             ") { if (" + role2 + ".Count > 0) { " + role2 + ".Clear(); } \n" +
+             "    " + addassign +
+             "\n  " + addcode + "  }" + "\n \n " + 
+             " public " + sync + "void remove" + role2 + "(" +
+             e2name + " " + val +
+             ") { " + remassign + "\n  " + removecode + "  }";
+        }
       }
-      else
-      { if (addOnly)
+      else // MANY multiplicity
+      { if (addOnly && ordered)
         { return "public " + sync + "void set" + role2 + "(ArrayList " +
              val + ") { " + assign + "\n" + 
              code + "  }" + "\n \n " + setindop + 
              " public " + sync + "void add" + role2 + "(" +
-             entity2.getName() + " " + val + 
+             e2name + " " + val + 
              ") { " + addassign +
              "\n  " + addcode + "  }" + "\n \n ";
         }
-        else 
+        else if (addOnly)
+        { return "public " + sync + "void set" + role2 + 
+             "(HashSet<" + e2name + "> " +
+             val + ") { " + assign + "\n" + 
+             code + "  }" + "\n \n " + setindop + 
+             " public " + sync + "void add" + role2 + "(" +
+             e2name + " " + val + 
+             ") { " + addassign +
+             "\n  " + addcode + "  }" + "\n \n ";
+        }
+        else if (ordered)
         { return "public " + sync + "void set" + role2 + "(ArrayList " +
              val + ") { " + assign + "\n  " + code + "  }" + "\n \n " +
              setindop + 
              " public " + sync + "void add" + role2 + "(" +
-             entity2.getName() + " " + val + 
+             e2name + " " + val + 
              ") { " + addassign +
              "\n  " + addcode + "  }" + "\n \n " + 
              " public " + sync + "void remove" + role2 + "(" +
-             entity2.getName() + " " + val + ") { " + remassign +
+             e2name + " " + val + ") { " + remassign +
+             "\n  " + removecode + "  }";
+        }
+        else 
+        { return "public " + sync + "void set" + role2 + 
+             "(HashSet<" + e2name + "> " +
+             val + ") { " + assign + "\n  " + code + "  }" + "\n \n " +
+             setindop + 
+             " public " + sync + "void add" + role2 + "(" +
+             e2name + " " + val + 
+             ") { " + addassign +
+             "\n  " + addcode + "  }" + "\n \n " + 
+             " public " + sync + "void remove" + role2 + "(" +
+             e2name + " " + val + ") { " + remassign +
              "\n  " + removecode + "  }";
         }
       }
@@ -2386,11 +2470,14 @@ String qual = "";
 
   public String setInterfaceOperationCSharp(Entity ent)
   { if (role2 == null) { return ""; }
+    if (entity2 == null) { return ""; }
     if (frozen) { return ""; } 
+
     // if (qualifier != null) 
     // { return qualifiedSetOperation(ent,cons,entities,types); } 
 
     String nme = role2; 
+    String e2name = entity2.getName(); 
     String val = nme + "xx"; 
     BasicExpression valbe = new BasicExpression(val); 
 
@@ -2404,47 +2491,88 @@ String qual = "";
     valt.setElementType(new Type(entity2)); 
 
     if (card2 == ONE)
-    { return "  void set" + role2 + "(" + entity2.getName() + " " + role2 + "xx);"; }
+    { return "  void set" + role2 + 
+             "(" + e2name + " " + role2 + "xx);"; 
+    }
     else  // but not a set/sequence type in pars? 
     { String setindop = ""; 
 
       if (ordered)
       { setindop = " void set" + role2 + "(int ind_x," + 
-                                 entity2.getName() + " " + role2 + "xx);\n\n"; 
+                   e2name + " " + role2 + "xx);\n\n"; 
       }
 
       if (card2 == ZEROONE)
-      { if (addOnly)
+      { if (addOnly && ordered)
         { return "  void set" + role2 + "(ArrayList " + role2 + "xx);\n \n " + setindop + 
-             "  void add" + role2 + "(" + entity2.getName() + " " + role2 + 
+             "  void add" + role2 + "(" + e2name + " " + role2 + 
              "xx);" + "\n \n ";
         } 
-        else 
+        else if (addOnly)
+        { return "  void set" + role2 + 
+             "(HashSet<" + e2name + "> " + role2 + "xx);\n \n " + 
+             setindop + 
+             "  void add" + role2 + "(" + e2name + " " + role2 + 
+             "xx);" + "\n \n ";
+        } 
+        else if (ordered)
         { return "  void set" + role2 + "(ArrayList " +
              role2 + "xx);" + "\n \n " +
              setindop + 
              "  void add" + role2 + "(" +
-             entity2.getName() + " " + role2 + 
+             e2name + " " + role2 + 
              "xx);" + "\n \n " + 
              "  void remove" + role2 + "(" +
-             entity2.getName() + " " + role2 +
+             e2name + " " + role2 +
+             "xx);";
+        }
+        else 
+        { return "  void set" + role2 + 
+             "(HashSet<" + e2name + "> " +
+             role2 + "xx);" + "\n \n " +
+             setindop + 
+             "  void add" + role2 + "(" +
+             e2name + " " + role2 + 
+             "xx);" + "\n \n " + 
+             "  void remove" + role2 + "(" +
+             e2name + " " + role2 +
              "xx);";
         }
       }
       else
-      { if (addOnly)
-        { return "  void set" + role2 + "(ArrayList " + role2 + "xx);\n \n " + setindop + 
+      { if (addOnly && ordered)
+        { return "  void set" + role2 + 
+             "(ArrayList " + role2 + "xx);\n \n " + setindop + 
              "  void add" + role2 + "(" +
-             entity2.getName() + " " + role2 + "xx);\n \n ";
+             e2name + " " + role2 + "xx);\n \n ";
         }
-        else 
-        { return "  void set" + role2 + "(ArrayList " + role2 + "xx);\n \n " +
+        else if (addOnly)
+        { return "  void set" + role2 + 
+             "(HashSet<" + e2name + "> " + role2 + "xx);\n \n " + 
              setindop + 
              "  void add" + role2 + "(" +
-             entity2.getName() + " " + role2 + 
+             e2name + " " + role2 + "xx);\n \n ";
+        }
+        else if (ordered)
+        { return "  void set" + role2 + 
+             "(ArrayList " + role2 + "xx);\n \n " +
+             setindop + 
+             "  void add" + role2 + "(" +
+             e2name + " " + role2 + 
              "xx);\n \n " + 
              "  void remove" + role2 + "(" +
-             entity2.getName() + " " + role2 +
+             e2name + " " + role2 +
+             "xx);";
+        }
+        else 
+        { return "  void set" + role2 + 
+             "(HashSet<" + e2name + "> " + role2 + "xx);\n \n " +
+             setindop + 
+             "  void add" + role2 + "(" +
+             e2name + " " + role2 + 
+             "xx);\n \n " + 
+             "  void remove" + role2 + "(" +
+             e2name + " " + role2 +
              "xx);";
         }
       }
@@ -2703,13 +2831,20 @@ String qual = "";
     return setindop + addindop + remindop + remop;  
   }  // and the general remove. removeAll is better than remove. 
 
-  public String qualifiedSetOperationCSharp(Entity ent, Vector cons,
-                                            Vector entities, Vector types)
-  { String argtype = ""; 
+  public String qualifiedSetOperationCSharp(
+                     Entity ent, Vector cons,
+                     Vector entities, Vector types)
+  { // Operations for qualified association 
+
+    String argtype = ""; 
     String e2name = entity2.getName(); 
 
     if (card2 == MANY || card2 == ZEROONE)
-    { argtype = "ArrayList"; } 
+    { if (ordered)
+      { argtype = "ArrayList"; }
+      else 
+      { argtype = "HashSet<" + e2name + ">"; }
+    }  
     else 
     { argtype = e2name; } 
     
@@ -2733,15 +2868,24 @@ String qual = "";
     if (card2 == ONE) 
     { return setindop + rem1op; } 
 
-    String test = 
+    String test = ""; 
+
+    String testseq = 
       "   if (_old" + role2 + " == null)\n" + 
       "   { _old" + role2 + " = new ArrayList();\n" + 
       "    " + role2 + "[_ind] = _old" + role2 + ";\n" + 
       "   }\n"; 
 
-    if (ordered) { } 
+    String testset = 
+      "   if (_old" + role2 + " == null)\n" + 
+      "   { _old" + role2 + " = new HashSet<" + e2name + ">();\n" + 
+      "    " + role2 + "[_ind] = _old" + role2 + ";\n" + 
+      "   }\n"; 
+
+    if (ordered) 
+    { test = testseq; } 
     else 
-    { test = test + "   if (_old" + role2 + ".Contains(" + role2 + "xx)) { return; }\n"; }
+    { test = testset; }
  
     String addindop = 
       " public void add" + role2 + 
@@ -2749,9 +2893,20 @@ String qual = "";
       " { ArrayList _old" + role2 + " = (ArrayList) " + role2 + "[_ind];\n" + test + 
       "   _old" + role2 + ".Add(" + role2 + "xx); \n" + 
       " }\n\n"; 
+
+    String addindopset = 
+      " public void add" + role2 + 
+        "(string _ind, " + e2name + " " + role2 + "xx)\n" + 
+      " { HashSet<" + e2name + "> _old" + role2 + 
+      " = (HashSet<" + e2name + ">) " + role2 + "[_ind];\n" + test + 
+      "   _old" + role2 + ".Add(" + role2 + "xx); \n" + 
+      " }\n\n"; 
     
-    if (addOnly) 
+    if (addOnly && ordered) 
     { return setindop + addindop; } 
+
+    if (addOnly) 
+    { return setindop + addindopset; } 
 
     String remtest = 
       "   if (_old" + role2 + " == null) { return; }\n";
@@ -2775,8 +2930,21 @@ String qual = "";
       "     " + role2 + "[_k] = SystemTypes.subtract(" + role2 + "[_k], _remove" + role2 + ");\n" + 
       "    }\n" + 
       " }\n\n";  
+
+    if (ordered)
+    { return setindop + addindop + remindop + remop; } 
+
+    String remindopset = 
+      " public void remove" + role2 + 
+        "(string _ind, " + e2name + " " + role2 + "xx)\n" + 
+      " { HashSet<" + e2name + "> _old" + role2 + 
+      " = (HashSet<" + e2name + ">) " + role2 + "[_ind];\n" + remtest + 
+      "   ArrayList _remove" + role2 + " = new ArrayList();\n" + 
+      "   _remove" + role2 + ".Add(" + role2 + "xx);\n" + 
+      "   _old" + role2 + " = SystemTypes.subtract(_old" + role2 + ", _remove" + role2 + "); \n" + 
+      " }\n\n";
     
-    return setindop + addindop + remindop + remop;  
+    return setindop + addindop + remindopset + remop;  
   }  // and the general remove. removeAll is better than remove. 
 
   public String qualifiedSetOperationCPP(Entity ent, Vector cons,
@@ -3291,6 +3459,9 @@ String qual = "";
   { // public static void setAllrole(ArrayList es, T val)
     // { update e.role for e in es }
     if (frozen) { return ""; } 
+    if (entity2 == null) 
+    { return ""; } 
+
     String qualt = ""; 
     String qual = ""; 
     if (qualifier != null) 
@@ -3302,7 +3473,11 @@ String qual = "";
     String e2name = entity2.getName();
     String typ = e2name; 
     if (card2 != ONE)
-    { typ = "ArrayList"; }
+    { if (ordered)
+      { typ = "ArrayList"; }
+      else 
+      { typ = "HashSet<" + e2name + ">"; } 
+    } 
 
     String es = ename.toLowerCase() + "_s";
     String res = "public static void setAll" + role2;
@@ -3475,6 +3650,9 @@ String qual = "";
     // { add val to e.role for e in es } 
 
     if (frozen) { return ""; } 
+    if (entity2 == null) 
+    { return ""; } 
+
     String qualt = ""; 
     String qual = ""; 
     if (qualifier != null) 
@@ -3616,7 +3794,10 @@ String qual = "";
   public String removeAllOperationCSharp(String ename)
   { // public static void addAllrole(ArrayList es, T val)
     // { remove val from e.role for e in es } 
-    if (frozen || addOnly) { return ""; } 
+    if (frozen || addOnly) { return ""; }
+    if (entity2 == null)
+    { return ""; } 
+ 
     String qualt = ""; 
     String qual = ""; 
     if (qualifier != null) 
@@ -3769,6 +3950,7 @@ String qual = "";
   { // public static void unionAllrole(ArrayList es, ArrayList val)
     // { add val to e.role for e in es } 
     if (frozen) { return ""; } 
+
     String qualt = ""; 
     String qual = ""; 
     if (qualifier != null) 
@@ -3926,6 +4108,7 @@ String qual = "";
   { // public static void subtractAllrole(ArrayList es, ArrayList val)
     // { remove val from e.role for e in es } 
     if (frozen || addOnly) { return ""; } 
+
     String qualt = ""; 
     String qual = ""; 
     if (qualifier != null) 
@@ -4102,30 +4285,45 @@ String qual = "";
 
   public String getOperationCSharp()
   { if (role2 == null) { return null; }
+    if (entity2 == null) 
+    { return null; } 
+
     String e2name = entity2.getName() + ""; 
 
     if (qualifier != null) 
     { if (card2 == ONE) 
       { return "public " + e2name + " get" +
-             role2 + "(string _ind) { return (" + e2name + ") " + 
-                                        role2 + "[_ind]; }\n\n" + 
-			"  public Dictionary get" + role2 + "() { return " + role2 + "; }\n";
+          role2 + "(string _ind) { return (" + e2name + ") " + 
+                    role2 + "[_ind]; }\n\n" + 
+          "  public Dictionary get" + role2 + "() { return " + role2 + "; }\n";
+      } 
+      else if (ordered) 
+      { return "public ArrayList get" +
+          role2 + "(string _ind) { return (ArrayList) " + role2 + "[_ind]; }\n\n" + 
+          "  public Dictionary get" + role2 + "() { return " + role2 + "; }\n";
       } 
       else 
-      { return "public ArrayList get" +
-             role2 + "(string _ind) { return (ArrayList) " + role2 + "[_ind]; }\n\n" + 
-			 "  public Dictionary get" + role2 + "() { return " + role2 + "; }\n";
+      { return "public HashSet<" + e2name + "> get" +
+          role2 + "(string _ind) { return (HashSet<" + e2name + ">) " + role2 + "[_ind]; }\n\n" + 
+          "  public Dictionary get" + role2 + "() { return " + role2 + "; }\n";
       } 
     }
     else if (card2 == ONE)
     { return "public " + e2name + " get" +
              role2 + "() { return " + role2 + "; }";
     }
-    return "public ArrayList get" +
+    else if (ordered)
+    { return "public ArrayList get" +
            role2 + "()\n" + 
            " { ArrayList res = new ArrayList();\n" + 
            "   res.AddRange(" + role2 + ");\n" + 
            "   return res; }";
+    } 
+    else 
+    { return "public HashSet<" + e2name + "> get" +
+           role2 + "()\n" + 
+           " { return " + role2 + "; }";
+    } 
   } 
 
   public String getOperationCPP()
@@ -4233,6 +4431,9 @@ String qual = "";
 
   public String getInterfaceOperationCSharp()
   { if (role2 == null) { return null; }
+    if (entity2 == null) 
+    { return null; } 
+
     String e2name = entity2.getName() + ""; 
 
     if (qualifier != null) 
@@ -4240,8 +4441,12 @@ String qual = "";
       { return "  " + e2name + " get" +
              role2 + "(string _ind);\n";
       } 
-      else 
+      else if (ordered)
       { return "  ArrayList get" +
+             role2 + "(string _ind);\n";
+      } 
+      else 
+      { return "  HashSet<" + e2name + "> get" +
              role2 + "(string _ind);\n";
       } 
     }
@@ -4249,8 +4454,10 @@ String qual = "";
     { return "  " + e2name + " get" +
              role2 + "();";
     }
-    return "  ArrayList get" +
-           role2 + "();";
+    else if (ordered)
+    { return "  ArrayList get" + role2 + "();"; } 
+    else 
+    { return "  HashSet<" + e2name + "> get" + role2 + "();"; } 
   } 
 
   public String getAllOperation(String ename)
@@ -7112,6 +7319,9 @@ String qual = "";
   { Vector res = new Vector();
     if (role2 == null || frozen)
     { return res; } 
+    if (entity2 == null) 
+    { return res; } 
+
     if (qualifier != null) 
     { return qualifierControllerOperationsCSharp(ent); } 
 
@@ -7137,8 +7347,10 @@ String qual = "";
     { addtest = "if (" + ex + ".get" + nme + 
              "().Contains(" + attx + ")) { return; }\n  "; 
     } // put if (ex.getr().size() > 0) { return; } for card2 == ZEROONE?
+
     if (card2 == ZEROONE) 
     { addtest = addtest + "  if (" + ex + ".get" + nme + "().Count > 0) { return; }\n  "; } 
+
     Attribute epar = new Attribute(ex,new Type(ent),INTERNAL);
     Attribute apar = new Attribute(attx,new Type(entity2),INTERNAL);
     Vector v1 = new Vector();
@@ -7147,6 +7359,7 @@ String qual = "";
     BehaviouralFeature event =
       new BehaviouralFeature("add" + nme,v1,false,null);
     String addclearup = ""; 
+
     if (card1 == ONE || card1 == ZEROONE) // remove all existing exx |-> attx pairs
     { if (role1 != null && role1.length() > 0)
       { if (card1 == ONE) 
@@ -7175,6 +7388,7 @@ String qual = "";
              ex + ", " + e2name +
              " " + attx + ") \n  { " + addtest + addclearup + addinverse + 
              "    " + ex + ".add" + nme + "(" + attx + ");\n  ";
+
     if (linkedClass != null) 
     { String acName = linkedClass.getName(); 
       // String acx = acName.toLowerCase() + "__x"; 
@@ -7199,7 +7413,7 @@ String qual = "";
         
       Constraint cnew = cc.matches("add",nme,ent,attx,event);
 
-      System.out.println("Match of " + cc + " with add" + nme + " ==> " + cnew); 
+      // System.out.println("Match of " + cc + " with add" + nme + " ==> " + cnew); 
  
       // if (cc.matches(nme,val))
       if (cnew != null)
@@ -7652,6 +7866,10 @@ String qual = "";
   public Vector qualifierControllerOperationsCSharp(Entity ent)
   { Vector res = new Vector();
     String ename = ent.getName(); 
+
+    if (entity2 == null) 
+    { return res; } 
+
     String e2name = entity2.getName();
     String e2x = e2name.toLowerCase() + "xx"; 
     String ex = "_" + ename.toLowerCase() + "x";  
@@ -8438,8 +8656,13 @@ String qual = "";
                                   Entity ent,Vector entities,Vector types)
   { Vector res = new Vector();
     String nme = role2; 
+
     if (role2 == null || frozen)
     { return res; } 
+
+    if (entity2 == null) 
+    { return res; } 
+
     if (qualifier != null) 
     { return qualifierControllerSetOperationCSharp(ent); } 
 
@@ -8617,7 +8840,7 @@ String qual = "";
       Constraint cnew = cc.matches("set",nme,ent,attx,event);
       // if (cc.matches(nme,val))
       if (cnew != null)
-      { System.out.println("Matched: new cons is " + cnew + " Pars " + v1); 
+      { // System.out.println("Matched: new cons is " + cnew + " Pars " + v1); 
         Vector cntxs = new Vector(); 
         if (cnew.getOwner() != null) 
         { cntxs.add(cnew.getOwner()); }
@@ -8630,7 +8853,7 @@ String qual = "";
       }
       else if (cc.getEvent() == null && cc.involvesFeature(nme))
       { Constraint cpre = (Constraint) cc.substituteEq(nme,attxbe); 
-        System.out.println("Possible precond for set" + nme + ": " + cpre); 
+        // System.out.println("Possible precond for set" + nme + ": " + cpre); 
       }
 
     }
@@ -8964,6 +9187,9 @@ String qual = "";
   public Vector qualifierControllerSetOperationCSharp(Entity ent)
   { Vector res = new Vector();
     String ename = ent.getName(); 
+    if (entity2 == null) 
+    { return res; } 
+
     String e2name = entity2.getName();
     String ex = "_" + ename.toLowerCase() + "x";  
     String edec = ename + " " + ex; 
@@ -8972,15 +9198,20 @@ String qual = "";
     
     if (card2 == ONE) 
     { res.add(" public void set" + role2 + "(" + edec +  
-                   ", string _ind, " + e2name + " " + val + ")\n" + 
+              ", string _ind, " + e2name + " " + val + ")\n" + 
               " { " + ex + ".set" + role2 + "(_ind, " + val + "); } \n");
       res.add(" public void remove" + role2 + "(" + edec + 
-                  ", " + e2name + " " + val + ")\n" + 
-                " { " + ex + ".remove" + role2 + "(" + val + "); }\n"); 
+              ", " + e2name + " " + val + ")\n" + 
+              " { " + ex + ".remove" + role2 + "(" + val + "); }\n"); 
     }
+    else if (ordered)
+    { res.add(" public void set" + role2 + "(" + edec + 
+              ", string _ind, ArrayList " + val + ")\n  " +
+              " { " + ex + ".set" + role2 + "(_ind, " + val + "); }\n"); 
+    } 
     else 
     { res.add(" public void set" + role2 + "(" + edec + 
-                   ", string _ind, ArrayList " + val + ")\n  " +
+              ", string _ind, HashSet<" + e2name + "> " + val + ")\n  " +
               " { " + ex + ".set" + role2 + "(_ind, " + val + "); }\n"); 
     } 
     return res; 
@@ -9084,6 +9315,9 @@ String qual = "";
   public Vector associationClassControllerSetOperationCSharp(Entity ent)
   { Vector res = new Vector(); 
     String ename = ent.getName(); 
+    if (entity2 == null) 
+    { return res; } 
+
     String e2name = entity2.getName();
     String ex = "_" + ename.toLowerCase() + "x";  
     String edec = ename + " " + ex; 
@@ -9211,13 +9445,21 @@ String qual = "";
   public String getCreateCodeCSharp(String ex)
   { // setrole2(ex,initval) -- initval is nmex for ONE
     if (qualifier != null) { return ""; } 
+    if (entity2 == null) 
+    { return ""; } 
+
     String nme = role2;
     String ini;
+
     String op = "    set" + nme + "(" + ex + ", ";
+
     if (card2 == ONE || frozen) 
     { ini = nme + "x"; }
-    else 
+    else if (ordered)
     { ini = "new ArrayList()"; }
+    else 
+    { ini = "new HashSet<" + entity2.getName() + ">()"; } 
+
     return op + ini + ");\n"; 
   } // order so multi are last?
 

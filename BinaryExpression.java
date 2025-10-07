@@ -9003,7 +9003,8 @@ public boolean conflictsWithIn(String op, Expression el,
     } 
 
     if (operator.equals("|selectMaximals"))
-    { String col = collectQueryFormCSharp(lqf,rqf,rprim,env,local);
+    { String col = 
+         collectQueryFormCSharp(lqf,rqf,rprim,env,local);
       Expression actualLeft = ((BinaryExpression) left).getRight();  
       lqf = actualLeft.queryFormCSharp(env,local); 
       if (actualLeft.umlkind == CLASSID)
@@ -9049,7 +9050,8 @@ public boolean conflictsWithIn(String op, Expression el,
     } 
 
     if (operator.equals("->sortedBy"))
-    { String col = collectQueryFormCSharp(lqf,rqf,rprim,env,local); 
+    { String col = 
+        collectQueryFormCSharp(lqf,rqf,rprim,env,local); 
       if (left.umlkind == CLASSID)
       { lqf = ((BasicExpression) left).classExtentQueryFormCSharp(env,local); } 
       return "SystemTypes.sortedBy(" + lqf + ", " + col + ")"; 
@@ -9072,7 +9074,6 @@ public boolean conflictsWithIn(String op, Expression el,
 
     if (operator.equals("->restrict"))
     { return "SystemTypes.restrictMap(" + lqf + "," + rqf + ")"; } 
-
 
     if (operator.equals("->antirestrict"))
     { return "SystemTypes.antirestrictMap(" + lqf + "," + rqf + ")"; } 
@@ -9141,7 +9142,8 @@ public boolean conflictsWithIn(String op, Expression el,
     { return lqf + ".Invoke(" + rqf + ")"; } 
 
     if (operator.equals("|A") || operator.equals("->any"))   
-    { String getany = anyQueryFormCSharp(lqf,rqf,rprim,env,local); 
+    { String getany = 
+         anyQueryFormCSharp(lqf,rqf,rprim,env,local); 
       String typ = type.getCSharp(); 
       return "((" + typ + ") " + getany + ")"; 
     } 
@@ -9163,7 +9165,6 @@ public boolean conflictsWithIn(String op, Expression el,
       { return lqf; } 
       return "SystemTypes.roundTo(" + lqf + "," + rqf + ")"; 
     } 
-
 
     if (operator.equals("<>=")) 
     { res = lqf + " == " + rqf; 
@@ -9213,18 +9214,22 @@ public boolean conflictsWithIn(String op, Expression el,
     }  
 
     if (operator.equals("->isUnique"))  // and define for B
-    { String fcollect = collectQueryFormCSharp(lqf,rqf,rprim,env,local);
+    { String fcollect = 
+        collectQueryFormCSharp(lqf,rqf,rprim,env,local);
       return "SystemTypes.isUnique(" + fcollect + ")"; 
     } 
 
     if (operator.equals("->intersectAll"))
-    { String col = collectQueryFormCSharp(lqf,rqf,rprim,env,local); 
+    { String col = 
+        collectQueryFormCSharp(lqf,rqf,rprim,env,local); 
       return "SystemTypes.intersectAll(" + col + ")"; 
     } 
 
     if (operator.equals("->unionAll"))
-    { String col = collectQueryFormCSharp(lqf,rqf,rprim,env,local); 
-      if (left.isOrdered() && (right.isOrdered() || "self".equals(right + "")))
+    { String col = 
+         collectQueryFormCSharp(lqf,rqf,rprim,env,local); 
+      if (left.isOrdered() && 
+          (right.isOrdered() || "self".equals(right + "")))
       { return "SystemTypes.concatenateAll(" + col + ")"; } 
       return "SystemTypes.unionAll(" + col + ")"; 
     } 
@@ -9232,10 +9237,12 @@ public boolean conflictsWithIn(String op, Expression el,
     if (operator.equals("->closure"))
     { String rel = right + ""; 
       if (entity == null) 
-      { JOptionPane.showMessageDialog(null, "No entity for: " + this, 
-                                      "Semantic error", JOptionPane.ERROR_MESSAGE);
+      { JOptionPane.showMessageDialog(null, 
+           "No entity for: " + this, 
+           "Semantic error", JOptionPane.ERROR_MESSAGE);
         return ""; 
       }  
+
       return "SystemTypes.closure" + entity.getName() + rel + "(" + lqf + ")"; 
     } // left must be set-valued. 
 
@@ -9280,17 +9287,20 @@ public boolean conflictsWithIn(String op, Expression el,
     } 
 
     if (left.umlkind == CLASSID && 
-        ((BasicExpression) left).arrayIndex == null && operator.equals("->includes"))  
+        ((BasicExpression) left).arrayIndex == null && 
+        operator.equals("->includes"))  
     { return "(" + rqf + " is " + left + ")"; } 
 
     if (left.umlkind == CLASSID && 
-        ((BasicExpression) left).arrayIndex == null && operator.equals("->includesAll"))  
+        ((BasicExpression) left).arrayIndex == null && 
+        operator.equals("->includesAll"))  
     { lqf = ((BasicExpression) left).classExtentQueryFormCSharp(env,local);
       return "(SystemTypes.isSubset(" + rqf + ", " + lqf + "))"; 
     } 
 
     if (left.umlkind == CLASSID && 
-        ((BasicExpression) left).arrayIndex == null && operator.equals("->excludes")) 
+        ((BasicExpression) left).arrayIndex == null && 
+        operator.equals("->excludes")) 
     { return "!(" + rqf + " is " + left + ")"; } 
 
 
@@ -9336,7 +9346,8 @@ public boolean conflictsWithIn(String op, Expression el,
     if (!lmult && !rmult)
     { if (operator.equals("=")) // and comparitors
       { res = composeEqQueryFormsCSharp(lqf,rqf,lprim,rprim); }
-      else if (operator.equals("/=") || operator.equals("!=") || operator.equals("<>"))
+      else if (operator.equals("/=") || 
+               operator.equals("!=") || operator.equals("<>"))
       { res = composeNeqQueryFormsCSharp(lqf,rqf,lprim,rprim); }
       else if (comparitors.contains(operator))
       { res = 
@@ -9375,7 +9386,8 @@ public boolean conflictsWithIn(String op, Expression el,
       { res = "SystemTypes.allMatches(" + lqf + "," + rqf + ")"; } 
       else if (operator.equals("->firstMatch"))
       { res = "SystemTypes.firstMatch(" + lqf + "," + rqf + ")"; } 
-      else if (operator.equals("->excludingAt") && left.isString())
+      else if (operator.equals("->excludingAt") && 
+               left.isString())
       { res = "SystemTypes.removeAtString(" + 
                                       lqf + "," + rqf + ")"; 
       }
@@ -9414,7 +9426,8 @@ public boolean conflictsWithIn(String op, Expression el,
       } 
       else if (operator.equals("->excludingFirst"))
       { res = "SystemTypes.removeFirst(" + lqf + "," + rw + ")"; }
-      else if (operator.equals("->including") && left.isOrdered())
+      else if (operator.equals("->including") && 
+               left.isOrdered())
       { res = "SystemTypes.concatenate(" + lqf + "," + rss + ")"; }
       else if (operator.equals("->including"))
       { res = "SystemTypes.union(" + lqf + "," + rss + ")"; }
@@ -9426,7 +9439,8 @@ public boolean conflictsWithIn(String op, Expression el,
           else 
           { res = lqf + ".Equals(" + rs + ")"; }
         } 
-        else if (operator.equals("/=") || operator.equals("!=") || operator.equals("<>"))
+        else if (operator.equals("/=") || 
+                 operator.equals("!=") || operator.equals("<>"))
         { if (Type.isSetType(left.getType()))
           { res = "!(SystemTypes.equalsSet(" + lqf + "," + rs + "))"; } 
           else 
@@ -9467,17 +9481,27 @@ public boolean conflictsWithIn(String op, Expression el,
       } 
     }
     else if (rmult && !lmult)
-    { String ls = left.makeSetCSharp(lqf);
+    { String ls = left.makeSequenceCSharp(lqf);
       String lw = lqf; 
 
       if (operator.equals("="))
-      { if (Type.isSetType(right.getType()))
-        { res = "SystemTypes.equalsSet(" + ls + "," + rqf + ")"; } 
+      { if (Type.isSortedSetType(right.getType()))
+        { ls = left.makeSortedSetCSharp(); 
+          res = "SystemTypes.equalsSet(" + ls + "," + rqf + ")"; } 
+        else if (Type.isSetType(right.getType()))
+        { ls = left.makeSetCSharp(); 
+          res = "SystemTypes.equalsSet(" + ls + "," + rqf + ")"; } 
         else 
         { res = ls + ".Equals(" + rqf + ")"; } 
       }
-      else if (operator.equals("/=") || operator.equals("!=") || operator.equals("<>"))
-      { if (Type.isSetType(right.getType()))
+      else if (operator.equals("/=") || 
+               operator.equals("!=") || 
+               operator.equals("<>"))
+      { if (Type.isSortedSetType(right.getType()))
+        { ls = left.makeSortedSetCSharp(); 
+          res = "!(SystemTypes.equalsSet(" + ls + "," + rqf + "))"; 
+        } 
+        else if (Type.isSetType(right.getType()))
         { res = "!(SystemTypes.equalsSet(" + ls + "," + rqf + "))"; } 
         else 
         { res = "!(" + ls + ".Equals(" + rqf + "))"; } 
@@ -12671,7 +12695,7 @@ public boolean conflictsWithIn(String op, Expression el,
     }  
     else 
     { if (left.elementType == null) 
-      { System.err.println("DESIGN ERROR!!: no element type for: " + left); 
+      { System.err.println("!!DESIGN ERROR!!: no element type for: " + left); 
         /* JOptionPane.showMessageDialog(null, "no element type for " + left + " in " + this, 
            "Design error", JOptionPane.ERROR_MESSAGE); */ 
       } 
@@ -12749,7 +12773,9 @@ public boolean conflictsWithIn(String op, Expression el,
     } 
 
     // System.out.println("Creating Collect " + uses + " " + env); 
-    String res =       BSystemTypes.getCollectDefinitionCSharp(collectleft,lqf,right,rprim,collectvar,env1,pars); 
+    String res =       
+      BSystemTypes.getCollectDefinitionCSharp(
+          collectleft,lqf,right,rprim,collectvar,env1,pars); 
     return "SystemTypes." + res.substring(0,res.length()-1) + callpars + ")"; 
   } 
 
@@ -13077,12 +13103,13 @@ public boolean conflictsWithIn(String op, Expression el,
     Entity localentity = null; 
  
     String lqf = ""; 
-    if ("->existsLC".equals(operator) || operator.equals("->exists"))
+    if ("->existsLC".equals(operator) || 
+        operator.equals("->exists"))
     { lqf = left.queryFormCSharp(env,local);
       existsleft = left; 
       // localentity = left.getEntity(); // or entity of the elementType
       if (left.elementType == null) 
-      { System.err.println("DESIGN ERROR: no element type for: " + left); 
+      { System.err.println("!!DESIGN ERROR: no element type for: " + left); 
         JOptionPane.showMessageDialog(null, "no element type for " + left + " in " + this, 
                                       "Design error", JOptionPane.ERROR_MESSAGE);
       } 
@@ -13096,7 +13123,7 @@ public boolean conflictsWithIn(String op, Expression el,
       existsvar = beleft.left + ""; 
       // localentity = beleft.right.getEntity(); // or entity of the elementType
       if (beleft.right == null || beleft.right.elementType == null)
-      { System.out.println("DESIGN ERROR: no element type of: " + beleft);
+      { System.out.println("!!DESIGN ERROR: no element type of: " + beleft);
         JOptionPane.showMessageDialog(null, "no element type for " + beleft + " in " + this, 
                                       "Design error", JOptionPane.ERROR_MESSAGE);
       }
@@ -14326,13 +14353,13 @@ public boolean conflictsWithIn(String op, Expression el,
   private String composeSetQueryFormsCSharp(String lqf, String rqf)
   { String res = lqf + " " + operator + " " + rqf; 
     if (operator.equals("="))
-    { if (Type.isSetType(left.getType()) || Type.isSetType(right.getType()))
+    { if (Type.isSetType(left.getType()))
       { res = "SystemTypes.equalsSet(" + lqf + "," + rqf + ")"; } 
       else 
       { res = lqf + ".Equals(" + rqf + ")"; }  
     } // order shouldn't matter
     else if (operator.equals("/=") || operator.equals("!=") || operator.equals("<>"))
-    { if (Type.isSetType(left.getType()) || Type.isSetType(right.getType()))
+    { if (Type.isSetType(left.getType()))
       { res = "!(SystemTypes.equalsSet(" + lqf + "," + rqf + "))"; } 
       else 
       { res = "!(" + lqf + ".Equals(" + rqf + "))"; }
@@ -14344,13 +14371,13 @@ public boolean conflictsWithIn(String op, Expression el,
 	  { res = "SystemTypes.includesAllMap(" + lqf + "," + rqf + ")"; } 
 	  else 
 	  { res = "SystemTypes.isSubset(" + rqf + "," + lqf + ")"; }
-	} 
+    } 
     else if (operator.equals("-"))
     { if (left.isMap() && right.isMap())
 	  { res = "SystemTypes.excludeAllMap(" + lqf + "," + rqf + ")"; } 
 	  else 
 	  { res = "SystemTypes.subtract(" + lqf + "," + rqf + ")"; }
-	} 
+    } 
     else if (operator.equals("->excluding"))  
     { res = "SystemTypes.subtract(" + lqf + "," + rqf + ")"; } 
     else if (operator.equals("\\/") || operator.equals("->union")) 
@@ -14369,10 +14396,10 @@ public boolean conflictsWithIn(String op, Expression el,
     } 
     else if (operator.equals("/\\") || operator.equals("->intersection"))
     { if (left.isMap() && right.isMap())
-	  { res = "SystemTypes.intersectionMap(" + lqf + "," + rqf + ")"; } 
-	  else 
-	  { res = "SystemTypes.intersection(" + lqf + "," + rqf + ")"; }
-	} 
+      { res = "SystemTypes.intersectionMap(" + lqf + "," + rqf + ")"; } 
+      else 
+      { res = "SystemTypes.intersection(" + lqf + "," + rqf + ")"; }
+    } 
     else if (operator.equals("/:") || operator.equals("/<:"))
     { res = "!(SystemTypes.isSubset(" + lqf + ", " + rqf + "))"; } 
     else if (operator.equals("->excludesAll"))
@@ -16319,13 +16346,20 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       String tname = "";       
       Type eleft = beleft.right.getElementType();  // Must be an entity type 
       if (eleft == null || "null".equals(eleft + "")) 
-      { eleftname = "object"; tname = "object"; } 
+      { eleftname = "object"; 
+        tname = "object"; 
+      } 
       else 
       { eleftname = eleft.getName();  
         // System.out.println(">>>>>" + eleftname); 
         tname = eleftname; 
 
-        if (eleftname.startsWith("Set") || eleftname.startsWith("Sequence"))
+        if (eleftname.startsWith("Set"))
+        { eleftname = 
+            "HashSet<" + Type.getCSharptype(eleft.getElementType()) + ">"; 
+          tname = "HashSet<object>"; 
+        } 
+        else if (eleftname.startsWith("Sequence"))
         { eleftname = "ArrayList"; 
           tname = "ArrayList"; 
         } 
@@ -16359,7 +16393,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       if ("Integer".equals(eleftname))
       { return  
         "    ArrayList " + elist + " = new ArrayList();\n" + 
-        "    " + elist + ".AddRange(" + lqf1 + ");\n" + 
+        "    " + elist + ".AddRange(SystemTypes.asSequence(" + lqf1 + "));\n" + 
         "    for (int " + indvar + " = 0; " + indvar + " < " + elist + ".Count; " + indvar + "++)\n" + 
         "    { int " + evarname + " = (int) " + elist + "[" + indvar + "];\n" + 
         "      " + ufr1 + "\n" + 
@@ -16367,7 +16401,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       } 
       else if (eleft != null && Type.isBasicType(eleft))
       { return  "    ArrayList " + elist + " = new ArrayList();\n" + 
-        "    " + elist + ".AddRange(" + lqf1 + ");\n" + 
+        "    " + elist + ".AddRange(SystemTypes.asSequence(" + lqf1 + "));\n" + 
         "    for (int " + indvar + " = 0; " + indvar + " < " + elist + ".Count; " + indvar + "++)\n" + 
         "    { " + tname + " " + evarname + 
                    " = ((" + tname + ") " + elist + "[" + indvar + "]);\n" +
@@ -16377,7 +16411,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
 
       return 
         "    ArrayList " + elist + " = new ArrayList();\n" + 
-        "    " + elist + ".AddRange(" + lqf1 + ");\n" + 
+        "    " + elist + ".AddRange(SystemTypes.asSequence(" + lqf1 + "));\n" + 
         "    for (int " + indvar + " = 0; " + indvar + " < " + elist + ".Count; " + indvar + "++)\n" + 
         "    { " + eleftname + " " + evarname + " = (" + eleftname + ") " + elist + 
                      "[" + indvar + "];\n" + 
@@ -16429,7 +16463,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
     else if (operator.equals("=") && left instanceof SetExpression)
     { val2 = right.queryFormCSharp(env,local);
       return ((SetExpression) left).updateForm("CSharp",env,operator,val2,right,local);
-    }
+    } // must be a sequence
     else if (operator.equals("->includesAll") && left instanceof BasicExpression)
     { val2 = right.queryFormCSharp(env,local);
       return ((BasicExpression) left).updateFormCSharp(env,"<:",val2,right,local);

@@ -11051,7 +11051,7 @@ public Statement generateDesignSubtract(Expression rhs)
                  pars.substring(1,pars.length()); 
         }
         return "  ArrayList " + var + " = new ArrayList();\n" + 
-               "  " + var + ".AddRange(" + pre + ");\n" +
+               "  " + var + ".AddRange(SystemTypes.asSequence(" + pre + "));\n" +
                "  for (int " + ind + " = 0; " + ind + " < " + var + ".Count; " +
                        ind + "++)\n" +
                "  { "  + call + "; }\n";
@@ -11294,8 +11294,8 @@ public Statement generateDesignSubtract(Expression rhs)
   }
 
   public String updateFormCSharp(java.util.Map env,
-                           String operator,
-                           String val2, Expression exp2, boolean local)
+                    String operator,
+                    String val2, Expression exp2, boolean local)
   { if (operator.equals("="))
     { return updateFormEqCSharp(env,val2,exp2,local); }
     else if (operator.equals(":"))
@@ -12624,8 +12624,8 @@ public Statement generateDesignSubtract(Expression rhs)
     // System.out.println(">>> Assignment " + this + " = " + val2); 
 
      if (Type.isSequenceType(type) && 
-        (var.isNumeric() || var.isString() || 
-         var.isBoolean()))
+         (var.isNumeric() || var.isString() || 
+          var.isBoolean()))
      { // this := 
        //   MatrixLib.singleValueMatrix(
        //       Sequence{this->size()}, var)
@@ -12659,8 +12659,6 @@ public Statement generateDesignSubtract(Expression rhs)
            scope, local); 
      }   
 
-
-
     String datax = data;
 
     if (objectRef != null) 
@@ -12685,7 +12683,6 @@ public Statement generateDesignSubtract(Expression rhs)
            "subrange", objectRef, pars1); 
       rng1.setType(objectRef.getType()); 
       rng1.setElementType(objectRef.getElementType()); 
-
 
       Expression rng2 = 
          BasicExpression.newFunctionBasicExpression(
@@ -12737,15 +12734,15 @@ public Statement generateDesignSubtract(Expression rhs)
                                  env,newval2,newvar,local); 
       } 
     } 
-                
 
-
-    if (umlkind == VALUE || umlkind == CONSTANT || umlkind == FUNCTION ||
+    if (umlkind == VALUE || umlkind == CONSTANT || 
+        umlkind == FUNCTION ||
         umlkind == QUERY || umlkind == UPDATEOP || prestate)
     { return "  {} /* can't assign to: " + data + " */"; }
     
     if (umlkind == CLASSID && arrayIndex == null) 
-    { if (val2.equals("{}") || val2.equals("Set{}") || val2.equals("Sequence{}"))  // delete the class extent
+    { if (val2.equals("{}") || val2.equals("Set{}") || 
+          val2.equals("Sequence{}"))  // delete the class extent
       { String datas = classExtentQueryFormCSharp(env,local);  
         return "ArrayList _" + data + " = new ArrayList(); \n" + 
                "  _" + data + ".AddRange(" + datas + "); \n" + 
@@ -13478,7 +13475,8 @@ public Statement generateDesignSubtract(Expression rhs)
     if (entity != null)
     { nme = entity.getName(); }
      
-    if (umlkind == VALUE || umlkind == CONSTANT || umlkind == QUERY ||
+    if (umlkind == VALUE || umlkind == CONSTANT || 
+        umlkind == QUERY ||
         umlkind == FUNCTION || umlkind == UPDATEOP || prestate)
     { return "{} /* can't add to: " + data + " */"; }
 
@@ -13510,7 +13508,7 @@ public Statement generateDesignSubtract(Expression rhs)
       { if (type != null && Type.isCollectionType(type))
         { return data + ".Add(" + val2 + ");"; }  
         else 
-        { return "{} /* can't add to single-valued attribute */"; }
+        { return "{} /* can't add to single-valued or map attribute */"; }
       } 
       if (umlkind == ROLE)
       { if (multiplicity == ModelElement.ONE)
@@ -13952,7 +13950,8 @@ public Statement generateDesignSubtract(Expression rhs)
                                  String val2, Expression exp2, boolean local)
   { String cont = "Controller.inst()"; 
 
-    if (umlkind == VALUE || umlkind == CONSTANT || umlkind == FUNCTION ||
+    if (umlkind == VALUE || umlkind == CONSTANT || 
+        umlkind == FUNCTION ||
         umlkind == QUERY || umlkind == UPDATEOP || prestate)
     { return "{} /* can't remove from: " + data + " */"; }
 
@@ -14684,17 +14683,22 @@ public Statement generateDesignSubtract(Expression rhs)
                               String val2, boolean local)
   { String cont = "Controller.inst()"; 
 
-    if (umlkind == VALUE || umlkind == CONSTANT || umlkind == FUNCTION ||
+    if (umlkind == VALUE || umlkind == CONSTANT || 
+        umlkind == FUNCTION ||
         umlkind == QUERY || umlkind == UPDATEOP || prestate)
     { return "{} /* can't add to: " + data + " */"; }
 
     if (umlkind == VARIABLE)
     { if (type != null && Type.isCollectionType(type))
-      { if (arrayIndex != null) 
+      { String unionop = "AddRange"; 
+        if (Type.isSetType(type))
+        { unionop = "UnionWith"; } 
+
+        if (arrayIndex != null) 
         { String indopt = arrayIndex.queryFormCSharp(env,local); 
-          return "((ArrayList) " + data + "[" + indopt + " -1]).AddRange(" + val2 + ");"; 
+          return "((ArrayList) " + data + "[" + indopt + " -1])." + unionop + "(" + val2 + ");"; 
         }
-        return data + ".AddRange(" + val2 + ");";
+        return data + "." + unionop + "(" + val2 + ");";
       } 
       else 
       { return "{} /* can't add to single-valued variable: " + this + " */"; }
@@ -14712,15 +14716,21 @@ public Statement generateDesignSubtract(Expression rhs)
     if (objectRef == null)
     { if (umlkind == ATTRIBUTE)
       { if (type != null && Type.isCollectionType(type))
-        { if (arrayIndex != null) 
+        { String unionop = "AddRange"; 
+          if (Type.isSetType(type))
+          { unionop = "UnionWith"; } 
+
+          if (arrayIndex != null) 
           { String indopt = arrayIndex.queryFormCSharp(env,local); 
-            return "((ArrayList) " + data + "[" + indopt + " -1]).AddRange(" + val2 + ");"; 
+            return "((ArrayList) " + data + "[" + indopt + " -1])." + unionop + "(" + val2 + ");"; 
           }
-          return data + ".AddRange(" + val2 + ");"; 
+
+          return data + "." + unionop + "(" + val2 + ");"; 
         }
         else  
         { return "{} /* can't add to single-valued attribute: " + this + " */"; }
       }
+
       if (umlkind == ROLE)
       { if (multiplicity == ModelElement.ONE)
         { return "{} /* can't add to ONE role */"; }
@@ -14732,7 +14742,13 @@ public Statement generateDesignSubtract(Expression rhs)
           return cont + ".union" + data + "(" + var + ", " + ind + ", " + val2 + ");"; 
         } 
 
-        if (local) { return data + ".AddRange(" + val2 + ");"; } 
+        if (local) 
+        { String unionop = "AddRange"; 
+          if (Type.isSetType(type))
+          { unionop = "UnionWith"; } 
+
+          return data + "." + unionop + "(" + val2 + ");"; 
+        } 
         
         return cont + ".union" + data + "(" + var + "," + val2 + ");";
       } // no need to wrap -- val2 must be a list
@@ -15053,9 +15069,11 @@ public Statement generateDesignSubtract(Expression rhs)
     if (umlkind == VARIABLE && Type.isCollectionType(type))
     { if (arrayIndex != null) 
       { String indopt = arrayIndex.queryFormCSharp(env,local); 
-        return data + "[" + indopt + " -1] = SystemTypes.subtract((ArrayList) " + 
-                                           data + "[" + indopt + " -1], " + val2 + ");"; 
+        return data + 
+          "[" + indopt + " -1] = SystemTypes.subtract(" + 
+                 data + "[" + indopt + " -1], " + val2 + ");"; 
       }
+
       return data + " = SystemTypes.subtract(" + data + ", " + val2 + ");"; 
     }
       // val2 must be a list
@@ -15070,8 +15088,11 @@ public Statement generateDesignSubtract(Expression rhs)
     { if (umlkind == ATTRIBUTE && Type.isCollectionType(type))
       { if (arrayIndex != null) 
         { String indopt = arrayIndex.queryFormCSharp(env,local); 
-          return data + "[" + indopt + " -1] = SystemTypes.subtract((ArrayList) " + data + "[" + indopt + " -1], " + val2 + ");"; 
+          return data + 
+            "[" + indopt + " -1] = SystemTypes.subtract((ArrayList) " + data + 
+               "[" + indopt + " -1], " + val2 + ");"; 
         }
+
         return data + " = SystemTypes.subtract(" + data + ", " + val2 + ");"; 
       }      
 
@@ -15086,7 +15107,8 @@ public Statement generateDesignSubtract(Expression rhs)
           return cont + ".subtract" + data + "(" + var + ", " + ind + ", " + val2 + ");"; 
         } 
 
-        if (local) { return data + " = SystemTypes.subtract(" + data + ", " + val2 + ");"; } 
+        if (local) 
+        { return data + " = SystemTypes.subtract(" + data + ", " + val2 + ");"; } 
 
         return cont + ".subtract" + data + "(" + var + "," + val2 + ");";
       } // no need to wrap -- val2 must be a list

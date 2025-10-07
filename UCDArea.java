@@ -12273,18 +12273,30 @@ public void produceCUI(PrintWriter out)
      out.println("      if (x != null) { res.Add(x); }");
      out.println("      return res;");
      out.println("    }\n");
+     out.println("    public static HashSet<T> addSet<T>(HashSet<T> a, T x)"); 
+     out.println("    {");
+     out.println("      HashSet<T> res = new HashSet<T>();");
+     out.println("      res.UnionWith(a); ");
+     out.println("      if (x != null) { res.Add(x); }");
+     out.println("      return res;");
+     out.println("    }\n");
  
     out.println("    public static ArrayList makeSet(object x)"); 
     out.println("    { ArrayList res = new ArrayList();"); 
     out.println("      if (x != null) { res.Add(x); }"); 
     out.println("      return res;"); 
     out.println("    }\n");
-     out.println("    public static SortedSet<T> makeSortedSet<T>(T x)");
-     out.println("    {");
-     out.println("      SortedSet<T> res = new SortedSet<T>();");
-     out.println("      if (x != null) { res.Add(x); }");
-     out.println("      return res;");
-     out.println("    }\n");
+    out.println("    public static HashSet<T> makeSet<T>(T x)"); 
+    out.println("    { HashSet<T> res = new HashSet<T>();"); 
+    out.println("      if (x != null) { res.Add(x); }"); 
+    out.println("      return res;"); 
+    out.println("    }\n");
+    out.println("    public static SortedSet<T> makeSortedSet<T>(T x)");
+    out.println("    {");
+    out.println("      SortedSet<T> res = new SortedSet<T>();");
+    out.println("      if (x != null) { res.Add(x); }");
+    out.println("      return res;");
+    out.println("    }\n");
  
     out.println("    public static ArrayList removeSet(ArrayList a, object x)"); 
     out.println("    { ArrayList res = new ArrayList(); "); 
@@ -12292,13 +12304,21 @@ public void produceCUI(PrintWriter out)
     out.println("      while (res.Contains(x)) { res.Remove(x); }"); 
     out.println("      return res; }\n"); 
 
-     out.println("    public static SortedSet<T> removeSet<T>(SortedSet<T> a, T x)");
-     out.println("    {");
-     out.println("       SortedSet<T> res = new SortedSet<T>();");
-     out.println("       res.UnionWith(a);");
-     out.println("       res.Remove(x); ");
-     out.println("       return res;");
-     out.println("    }\n");
+    out.println("    public static SortedSet<T> removeSortedSet<T>(SortedSet<T> a, T x)");
+    out.println("    {");
+    out.println("       SortedSet<T> res = new SortedSet<T>();");
+    out.println("       res.UnionWith(a);");
+    out.println("       res.Remove(x); ");
+    out.println("       return res;");
+    out.println("    }\n");
+
+    out.println("    public static HashSet<T> removeSet<T>(HashSet<T> a, T x)");
+    out.println("    {");
+    out.println("       HashSet<T> res = new HashSet<T>();");
+    out.println("       res.UnionWith(a);");
+    out.println("       res.Remove(x); ");
+    out.println("       return res;");
+    out.println("    }\n");
     
     String mop = BSystemTypes.generateMaxOpCSharp(); 
     out.println("\n" + mop); 

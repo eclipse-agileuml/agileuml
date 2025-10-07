@@ -2278,7 +2278,7 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
                             precopy + ".Count)";
             if (argument.isSequence())
             { return precopy + " = SystemTypes.concatenate(" + subrange1 + ", " + subrange2 + ");"; } 
-            else 
+            else // string
             { return precopy + " = " + subrange1 + " + (" + subrange2 + ");"; }  
           }
         } 
@@ -3071,6 +3071,8 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
           type.keyType = argument.elementType.getKeyType();  
           type.elementType = elementType; 
         }
+
+        type.setSorted(argument.elementType.isSorted()); 
       } 
       else 
       { elementType = argument.elementType; } 
@@ -3092,6 +3094,10 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
           type.keyType = argument.elementType.getKeyType();  
           type.elementType = elementType; 
         }
+
+        if (argument.elementType.isSorted())
+        { type.setSorted(true); } 
+        // type is sorted if the elements are
       }
       else 
       { elementType = argument.elementType; }  
@@ -3789,6 +3795,8 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
           type.keyType = argument.elementType.getKeyType();  
           type.elementType = elementType; 
         }
+
+        type.setSorted(argument.elementType.isSorted()); 
       } 
       else 
       { elementType = argument.elementType; } 
@@ -3820,6 +3828,8 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
           type.keyType = argument.elementType.getKeyType();  
           type.elementType = elementType; 
         }
+
+        type.setSorted(argument.elementType.isSorted()); 
       }
       else 
       { elementType = argument.elementType; }  
@@ -5634,18 +5644,21 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
       return "-" + qf; 
     } 
 
+    if (operator.equals("+"))
+    { return qf; } 
+
     if (operator.equals("?"))
     { String res = qf; 
       if (argument.isCollection() || 
           argument.isFunctionType() || 
           argument.isClassEntityType())
-      { } 
+      { } // already its own reference
       else 
       { res = "&" + qf; } 
 
       if (needsBracket) 
       { res = "(" + res + ")"; }
-	  return res;  
+      return res;  
     } 
 
     if (operator.equals("!"))
@@ -5661,7 +5674,7 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
 
       if (needsBracket) 
       { res = "(" + res + ")"; }
-	  return res;  
+      return res;  
     } // functions, classes, collections, maps have ?x = x
 
     if (operator.equals("not"))
@@ -5699,6 +5712,9 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
     { if (argument.isRef())
       { return "SystemTypes.asSequence(" + qf + ")"; }
       
+      if (argument.isSet())
+      { return "SystemTypes.asSequence(" + qf + ")"; }
+      
       if (argument.isMap())
       { return "SystemTypes.asSequence((Hashtable) " + qf + ")"; } 
        
@@ -5709,8 +5725,12 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
         type.isSet())
     { return qf; } 
 
+    if (operator.equals("->asSet") && type != null && 
+        type.isSequence())
+    { return "SystemTypes.asSet(" + qf + ")"; } 
+
     if (operator.equals("->asBag"))
-    { return "SystemTypes.sort(" + qf + ")"; } 
+    { return "SystemTypes.asBag(" + qf + ")"; } 
 
     if (operator.equals("->asReference"))
     { return "SystemTypes.asReference(" + qf + ")"; } 
@@ -5763,17 +5783,22 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
     if ("->copy".equals(operator))
     { if (type == null) 
       { return qf; } 
+
       if (type.isEntity())
       { String tcs = type.getCSharp(); 
         return "((" + tcs + ")" + qf + ".MemberwiseClone())"; 
       }
+
       String tname = type.getName(); 
       if ("String".equals(tname))
       { return "(\"\"" + qf + ")"; } 
+
       if ("Set".equals(tname) || "Sequence".equals(tname))
       { return "SystemTypes.copyCollection(" + qf + ")"; } 
+
       if ("Map".equals(tname))
       { return "SystemTypes.copyMap(" + qf + ")"; } 
+
       return qf; 
     }    
 
@@ -5796,6 +5821,16 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
         argument.elementType.isMap())
     { return "SystemTypes.unionAllMap(" + qf + ")"; } 
 
+    if (operator.equals("->unionAll") && 
+        argument.elementType != null &&
+        argument.elementType.isSortedSet())
+    { return "SystemTypes.unionAllSortedSet(" + qf + ")"; } 
+
+    if (operator.equals("->unionAll") && 
+        argument.elementType != null &&
+        argument.elementType.isSet())
+    { return "SystemTypes.unionAllSet(" + qf + ")"; } 
+
     if (operator.equals("->unionAll"))
     { return "SystemTypes.unionAll(" + qf + ")"; } 
     
@@ -5804,24 +5839,40 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
         argument.elementType.isMap())
     { return "SystemTypes.intersectAllMap(" + qf + ")"; } 
 
+    if (operator.equals("->intersectAll") && 
+        argument.elementType != null &&
+        argument.elementType.isSortedSet())
+    { return "SystemTypes.intersectAllSortedSet(" + qf + ")"; } 
+
+    if (operator.equals("->intersectAll") && 
+        argument.elementType != null &&
+        argument.elementType.isSet())
+    { return "SystemTypes.intersectAllSet(" + qf + ")"; } 
+
     if (operator.equals("->intersectAll"))
     { return "SystemTypes.intersectAll(" + qf + ")"; } 
 
-    if (operator.equals("->flatten")) 
-    { if (Type.isSequenceType(argument.type))
+    if (operator.equals("->flatten") && 
+        argument.elementType != null) 
+    { Type et = argument.elementType;
+ 
+      if (Type.isSequenceType(et))
       { return "SystemTypes.concatenateAll(" + qf + ")"; } 
-      else if (Type.isSetType(argument.type))
-      { return "SystemTypes.unionAll(" + qf + ")"; } 
-      else if (Type.isMapType(argument.type))
+      else if (Type.isSetType(et))
+      { return "SystemTypes.unionAllSet(" + qf + ")"; } 
+      else if (Type.isMapType(et))
       { return "SystemTypes.unionAllMap(" + qf + ")"; } 
+
       return qf; 
     } // but only goes one level down. 
+    else if (operator.equals("->flatten"))
+    { return qf; } 
 
     String pre = qf;
     String data = operator; 
 	
-	if (operator.startsWith("->"))
-	{ data = operator.substring(2,operator.length()); }
+    if (operator.startsWith("->"))
+    { data = operator.substring(2,operator.length()); }
 
     if (extensionoperators.containsKey(operator))
     { String op = operator;
@@ -5864,18 +5915,23 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
     else if (data.equals("trim"))
     { return pre + ".Trim()"; } 
     else if (data.equals("sum"))
-    { Type sumtype = argument.getElementType();  // int, double, long, String 
+    { Type sumtype = argument.getElementType();  
+      // must be int, double, long, String
+ 
       if (sumtype == null) 
       { JOptionPane.showMessageDialog(null, 
               "No type for: " + this, 
               "Type error", JOptionPane.ERROR_MESSAGE);
         return ""; 
       }
+
       String tname = sumtype.getName(); 
       return "SystemTypes.sum" + tname + "(" + pre + ")"; 
     } 
     else if (data.equals("prd"))
-    { Type sumtype = argument.getElementType();  // int, double, long 
+    { Type sumtype = argument.getElementType();  
+      // must be int, double, long
+ 
       if (sumtype == null) 
       { JOptionPane.showMessageDialog(null, 
                      "No type for: " + this, 
@@ -5889,14 +5945,27 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
     { return "(" + pre + ".Count == 0)"; } 
     else if (data.equals("notEmpty"))
     { return "(" + pre + ".Count != 0)"; } 
-    else if (data.equals("reverse") || data.equals("sort") ||
-             data.equals("asSet")) 
-    { return "SystemTypes." + data + "(" + pre + ")"; } 
+    else if (data.equals("reverse"))
+    { if (argument.isSet() || argument.isMap())
+      { return pre; }
+      return "SystemTypes.reverse(" + pre + ")";
+    }  
+    else if (data.equals("sort"))
+    { if (argument.isSet() || argument.isMap())
+      { return pre; }
+      return "SystemTypes.sort(" + pre + ")";
+    }
+    else if (data.equals("asSet")) 
+    { if (argument.isSet() || argument.isMap())
+      { return pre; }
+      return "SystemTypes.asSet(" + pre + ")"; 
+    } 
     else if (data.equals("keys"))
     { return "SystemTypes.mapKeys(" + pre + ")"; }
     else if (data.equals("values"))
     { return "SystemTypes.mapValues(" + pre + ")"; }
-    else if (data.equals("closure") && (argument instanceof BasicExpression))
+    else if (data.equals("closure") && 
+             (argument instanceof BasicExpression))
     { String rel = ((BasicExpression) argument).data;
       Expression arg = ((BasicExpression) argument).objectRef;  
       if (entity == null) 
@@ -5907,7 +5976,8 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
       { return "SystemTypes.closure" + entity.getName() + rel + "(new ArrayList())"; }  
       return "SystemTypes.closure" + entity.getName() + rel + "(" + arg.queryFormCSharp(env,local) + ")";
     } 
-    else if (argument.type != null && "String".equals("" + argument.getType()))
+    else if (argument.type != null && 
+             "String".equals("" + argument.getType()))
     { // last,first,front,tail on strings
       if (data.equals("first") || data.equals("any"))
       { return pre + ".Substring(0,1)"; } 
@@ -5919,7 +5989,8 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
       { return pre + ".Substring(1," + pre + ".Length-1)"; } 
     } 
     else if (data.equals("max") || data.equals("min") ||
-             data.equals("any") || data.equals("last") || data.equals("first"))
+             data.equals("any") || data.equals("last") || 
+             data.equals("first"))
     { Type et = argument.elementType; 
       if (et != null) 
       { if ("String".equals("" + et))
@@ -5928,7 +5999,7 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
         { return "((" + et + ") SystemTypes." + data + "(" + pre + "))"; }
         else if (Type.isPrimitiveType(et))
         { return unwrapCSharp("SystemTypes." + data + "(" + pre + ")"); } 
-        else 
+        else // sequences and sorted sets
         { String elemTyp = et.getCSharp(); 
           return "((" + elemTyp + ") SystemTypes." + data + "(" + pre + "))"; 
         } 

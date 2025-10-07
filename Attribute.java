@@ -2520,8 +2520,8 @@ public class Attribute extends ModelElement
  
     String def = type.getDefaultJava7();
 
-    System.out.println(">> Initialiser of " + this + " is " + 
-                       def); 
+    // System.out.println(">> Initialiser of " + this + " is " + 
+    //                    def); 
 
     if (def == null) { return ""; }
     return "this." + nme + " = " + def + ";";
@@ -2531,9 +2531,10 @@ public class Attribute extends ModelElement
   { String nme = getName();
     if (frozen && initialExpression == null)   
     { return nme + " = " + nme + "x;"; }
+
     if (isFinal()) { return ""; }
 
-    System.out.println(">> Initial expression/value of " + this + " is " + initialExpression + " " + initialValue); 
+    // System.out.println(">> Initial expression/value of " + this + " is " + initialExpression + " " + initialValue); 
     System.out.println(); 
 
     if (type != null && type.isStructEntityType() && 
@@ -2544,17 +2545,28 @@ public class Attribute extends ModelElement
         "0".equals(initialExpression + ""))
     { return nme + " = null;"; } 
 
+    /* System.out.println(">>> Initial expression for " + this + " " + initialExpression.elementType + " is " + elementType + " " +  type.getDefaultCSharp()); */ 
+
     if (initialExpression != null) 
     { java.util.Map env = new java.util.HashMap();
       if (entity != null) 
       { env.put(entity.getName(), "this"); } 
-      return nme + " = " + initialExpression.queryFormCSharp(env,true) + ";"; 
+
+      if (Type.isVacuousType(initialExpression.type)) 
+      { initialExpression.setType(type); } 
+      if (Type.isVacuousType(initialExpression.elementType))
+      { initialExpression.setElementType(type.elementType); } 
+
+      return nme + " = " + 
+        initialExpression.queryFormCSharp(env,true) + ";"; 
     } 
 
     // if (initialValue != null && !initialValue.equals(""))
     // { return "this." + nme + " = " + initialValue + ";"; } 
     String def = type.getDefaultCSharp();
+
     if (def == null) { return ""; }
+
     return nme + " = " + def + ";";
   } 
 
@@ -5550,6 +5562,8 @@ public class Attribute extends ModelElement
         "null".equals(initialExpression + ""))
     { return ""; } 
 
+    System.out.println(">>> Initial expression for " + this + " " + initialExpression.elementType + " is " + elementType + " " +  type.getDefaultCSharp()); 
+
     String nme = getName();
     String ini;
     String op;
@@ -5560,7 +5574,17 @@ public class Attribute extends ModelElement
     if (unique || ent.uniqueConstraint(nme))
     { ini = nme + "x"; } // but can't call set anyway.
     else if (initialExpression != null) 
-    { ini = initialExpression.queryFormCSharp(new java.util.HashMap(), true); } 
+    { if (Type.isVacuousType(initialExpression.type) && 
+          type != null) 
+      { initialExpression.setType(type); } 
+      if (Type.isVacuousType(initialExpression.elementType) && 
+          type.elementType != null) 
+      { initialExpression.setElementType(
+                             type.getElementType()); 
+      } 
+
+      ini = initialExpression.queryFormCSharp(new java.util.HashMap(), true); 
+    } 
     else
     { ini = type.getDefaultCSharp(); }
     if (ini == null) { return ""; }
@@ -7329,9 +7353,40 @@ public String iosDbiExtractOp(String ent, int i)
       }
     } 
     else if (type.isCollection() && 
-             ("Set".equals(type.getName()) || 
-              "Sequence".equals(type.getName())) && 
-              elementType != null)
+             "Set".equals(type.getName()) && 
+             elementType != null)
+    { Type elemT = getElementType(); 
+      String et = Type.getCSharptype(elemT); 
+
+      Vector testVals = elemT.testValues(); 
+      Vector optestVals = elemT.operationTestValues(); 
+      res.add(""); 
+      opTests.add(attname + " = new HashSet<" + et + ">();"); 
+	   
+	  // Singletons: 
+      for (int p = 0; p < testVals.size() && p < 3; p++) 
+      { String tv = (String) testVals.get(p);
+        String opv = (String) optestVals.get(p);  
+        res.add(tv + " : " + nme); 
+        opTests.add(attname + " = SystemTypes.makeSet(" + opv + ");"); 
+      }
+	  
+	  // Triples: 
+      for (int p = 0; p+2 < testVals.size() && p < 3; p++) 
+      { String tv = (String) testVals.get(p); 
+        String tv1 = (String) testVals.get(p+1);
+        String tv2 = (String) testVals.get(p+2);  
+        String opv = (String) optestVals.get(p);  
+        String opv1 = (String) optestVals.get(p+1);  
+        String opv2 = (String) optestVals.get(p+2);
+  
+        res.add(tv + " : " + nme + "\n" + tv1 + " : " + nme + "\n" + tv2 + " : " + nme);
+        opTests.add(attname + " = SystemTypes.addSet(SystemTypes.addSet(SystemTypes.makeSet(" + opv + "), " + opv1 + ")," + opv2 + ");"); 
+      }
+    } 
+    else if (type.isCollection() && 
+             "Sequence".equals(type.getName()) && 
+             elementType != null)
     { Type elemT = getElementType(); 
       Vector testVals = elemT.testValues(); 
       Vector optestVals = elemT.operationTestValues(); 

@@ -279,8 +279,29 @@ public class Type extends ModelElement
   public boolean isSetType() 
   { return "Set".equals(name); } 
 
+  public static boolean isSetType(Type typ) 
+  { if (typ == null) 
+    { return false; } 
+
+    String nme = typ.getName(); 
+
+    return "Set".equals(nme); 
+  } 
+
+  public boolean isSortedSet() 
+  { return "Set".equals(name) && sorted; } 
+
   public boolean isSortedSetType() 
   { return "Set".equals(name) && sorted; } 
+
+  public static boolean isSortedSetType(Type typ) 
+  { if (typ == null) 
+    { return false; } 
+
+    String nme = typ.getName(); 
+
+    return "Set".equals(nme) && typ.isSorted(); 
+  } 
 
   public boolean isSequenceType() 
   { return "Sequence".equals(name); } 
@@ -550,11 +571,11 @@ public class Type extends ModelElement
   } 
     
 
-  public static boolean isSetType(Type t) 
+  /* public static boolean isSetType(Type t) 
   { if (t == null) { return false; } 
     String nme = t.getName(); 
     return "Set".equals(nme); 
-  } 
+  } */ 
 
   public static boolean isSequenceType(Type t) 
   { if (t == null) { return false; } 
@@ -3243,10 +3264,19 @@ public class Type extends ModelElement
       { return "0"; }
       if (nme.equals("double"))
       { return "0.0"; }
-      if (nme.equals("Set") || nme.equals("Sequence"))
+
+      if (nme.equals("Set") && elementType != null)
+      { return "new HashSet<" + elementType.getCSharp() + ">()"; } 
+
+      if (nme.equals("Set") && elementType == null)
+      { return "new HashSet<object>()"; } 
+
+      if (nme.equals("Sequence"))
       { return "new ArrayList()"; }
+
       if (nme.equals("Map"))
       { return "new Hashtable()"; }
+
       if (alias != null)    // For datatypes
       { return alias.getDefaultCSharp(); } 
 
@@ -3255,6 +3285,7 @@ public class Type extends ModelElement
 
       return "null";    // for classes, functions, Ref, OclAny
     }
+
     return nme + "." + values.get(0);
   }
 
@@ -3404,8 +3435,14 @@ public class Type extends ModelElement
       { return "void*"; } 
     } 
 
-    if (nme.equals("Set") || nme.equals("Sequence"))
+    if (nme.equals("Sequence"))
     { return "ArrayList"; }
+
+    if (nme.equals("Set") && elementType != null)
+    { return "HashSet<" + elementType.getCSharp() + ">"; }
+
+    if (nme.equals("Set") && elementType == null)
+    { return "HashSet<object>"; }
 
     if (nme.equals("Map"))
     { return "Hashtable"; }
@@ -3937,7 +3974,13 @@ public class Type extends ModelElement
     { return lqf + " is ArrayList"; } 
 
     if ("Set".equals(typ))
-    { return lqf + " is ArrayList"; } 
+    { return lqf + " is HashSet<object>"; } 
+
+    if (typ.startsWith("Set(")) // eg: Set(int)
+    { String typbr = typ.replaceAll("(", "<");
+      typbr = typ.replaceAll(")", ">"); 
+      return lqf + " is Hash" + typbr; 
+    } 
 
     if ("Map".equals(typ))
     { return lqf + " is Hashtable"; } 

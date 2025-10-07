@@ -3785,9 +3785,12 @@ abstract class Statement implements Cloneable
           { actualtyp = new Type("Sequence", null); } 
           else 
           { actualtyp = new Type("Set",null); }  
-          actualtyp.setElementType(preterm.getElementType()); 
-          newdec = actualtyp.getCSharp() + " " + pre_var + " = new ArrayList();\n" + 
-                   "    " + pre_var + ".AddRange(" + pretermqf + ");\n"; 
+          actualtyp.setElementType(preterm.getElementType());
+          String csharptype = actualtyp.getCSharp(); 
+ 
+          newdec = 
+            "    " + csharptype + " " + pre_var + " = new " + csharptype + "();\n" + 
+            "    " + pre_var + " = SystemTypes.union(" + pre_var + ", " + pretermqf + ");\n"; 
         } 
         else 
         { actualtyp = typ;
@@ -3810,6 +3813,7 @@ abstract class Statement implements Cloneable
       // newpost.typeCheck(types,entities,context,localatts);
       return newdecs + "\n  " + newpost.updateFormCSharp(env,local);
     } 
+
     return post.updateFormCSharp(env,local);  
   }  
 
@@ -8125,7 +8129,7 @@ class WhileStatement extends Statement
         Type et = loopRange.getElementType(); 
         String etr = "object"; 
         if (et == null) 
-        { System.err.println("Error: null element type for " + loopRange);
+        { System.err.println("!! Error: null element type for " + loopRange);
           if (loopVar.getType() != null)
           { etr = loopVar.getType().getCSharp(); }
         }  
@@ -8141,12 +8145,14 @@ class WhileStatement extends Statement
         Vector preterms = body.allPreTerms(lv); 
         String newbody = processPreTermsCSharp(body, preterms, env1, local); 
 
-        return "  ArrayList " + rang + " = " + lr + ";\n" + 
+        return "  ArrayList " + rang + 
+                 " = SystemTypes.asSequence(" + lr + ");\n" + 
                "  for (int " + ind + " = 0; " + ind + " < " + rang + ".Count; " + ind + "++)\n" + 
                "  { " + etr + " " + lv + " = (" + etr + ") " + rang + "[" + ind + "];\n" +
-               "    " + newbody + " }"; 
+               "    " + newbody + "\n  }"; 
       } 
-      else if (loopTest != null && (loopTest instanceof BinaryExpression))
+      else if (loopTest != null && 
+               (loopTest instanceof BinaryExpression))
       { // assume it is  var : exp 
         BinaryExpression lt = (BinaryExpression) loopTest; 
         String lv = lt.left.queryFormCSharp(env, local); 
@@ -8172,10 +8178,10 @@ class WhileStatement extends Statement
         Vector preterms = body.allPreTerms(lv); 
         String newbody = processPreTermsCSharp(body, preterms, env1, local); 
 
-        return "  ArrayList " + rang + " = " + lr + ";\n" + 
+        return "  ArrayList " + rang + " = SystemTypes.asSequence(" + lr + ");\n" + 
                "  for (int " + ind + " = 0; " + ind + " < " + rang + ".Count; " + ind + "++)\n" + 
                "  { " + etr + " " + lv + " = (" + etr + ") " + rang + "[" + ind + "];\n" +
-               "    " + newbody + " }"; 
+               "    " + newbody + "\n  }"; 
       } 
       return "  for (" + loopTest.queryFormCSharp(env,local) + ") \n" + 
              "  { " + body.updateFormCSharp(env,local) + " }"; 
@@ -9392,7 +9398,11 @@ class CreationStatement extends Statement
       { return "  " + jType + " " + assignsTo + ";"; } 
       else if (Type.isMapType(instanceType))
       { return "  Hashtable " + assignsTo + ";"; }
-      else if (Type.isCollectionType(instanceType))
+      else if (Type.isSetType(instanceType))
+      { Type et = instanceType.getElementType(); 
+        return "  HashSet<" + Type.getCSharptype(et) + "> " + assignsTo + ";"; 
+      }
+      else if (Type.isSequenceType(instanceType))
       { return "  ArrayList " + assignsTo + ";"; } 
       else if (Type.isFunctionType(instanceType))
       { String kt = "object"; 
@@ -9423,8 +9433,9 @@ class CreationStatement extends Statement
         } 
       } 
     } 
-    else if (createsInstanceOf.startsWith("Set") || 
-             createsInstanceOf.startsWith("Sequence"))
+    else if (createsInstanceOf.startsWith("Set"))
+    { return "  HashSet<object> " + assignsTo + ";"; }  
+    else if (createsInstanceOf.startsWith("Sequence"))
     { return "  ArrayList " + assignsTo + ";"; } 
     else if (createsInstanceOf.startsWith("Map"))
     { return "  Hashtable "  + assignsTo + ";"; }
