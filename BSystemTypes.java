@@ -8659,12 +8659,11 @@ public class BSystemTypes extends BComponent
 
   public static String generateAsSetOpCSharp()
   { String res = 
-      "  public static ArrayList asSet(ArrayList a)\n" +
-      "  { ArrayList res = new ArrayList(); \n" +
+      "  public static HashSet<object> asSet(ArrayList a)\n" +
+      "  { HashSet<object> res = new HashSet<object>(); \n" +
       "    for (int i = 0; i < a.Count; i++)\n" +
       "    { object obj = a[i];\n" +
-      "      if (res.Contains(obj)) { } \n" + 
-      "      else { res.Add(obj); }\n" + 
+      "      res.Add(obj);\n" + 
       "    } \n" + 
       "    return res; \n" + 
       "  }\n\n"; 
@@ -8698,6 +8697,14 @@ public class BSystemTypes extends BComponent
 
     res = res + 
       "  public static ArrayList asSequence<T>(HashSet<T> r)\n" +
+      "  { ArrayList res = new ArrayList(); \n" +
+      "    foreach (T x in r)\n" +
+      "    { res.Add(x); }\n" +
+      "    return res;\n" +
+      "  }\n\n";   
+
+    res = res + 
+      "  public static ArrayList asSequence<T>(SortedSet<T> r)\n" +
       "  { ArrayList res = new ArrayList(); \n" +
       "    foreach (T x in r)\n" +
       "    { res.Add(x); }\n" +
@@ -9661,14 +9668,26 @@ public class BSystemTypes extends BComponent
     "  }\n\n";
 
     res = res + 
-    "  public static <T, S extends Comparable> TreeSet<T> maximalElements(TreeSet<T> s, List<S> v)\n" +
-    "  { ArrayList<T> lst = new ArrayList<T>();\n" +
-    "    lst.addAll(s); \n" +
-    "    ArrayList<T> lres = maximalElements(lst, v);\n" + 
-    "    TreeSet<T> res = new TreeSet<T>(); \n" +
-    "    res.addAll(lres); \n" +
-    "    return res;\n" +
-    "  }\n\n"; 
+      "  public static <T, S extends Comparable> TreeSet<T> maximalElements(TreeSet<T> s, List<S> v)\n" +
+      "  { TreeSet<T> res = new TreeSet<T>();\n" +
+      "    if (s.size() == 0) \n" +
+      "    { return res; }\n" +
+      "    Comparable largest = (Comparable) v.get(0);\n" +
+      "    res.add(s.first());\n" +
+      "    int i = 0; \n" +
+      "    for (T x : s)\n" +
+      "    { Comparable next = (Comparable) v.get(i);\n" +
+      "      if (largest.compareTo(next) < 0)\n" +
+      "      { largest = next;\n" +
+      "        res.clear();\n" +
+      "        res.add(x);\n" +
+      "      }\n" +
+      "      else if (largest.compareTo(next) == 0)\n" +
+      "      { res.add(x); }\n" +
+      "      i++; \n" +
+      "    }\n" +
+      "    return res;\n" +  
+      "  }\n\n"; 
 
     return res; 
   } 
@@ -9692,7 +9711,29 @@ public class BSystemTypes extends BComponent
     "      { res.Add(s[i]); }\n" +
     "    }\n" +
     "    return res;\n" + 
-    "  }"; 
+    "  }\n\n";
+
+    res = res + 
+    "  public static SortedSet<T> maximalElements<T>(SortedSet<T> s, ArrayList v)\n" +
+    "  { SortedSet<T> res = new SortedSet<T>();\n" +
+    "    if (s.Count == 0) { return res; }\n" +
+    "    IComparable largest = (IComparable) v[0];\n" +
+    "    res.Add(s.Min);\n" +
+    "    int i = 0; \n" +
+    "    foreach (T x in s)\n" +
+    "    { IComparable next = (IComparable) v[i];\n" +
+    "      if (largest.CompareTo(next) < 0)\n" +
+    "      { largest = next;\n" +
+    "        res.Clear();\n" +
+    "        res.Add(x);\n" +
+    "      }\n" +
+    "      else if (largest.CompareTo(next) == 0)\n" +
+    "      { res.Add(x); }\n" +
+    "      i++;\n" + 
+    "    }\n" +
+    "    return res;\n" +
+    "  }\n\n"; 
+ 
     return res; 
   } 
 
@@ -9842,15 +9883,27 @@ public class BSystemTypes extends BComponent
     "  }\n\n";
 
     res = res + 
-    "  public static <T, S extends Comparable> TreeSet<T> minimalElements(TreeSet<T> s, List<S> v)\n" +
-    "  { ArrayList<T> lst = new ArrayList<T>();\n" +
-    "    lst.addAll(s); \n" +
-    "    ArrayList<T> lres = minimalElements(lst, v);\n" + 
-    "    TreeSet<T> res = new TreeSet<T>(); \n" +
-    "    res.addAll(lres); \n" +
-    "    return res;\n" +
-    "  }\n\n"; 
- 
+      "  public static <T, S extends Comparable> TreeSet<T> minimalElements(TreeSet<T> s, List<S> v)\n" +
+      "  { TreeSet<T> res = new TreeSet<T>();\n" +
+      "    if (s.size() == 0) \n" +
+      "    { return res; }\n" +
+      "    Comparable smallest = (Comparable) v.get(0);\n" +
+      "    res.add(s.first());\n" +
+      "    int i = 0; \n" +
+      "    for (T x : s)\n" +
+      "    { Comparable next = (Comparable) v.get(i);\n" +
+      "      if (smallest.compareTo(next) > 0)\n" +
+      "      { largest = next;\n" +
+      "        res.clear();\n" +
+      "        res.add(x);\n" +
+      "      }\n" +
+      "      else if (smallest.compareTo(next) == 0)\n" +
+      "      { res.add(x); }\n" +
+      "      i++; \n" +
+      "    }\n" +
+      "    return res;\n" +  
+      "  }\n\n"; 
+
     return res; 
   } 
 
@@ -9873,7 +9926,29 @@ public class BSystemTypes extends BComponent
     "      { res.Add(s[i]); }\n" +
     "    }\n" +
     "    return res;\n" +
-    "  }\n"; 
+    "  }\n\n";
+
+    res = res + 
+    "  public static SortedSet<T> minimalElements<T>(SortedSet<T> s, ArrayList v)\n" +
+    "  { SortedSet<T> res = new SortedSet<T>();\n" +
+    "    if (s.Count == 0) { return res; }\n" +
+    "    IComparable smallest = (IComparable) v[0];\n" +
+    "    res.Add(s.Min);\n" +
+    "    int i = 0;\n" +
+    "    foreach (T x in s)\n" +
+    "    { IComparable next = (IComparable) v[i];\n" +
+    "      if (smallest.CompareTo(next) > 0)\n" +
+    "      { smallest = next;\n" +
+    "        res.Clear();\n" +
+    "        res.Add(x);\n" +
+    "      }\n" +
+    "      else if (smallest.CompareTo(next) == 0)\n" +
+    "      { res.Add(x); }\n" +
+    "      i++;\n" +
+    "    }\n" +
+    "    return res;\n" +
+    "  }\n\n"; 
+ 
     return res; 
   } 
 
@@ -9897,6 +9972,7 @@ public class BSystemTypes extends BComponent
     "    }\n" +
     "    return res;\n" +
     "  }\n\n" + 
+
     "  static vector<_T>* minimalElements(vector<_T>* s, vector<long>* v)\n" +
     "  { vector<_T>* res = new vector<_T>();\n" +
     "    if (s->size() == 0) { return res; }\n" +
@@ -9915,6 +9991,7 @@ public class BSystemTypes extends BComponent
     "    }\n" +
     "    return res;\n" +
     "  }\n\n" + 
+
     "  static vector<_T>* minimalElements(vector<_T>* s, vector<string>* v)\n" +
     "  { vector<_T>* res = new vector<_T>();\n" +
     "    if (s->size() == 0) { return res; }\n" +
@@ -9933,6 +10010,7 @@ public class BSystemTypes extends BComponent
     "    }\n" +
     "    return res;\n" +
     "  }\n\n" + 
+
     "  static vector<_T>* minimalElements(vector<_T>* s, vector<double>* v)\n" +
     "  { vector<_T>* res = new vector<_T>();\n" +
     "    if (s->size() == 0) { return res; }\n" +

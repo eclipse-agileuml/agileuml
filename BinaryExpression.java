@@ -7977,7 +7977,9 @@ public boolean conflictsWithIn(String op, Expression el,
     { return collectQueryFormJava6(lqf,rqf,rprim,env,local); } 
 
     if (operator.equals("|A") || operator.equals("->any"))   
-    { String getany = anyQueryFormJava6(lqf,rqf,rprim,env,local); 
+    { String getany = 
+         anyQueryFormJava6(lqf,rqf,rprim,env,local);
+ 
       if (Type.isPrimitiveType(type))
       { return unwrapJava6(getany); } 
        
@@ -8497,10 +8499,12 @@ public boolean conflictsWithIn(String op, Expression el,
     } 
 
     if (operator.equals("->selectMaximals"))
-    { String col = collectQueryFormJava7(lqf,rqf,rprim,env,local); 
+    { String col = 
+         collectQueryFormJava7(lqf,rqf,rprim,env,local); 
       String jType = type.getJava7(elementType); 
       if (left.umlkind == CLASSID)
-      { lqf = ((BasicExpression) left).classExtentQueryFormJava7(env,local); } 
+      { lqf = ((BasicExpression) left).classExtentQueryFormJava7(env,local); }
+ 
       return "((" + jType + ") Ocl.maximalElements(" + lqf + ", ((ArrayList<Comparable>) " + col + ")))"; 
     } 
 
@@ -8516,7 +8520,8 @@ public boolean conflictsWithIn(String op, Expression el,
     }
 
     if (operator.equals("->selectMinimals"))
-    { String col = collectQueryFormJava7(lqf,rqf,rprim,env,local); 
+    { String col = 
+         collectQueryFormJava7(lqf,rqf,rprim,env,local); 
       String jType = type.getJava7(elementType); 
       if (left.umlkind == CLASSID)
       { lqf = ((BasicExpression) left).classExtentQueryFormJava7(env,local); } 
@@ -8638,7 +8643,8 @@ public boolean conflictsWithIn(String op, Expression el,
       { res = "(" + lqf + " - (" + rqf + "))"; } 
       else if (left.isString())
       { res = "((Comparable) " + lqf + ").compareTo(\"\" + " + rqf + ")"; } 
-      else if (left.hasSequenceType() && right.hasSequenceType())
+      else if (left.hasSequenceType() && 
+               right.hasSequenceType())
       { res = "Ocl.sequenceCompare(" + lqf + "," + rqf + ")"; } 
       else 
       { res = "((Comparable) " + lqf + ").compareTo(" + rqf + ")"; }  
@@ -8666,8 +8672,10 @@ public boolean conflictsWithIn(String op, Expression el,
     } 
 
     if (operator.equals("->unionAll"))
-    { String col = collectQueryFormJava7(lqf,rqf,rprim,env,local); 
-      String jtype = type.getJava7(elementType); 
+    { String col = 
+         collectQueryFormJava7(lqf,rqf,rprim,env,local); 
+      String jtype = type.getJava7(elementType);
+ 
       if (left.isOrdered() && (right.isOrdered() || 
           "self".equals(right + "")))
       { return "((" + jtype + ") Ocl.concatenateAll(" + col + "))"; } 
@@ -8699,7 +8707,8 @@ public boolean conflictsWithIn(String op, Expression el,
     } 
 
     if (right.umlkind == CLASSID && 
-        ((BasicExpression) right).arrayIndex == null && operator.equals("->oclIsTypeOf"))  
+        ((BasicExpression) right).arrayIndex == null && 
+        operator.equals("->oclIsTypeOf"))  
     { return "(" + lqf + ".getClass() == " + right + ".class)"; } 
 
     if (operator.equals("->oclIsTypeOf"))  
@@ -8718,21 +8727,25 @@ public boolean conflictsWithIn(String op, Expression el,
     } 
 
     if (left.umlkind == CLASSID && 
-        ((BasicExpression) left).arrayIndex == null && operator.equals("->includes"))  
+        ((BasicExpression) left).arrayIndex == null && 
+        operator.equals("->includes"))  
     { return "(" + rqf + " instanceof " + left + ")"; } 
 
     if (left.umlkind == CLASSID && 
-        ((BasicExpression) left).arrayIndex == null && operator.equals("->includesAll"))  
+        ((BasicExpression) left).arrayIndex == null && 
+        operator.equals("->includesAll"))  
     { lqf = ((BasicExpression) left).classExtentQueryFormJava7(env,local);
       return "(" + lqf + ".containsAll(" + rqf + "))"; 
     } 
 
     if (left.umlkind == CLASSID && 
-        ((BasicExpression) left).arrayIndex == null && operator.equals("->excludes")) 
+        ((BasicExpression) left).arrayIndex == null && 
+        operator.equals("->excludes")) 
     { return "!(" + rqf + " instanceof " + left + ")"; } 
 
     if (left.umlkind == CLASSID && 
-        ((BasicExpression) left).arrayIndex == null && operator.equals("->excludesAll"))  
+        ((BasicExpression) left).arrayIndex == null && 
+        operator.equals("->excludesAll"))  
     { lqf = ((BasicExpression) left).classExtentQueryFormJava7(env,local);
       return "Collections.disjoint(" + lqf + "," + rqf + ")"; 
     } 
@@ -8994,15 +9007,42 @@ public boolean conflictsWithIn(String op, Expression el,
     if (operator.equals("|C") || operator.equals("->collect"))
     { return collectQueryFormCSharp(lqf,rqf,rprim,env,local); } 
 
-    if (operator.equals("->selectMaximals"))
+    if (operator.equals("->selectMaximals") && 
+        left.isSequence())
     { String col = 
-         collectQueryFormCSharp(lqf,rqf,rprim,env,local); 
+         collectQueryFormCSharp(lqf,rqf,rprim,env,local);
+ 
       if (left.umlkind == CLASSID)
       { lqf = ((BasicExpression) left).classExtentQueryFormCSharp(env,local); }   
+
       return "SystemTypes.maximalElements(" + lqf + ", " + col + ")"; 
     } 
 
-    if (operator.equals("|selectMaximals"))
+    if (operator.equals("->selectMaximals") && 
+        left.isSet())
+    { // Same as 
+      // left->asSequence()->selectMaximals(right)->asSet()
+
+      if (left.umlkind == CLASSID)
+      { lqf = ((BasicExpression) left).classExtentQueryFormCSharp(env,local); }   
+      else 
+      { Expression leftseq = 
+          new UnaryExpression("->asSequence", left); 
+        Type lefttypesq = new Type("Sequence", null); 
+        lefttypesq.setElementType(left.getElementType()); 
+        leftseq.setType(lefttypesq); 
+
+        lqf = leftseq.queryFormCSharp(env, local); 
+      } 
+
+      String col = 
+         collectQueryFormCSharp(lqf,rqf,rprim,env,local);
+
+      return "SystemTypes.asSet(SystemTypes.maximalElements(" + lqf + ", " + col + "))"; 
+    } 
+
+    if (operator.equals("|selectMaximals") && 
+        ((BinaryExpression) left).getRight().isSequence())
     { String col = 
          collectQueryFormCSharp(lqf,rqf,rprim,env,local);
       Expression actualLeft = ((BinaryExpression) left).getRight();  
@@ -9010,6 +9050,27 @@ public boolean conflictsWithIn(String op, Expression el,
       if (actualLeft.umlkind == CLASSID)
       { lqf = ((BasicExpression) actualLeft).classExtentQueryFormCSharp(env,local); }   
       return "SystemTypes.maximalElements(" + lqf + ", " + col + ")"; 
+    } 
+
+    if (operator.equals("|selectMaximals") && 
+        ((BinaryExpression) left).getRight().isSet())
+    { Expression actualLeft = ((BinaryExpression) left).getRight();  
+
+      if (actualLeft.umlkind == CLASSID)
+      { lqf = ((BasicExpression) actualLeft).classExtentQueryFormCSharp(env,local); }   
+      else 
+      { Expression leftseq = 
+          new UnaryExpression("->asSequence", actualLeft); 
+        Type lefttypesq = new Type("Sequence", null); 
+        lefttypesq.setElementType(actualLeft.getElementType()); 
+        leftseq.setType(lefttypesq); 
+
+        lqf = leftseq.queryFormCSharp(env, local); 
+      } 
+
+      String col = 
+         collectQueryFormCSharp(lqf,rqf,rprim,env,local);
+      return "SystemTypes.asSet(SystemTypes.maximalElements(" + lqf + ", " + col + "))"; 
     } 
 
     if (operator.equals("->iterate") && accumulator != null && 
@@ -9031,14 +9092,38 @@ public boolean conflictsWithIn(String op, Expression el,
                 ", (" + iteratorVariable + "_x) => ( (" + acc + "_x) => { " + csacctype + " " + acc + " = (" + csacctype + ") " + acc + "_x;  " + letypestr + " " + iteratorVariable + " = (" + letypestr + ") " + iteratorVariable + "_x; return " + rqf + "; } ) )"; 
     } 
 
-    if (operator.equals("->selectMinimals"))
+    if (operator.equals("->selectMinimals") && left.isSequence())
     { String col = collectQueryFormCSharp(lqf,rqf,rprim,env,local); 
       if (left.umlkind == CLASSID)
       { lqf = ((BasicExpression) left).classExtentQueryFormCSharp(env,local); } 
       return "SystemTypes.minimalElements(" + lqf + ", " + col + ")"; 
     } 
 
-    if (operator.equals("|selectMinimals"))
+    if (operator.equals("->selectMinimals") && 
+        left.isSet())
+    { // Same as 
+      // left->asSequence()->selectMinimals(right)->asSet()
+
+      if (left.umlkind == CLASSID)
+      { lqf = ((BasicExpression) left).classExtentQueryFormCSharp(env,local); }   
+      else 
+      { Expression leftseq = 
+          new UnaryExpression("->asSequence", left); 
+        Type lefttypesq = new Type("Sequence", null); 
+        lefttypesq.setElementType(left.getElementType()); 
+        leftseq.setType(lefttypesq); 
+
+        lqf = leftseq.queryFormCSharp(env, local); 
+      } 
+
+      String col = 
+         collectQueryFormCSharp(lqf,rqf,rprim,env,local);
+
+      return "SystemTypes.asSet(SystemTypes.minimalElements(" + lqf + ", " + col + "))"; 
+    } 
+
+    if (operator.equals("|selectMinimals") && 
+        ((BinaryExpression) left).getRight().isSequence())
     { String col = 
         collectQueryFormCSharp(lqf,rqf,rprim,env,local);
       Expression actualLeft = 
@@ -9047,6 +9132,27 @@ public boolean conflictsWithIn(String op, Expression el,
       if (actualLeft.umlkind == CLASSID)
       { lqf = ((BasicExpression) actualLeft).classExtentQueryFormCSharp(env,local); }   
       return "SystemTypes.minimalElements(" + lqf + ", " + col + ")"; 
+    } 
+
+    if (operator.equals("|selectMinimals") && 
+        ((BinaryExpression) left).getRight().isSet())
+    { Expression actualLeft = ((BinaryExpression) left).getRight();  
+
+      if (actualLeft.umlkind == CLASSID)
+      { lqf = ((BasicExpression) actualLeft).classExtentQueryFormCSharp(env,local); }   
+      else 
+      { Expression leftseq = 
+          new UnaryExpression("->asSequence", actualLeft); 
+        Type lefttypesq = new Type("Sequence", null); 
+        lefttypesq.setElementType(actualLeft.getElementType()); 
+        leftseq.setType(lefttypesq); 
+
+        lqf = leftseq.queryFormCSharp(env, local); 
+      } 
+
+      String col = 
+         collectQueryFormCSharp(lqf,rqf,rprim,env,local);
+      return "SystemTypes.asSet(SystemTypes.minimalElements(" + lqf + ", " + col + "))"; 
     } 
 
     if (operator.equals("->sortedBy"))
