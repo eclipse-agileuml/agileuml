@@ -1645,7 +1645,7 @@ static values(m)
 // var pp = setSubrange(ss, 3, 5, "and");
 
 // var ss = [1, 4, 6, 7, 2];
-// alert(listSubrange(ss, 2, -1));
+// alert(sequenceSubrange(ss, 2, -1));
 
 // var mp = new Map([["a", 1], ["b", 2]]);
 

@@ -83,7 +83,7 @@ class MatrixLib :
       result = []
       prod: int = ocl.prd(ocl.tail(sh))
       for i in range(sh[0]):
-        rowi: list = MatrixLib.fillMatrixForm(ocl.listSubrange(sq, prod * (i - 1), (prod * i) - 1), ocl.tail(sh))
+        rowi: list = MatrixLib.fillMatrixForm(ocl.sequenceSubrange(sq, 1 + prod * (i - 1), (prod * i)), ocl.tail(sh))
         result.append(rowi)
       return result
 
