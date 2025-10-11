@@ -204,6 +204,18 @@ class VectorUtil
     return res; 
   }
 
+  public static boolean containsEqualExpression(final String s, final Vector vs)
+  { boolean res = false;
+
+    for (int i = 0; i < vs.size(); i++)
+    { Object obj = vs.elementAt(i);
+      if (VectorUtil.test("=", (obj + ""), s))
+      { return true; } 
+    }
+
+    return res; 
+  } // 1 = 1.0, etc. 
+
   public static boolean containsEqualVector(final Vector v, final Vector vs)
   { boolean res = false; 
     for (int i = 0; i < vs.size(); i++) 
@@ -630,26 +642,63 @@ class VectorUtil
       for (int j = 0; j < vals2.size(); j++)
       { String s2 = (String) vals2.get(j);
         int y = Integer.parseInt(s2);
-        if (test(operator,x,y))
+        if (VectorUtil.test(operator,x,y))
         { res.add(new Maplet(s1,s2)); }
       }
     }
     return res;
   }
 
-  public static boolean test(String op, int x, int y)
+  public static boolean test(String op, String x, String y)
+  { try
+    { double x1 = Double.parseDouble(x); 
+      double y1 = Double.parseDouble(y);
+      return VectorUtil.test(op, x1, y1); 
+    } 
+    catch (Exception _ex) { } 
+
+    // Treat as strings
+
+    if (op.equals("="))
+    { return ("" + x).equals(y); }
+
+    if (op.equals("<"))
+    { return ("" + x).compareTo(y) < 0; }
+
+    if (op.equals("!=") || op.equals("/="))
+    { return !("" + x).equals(y); }
+
+    if (op.equals("<="))
+    { return ("" + x).compareTo(y) <= 0; }
+
+    if (op.equals(">"))
+    { return ("" + x).compareTo(y) > 0; }
+
+    if (op.equals(">="))
+    { return ("" + x).compareTo(y) >= 0; }
+
+    return false; 
+  } 
+
+  public static boolean test(String op, double x, double y)
   { if (op.equals("="))
     { return x == y; }  // already handled in Expression
+
     if (op.equals("<"))
     { return x < y; }
-    if (op.equals("!="))
+
+    if (op.equals("!=") || op.equals("/="))
     { return x != y; }
+
     if (op.equals("<="))
     { return x <= y; }
+
     if (op.equals(">"))
     { return x > y; }
+
     if (op.equals(">="))
     { return x >= y; }
+
     return false;
   }
 
@@ -957,8 +1006,7 @@ class VectorUtil
     Vector v2 = new Vector(); 
     v2.add("x");  
     Vector rr = VectorUtil.replaceSubsequence(coll,v1,v2); 
-    System.out.println(rr);  
-                              */ 
+    System.out.println(rr); 
            
     Vector zz = new Vector(); 
     Vector yy = new Vector(); 
@@ -968,7 +1016,9 @@ class VectorUtil
     System.out.println(VectorUtil.vectorMinimum(yy));  
     System.out.println(VectorUtil.vectorMaximum(yy));  
 
-    System.out.println(VectorUtil.removeDuplicates(yy)); 
+    System.out.println(VectorUtil.removeDuplicates(yy)); */ 
+
+    System.out.println(VectorUtil.test("<=", "21x", "21z"));  
   } 
     
 }

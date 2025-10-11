@@ -503,9 +503,9 @@ public abstract class ASTTerm
       } 
       newstereos.add(mf + "=" + val); 
       ASTTerm.metafeatures.put(lit,newstereos); 
-      // System.out.println("*** Set " + lit + 
-      //                    " tagged values: " + 
-      //                    newstereos); 
+      System.out.println("*** Set " + lit + 
+                         " tagged values: " + 
+                         newstereos); 
     } 
   }
 
@@ -1051,10 +1051,12 @@ public abstract class ASTTerm
 
   public static String getType(ASTTerm t) 
   { String val = (String) types.get(t.literalForm());
+
     if (val == null && t instanceof ASTBasicTerm) 
     { ASTBasicTerm bt = (ASTBasicTerm) t; 
       return bt.getType(); 
     } 
+
     return val;  
   }
 
@@ -1332,6 +1334,11 @@ public abstract class ASTTerm
 
   public abstract Vector jsexpressionListToKM3(java.util.Map vartypes, 
     java.util.Map varelemtypes, Vector types, Vector entities);
+
+  public abstract Vector jsexpressionListToKM3(int sze,
+    java.util.Map vartypes, 
+    java.util.Map varelemtypes, 
+    Vector types, Vector entities); 
 
   public abstract Vector jsupdateForm(java.util.Map vartypes, 
     java.util.Map varelemtypes, Vector types, Vector ents); 
@@ -6199,6 +6206,7 @@ public abstract class ASTTerm
     return lit; // for numbers only 
   }  
 
+  /* For MathOCL */ 
   public static String symbolicEvaluation(ASTTerm e1)
   { String a = ""; 
     String e1lit = e1.literalForm(); 

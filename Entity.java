@@ -75,6 +75,20 @@ public class Entity extends ModelElement implements Comparable
   public Entity mergeEntity(Entity ent)
   { // Combine features of this with priority over ent
 
+    if (typeParameters == null && 
+        ent.typeParameters != null)
+    { typeParameters = ent.typeParameters; } // or copy
+    else if (ent.typeParameters != null) 
+    { for (int i = 0; i < ent.typeParameters.size(); i++) 
+      { Type tp = (Type) ent.typeParameters.get(i); 
+        if (VectorUtil.containsEqualString(tp.getName(),
+                                           typeParameters))
+        { } 
+        else 
+        { typeParameters.add(tp); } 
+      } 
+    } 
+
     for (int i = 0; i < ent.attributes.size(); i++) 
     { Attribute attr = (Attribute) ent.attributes.get(i); 
       if (hasAttribute(attr.getName())) { } 
@@ -239,7 +253,7 @@ public class Entity extends ModelElement implements Comparable
   public void addGenericTypeParameters(Vector gpars, Vector ents)
   { for (int i = 0; i < gpars.size(); i++) 
     { ModelElement mt = (ModelElement) gpars.get(i);
-	  if (mt == null) { continue; }
+      if (mt == null) { continue; }
 	  
       Entity newT = null; 
       if (mt instanceof Type && 
@@ -252,6 +266,8 @@ public class Entity extends ModelElement implements Comparable
       newT.genericParameter = true; 
       addTypeParameter(new Type(newT));
     }
+
+    // JOptionPane.showInputDialog("Generic type parameters of " + this + " are: " + typeParameters); 
   }      
 
   public void setIsParameter(boolean gen)
@@ -343,6 +359,20 @@ public class Entity extends ModelElement implements Comparable
 
   public Type getType() 
   { return new Type("OclType", null); } 
+
+  public ObjectSpecification initialisedObject(String nme)
+  { ObjectSpecification res = 
+      new ObjectSpecification(nme, this);
+ 
+    for (int i = 0; i < attributes.size(); i++) 
+    { Attribute attr = (Attribute) attributes.get(i); 
+      String aname = attr.getName(); 
+      Expression aval = attr.getInitialisation(); 
+      res.setOCLValue(aname, aval); 
+    }
+ 
+    return res; 
+  } 
 
   public String cg(CGSpec cgs)
   { String etext = this + "";
@@ -588,6 +618,8 @@ public class Entity extends ModelElement implements Comparable
     { ModelElement x = (ModelElement) tpars.get(i);
       addTypeParameter(x);
     }
+
+    // JOptionPane.showInputDialog("~~~ set type parameters of " + this + " to " + typeParameters); 
   } 
 
   public boolean hasTypeParameters(Vector tpars) 
@@ -825,6 +857,35 @@ public class Entity extends ModelElement implements Comparable
     return res; 
   } 
 
+  public int maximumInheritanceChain()
+  { if (superclass == null && interfaces.size() == 0)
+    { return 1; } 
+
+    int res = 1; 
+
+    if (superclass != null) 
+    { int m = superclass.maximumInheritanceChain(); 
+      res = res + m; 
+    } 
+
+    if (superclasses != null) 
+    { for (int i = 0; i < superclasses.size(); i++) 
+      { Entity sup = (Entity) superclasses.get(i); 
+        int imax = sup.maximumInheritanceChain(); 
+        if (imax + 1 > res) 
+        { res = imax + 1; } 
+      }
+    }  
+
+    for (int i = 0; i < interfaces.size(); i++) 
+    { Entity intf = (Entity) interfaces.get(i); 
+      int imax = intf.maximumInheritanceChain(); 
+      if (imax + 1 > res) 
+      { res = imax + 1; } 
+    } 
+
+    return res; 
+  } 
 
   public Entity makeFlattenedCopy(boolean allmaps, int n, boolean exact)
   { // Combine all direct attributes, associations and inherited and
@@ -1177,7 +1238,7 @@ public class Entity extends ModelElement implements Comparable
   { if (e != null) 
     { e.genericParameter = true; 
       Type t = new Type(e); 
-      this.addTypeParameter(t); 
+      typeParameters.add(t); 
     } 
   } 
 
@@ -4937,6 +4998,8 @@ public class Entity extends ModelElement implements Comparable
       Vector args = op.getParameterExpressions(); 
       op.definedness(args);
       op.determinate(args);  
+      op.isSideEffecting();
+      System.out.println();  
     } 
   } 
 
@@ -4960,7 +5023,8 @@ public class Entity extends ModelElement implements Comparable
   } 
 
 
-  public int displayMeasures(PrintWriter out, java.util.Map clones)
+  public int displayMeasures(PrintWriter out, 
+                             java.util.Map clones)
   { String nme = getName(); 
 
     if (isDerived() || isComponent() || 
@@ -4973,6 +5037,27 @@ public class Entity extends ModelElement implements Comparable
 
     int highcount = 0; 
     int lowcount = 0; 
+
+    int ancestors = 0; 
+
+    if (superclass != null)
+    { ancestors = 1; }
+ 
+    if (superclasses != null)
+    { ancestors = ancestors + superclasses.size(); } 
+
+    ancestors = ancestors + interfaces.size(); 
+
+    if (ancestors > TestParameters.superclassesLimit)
+    { out.println("!! Code smell (ESC): excessive number of superclasses/interfaces (" + ancestors + ") in " + nme); 
+      // highcount++;
+    } 
+
+    int maxinheritchain = maximumInheritanceChain(); 
+    if (maxinheritchain > TestParameters.inheritanceChainLimit)
+    { out.println("!! Code smell (EDI): excessive depth of inheritance (" + maxinheritchain + ") in " + nme); 
+      // highcount++;
+    } 
 
     int atts = attributes.size(); 
     int assocs = associations.size(); 
@@ -5728,6 +5813,43 @@ public class Entity extends ModelElement implements Comparable
 
     UCDArea.CLONE_LIMIT = 10;
 
+    for (int i = 0; i < attributes.size(); i++) 
+    { Attribute attr = (Attribute) attributes.get(i); 
+ 
+      Vector redDetails = new Vector(); 
+      Vector amberDetails = new Vector(); 
+      Map resa = attr.energyUse(redDetails, amberDetails); 
+      int redop = (int) resa.get("red"); 
+      int amberop = (int) resa.get("amber"); 
+      
+      if (redop > 0) 
+      { System.err.println("!!! Attribute " + attr + 
+                           " has " + redop + " energy use " +
+                           " red flags!");
+
+        for (int j = 0; j < redDetails.size(); j++) 
+        { System.err.println(redDetails.get(j)); } 
+        System.err.println(); 
+ 
+        int redscore = (int) res.get("red"); 
+        res.set("red", redscore + redop); 
+      } 
+     
+      if (amberop > 0) 
+      { System.err.println("!! Attribute " + attr + 
+                           " has " + amberop + 
+                           " energy use " +
+                           " amber flags!"); 
+
+        for (int j = 0; j < amberDetails.size(); j++) 
+        { System.err.println(amberDetails.get(j)); } 
+        System.err.println(); 
+
+        int amberscore = (int) res.get("amber"); 
+        res.set("amber", amberscore + amberop); 
+      } 
+    } 
+
     int n = operations.size(); 
 
     for (int i = 0; i < n; i++) 
@@ -5736,7 +5858,6 @@ public class Entity extends ModelElement implements Comparable
 
       Vector redDetails = new Vector(); 
       Vector amberDetails = new Vector(); 
-
       Map res1 = op.energyAnalysis(redDetails, amberDetails);
 
       java.util.Map clones = new java.util.HashMap(); 
@@ -5916,6 +6037,7 @@ public class Entity extends ModelElement implements Comparable
 
     for (int i = 0; i < attributes.size(); i++) 
     { Attribute attr = (Attribute) attributes.get(i); 
+
       if (attr.hasSequenceType())
       { boolean indexUse = 
           attr.hasIndexingOperation(collOps); 
@@ -6695,11 +6817,11 @@ System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 
         Expression expr = new BasicExpression(att);
       
-        JOptionPane.showMessageDialog(null, 
+        /* JOptionPane.showMessageDialog(null, 
               ">> Attribute " + att + " Width: " + awidth + 
               " Multiplicity: " + amult, 
               "", 
-              JOptionPane.INFORMATION_MESSAGE);
+              JOptionPane.INFORMATION_MESSAGE); */ 
 
         if (att.isSequence())
         { Expression xvar = 
@@ -6749,11 +6871,11 @@ System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
             atype.setFixedSize(true, widthExpr);  
           } 
 
-          JOptionPane.showMessageDialog(null, 
+          /* JOptionPane.showMessageDialog(null, 
              ">> Attribute " + att + " Type: " + atype + 
              " Type is fixed size: " + atype.hasFixedSize(), 
              "", 
-             JOptionPane.INFORMATION_MESSAGE);
+             JOptionPane.INFORMATION_MESSAGE); */ 
         } 
  
         sumExpr = 
@@ -9553,6 +9675,17 @@ System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
     return res; 
   } 
 
+  public void assertTypeInformation() // for CSTL
+  { for (int i = 0; i < attributes.size(); i++)
+    { Attribute att = (Attribute) attributes.get(i);
+      att.assertTypeInformation(); 
+    }
+
+    for (int i = 0; i < associations.size(); i++)
+    { Association ast = (Association) associations.get(i);
+      ast.assertTypeInformation(); 
+    }
+  } 
  
   public void generateJava(Vector entities, Vector types, PrintWriter out)
   { if (hasStereotype("external") || 
@@ -12402,8 +12535,11 @@ System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
   { String res = ""; 
 
     for (int i = 0; i < stereotypes.size(); i++) 
-    { String stereo = (String) stereotypes.get(i); 
-      res = res + "  stereotype " + stereo + ";\n"; 
+    { String stereo = (String) stereotypes.get(i);
+
+      if ("abstract".equals(stereo)) { } 
+      else  
+      { res = res + "  stereotype " + stereo + ";\n"; } 
     }
 
     return res; 
@@ -12429,7 +12565,10 @@ System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
   public String getKM3()
   { String nme = "class " + getName();
 
-    if (typeParameters.size() > 0)
+    // JOptionPane.showInputDialog("]]] Class " + nme + " has parameters " + typeParameters); 
+
+    if (typeParameters != null && 
+        typeParameters.size() > 0)
     { String tp = ""; 
       for (int i = 0; i < typeParameters.size(); i++) 
       { tp = tp + ((ModelElement) typeParameters.get(i)).getName();
@@ -12478,8 +12617,10 @@ System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
     String res = "  " + nme + " {\n\r";
 
     for (int i = 0; i < stereotypes.size(); i++) 
-    { String stereo = (String) stereotypes.get(i); 
-      res = res + "  stereotype " + stereo + ";\n\r"; 
+    { String stereo = (String) stereotypes.get(i);
+      if ("abstract".equals(stereo)) { } 
+      else  
+      { res = res + "  stereotype " + stereo + ";\n\r"; }  
     }
 
     res = res + "\n\r";
@@ -12711,8 +12852,15 @@ System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
           intf.getName() + " <|.. " + nme + "\n\n"; 
     }    
 
-    String res =  inheritstring + 
+    String classHeader =  
                   "class " + nme + " {\n";
+
+    if (isInterface())
+    { classHeader = "interface " + nme + " {\n"; } 
+    else if (isAbstract())
+    { classHeader = "abstract " + classHeader; } 
+
+    String res =  inheritstring + classHeader;  
     
     for (int i = 0; i < attributes.size(); i++)
     { Attribute att = (Attribute) attributes.get(i);
@@ -19696,11 +19844,14 @@ public BehaviouralFeature designKillOp(Vector assocs)
     { Statement delcode = ast.delete2Op(this);
       ss.addStatement(delcode);
     }
-    if (this == ast.getEntity1() && ast.getRole1() != null && ast.getRole1().length() > 0)
+
+    if (this == ast.getEntity1() && ast.getRole1() != null && 
+        ast.getRole1().length() > 0)
     { Statement delcode = ast.delete1Op(this);
       ss.addStatement(delcode);
     }
-    else if (this == ast.getEntity1() && ast.isAggregation() && ast.getCard1() == ZEROONE)
+    else if (this == ast.getEntity1() && ast.isAggregation() && 
+             ast.getCard1() == ZEROONE)
     { Statement delagg = ast.deleteAggregationOp(this,ex);
       ss.addStatement(delagg);
     }

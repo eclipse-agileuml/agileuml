@@ -32,7 +32,7 @@ public class StringLib
     String trm = str; 
     while (trm.length() > 0 && ch.equals("" + trm.charAt(0)))
     { trm = trm.substring(1); }
-	return trm;
+    return trm;
   }
 
   public static String rightTrim(String s)

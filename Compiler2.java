@@ -773,7 +773,7 @@ public class Compiler2
         { sb = new StringBuffer();     // unrecognised lexical
           lexicals.addElement(sb);  
           in = INUNKNOWN; 
-          System.err.println("!! Unrecognised token in expression: " + c); 
+          // System.err.println("!! Unrecognised token in expression: " + c); 
           sb.append(c); 
         }
       }
@@ -4498,16 +4498,23 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
     BehaviouralFeature bf;
 
     String modality = "" + lexicals.get(0);
+
     if ("static".equals(modality)) 
     { bf = operationDefinition(2,n-1,entities,types); 
       if (bf != null) 
       { bf.setStatic(true); }
     } 
+    else if ("abstract".equals(modality)) 
+    { bf = operationDefinition(2,n-1,entities,types); 
+      if (bf != null) 
+      { bf.setAbstract(true); }
+    } // can't be both abstract and static
     else 
     { bf = operationDefinition(1,n-1,entities,types); }
  
     if (bf == null) 
     { return null; } 
+
     if ("query".equals(modality))
     { bf.setQuery(true); } 
     else 
@@ -6126,8 +6133,8 @@ public Vector parseAttributeDecsInit(Vector entities, Vector types)
     } 
 
     if ("abstract".startsWith(st)) 
-    { mess[0] = "Abstract class declaration, eg: abstract class Name { ... }"; 
-      return "abstract class"; 
+    { mess[0] = "Abstract class or operation declaration, eg: abstract class Name { ... }\n  abstract operation op() pre: true post: true;"; 
+      return "abstract class/operation"; 
     } 
 
     if ("usecase".startsWith(st)) 
@@ -7867,8 +7874,9 @@ public Vector parseAttributeDecsInit(Vector entities, Vector types)
   } 
 
 
-  public Object parseKM3classifier(int st, int en, Vector entities, Vector types, 
-                          Vector gens, Vector pasts, Vector errors)
+  public Object parseKM3classifier(int st, int en, 
+                     Vector entities, Vector types, 
+                     Vector gens, Vector pasts, Vector errors)
   { boolean abstr = false; 
     boolean interf = false; 
     String rname = ""; 
@@ -8070,34 +8078,44 @@ public Vector parseAttributeDecsInit(Vector entities, Vector types)
     
     if (abstr) 
     { res.setAbstract(true); } 
+
     if (interf) 
     { res.setInterface(true); } 
     // entities.add(res); 
 
     System.out.println(">>> Parsing KM3 class " + rname); 
 
-    int reached = start; // start of the next element to be parsed. reached <= i
+    int reached = start; 
+      // start of the next element to be parsed. reached <= i
 
-    // System.out.println(">>> starting: " + lexicals.get(reached)); 
+    System.out.println(">>> starting parse at: " + lexicals.get(reached)); 
 
     for (int i = start + 1; i < en; i++) 
-    { String lx2 = lexicals.get(i) + ""; 
-      if ("attribute".equals(lx2) || 
-          "reference".equals(lx2) || 
+    { String lx2 = lexicals.get(i) + "";
+ 
+      if ("reference".equals(lx2) || 
+          "static".equals(lx2) || "abstract".equals(lx2) ||
+          "attribute".equals(lx2) || 
           "operation".equals(lx2) ||
-          "query".equals(lx2) || // "frozen".equals(lx2) ||
-          "static".equals(lx2) || "invariant".equals(lx2) || 
+          "query".equals(lx2) || 
+          "invariant".equals(lx2) || 
           "stereotype".equals(lx2)) 
       { String lxr = lexicals.get(reached) + ""; 
-        if ("attribute".equals(lxr) || 
+
+        if ("static".equals(lxr) ||
+            "abstract".equals(lxr) ||
+            "attribute".equals(lxr) || 
             "reference".equals(lxr) || "query".equals(lxr) || 
-            "operation".equals(lxr) || "static".equals(lxr) || 
+            "operation".equals(lxr) ||  
             "invariant".equals(lxr) || 
             // "frozen".equals(lxr) ||
             "stereotype".equals(lxr)) 
         { if ("static".equals(lxr))
-          { if ("attribute".equals(lexicals.get(reached+1) + ""))
-            { Attribute attr = parseAttributeClause(reached+1, i - 1, entities, types);
+          { if ("attribute".equals(
+                lexicals.get(reached+1) + "") && i > reached + 2)
+            { Attribute attr = 
+                parseAttributeClause(reached+1, i - 1, entities, types);
+
               if (attr == null) 
               { System.err.println("!! Cannot parse attribute " + 
                                    lexicals.get(reached + 2)); 
@@ -8112,8 +8130,12 @@ public Vector parseAttributeDecsInit(Vector entities, Vector types)
                 res.addAttribute(attr);
               } 
             } 
-            else if ("operation".equals(lexicals.get(reached+1) + "") || 
-                     "query".equals(lexicals.get(reached+1) + "")) 
+            else if (("operation".equals(
+                         lexicals.get(reached+1) + "") && 
+                      i > reached + 4) || 
+                     ("query".equals(
+                         lexicals.get(reached+1) + "") && 
+                      i > reached + 4)) 
             { BehaviouralFeature bf = 
                 operationDefinition(reached + 2, i-2, entities, types); 
               if (bf != null) 
@@ -8121,7 +8143,31 @@ public Vector parseAttributeDecsInit(Vector entities, Vector types)
                 res.addOperation(bf); 
               } 
               else 
-              { System.err.println("!! ERROR: Invalid operation definition: " + 
+              { System.err.println("!! ERROR: Invalid static operation definition: " + 
+                               showLexicals(reached+2, i-2));
+                Vector error3 = new Vector(); 
+                error3.add("Invalid operation declaration"); 
+                error3.add(showLexicals(reached+2,i-2)); 
+                errors.add(error3); 
+              }  
+            } 
+          } 
+          else if ("abstract".equals(lxr))
+          { JOptionPane.showInputDialog("Abstract operation " + lexicals.get(reached+1)); 
+
+            if (i > reached + 4 && 
+                ("operation".equals(
+                          lexicals.get(reached+1) + "") || 
+                 "query".equals(
+                          lexicals.get(reached+1) + ""))) 
+            { BehaviouralFeature bf = 
+                operationDefinition(reached + 2, i-2, entities, types); 
+              if (bf != null) 
+              { bf.setAbstract(true); 
+                res.addOperation(bf); 
+              } 
+              else 
+              { System.err.println("!! ERROR: Invalid abstract operation definition: " + 
                                showLexicals(reached+2, i-2));
                 Vector error3 = new Vector(); 
                 error3.add("Invalid operation declaration"); 
@@ -8180,9 +8226,11 @@ public Vector parseAttributeDecsInit(Vector entities, Vector types)
             }  
             // res.addAssociation(ast); 
           } 
-          else if ("operation".equals(lxr) || "query".equals(lxr)) 
+          else if ("operation".equals(lxr) || 
+                   "query".equals(lxr)) 
           { BehaviouralFeature bf = 
               operationDefinition(reached + 1, i-2, entities, types); 
+
             if (bf != null) 
             { res.addOperation(bf); } 
             else 
@@ -8246,20 +8294,30 @@ public Vector parseAttributeDecsInit(Vector entities, Vector types)
         { reached = i; 
           i++; 
         } 
-        if ("static".equals(lx2)) { i++; } // don't test the next keyword. 
+
+        if ("static".equals(lx2) || 
+            "abstract".equals(lx2)) 
+        { i++; } // don't test the next keyword. 
       }
     }  
 
     if (reached + 2 <= en - 1) 
     { boolean isStatic = false; 
-      
+      boolean isAbstract = false; 
+
       if ("static".equals(lexicals.get(reached) + ""))
       { isStatic = true; 
+        reached = reached + 1; 
+      } 
+
+      if ("abstract".equals(lexicals.get(reached) + ""))
+      { isAbstract = true; 
         reached = reached + 1; 
       } 
       
       if ("attribute".equals(lexicals.get(reached) + ""))
       { Attribute aa = parseAttributeClause(reached, en-1, entities, types); 
+
         if (aa == null) 
         { System.err.println("!! Cannot parse attribute " + 
                                    lexicals.get(reached + 1)); 
@@ -8276,6 +8334,7 @@ public Vector parseAttributeDecsInit(Vector entities, Vector types)
       } 
       else if ("reference".equals(lexicals.get(reached) + ""))
       { PreAssociation ast = parseAssociationClause(reached, en-1, entities, types); 
+
         if (ast == null) 
         { System.err.println("!! Cannot parse reference " + 
                                    lexicals.get(reached + 1)); 
@@ -8297,8 +8356,10 @@ public Vector parseAttributeDecsInit(Vector entities, Vector types)
                "query".equals(lexicals.get(reached) + "")) 
       { BehaviouralFeature bf = 
               operationDefinition(reached + 1, en-2, entities, types); 
+
         if (bf != null) 
         { bf.setStatic(isStatic); 
+          bf.setAbstract(isAbstract); 
           res.addOperation(bf);
         } 
         else 

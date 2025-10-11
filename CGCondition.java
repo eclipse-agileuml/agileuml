@@ -1489,14 +1489,18 @@ public class CGCondition
 
       if (isMatches)
       { // check that edata matches the stereo
+        if (repl == null) 
+        { return false; } 
+
         try { 
           if (repl.matches(stereo))
           { return true; } 
         }
         catch (Exception _ex) 
-        { System.err.println("!! Invalid regular expression: " + stereo); 
+        { System.err.println("!! Invalid regular expression test: " + repl + " matches " + stereo); 
           return false; 
         } 
+
         return false; 
       } 
 
@@ -1527,12 +1531,15 @@ public class CGCondition
 
     if (isMatches)
     { // check that variable matches the stereo
+      if (alit == null) 
+      { return false; } 
+
       try { 
         if (alit.matches(stereo))
         { return true; } 
       }
       catch (Exception _ex) 
-      { System.err.println("!! Invalid regular expression: " + stereo); 
+      { System.err.println("!! Invalid regular expression test: " + alit + " matches " + stereo); 
         return false; 
       } 
 

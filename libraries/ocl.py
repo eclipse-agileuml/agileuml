@@ -1175,7 +1175,7 @@ def keys(m) :
     res.add(x)
   return res
 
-
+# values should be a Bag (Sequence)
 def values(m) : 
   res = set({})
   for x in m : 

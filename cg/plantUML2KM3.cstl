@@ -1,0 +1,297 @@
+classDiagram::
+@startuml _* @enduml _2 |-->package app {\n _* }
+
+
+cdelement::
+class _1 _2 _3 |-->class _1 _3\n
+class _1 _2 |-->class _1 _2\n<when> _2 classDefinition
+class _1 _2 |-->class _1 { }\n 
+class _1 |-->class _1 { }\n 
+
+entity _1 _2 _3 |-->class _1 _3\n
+entity _1 _2 |-->class _1 _2\n<when> _2 classDefinition
+entity _1 _2 |-->class _1 { }\n 
+entity _1 |-->class _1 { }\n 
+
+interface _1 _2 _3 |-->interface _1 _3\n
+interface _1 _2 |-->interface _1 _2\n<when> _2 classDefinition
+interface _1 _2 |-->interface _1 { }\n 
+interface _1 |-->interface _1 { }\n 
+
+abstract class _1 _2 _3 |-->abstract class _1 _3\n
+abstract class _1 _2 |-->abstract class _1 _2\n<when> _2 classDefinition
+abstract class _1 _2 |-->abstract class _1 { }\n 
+abstract class _1 |-->abstract class _1 { }\n 
+
+abstract _1 _2 _3 |-->abstract class _1 _3\n
+abstract _1 _2 |-->abstract class _1 _2\n<when> _2 classDefinition
+abstract _1 _2 |-->abstract class _1 { }\n 
+abstract _1 |-->abstract class _1 { }\n 
+
+enum _1 _2 _3 |--> enumeration _1 _3\n
+enum _1 _2 |--> enumeration _1 _2\n <when> _2 enumDefinition
+enum _1 _2 |--> enumeration _1 { }\n 
+enum _1 |--> enumeration _1 { }\n 
+
+annotation _1 |-->
+
+_1 |-->_1
+
+
+circleInterface::
+circle _1 |-->interface _1 { } 
+( ) _1 |-->interface _1 { } 
+
+
+inheritance::
+_1 _2 _3 |-->class _3 extends _1 { }\n<when> _2 leftAncestorSymbol
+_1 _2 _3 |-->class _1 extends _3 { }\n<when> _2 rightAncestorSymbol
+
+
+interfaceInheritance::
+_1 _2 _3 |-->interface _1 { }\n\nclass _3 implements _1 { }<when> _2 leftImplementsSymbol
+_1 _2 _3 |-->interface _3 { }\n\nclass _1 implements _3 { }<when> _2 rightImplementsSymbol
+
+
+association::
+_1 _2 _3 _4 _5 _6 |-->class _5 { reference ref_1 _2 : _1; }\n<when> _3 leftAssociationSymbol
+_1 _2 _3 _4 _5 _6 |-->class _1 { reference ref_5 _4 : _5; }\n
+
+_1 _2 _3 _4 _5 |-->class _5 { reference ref_1 _2 : _1; }\n<when> _5 identifier, _3 leftAssociationSymbol
+_1 _2 _3 _4 _5 |-->class _1 { reference ref_5 _4 : _5; }\n<when> _5 identifier
+
+_1 _2 _3 _4 |-->class _4 { reference ref_1 [1] : _1; }\n<when> _3 stringExpression, _2 leftAssociationSymbol
+_1 _2 _3 _4 |-->class _1 { reference ref_4 _3 : _4; }\n<when> _3 stringExpression
+
+_1 _2 _3 _4 |-->class _4 { reference ref_1 _2 : _1; }\n<when> _3 leftAssociationSymbol
+_1 _2 _3 _4 |-->class _1 { reference ref_3 [1] : _3; }\n<when> _4 lineAnnotation
+_1 _2 _3 _4 |-->class _1 { reference ref_4 [1] : _4; }\n
+
+_1 _2 _3 |-->class _3 { reference ref_1 [1] : _1; }\n<when> _2 leftAssociationSymbol
+_1 _2 _3 |-->class _1 { reference ref_3 [1] : _3; }\n
+
+
+aggregation::
+_1 _2 _3 _4 _5 _6 |-->class _5 { reference ref_1 _2 : _1; }\n<when> _3 leftAggregationSymbol
+_1 _2 _3 _4 _5 _6 |-->class _1 { reference ref_5 _4 : _5; }\n
+
+_1 _2 _3 _4 _5 |-->class _5 { reference ref_1 _2 : _1; }\n<when> _5 identifier, _3 leftAggregationSymbol
+_1 _2 _3 _4 _5 |-->class _1 { reference ref_5 _4 : _5; }\n<when> _5 identifier
+
+_1 _2 _3 _4 |-->class _4 { reference ref_1 [1] : _1; }\n<when> _3 stringExpression, _2 leftAggregationSymbol
+_1 _2 _3 _4 |-->class _1 { reference ref_4 _3 : _4; }\n<when> _3 stringExpression
+
+_1 _2 _3 _4 |-->class _4 { reference ref_1 _2 : _1; }\n<when> _3 leftAggregationSymbol
+_1 _2 _3 _4 |-->class _1 { reference ref_3 [1] : _3; }\n<when> _4 lineAnnotation
+_1 _2 _3 _4 |-->class _1 { reference ref_3 [1] : _3; }\n
+
+_1 _2 _3 |-->class _3 { reference ref_1 [1] : _1; }\n<when> _2 leftAggregationSymbol
+_1 _2 _3 |-->class _1 { reference ref_3 [1] : _3; }\n
+
+
+composition::
+_1 _2 _3 _4 _5 _6 |-->class _5 { reference ref_1 _2 container : _1; }\n<when> _3 leftCompositionSymbol
+_1 _2 _3 _4 _5 _6 |-->class _1 { reference ref_5 _4 container : _5; }\n
+
+_1 _2 _3 _4 _5 |-->class _5 { reference ref_1 _2 container : _1; }\n<when> _5 identifier, _3 leftCompositionSymbol
+_1 _2 _3 _4 _5 |-->class _1 { reference ref_5 _4 container : _5; }\n<when> _5 identifier
+
+_1 _2 _3 _4 |-->class _4 { reference ref_1 [1] container : _1; }\n<when> _3 stringExpression, _2 leftCompositionSymbol
+_1 _2 _3 _4 |-->class _1 { reference ref_4 _3 container : _4; }\n<when> _3 stringExpression
+
+_1 _2 _3 _4 |-->class _4 { reference ref_1 _2 container : _1; }\n<when> _3 leftCompositionSymbol
+_1 _2 _3 _4 |-->class _1 { reference ref_3 [1] container : _3; }\n<when> _4 lineAnnotation
+_1 _2 _3 _4 |-->class _1 { reference ref_4 [1] container : _4; }\n
+
+_1 _2 _3 |-->class _3 { reference ref_1 [1] container : _1; }\n<when> _2 leftCompositionSymbol
+_1 _2 _3 |-->class _1 { reference ref_3 [1] container : _3; }\n
+
+
+dependency::
+_* |-->
+_1 |-->
+
+
+classDefinition::
+{ } |-->{ }\n 
+{ _* } |-->{\n _* }\n
+
+
+classElement::
+_1 |-->_1
+
+
+enumDefinition::
+{ _* } |-->{ _*`enumliteral }\n
+
+
+enumliteral::
+_1 |--> literal _1; 
+
+
+attribute::
+_1 : _2 _3 _4 |-->class _1 { attribute _4 : _2; }\n 
+_1 : _2 _3 |-->class _1 { attribute _3 : _2; }\n
+
+
+internalAttribute:: 
+{ _1 } _2 _3 : _4 |-->  _1 attribute _3 : _4;\n
+{ _1 } _2 : _3 |-->  _1 attribute _2 : _3;\n
+
+{ _1 } _2 _3 _4 |-->  _1 attribute _4 : _2;\n
+{ _1 } _2 _3 |-->  _1 attribute _3 : _2;\n<when> _2 type
+{ _1 } _2 _3 |-->  _1 attribute _3 : OclAny;\n
+{ _1 } _2 |-->  _1 attribute _2 : OclAny;\n<when> _2 type
+
+_1 _2 : _3 |-->  attribute _2 : _3;\n
+_1 : _2 |-->  attribute _1 : _2;\n
+
+_1 _2 _3 |-->  attribute _3 : _1;\n
+_1 _2 |-->  attribute _2 : _1;\n<when> _1 type
+_1 _2 |-->  attribute _2 : OclAny;\n
+_1 |-->  attribute _1 : OclAny;\n
+
+
+method::
+_1 : _2 _3 ( _4 ) |-->class _1 { operation _3(_4) pre: true post: true; }\n 
+_1 : _2 _3 ( ) |-->class _1 { operation _3() pre: true post: true; }\n  
+
+_1 : _2 ( _3 ) |-->class _1 { operation _2(_3) pre: true post: true; }\n 
+_1 : _2 ( ) |-->class _1 { operation _2() pre: true post: true; }\n  
+ 
+
+internalMethod:: 
+{ _1 } _2 _3 _4 ( _5 ) |-->  _1 operation _4(_5) : _2\n  pre: true post: true;\n 
+{ _1 } _2 _3 ( _4 ) |-->  _1 operation _3(_4) : _2\n  pre: true post: true;\n<when> _2 type
+{ _1 } _2 _3 ( _4 ) |-->  _1 operation _3(_4)\n  pre: true post: true;\n
+{ _1 } _2 ( _3 ) |-->  _1 operation _2(_3)\n  pre: true post: true;\n
+
+{ _1 } _2 _3 _4 ( ) |-->  _1 operation _4() : _2\n  pre: true post: true;\n 
+{ _1 } _2 _3 ( ) |-->  _1 operation _3() : _2\n  pre: true post: true;\n<when> _2 type
+{ _1 } _2 _3 ( ) |-->  _1 operation _3()\n  pre: true post: true;\n
+{ _1 } _2 ( ) |-->  _1 operation _2()\n  pre: true post: true;\n
+
+{ _1 } _2 _3 ( _4 ) : _5 |-->  _1 operation _3(_4) : _5\n  pre: true post: true;\n 
+{ _1 } _2 ( _3 ) : _4 |-->  _1 operation _2(_3) : _4\n  pre: true post: true;\n
+
+{ _1 } _2 _3 ( ) : _4 |-->  _1 operation _3() : _4\n  pre: true post: true;\n 
+{ _1 } _2 ( ) : _3 |-->  _1 operation _2() : _3\n  pre: true post: true;\n
+
+_1 _2 _3 ( _4 ) |-->  operation _3(_4) : _1\n  pre: true post: true;\n 
+_1 _2 ( _3 ) |-->  operation _2(_3) : _1\n  pre: true post: true;\n<when> _1 type
+_1 _2 ( _3 ) |-->  operation _2(_3)\n  pre: true post: true;\n
+_1 ( _2 ) |-->  operation _1(_2)\n  pre: true post: true;\n
+
+_1 _2 _3 ( ) |-->  operation _3() : _1\n  pre: true post: true;\n 
+_1 _2 ( ) |-->  operation _2() : _1\n  pre: true post: true;\n<when> _1 type
+_1 _2 ( ) |-->  operation _2()\n  pre: true post: true;\n
+_1 ( ) |-->  operation _1()\n  pre: true post: true;\n
+
+_1 _2 ( _3 ) : _4 |-->  operation _2(_3) : _4\n  pre: true post: true;\n 
+_1 ( _2 ) : _3 |-->  operation _1(_2) : _3\n  pre: true post: true;\n
+
+_1 _2 ( ) : _3 |-->  operation _2() : _3\n  pre: true post: true;\n 
+_1 ( ) : _2 |-->  operation _1() : _2\n  pre: true post: true;\n
+
+
+
+visibility:: 
+_1 |-->
+
+
+stereotype::
+_* |-->
+
+
+parameters::
+_1 |-->_1
+_1 , _* |-->_1, _*`recurse
+
+
+parameter::
+_1 : _2 |-->_1 : _2
+_1 |-->_1 : OclAny
+
+
+identifier::
+_1 |-->_1
+
+
+stringExpression::
+"many" |-->[*]
+"*" |-->[*]
+"* {ordered}" |-->[*] ordered
+"one" |-->[1]
+"1" |-->[1]
+"0..1" |-->[0-1]
+_1 |-->[_1]
+
+
+lineAnnotation::
+_* |-->
+_1 |-->
+
+
+type::
+Sequence ( _1 ) |-->Sequence(_1)
+Set ( _1 ) |-->Set(_1)
+Bag ( _1 ) |-->SortedSequence(_1)
+OrderedSet ( _1 ) |-->OrderedSet(_1) 
+SortedSet ( _1 ) |-->SortedSet(_1) 
+_1 [ _2 ] |-->Sequence(_1)  
+_1 [ ] |-->Sequence(_1)  
+Map ( _1 , _2 ) |-->Map(_1,_2) 
+SortedMap ( _1 , _2 ) |-->SortedMap(_1,_2) 
+Function ( _1 , _2 ) |-->Function(_1,_2)
+ 
+Object |-->OclAny
+Date |-->OclDate
+Boolean |-->boolean
+Integer |-->int
+Long |-->long
+Real |-->double
+_1 |-->_1
+
+
+modifier::
+classifier |-->static
+_1 |-->_1
+
+
+leftAncestorSymbol::
+_1 |-->_1
+
+rightAncestorSymbol::
+_1 |-->_1
+
+
+leftImplementsSymbol::
+_1 |-->_1
+
+rightImplementsSymbol::
+_1 |-->_1
+
+
+associationSymbol::
+_1 |-->_1
+
+leftAssociationSymbol::
+_1 |-->_1
+
+aggregationSymbol::
+_1 |-->_1
+
+leftAggregationSymbol::
+_1 |-->_1
+
+compositionSymbol::
+_1 |-->_1
+
+leftCompositionSymbol::
+_1 |-->_1
+
+dependencySymbol::
+_1 |-->_1
+
+
+

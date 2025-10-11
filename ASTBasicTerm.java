@@ -424,7 +424,8 @@ public class ASTBasicTerm extends ASTTerm
           "double".equals(tname) || "void".equals(tname))
       { return new Type(tname,null); } 
       if ("time_t".equals(tname) || "clock_t".equals(tname) ||
-          "size_t".equals(tname) || "fpos_t".equals(tname))
+          "size_t".equals(tname) || "fpos_t".equals(tname) ||
+          "ptrdiff_t".equals(tname))
       { return new Type("long",null); }  
       
     
@@ -494,16 +495,18 @@ public class ASTBasicTerm extends ASTTerm
 
 
   public Type deduceType()
-  { if (Expression.isString(value))
+  { System.out.println(">>> Deduce basic term type for " + this); 
+
+    if (Expression.isStringValue(value))
     { return new Type("String",null); }
    
-    if (Expression.isInteger(value))
+    if (Expression.isIntegerValue(value))
     { return new Type("int",null); }
 
-    if (Expression.isLong(value))
+    if (Expression.isLongValue(value))
     { return new Type("long",null); }
 
-    if (Expression.isDouble(value))
+    if (Expression.isDoubleValue(value))
     { return new Type("double",null); }
 
     if ("true".equals(value) || "false".equals(value))
@@ -513,7 +516,7 @@ public class ASTBasicTerm extends ASTTerm
   } 
 
   public Type deduceElementType()
-  { if (Expression.isString(value))
+  { if (Expression.isStringValue(value))
     { return new Type("String",null); }
    
     return new Type("OclAny", null); 
@@ -973,6 +976,16 @@ public class ASTBasicTerm extends ASTTerm
   } 
 
   public Vector jsexpressionListToKM3(java.util.Map vartypes, 
+    java.util.Map varelemtypes, Vector types, Vector entities)
+  { System.out.println(">> jsexpressionListToKM3 for " + tag + " with value " + value); 
+    System.out.println(); 
+
+    Vector res = new Vector(); 
+    return res; 
+  }
+
+  public Vector jsexpressionListToKM3(int sze,
+    java.util.Map vartypes, 
     java.util.Map varelemtypes, Vector types, Vector entities)
   { System.out.println(">> jsexpressionListToKM3 for " + tag + " with value " + value); 
     System.out.println(); 

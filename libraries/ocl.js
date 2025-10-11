@@ -1,1196 +1,1565 @@
-# OCL library ocl.js
-
-
-static function sqr(x)  
-{ return x*x; }
-
-static function sqrt(x)  
-{ return Math.sqrt(x); }
-
-static function cbrt(x)  
-{ return Math.cbrt(x); }
-
-static function abs(x)  
-{ return Math.abs(x); } 
-
-static function gcd(xx,yy) 
-{ var x = Math.abs(xx);
-  var y = Math.abs(yy); 
-  while (x != 0 && y != 0) 
-  { z = y; 
-    y = x % y; 
-    x = z;
+class Ocl
+{ static newList(...args)
+  { var res = [];
+    for (var x of args)
+    { res.push(x); }
+    return res;
   }
 
-  if (y == 0) 
-  { return x; }
+  static newSet(...args)
+  { var res = new Set();
+    for (var x of args)
+    { res.add(x); }
+    return res;
+  }
+
+  static newMap(...args)
+  { var res = new Map();
+    for (var x of args)
+    { res.set(x.at(0), x.at(1)); }
+    return res;
+  }
+
+  static size(col) 
+  { var sq = Array.from(col);
+    return sq.length;
+  } // independent of col's type
+
+  static at(col,i) 
+  { var sq = Array.from(col);
+    return sq[i-1];
+  } // for strings and sequences
+
+  static sqr(x)  
+  { return x*x; }
+
+  static sqrt(x)  
+  { return Math.sqrt(x); }
+
+  static cbrt(x)  
+  { return Math.cbrt(x); }
+
+  static abs(x)  
+  { return Math.abs(x); } 
+
+  static gcd(xx,yy) 
+  { var x = Math.abs(xx);
+    var y = Math.abs(yy); 
+    while (x > 0 && y > 0) 
+    { var z = y; 
+      y = x % y; 
+      x = z;
+    }
+
+    if (y == 0) 
+    { return x; }
   
-  if (x == 0) 
-  { return y; }
+    if (x == 0) 
+    { return y; }
  
-  return 0;
-}
+    return 0;
+  }
 
-static function roundTo(x,n) 
-{ if (n == 0) 
-  { return Math.round(x); }
-  var y = x*Math.pow(10,n); 
-  return Math.round(y)/Math.pow(10,n);
-} 
-
-static function truncateTo(x,n) 
-{ if (n <= 0) 
-  { return Math.trunc(x); }
-  var y = x*Math.pow(10,n); 
-  return Math.trunc(y)/Math.pow(10,n); 
-}
-
-
-static function isInteger(sx)  
-{ var ss = "" + sx; 
-  if (("" + parseInt(ss)) == ss) 
-  { return true; } 
-  return false; 
-}
-
-static function isLong(sx)  
-{ return isInteger(sx); } 
-
-static function isReal(sx)  
-{ if (isInteger(sx)) 
-  { return true; } 
-  var ss = "" + sx; 
-  if (("" + parseFloat(ss)) == ss) 
-  { return true; } 
-  return false; 
-} 
-
-function toInteger(sx) 
-{ return parseInt("" + sx); }
-
-static function toLong(sx) 
-{ return parseInt("" + sx); }
-
-static function toReal(sx) 
-{ return parseFloat("" + sx); }
-
-static function toBoolean(xx)  
-{ if (xx == null || xx == 0 || xx == "") 
-  { return false; } 
-  if (xx == undefined) 
-  { return false; } 
-  if (Number.isNaN(xx)) 
-  { return false; }
-  if (("" + xx) == "false") 
-  { return false; } 
-  if (("" + xx) == "true") 
-  { return true; } 
-  return null; 
-} 
-
-
-static function char2byte(ch)  
-{ if (ch == "") 
-  { return -1; } 
-  return ch.charCodeAt(0); 
-} 
-
-static function byte2char(bb)  
-{ if (bb == -1) 
-  { return ""; } 
-  return String.fromCharCode(bb);  
-} 
-
-static function ord(lit)  
-{ if ((typeof lit) == "string")  
-  { return char2byte(lit); } 
-
-  if ((typeof lit) == "number")
-  { return lit; } 
-  return null; 
-}  
-
-static function succ(lit)  
-{ if ((typeof lit) == "string") 
-  { var litord = char2byte(lit); 
-    return byte2char(litord + 1); 
+  static roundTo(x,n) 
+  { if (n == 0) 
+    { return Math.round(x); }
+    var y = x*Math.pow(10,n); 
+    return Math.round(y)/Math.pow(10,n);
   } 
 
-  if ((typeof lit) == "number")
-  { return lit + 1; } 
+  static truncateTo(x,n) 
+  { if (n <= 0) 
+    { return Math.trunc(x); }
+    var y = x*Math.pow(10,n); 
+    return Math.trunc(y)/Math.pow(10,n); 
+  }
 
-  return null; 
-} 
+  static isInteger(sx)  
+  { var ss = "" + sx; 
+    if (("" + parseInt(ss)) == ss) 
+    { return true; } 
+    return false; 
+  }
 
-static function pred(lit)  
-{ if ((typeof lit) == "string") 
-  { var litord = char2byte(lit); 
-    return byte2char(litord - 1); 
+  static isLong(sx)  
+  { return Ocl.isInteger(sx); } 
+
+  static isReal(sx)  
+  { if (Ocl.isInteger(sx)) 
+    { return true; } 
+    var ss = "" + sx; 
+    if (("" + parseFloat(ss)) == ss) 
+    { return true; } 
+    return false; 
   } 
 
-  if ((typeof lit) == "number")
-  { return lit - 1; }
- 
-  return null; 
-} 
+  static oclIsTypeOf(x,typ) 
+  { if ("int" == typ || "long" == typ)
+    { return Ocl.isInteger(x); }
+    if ("double" == typ)
+    { return Ocl.isReal(x); }
 
-static function asBag(sq)  
-{ return sortSequence(sq); } 
-// a bag is a sorted sequence
+    var xtyp = (typeof x); 
 
-def mapAsBag(mp) :
-  # mp of type Map(T,int)
-  res = [] 
-  for k in mp : 
-    n = mp[k]
-    for i in range(0,n) : 
-      res.append(k)
-  return res
+    if ("boolean" == typ)
+    { return xtyp == "boolean"; }
+
+    if ("String" == typ)
+    { return xtyp.startsWith("string"); }
+
+    if (typ == "Sequence" || typ.startsWith("Sequence("))
+    { return Array.isArray(x); }
+
+    if (typ.startsWith("Function("))
+    { return (xtyp == "function"); }
+    if (typ.startsWith("Ref("))
+    { return (xtyp == "symbol"); }
+    if (typ == "Set" || typ.startsWith("Set("))
+    { return x.toString().startsWith("[object Set"); }
+    if (typ == "Map" || typ.startsWith("Map("))
+    { return x.toString().startsWith("[object Map"); }
+    if (x == null)
+    { return typ == "void"; }
+    if (xtyp == "object")
+    { return (x instanceof typ); }
+    return false;
+  } 
+
+  static oclType(x) 
+  { if (Ocl.isInteger(x))
+    { return "int"; }
+    if (Ocl.isReal(x))
+    { return "double"; }
     
-def asOrderedSet(sq) :
-  elems = set([])
-  res = []
-  for x in sq :
-    if x in elems :
-      pass 
-    else :
-      res.append(x)
-      elems.add(x)
-  return res
+    var typ = (typeof x); 
 
+    if (typ == "string")
+    { return "String"; }
+    if (Array.isArray(x))
+    { return "Sequence"; }
+    if (typ == "function")
+    { return "Function"; }
+    if (x.toString().startsWith("[object Map"))
+    { return "Map"; }
+    if (x.toString().startsWith("[object Set"))
+    { return "Set"; }
+    if (typ == "symbol")
+    { return "Ref"; }
+    return (typeof x);
+  }
 
-def isUnique(s) : 
-  return len(set(s)) == len(s)
+  static copy(x) 
+  { var typ = (typeof x); 
+    
+    if (typ == "number" || typ == "function" ||
+        typ == "symbol")
+    { return x; }    
 
-def any(s) : 
-  lst = list(s)
-  if 1 <= len(lst) : 
-    return lst[0]
-  return None
+    if (typ == "string")
+    { return "" + x; }
 
-def anyMap(s) : 
-  for k in s : 
-    return s[k]
-  return None
+    if (Array.isArray(x))
+    { return [].concat(x); }
 
-def includesAll(supset,subset) :
-  for x in subset :
-    if x in supset :
-      pass
-    else :
-      return False
-  return True
+    if (x.toString().startsWith("[object Map"))
+    { return new Map(x); }
 
+    if (x.toString().startsWith("[object Set"))
+    { return new Set(x); }
 
-def excludesAll(supset,subset) :
-  for x in subset :
-    if x in supset :
-      return False
-  return True
+    var res = Object.assign({}, x);
+    res.prototype = x.prototype; 
+    return res;  
+  }
 
-def includesValue(mp, x) : 
-  for k in mp : 
-    if mp[k] == x : 
-      return True
-  return False
+  static toInteger(sx) 
+  { return parseInt("" + sx); }
 
-def excludesValue(mp, x) : 
-  for k in mp : 
-    if mp[k] == x : 
-      return False
-  return True
+  static toLong(sx) 
+  { return parseInt("" + sx); }
 
-def iterate(sq,init,f) : 
-  acc = init
-  for x in sq : 
-    acc = f(x,acc)
-  return acc
+  static toReal(sx) 
+  { return parseFloat("" + sx); }
 
-def exists(col,f) :
-  for x in col :
-    if f(x) :
-      return True
-  return False
+  static toBoolean(xx)  
+  { if (xx == null || xx == 0 || xx == "") 
+    { return false; } 
+    if (xx == undefined) 
+    { return false; } 
+    if (Number.isNaN(xx)) 
+    { return false; }
+    if (("" + xx) == "false") 
+    { return false; } 
+    if ((typeof xx) == "number")
+    { return true; }
+    if (("" + xx) == "true") 
+    { return true; } 
+    return null; 
+  } 
 
+  static char2byte(ch)  
+  { if (ch == "") 
+    { return -1; } 
+    return ch.charCodeAt(0); 
+  } 
 
-def forAll(col,f) :
-  for x in col :
-    if f(x) :
-      pass
-    else :
-      return False
-  return True
+  static byte2char(bb)  
+  { if (bb == -1) 
+    { return ""; } 
+    return String.fromCharCode(bb);  
+  } 
 
+  static ord(lit)  
+  { if ((typeof lit) == "string")  
+    { return Ocl.char2byte(lit); } 
 
-def exists1(col,f) :
-  found = False
-  for x in col :
-    if f(x) :
-      if found :
-        return False
-      else :
-        found = True
-  return found
+    if ((typeof lit) == "number")
+    { return lit; } 
 
+    return null; 
+  }  // enum types are ints
 
-def toLowerCase(str) :
-  s = '' + str
-  return s.lower()
+  static succ(lit)  
+  { if ((typeof lit) == "string") 
+    { var litord = Ocl.char2byte(lit); 
+      return Ocl.byte2char(litord + 1); 
+    } 
 
+    if ((typeof lit) == "number")
+    { return lit + 1; } 
 
-def toUpperCase(str) :
-  s = '' + str
-  return s.upper()
+    return null; 
+  } 
 
+  static pred(lit)  
+  { if ((typeof lit) == "string") 
+    { var litord = Ocl.char2byte(lit); 
+      return Ocl.byte2char(litord - 1); 
+    } 
 
-def before(s,sep) : 
-  if len(sep) <= 0 : 
-    return s
-  i = s.find(sep)
-  if i < 0 : 
-    return s
-  else : 
-    return s[0:i]
-
-def after(s,sep) : 
-  j = len(sep)
-  if j <= 0 : 
-    return ""
-  i = s.find(sep)
-  if i < 0 : 
-    return ""
-  else : 
-    return s[i+j:]
-
-
-def characters(str) :
-  res = []
-  for x in str :
-    res.append('' + x)
-  return res
-
-
-def insertAtString(x,i,s) :
-  # i must be > 0
-  if i <= 0 : 
-    return x
-  x1 = x[0:i-1]
-  x2 = x[i-1:]
-  return x1 + s + x2
-
-def setAtString(x,i,s) :
-  # i must be > 0, s has length 1
-  if i <= 0 : 
-    return x
-  x1 = x[0:i-1]
-  x2 = x[i:]
-  return x1 + s + x2
-
-def reverseString(st) :
-  if len(st) == 0 : 
-    return st
-  else :
-    return reverseString(st[1:]) + st[0:1]
-  
-
-def subtractString(s1,s2) :
-  res = ''
-  for x in s1 :
-    if x in s2 :
-      pass
-    else :
-      res = res + x
-  return res
-
-
-def equalsIgnoreCase(s1,s2) :
-  result = False
-  if toLowerCase(s1) == toLowerCase(s2) :
-    result = True
-  return result
-
-def compareTo(s1,s2) : 
-  result = 0
-  if s1 < s2 : 
-    return -1
-  if s1 > s2 : 
-    return 1
-  return result
-
-def indexOfSequence(sq,x) : 
-  if x in sq : 
-    return sq.index(x) + 1
-  else : 
-    return 0
-
-def lastIndexOfSequence(sq,x) : 
-  if x in sq : 
-    sqr = reverseSequence(sq)
-    i = indexOfSequence(sqr,x)
-    return len(sq) - i + 1
-  else : 
-    return 0
-
-def lastIndexOf(s,d) :
-  result = 0
-  dlen = len(d)
-  if dlen == 0 : 
-    return 0
-  i = (reverseString(s).find(reverseString(d)) + 1)
-  if i <= 0 :
-    result = 0
-  else :
-    if i > 0 :
-      result = len(s) - i - dlen + 2
-  return result
-
-def lastIndexOfString(s, d) : 
-  return lastIndexOf(s,d)
-
-def hasPrefixSequence(sq,sq1,j) : 
-  m = len(sq1)
-  n = len(sq)
-  if m == 0 or n == 0 or n < j+m : 
-    return False
-  i = 0
-  while i < m and i+j < n : 
-    if sq[i+j] != sq1[i] : 
-      return False
-    i = i+1
-  return True
-
-def indexOfString(ss,sub) : 
-  n = ss.find(sub)
-  return n + 1
-
-def indexOfSubSequence(sq,sq1) : 
-  m = len(sq1)
-  n = len(sq)
-  if m == 0 or n == 0 or n < m : 
-    return 0
-  i = 0
-  while i+m <= n : 
-    if hasPrefixSequence(sq,sq1,i) : 
-      return i+1
-    i = i + 1
-  return 0
-
-
-def lastIndexOfSubSequence(sq,sq1) :
-  m = len(sq1)
-  n = len(sq)
-  if m == 0 or n == 0 or n < m : 
-    return 0
-  rsq = reverseSequence(sq)
-  rsq1 = reverseSequence(sq1)
-  i = indexOfSubSequence(rsq,rsq1)
-  if i <= 0 :
-    return 0
-  return n - i - m + 2
+    if ((typeof lit) == "number")
+    { return lit - 1; }
  
-def at(sq,i) : 
-  if i <= 0 : 
-    return None
-  if len(sq) > i : 
-    return None
-  return sq[i-1]
-
-def first(sq) : 
-  if len(sq) == 0 : 
-    return None
-  return sq[0]
-
-def last(sq) : 
-  if len(sq) == 0 : 
-    return None
-  return sq[len(sq)-1]
-
-def front(sq) :
-  if len(sq) == 0 : 
-    return sq 
-  return sq[:-1]
-
-def tail(sq) :
-  if len(sq) == 0 : 
-    return sq 
-  return sq[1:]
-
-def firstSortedMap(mm) : 
-  if len(mm) == 0 : 
-    return None
-  itm = mm.peekitem(0)
-  lst = []
-  lst.append(itm)
-  res = SortedDict(lst)
-  return res
-  
-def lastSortedMap(mm) : 
-  if len(mm) == 0 : 
-    return None
-  itm = mm.peekitem(-1)
-  lst = []
-  lst.append(itm)
-  res = SortedDict(lst)
-  return res
-  
-def frontSortedMap(mm) :
-  if len(mm) == 0 : 
-    return mm
-  res = mm.copy()
-  res.popitem(-1) 
-  return res
-
-def tailSortedMap(mm) :
-  if len(mm) == 0 : 
-    return mm
-  res = mm.copy()
-  res.popitem(0) 
-  return res
-
-
-def trim(str) : 
-  res = '' + str
-  return res.strip()
-
-
-def replace(str,sub,rep) : 
-  res = '' + str
-  return res.replace(sub,rep)
-
-
-def splitByAll(str, delimiters) :
-  if 0 < len(delimiters) :  
-    delim = delimiters[0] 
-    taildelims = (delimiters)[1:]
-    splits = str.split(delim)
-    res = [] 
-    for st in splits : 
-      if len(st) > 0 : 
-        res.extend(splitByAll(st, taildelims))
-    return res
-  else : 
-    result = [] 
-    result.append(str) 
-    return result
-
-
-def split(str, pattern) : 
-  splits = re.split(pattern,str)
-  res = [] 
-  for st in splits : 
-    if len(st) > 0 : 
-      res.append(st)
-  return res
-
-
-def isMatch(str, pattern) : 
-  if re.fullmatch(pattern,str) == None : 
-    return False
-  else : 
-    return True
-
-def hasMatch(str, pattern) : 
-  if re.search(pattern,str) == None : 
-    return False
-  else : 
-    return True
-
-
-def firstMatch(str, pattern) : 
-  m = re.search(pattern,str)
-  if m == None :  
-    return None
-  else : 
-    return m.group()
-
-
-def allMatches(str, pattern) : 
-  res = []
-  res.extend(re.findall(pattern,str)) 
-  return res
-  
-
-def replaceAll(str, pattern, repl) : 
-  res = '' + str
-  res = re.sub(pattern, repl, res)
-  return res
-
-
-def replaceAllMatches(str, pattern, repl) : 
-  res = '' + str
-  res = re.sub(pattern, repl, res)
-  return res
-
-
-def replaceFirstMatch(str, pattern, repl) : 
-  res = '' + str
-  res = re.sub(pattern, repl, res, 1)
-  return res
-
-
-def insertInto(x,i,s) :
-  # i must be > 0
-  if i <= 0 : 
-    return x
-  x1 = x[0:i-1]
-  x2 = x[i-1:]
-  x1.extend(s)
-  x1.extend(x2)
-  return x1
-
-def excludingSubrange(x,i,j) :
-  # i must be > 0, i <= j
-  if i <= 0 : 
-    return x
-  if i > j : 
-    return x
-  x1 = x[0:i-1]
-  x2 = x[j:]
-  x1.extend(x2)
-  return x1
-
-def setSubrange(x,i,j,v) :
-  # Only for strings. i must be > 0, i <= j
-  if i <= 0 : 
-    return x
-  if i > j : 
-    return x
-  x1 = x[0:i-1] + str(v) + x[j:]
-  return x1
-
-def sequenceSubrange(l, i, j) :
-  # For lists. OCL indexing used for i, j
-  result = []
-  if j < 0 : 
-    j = len(l) + j
-  # eg: -1 is the last element of l
-  if i == 0 : 
-    i = 1
-  if i < 0:
-    i = len(l) + i
-  
-  for k in range(i-1, j):
-    result.append(l[k])
-  return result
-
-
-def insertAt(x,i,s) :
-  # i must be > 0
-  if i <= 0 : 
-    return x
-  sq = []
-  sq.extend(x)
-  sq.insert(i-1,s)
-  return sq
-
-
-def setAt(sq,i,val) : 
-  res = []
-  res.extend(sq)
-  if i >= 1 and i <= len(sq) : 
-    res[i-1] = val
-  return res
-
-def removeAt(sq,i) : 
-  res = []
-  res.extend(sq)
-  if i >= 1 and i <= len(sq) :
-    del res[i-1]
-  return res
-
-def setAtMap(sq,k,val) : 
-  res = sq.copy()
-  res[k] = val
-  return res
-
-def removeAtMap(sq,k) : 
-  res = sq.copy()
-  del res[k]
-  return res
-
-def removeAtString(ss,i) : 
-  res = "" + ss
-  if i == 1 and i <= len(ss) : 
-    return res[1:]
-  if i >= 2 and i <= len(ss) :
-    return ss[0:(i-1)] + ss[i:]
-  return res
-
-def excludingAtString(ss,i) : 
-  return removeAtString(ss,i)
-
-
-def excludingFirst(sq,x) : 
-  res = []
-  res.extend(sq)
-  try : 
-    res.remove(x)
-  except : 
-    pass
-  return res
-
-
-
-def includingSequence(s,x) :
-  res = []
-  res.extend(s)
-  res.append(x)
-  return res
-
-def includingSortedSequence(s,x) :
-  res = s.copy()
-  res.add(x)
-  return res
-
-def includingSet(s,x) :
-  res = s.copy()
-  res.add(x)
-  return res
-
-def includingSortedSet(s,x) :
-  res = s.copy()
-  res.add(x)
-  return res
-
-
-def excludeAllSequence(s1,s2) :
-  res = []
-  for x in s1 :
-    if x in s2 :
-      pass
-    else :
-      res.append(x)
-  return res
-
-
-def excludeAllSet(s1,s2) :
-  res = s1.copy()
-  return res.difference(s2)
-
-def excludeAllSortedSet(s1,s2) :
-  res = s1.copy()
-  return res.difference(s2)
-
-
-def excludingSequence(s,y) :
-  res = []
-  for x in s :
-    if x == y :
-      pass
-    else :
-      res.append(x)
-  return res
-
-
-def excludingSet(s,x) :
-  res = s.copy()
-  subtr = {x}
-  return res.difference(subtr)
-
-def excludingSortedSet(s,x) :
-  res = s.copy()
-  res.discard(x)
-  return res
-
-def prepend(s,x) :
-  res = [x]
-  res.extend(s)
-  return res
-
-
-def append(s,x) :
-  res = []
-  res.extend(s)
-  res.append(x)
-  return res
-
-
-def union(s,t) :
-  res = []
-  res.extend(s)
-  for x in t : 
-    if x in s : 
-      pass
-    else : 
-      res.append(x)
-  return res
-
-
-def unionSequence(s,t) :
-  res = []
-  res.extend(s)
-  res.extend(t)
-  return res
-
-
-def unionSet(s,t) :
-  res = s.copy()
-  return res.union(t)
-
-def unionSortedSet(s,t) :
-  res = s.copy()
-  return res.union(t)
+    return null; 
+  } 
+
+  static asBag(sq)  
+  { return sq.toSorted(); } 
+  // a bag is a sorted sequence
+
+  static mapAsBag(mp) 
+  { // mp of type Map(T,int)
+    var res = []; 
+    for (var [k, v] of mp) 
+    { for (var _i = 0; _i < v; _i++) 
+      { res.push(k); }
+    }
+    return res.toSorted();
+  }
+    
+  static asOrderedSet(sq) 
+  { var elems = new Set();
+    var res = [];
+    for (var x of sq)
+    { if (elems.has(x)) {}
+      else 
+      { res.push(x);
+        elems.add(x);
+      }
+    }
+    return res;
+  }
+
+  static asSet(sq) 
+  { var elems = new Set();
+    for (var x of sq)
+    { elems.add(x); }
+    return elems;
+  }
+
+  static oclIsInvalid(x) 
+  { return x === undefined || 
+           Number.isNaN(x); 
+  } 
+
+  static oclIsUndefined(x) 
+  { return x == null || x == undefined || 
+           Number.isNaN(x); 
+  } 
+
+  static isUnique(s, f) 
+  { var st = new Set();
+    for (var x of s)
+    { var y = f(x);
+      if (st.has(y))
+      { return false; }
+      st.add(y);
+    }
+    return true;
+  } // for any collection s
+
+  static isUniqueMap(m, f) 
+  { var st = new Set();
+    for (var [k,x] of m)
+    { var y = f(x);
+      if (st.has(y))
+      { return false; }
+      st.add(y);
+    }
+    return true;
+  }
+
+  static any(s)  
+  { var lst = Array.from(s);
+    if (1 <= lst.length)  
+    { return lst[0]; }
+    return null;
+  } // sets, sequences s
+
+  static anyMap(s)  
+  { for (var [k,v] of s) 
+    { return v; }
+    return null; 
+  }
+
+  static anyCollection(s, f)  
+  { for (var v of s) 
+    { if (f(v)) 
+      { return v; }
+    }
+    return null;
+  } // sets, sequences s
+
+  static anyMapElement(s, f)  
+  { for (var [k,v] of s) 
+    { if (f(v)) 
+      { return v; }
+    }
+    return null;
+  }
+
+  static includes(col, x)
+  { for (var y of col)
+    { if (x == y) 
+      { return true; }
+    }
+    return false;
+  }
+
+  static excludes(col, x)
+  { for (var y of col)
+    { if (x == y) 
+      { return false; }
+    }
+    return true;
+  }
+
+  static includesAllSet(supset,subset) 
+  { for (var x of subset)
+    { if (supset.has(x)) {}
+      else 
+      { return false; }
+    }
+    return true;
+  }
+
+  static includesAllSequence(supset,subset) 
+  { for (var x of subset)
+    { if (supset.includes(x)) {}
+      else 
+      { return false; }
+    }
+    return true;
+  }
+
+  static includesAll(supset,subset) 
+  { for (var x of subset)
+    { if (Ocl.includes(supset,x)) {}
+      else 
+      { return false; }
+    }
+    return true;
+  }
+
+  static excludesAllSet(supset,subset) 
+  { for (var x of subset)
+    { if (supset.has(x))
+      { return false; }
+    }
+    return true;
+  }
+
+  static excludesAllSequence(supset,subset) 
+  { for (var x of subset)
+    { if (supset.includes(x))
+      { return false; }
+    }
+    return true;
+  }
+
+  static excludesAll(supset,subset) 
+  { for (var x of subset)
+    { if (Ocl.includes(supset, x))
+      { return false; }
+    }
+    return true;
+  }
+
+
+  static includesValue(mp, x) 
+  { for (var [k,v] of mp) 
+    { if (v == x) 
+      { return true; }
+    }
+    return false;
+  }
+
+  static excludesValue(mp, x) 
+  { for (var [k,v] of mp)
+    { if (v == x)
+      { return false; }
+    }
+    return true;
+  }
+
+  static iterate(sq,init,f)  
+  { var acc = init;
+    for (var x of sq) 
+    { var g = f(x);
+      acc = g(acc); 
+    }
+    return acc;
+  }
+
+  static exists(col,f) 
+  { for (var x of col)
+    { if (f(x))
+      { return true; }
+    }
+    return false;
+  }
+
+  static forAll(col,f)   
+  { for (var x of col)
+    { if (f(x)) { }
+      else 
+      { return false; }
+    }
+    return true;
+  }
+
+  static exists1(col,f) 
+  { var found = false;
+    for (var x of col)
+    { if (f(x))
+      { if (found)
+        { return false; }
+        else 
+        { found = true; }
+      }
+    }
+    return found;
+  }
+
+  static toLowerCase(str) 
+  { var s = "" + str;
+    return s.toLowerCase();
+  }
+
+  static toUpperCase(str) 
+  { var s = "" + str;
+    return s.toUpperCase();
+  }
+
+  static before(s,sep) 
+  { if (sep.length <= 0) 
+    { return s; }
+    var i = s.search(sep);
+    if (i < 0)  
+    { return s; }
+    return s.substring(0,i);
+  }
+
+  static after(s,sep)  
+  { var j = sep.length;
+    if (j <= 0) 
+    { return ""; }
+    var i = s.search(sep);
+    if (i < 0) 
+    { return ""; }
+    return s.substring(i+j, s.length);
+  }
+
+  static characters(str) 
+  { var res = [];
+    var n = str.length;
+    for (var x = 0; x < n; x++)
+    { res.push(str.at(x)); }
+    return res;
+  }
+
+  static insertAtString(x,i,s) 
+  { // 1-based index i
+    if (i <= 0) 
+    { return x; }
+    var n = x.length;
+    var x1 = x.substring(0,i-1);
+    var x2 = x.substring(i-1, n);
+    return x1 + s + x2;
+  }
+
+  static setAtString(x,i,s) 
+  { // i must be > 0, s has length 1
+    if (i <= 0) 
+    { return x; }
+    var n = x.length;
+    var x1 = x.substring(0, i-1);
+    var x2 = x.substring(i, n);
+    return x1 + s + x2;
+  }
+
+  static reverseString(st) 
+  { var res = "";
+    var n = st.length;
+    for (var x = n-1; x >= 0; x--)
+    { res = res + st.at(x); }
+    return res;
+  }  
+
+  static subtractString(s1,s2)
+  { var res = ""; 
+    var n = s1.length;
+    for (var x = 0; x < n; x++)
+    { var sx = s1.at(x); 
+      var ind = s2.search(sx);
+      if (ind >= 0) { }
+      else 
+      { res = res + sx; }
+    }
+    return res;
+  }
+
+  static equalsIgnoreCase(s1,s2) 
+  { if (s1.toLowerCase() == s2.toLowerCase())
+    { return true; }
+    return false;
+  }
+
+  static compareTo(s1,s2) 
+  { var result = 0;
+    if (s1 < s2)  
+    { return -1; }
+    if (s1 > s2)
+    { return 1; }
+    return result;
+  }
+
+  static indexOf(sq,x)
+  { var indx = sq.indexOf(x);
+    return indx + 1;
+  }
+
+  static lastIndexOf(sq,x) 
+  { var indx = sq.lastIndexOf(x);
+    return indx + 1;
+  } // strings or sequences
+
+
+  static hasPrefixSubSequence(sq,sq1,j) 
+  { // sq1 is a prefix of sq 
+    // starting from position j
+
+    var m = sq1.length;
+    if (m == 0) 
+    { return true; } 
+
+    var n = sq.length;
+    if (n == 0 ||
+        n < j+m) 
+    { return false; }
+
+    var i = 0;
+    while (i < m && i+j < n) 
+    { if (sq[i+j] != sq1[i]) 
+      { return false; } 
+      i = i+1;
+    }
+
+    return true;
+  }
+
+  static hasPrefixSequence(sq,sq1)
+  { if (sq1.length == 0) 
+    { return true; } 
+    return Ocl.hasPrefixSubSequence(sq,sq1,0); 
+  }
+
+  static hasSuffixSequence(sq,sq1)
+  { var m = sq1.length;
+
+    if (m == 0) 
+    { return true; }
  
+    var n = sq.length;
 
-def concatenate(s,t) :
-  res = []
-  res.extend(s)
-  res.extend(t)
-  return res
+    if (n == 0 || n < m)
+    { return false; }
+
+    return Ocl.hasPrefixSubSequence(sq,sq1,n-m); 
+  }
+
+  static indexOfSubSequence(sq,sq1) 
+  { var m = sq1.length;
+    var n = sq.length;
+    if (m == 0) 
+    { return 1; } 
+
+    if (n == 0 || 
+        n < m) 
+    { return 0; } // not found
+    var i = 0;
+    while (i+m <= n) 
+    { if (Ocl.hasPrefixSubSequence(sq,sq1,i))
+      { return i+1; }
+      i = i + 1;
+    }
+    return 0;
+  }
+
+
+  static lastIndexOfSubSequence(sq,sq1) 
+  { var m = sq1.length;
+    var n = sq.length;
+
+    if (m == 0) 
+    { return n; } 
+
+    if (n == 0 || 
+        n < m) 
+    { return 0; }
+
+    var rsq = sq.toReversed();
+    var rsq1 = sq1.toReversed();
+
+    var i = Ocl.indexOfSubSequence(rsq,rsq1);
+    if (i <= 0)
+    { return 0; }
+
+    return n - i - m + 2;
+  }
+
+  static first(sq)  
+  { if (sq.length == 0) 
+    { return null; }
+    return sq.at(0);
+  } // also for strings
+
+  static last(sq) 
+  { if (sq.length == 0) 
+    { return null; }
+    return sq.at(sq.length - 1);
+  }
+
+  static front(sq) 
+  { if (sq.length == 0) 
+    { return sq; } 
+    return sq.slice(0, sq.length-1);
+  }
+
+  static tail(sq) 
+  { if (sq.length == 0) 
+    { return sq; } 
+    return sq.slice(1,sq.length);
+  }
+
+  static firstMap(mm) 
+  { if (mm.size == 0) 
+    { return null; }
+    for (var [i,v] of mm)
+    { return v; }
+  }
+
+  static lastMap(mm) 
+  { var res = null; 
+    for (var [i,v] of mm)
+    { res = v; }
+    return res; 
+  } // element, not a maplet
+
+
+  static trim(str) 
+  { var res = "" + str;
+    return res.trim();
+  }
+
+  static replace(str,sub,rep) 
+  { var res = "" + str;
+    return res.replace(sub,rep);
+  } // replaceFirstMatch
+
+  static splitByAll(str, delimiters) 
+  { if (0 < delimiters.length)   
+    { var delim = delimiters[0]; 
+      var taildelims = delimiters.slice(1);
+      var splits = str.split(delim);
+      var res = [] 
+      for (var st of splits) 
+      { if (st.length > 0) 
+        { var spltall = Ocl.splitByAll(st, taildelims);
+          res = res.concat(spltall);
+        }
+      }
+      return res;
+    }
+    else 
+    { var result = []; 
+      result.push(str); 
+      return result;
+    }
+  }
+
+  static split(str, pattern) 
+  { var splits = str.split(pattern);
+    var res = []; 
+    for (var st of splits) 
+    { if (st.length > 0) 
+      { res.push(st); }
+    }
+    return res;
+  }
+
+  static isMatch(str, pattern) 
+  { var re = new RegExp(pattern);
+    var mtchs = str.match(re);
+    if (mtchs != null && mtchs.length > 0)
+    { var mtch = mtchs.at(0);
+      if (mtch == str)
+      { return true; }
+    }
+    return false; 
+  }
+
+  static hasMatch(str, pattern) 
+  { var re = new RegExp(pattern, 'g');
+    var mtchs = str.match(re);
+    if (mtchs != null && mtchs.length > 0)
+    { return true; }
+    return false;
+  }
+
+  static firstMatch(str, pattern) 
+  { var re = new RegExp(pattern, 'g');
+    var mtchs = str.match(re);
+    if (mtchs != null && mtchs.length > 0)
+    { return mtchs[0]; }
+    return null;
+  } 
+
+  static allMatches(str, pattern) 
+  { var re = new RegExp(pattern, 'g');
+    var mtchs = str.match(re);
+    if (mtchs != null && mtchs.length > 0)
+    { return mtchs; }
+    return [];
+  }  
+
+  static replaceAll(str, pattern, repl) 
+  { var res = "" + str;
+    res = res.replaceAll(pattern, repl);
+    return res;
+  }
+
+  static replaceAllMatches(str, pattern, repl) 
+  { return Ocl.replaceAll(str, pattern, repl); }
+
+  static replaceFirstMatch(str, pattern, repl) 
+  { var res = "" + str;
+    res = str.replace(pattern, repl);
+    return res;
+  }
+
+  static insertInto(x,i,s) 
+  { // i must be > 0
+    if (i <= 0) 
+    { return x; }
+    var x1 = x.slice(0,i-1);
+    var x2 = x.slice(i-1);
+    var res = x1.concat(s);
+    return res.concat(x2);
+  } // for sequences or strings
+
+  static excludingSubrange(x,i,j)
+  { // i must be > 0, i <= j
+    if (i <= 0) 
+    { return x; }
+    if (i > j) 
+    { return x; }
+    var x1 = x.slice(0,i-1);
+    var x2 = x.slice(j);
+    return x1.concat(x2);
+  } // ok for strings, sequences
+
+  static setSubrange(x,i,j,v)
+  { // sequences, strings. i must be > 0, i <= j
+    if (i <= 0) 
+    { return x; }
+    if (i > j) 
+    { return x; }
+    var x1 = x.slice(0,i-1); 
+    var x2 = x.slice(j); 
+    return x1.concat(v).concat(x2);
+  }
+
+  static integerSubrange(i, j)
+  { var result = [];
+    for (var k = i; k <= j; k++)
+    { result.push(k); }
+    return result;
+  }
+
+  static insertAtSequence(x,i,elem) 
+  { // i must be > 0
+    if (i <= 0) 
+    { return x; }
+    var x1 = x.slice(0,i-1);
+    x1.push(elem);
+    var x2 = x.slice(i-1); 
+    return x1.concat(x2);
+  } // sequences
+
+  static insertAtString(x,i,s) 
+  { // i must be > 0
+    if (i <= 0) 
+    { return x; }
+    var sq = x.slice(0,i-1);
+    sq = sq + s;
+    return sq.concat(x.slice(i-1));
+  } // string
+
+  static setAtSequence(sq,i,val)  
+  { var res = sq;
+    if (i >= 1 && i <= sq.length)  
+    { res[i-1] = val; }
+    return res;
+  } // sequences
+
+  static removeAt(sq,i)  
+  { 
+    if (i >= 1 && i <= sq.length)
+    { return sq.slice(0,i-1).concat(sq.slice(i)); }
+    return sq;
+  } // ok for sequences, strings
+
+  static setAtMap(sq,k,val) 
+  { var res = new Map(sq);
+    res.set(k, val);
+    return res;
+  }
+
+  static excludingFirst(sq,x) 
+  { var ind = sq.indexOf(x);
+    if (ind < 0)
+    { return sq; }
+    var res = sq.slice(0,ind); 
+    return res.concat(sq.slice(ind+1));
+  } // ok for sequences, strings
+
+  static includingSequence(s,x)
+  { var res = [].concat(s);
+    res.push(x);
+    return res;
+  }
+
+  static includingSet(s,x) 
+  { var res = new Set();
+    res = res.union(s);
+    res.add(x);
+    return res;
+  }
+
+  static including(s, x)
+  { if (Array.isArray(s)) 
+    { return Ocl.includingSequence(s,x); }
+    return Ocl.includingSet(s,x);
+  }
+
+  static excludeAllSequence(s1,s2)
+  { var res = [];
+    var st2 = Ocl.asSet(s2); 
+    for (var x of s1)
+    { if (st2.has(x))
+      { }
+      else  
+      { res.push(x); }
+    }
+    return res;
+  }
+
+  static excludeAllSet(s1,s2) 
+  { var res = new Set();
+    var st2 = Ocl.asSet(s2); 
+    res = res.union(s1);
+    return res.difference(st2);
+  }
+
+  static excludeAll(s, x)
+  { if (Array.isArray(s)) 
+    { return Ocl.excludeAllSequence(s,x); }
+    return Ocl.excludeAllSet(s,x);
+  }
+
+  static excludingSequence(s,y) 
+  { var res = [];
+    for (var x of s)
+    { if (x == y) { }
+      else
+      { res.push(x); }
+    }
+    return res;
+  }
+
+  static excludingSet(s,x) 
+  { var res = new Set();
+    res = res.union(s);
+    res.delete(x);
+    return res;  
+  }
+
+  static excluding(s, x)
+  { if (Array.isArray(s)) 
+    { return Ocl.excludingSequence(s,x); }
+    return Ocl.excludingSet(s,x);
+  }
+
+  static prepend(s,x) 
+  { var res = [x];
+    return res.concat(s);
+  }
+
+  static append(s,x) 
+  { var res = [].concat(s)
+    res.push(x);
+    return res;
+  }
+
+  static unionSequence(s,t)
+  { var res = [].concat(s);
+    var tsq = Array.from(t); 
+    return res.concat(tsq);
+  }
+
+  static unionSet(s,t) 
+  { var res = new Set();
+    var st = Ocl.asSet(t); 
+    res = res.union(s);
+    return res.union(st);
+  }
+
+  static union(s, x)
+  { if (Array.isArray(s)) 
+    { return Ocl.unionSequence(s,x); }
+    return Ocl.unionSet(s,x);
+  }
+
+  static concatenate(s,t) 
+  { return Ocl.unionSequence(s,t); }
  
+  static intersectionSequence(s,t) 
+  { var res = [];
+    var st = Ocl.asSet(t); 
+    for (var x of s)
+    { if (st.has(x))
+      { res.push(x); }
+    }
+    return res;
+  }
 
-def intersectionSequence(s,t) :
-  res = [x for x in s if x in t]
-  return res
+  static intersectionSet(s,t) 
+  { var st = Ocl.asSet(t); 
+    return s.intersection(st); 
+  } 
 
+  static intersection(s, x)
+  { if (Array.isArray(s)) 
+    { return Ocl.intersectionSequence(s,x); }
+    return Ocl.intersectionSet(s,x);
+  }
 
-def intersectionSet(s,t) :
-  res = s.copy()
-  return res.intersection(t) 
+  static concatenateAll(sq) 
+  { var res = [];
+    for (var s of sq) 
+    { res = res.concat(s); }
+    return res;
+  }
 
-def intersectionSortedSet(s,t) :
-  res = s.copy()
-  return res.intersection(t) 
+  static unionAllSet(sq) 
+  { var n = Ocl.size(sq); 
+    if (n == 0) 
+    { return new Set(); } 
+    var res = Ocl.any(sq);
+    for (var s of sq) 
+    { res = Ocl.union(res,s); }
+    return res;
+  }
 
+  static unionAll(s)
+  { var n = Ocl.size(s); 
+    if (n == 0) 
+    { return new Set(); } 
+    var x = Ocl.any(s); 
+    if (Array.isArray(x)) 
+    { return Ocl.concatenateAll(s); }
+    return Ocl.unionAllSet(s);
+  }
 
-def concatenateAll(sq) :
-  res = []
-  for s in sq : 
-    res.extend(s)
-  return res
+  static intersectAllSet(sq) 
+  { var res = Ocl.any(sq); 
+    if (res == null) 
+    { return new Set(); }
+    for (var s of sq)
+    { res = res.intersection(s); }
+    return res;
+  }
 
+  static intersectAllSequence(sq) 
+  { var res = Ocl.any(sq); 
+    if (res == null) 
+    { return []; }
+ 
+    for (var s of sq) 
+    { res = Ocl.intersectionSequence(res,s); }
+    return res; 
+  }
 
-def unionAll(sq) :
-  res = any(sq)
-  for s in sq : 
-    res = res.union(s)
-  return res
+  static intersectAll(s)
+  { var x = Ocl.any(s); 
+    if (x == null) 
+    { return new Set(); }
+    if (Array.isArray(x)) 
+    { return Ocl.intersectAllSequence(s); }
+    return Ocl.intersectAllSet(s);
+  }
 
+  static reverseSequence(s) 
+  { return s.toReversed(); }
 
+  static reverseSet(s) 
+  { var res = new Set(); 
+    var sq = Array.from(s);
+    return Ocl.unionSet(res, sq.toReversed());
+  } 
 
-def intersectAllSet(sq) :
-  res = any(sq)
-  for s in sq : 
-    res = res.intersection(s)
-  return res
-
-
-def intersectAllSequence(sq) :
-  res = any(sq)
-  for s in sq : 
-    res = intersectionSequence(res,s)
-  return res
-
-
-def reverseSequence(s) :
-  res = []
-  res.extend(s)
-  res.reverse()
-  return res
-
-
-def reverseSet(s) :
-  return s.copy()
-
-
-static function sortSequence(s) 
-{ if (s.length == 0) 
-  { return s; } 
+  static sortSequence(s) 
+  { if (s.length == 0) 
+    { return []; } 
   
-  var s0 = s[0]; 
+    var s0 = s[0]; 
 
-  if ((typeof s0) == number)
-  { return s.toSorted((a, b) => a - b); } 
+    if ((typeof s0) == "number")
+    { return s.toSorted((a, b) => a - b); } 
   
-  return s.toSorted(); 
-} 
+    return s.toSorted(); 
+  } 
 
+  static sortSet(s) 
+  { var res = Array.from(s); 
+    res = Ocl.sortSequence(res);
+    var result = new Set();
+    for (var x of res)
+    { result.add(x); }
+    return result;
+  }
 
-def sortSet(s) :
-  return s.copy()
+  static sortMap(s) 
+  { var ks = s.keys();
+    var m = new Map();
+    var res = Array.from(ks); 
+    res = Ocl.sortSequence(res);
+    for (var k of res) 
+    { m.set(k, s.get(k)); }
+    return m;
+  }
 
-def sortMap(s) :
-  ks = sorted(s)
-  m = dict({})
-  for k in ks : 
-    m[k] = s[k]
-  return m
+  static sortedBy(s, f)
+  { 
+    var p = Array.from(s);
+    if (p.length == 0) 
+    { return p; } 
 
+    var values = new Map(); 
+    for (var x of p) 
+    { values.set(x, f(x)); } 
 
-def sortedBy(s, fields) : 
-  n = len(fields)
-  p = s.copy()
-  for i in range(1,n+1) : 
-    p = sorted(p, key = fields[n-i])
-  return p
+    var y = f(p[0]);
 
+    if ((typeof y) == "number")
+    { return p.toSorted((a,b) => (values.get(a) - values.get(b))); }  
 
-def selectSet(s,f) : 
-  return set({x for x in s if f(x)})
+    return p.toSorted((a,b) => Ocl.compareTo(values.get(a), values.get(b)));
+  } // for collections s
 
-def selectSortedSet(s,f) : 
-  return SortedSet({x for x in s if f(x)})
+  static sortedByMultiple(s, fields)
+  { var n = fields.length;
+    var p = Array.from(s);
+    for (var ind = n-1; ind >= 0; ind--)
+    { var f = fields[ind];
+      p = p.toSorted((a,b) => Ocl.compareTo(f(a), f(b)));
+    }
+    return p;
+  } // for collections s
 
-def selectSequence(s,f) : 
-  return [x for x in s if f(x)]
+  static selectSet(s,f) 
+  { var res = new Set();
+    for (var x of s)
+    { if (f(x))
+      { res.add(x); }
+    }
+    return res;
+  }
 
-def rejectSet(s,f) : 
-  return set({x for x in s if not f(x)})
+  static selectSequence(s,f) 
+  { var res = []; 
+    for (var x of s)
+    { if (f(x))
+      { res.push(x); }
+    }
+    return res;
+  }
 
-def rejectSortedSet(s,f) : 
-  return SortedSet({x for x in s if not f(x)})
+  static select(s,f)
+  { if (Array.isArray(s))
+    { return Ocl.selectSequence(s,f); }
+    return Ocl.selectSet(s,f);
+  }
 
-def rejectSequence(s,f) : 
-  return [x for x in s if not f(x)]
+  static rejectSet(s,f)  
+  { var res = new Set();
+    for (var x of s)
+    { if (f(x)) { }
+      else
+      { res.add(x); }
+    }
+    return res;
+  }  
 
-def collectSet(s,f) : 
-  return set({f(x) for x in s})
+  static rejectSequence(s,f) 
+  { var res = []; 
+    for (var x of s)
+    { if (f(x)) { } 
+      else 
+      { res.push(x); }
+    }
+    return res;
+  }
 
-def collectSequence(s,f) : 
-  return [f(x) for x in s]
+  static reject(s,f)
+  { if (Array.isArray(s))
+    { return Ocl.rejectSequence(s,f); }
+    return Ocl.rejectSet(s,f);
+  }
 
-def any1(s,f) : 
-  for x in s : 
-    if f(x) : 
-      return x
-  return None
+  static collect(s,f) 
+  { var res = [];
+    for (var x of s)
+    { res.push(f(x)); }
+    return res;
+  } // ok for sets, sequences
 
-
-
-def selectMaximalsSequence(col,f) :
-  result = []
-  if len(col) == 0 :
-    return result
-  maximal = f(col[0])
-  result = [col[0]]
-  for x in col[1:] :
-    value = f(x)
-    if value > maximal :
-      result = [x]
-      maximal = value
-    else : 
-      if value == maximal :
-        result.append(x)
-  return result
+  static selectMaximalsSequence(col,f)
+  { var result = [];
+    if (col.length == 0)
+    { return result; }
+    var maximal = f(col[0]);
+    var result = [col[0]];
+    for (var ind = 1; ind < col.length; ind++)
+    { var x = col[ind];
+      var value = f(x);
+      if (value > maximal)
+      { result = [x];
+        maximal = value;
+      }
+      else  
+      { if (value == maximal)
+        { result.push(x); }
+      }
+    }
+    return result;
+  }
  
+  static selectMaximalsSet(col,f) 
+  { var result = new Set();
+    if (col.size == 0)
+    { return result; }
+    var elem = Ocl.any(col);
+    var maximal = f(elem);
+    result.add(elem);
 
-def selectMaximalsSet(col,f) :
-  result = {}
-  elems = col.copy()
-  if len(col) == 0 :
-    return result
-  x = elems.pop()
-  maximal = f(x)
-  result = {x}
-  for y in elems :
-    value = f(y)
-    if value > maximal :
-      result = {y}
-      maximal = value
-    else : 
-      if value == maximal :
-        result.add(y)
-  return result
+    for (var x of col)
+    { var value = f(x);
+      if (value > maximal)
+      { result = new Set();
+        result.add(x);
+        maximal = value;
+      }
+      else 
+      { if (value == maximal)
+        { result.add(x); }
+      }
+    }
+    return result;
+  }
 
+  static selectMaximals(s,f)
+  { if (Array.isArray(s))
+    { return Ocl.selectMaximalsSequence(s,f); }
+    return Ocl.selectMaximalsSet(s,f);
+  }
 
-def selectMinimalsSequence(col,f) :
-  result = []
-  if len(col) == 0 :
-    return result
-  minimal = f(col[0])
-  result = [col[0]]
-  for x in col[1:] :
-    value = f(x)
-    if value < minimal :
-      result = [x]
-      minimal = value
-    else : 
-      if value == minimal :
-        result.append(x)
-  return result
+  static selectMinimalsSequence(col,f) 
+  { var result = [];
+    if (col.length == 0)
+    { return result; }
+    var minimal = f(col[0]);
+    var result = [col[0]];
+    for (var ind = 1; ind < col.length; ind++)
+    { var x = col[ind];
+      var value = f(x);
+      if (value < minimal)
+      { result = [x];
+        minimal = value;
+      }
+      else  
+      { if (value == minimal)
+        { result.push(x); }
+      }
+    }
+    return result;
+  }
+
+  static selectMinimalsSet(col,f)
+  { var result = new Set();
+    if (col.size == 0)
+    { return result; }
+    var elem = Ocl.any(col);
+    var minimal = f(elem);
+    result.add(elem);
+
+    for (var x of col)
+    { var value = f(x);
+      if (value < minimal)
+      { result = new Set();
+        result.add(x);
+        minimal = value;
+      }
+      else 
+      { if (value == minimal)
+        { result.add(x); }
+      }
+    }
+    return result;
+  }
+
+  static selectMinimals(s,f)
+  { if (Array.isArray(s))
+    { return Ocl.selectMinimalsSequence(s,f); }
+    return Ocl.selectMinimalsSet(s,f);
+  }
+
+  static selectMinimalsMap(m,f)
+  { var result = new Map();
+    if (m.size == 0)
+    { return result; }
+    var elem = Ocl.anyMap(m);
+    var minimal = f(elem);
+
+    for (var [k,x] of m)
+    { var value = f(x);
+      if (value < minimal)
+      { result = new Map();
+        result.set(k,x);
+        minimal = value;
+      }
+      else 
+      { if (value == minimal)
+        { result.set(k,x); }
+      }
+    }
+    return result;
+  }
+
+  static selectMaximalsMap(m,f)
+  { var result = new Map();
+    if (m.size == 0)
+    { return result; }
+    var elem = Ocl.anyMap(m);
+    var maximal = f(elem);
+
+    for (var [k,x] of m)
+    { var value = f(x);
+      if (value > maximal)
+      { result = new Map();
+        result.set(k,x);
+        maximal = value;
+      }
+      else 
+      { if (value == maximal)
+        { result.set(k,x); }
+      }
+    }
+    return result;
+  }
+
+  static minCollection(col) 
+  { var result = Ocl.any(col); 
+    for (var x of col)
+    { if (x < result)
+      { result = x; }
+    }
+    return result;
+  } // ok for sets, sequences
+
+  static maxCollection(col)
+  { var result = Ocl.any(col);
+    for (var x of col)
+    { if (x > result)
+      { result = x; }
+    }
+    return result;
+  } // for sets, sequences
  
-
-def selectMinimalsSet(col,f) :
-  result = {}
-  elems = col.copy()
-  if len(col) == 0 :
-    return result
-  x = elems.pop()
-  minimal = f(x)
-  result = {x}
-  for y in elems :
-    value = f(y)
-    if value < minimal :
-      result = {y}
-      minimal = value
-    else : 
-      if value == minimal :
-        result.add(y)
-  return result
- 
-
-def minSequence(sq) :
-  result = sq[0]
-  for x in sq :
-    if x < result :
-      result = x
-  return result
-
-
-def minSet(col) :
-  elems = col.copy()
-  result = elems.pop()
-  for x in elems :
-    if x < result :
-      result = x
-  return result
-
-
-def maxSequence(sq) :
-  result = sq[0]
-  for x in sq :
-    if x > result :
-      result = x
-  return result
-
-
-def maxSet(col) :
-  elems = col.copy()
-  result = elems.pop()
-  for x in elems :
-    if x > result :
-      result = x
-  return result
-
-
-def sum(col) : 
-  result = 0
-  for x in col : 
-    result = result + x
-  return result
-
-def sumint(col) : 
-  return sum(col)
-
-def sumlong(col) : 
-  return sum(col)
-
-def sumdouble(col) : 
-  result = 0.0
-  for x in col : 
-    result = result + x
-  return result
-
-def sumString(col) : 
-  result = ""
-  for x in col : 
-    result = result + x
-  return result
-
-
-def prd(col) : 
-  result = 1
-  for x in col : 
-    result *= x
-  return result
-
-
-def includesAllMap(supset,subset) :
-  for x in subset :
-    if x in supset :
-      if subset[x] != supset[x] :
-        return False       
-    else :
-      return False
-  return True
-
-
-
-def excludesAllMap(supset,subset) :
-  for x in subset :
-    if x in supset :
-      if subset[x] == supset[x] :
-        return False
-  return True
-
-
-
-def existsMap(m,f) :
-  for x in m :
-    if f(m[x]) :
-      return True
-  return False
-
-
-def forAllMap(m,f) :
-  for x in m :
-    if f(m[x]) :
-      pass
-    else :
-      return False
-  return True
-
-
-def exists1Map(m,f) :
-  found = False
-  for x in m :
-    if f(m[x]) :
-      if found :
-        return False
-      else :
-        found = True
-  return found
-
-
-def includingMap(m,x,y) :
-  res = m.copy()
-  res[x] = y
-  return res
-
-
-def excludeAllMap(s1,s2) :
-  res = s1.copy()
-  for x in s1 :
-    if x in s2 :
-      del res[x]
-  return res
-
-
-def excludingMapKey(m,y) :
-  res = m.copy()
-  if y in m :  
-    del res[y]
-  return res
-
-
-def excludingMapValue(s,y) :
-  res = s.copy()
-  for x in s :
-    if s[x] == y :
-      del res[x]
-  return res
-
-
-def unionMap(s,t) :
-  res = s.copy()
-  for x in t :
-    res[x] = t[x]
-  return res
-
-def unionAllMap(sq) :
-  res = dict({})
-  for s in sq : 
-    res = unionMap(res,s)
-  return res
-
-
-def intersectionMap(s,t) :
-  res = s.copy()
-  for x in s :
-    if x in t and s[x] == t[x] :
-      pass
-    else : 
-      del res[x]
-  return res
-
-def intersectAllMap(sq) :
-  res = dict({})
-  if len(sq) == 0 : 
-    return res
-  res = sq[0]
-
-  for s in sq : 
-    res = intersectionMap(res,s)
-  return res
-
-
-def selectMap(m,p) :
-  res = m.copy()
-  for x in m :
-    if p(m[x]) :
-      pass
-    else : 
-      del res[x]
-  return res
-
-
-def rejectMap(m,p) :
-  res = m.copy()
-  for x in m :
-    if p(m[x]) :
-      del res[x]
-  return res
-
-
-def collectMap(m,e) :
-  res = dict({})
-  for x in m :
-    res[x] = e(m[x])
-  return res
-
-
-
-def restrict(m,ks) :
-  res = m.copy()
-  for x in m :
-    if x in ks :
-      pass
-    else :
-      del res[x]
-  return res
-
-
-def antirestrict(m,ks) :
-  res = m.copy()
-  for x in m :
-    if x in ks :
-      del res[x]
-  return res
-
-def excludingAtMap(m,k) : 
-  res = m.copy()
-  if x in m : 
-    del res[k]
-  return res
-
-
-def keys(m) : 
-  res = set({})
-  for x in m : 
-    res.add(x)
-  return res
-
-
-def values(m) : 
-  res = set({})
-  for x in m : 
-    res.add(m[x])
-  return res
-
-
-# sortedBy is used like this: 
-# data = ["1111234", "1000234", "1000421", "1111012"]
-# sdata = sortedBy(data, [lambda s : s[0:5], lambda s : s[5:8]])
-# print(sdata)
-
-# ss = "a long string"
-# pp = setSubrange(ss, 3, 5, "and")
-# print(pp)
-
-# ss = [1, 4, 6, 7, 2]
-# print(sequenceSubrange(ss, 2, -1))
-
-# mp = dict({"a": 1, "b": 2})
-
-# print(excludesValue(mp,2))
-# print(excludesValue(mp,4))
-
-# mp = dict({"c" : 1, "b": 4, "a": 2})
-# ms = sortMap(mp)
-# print(ms)
-
-# bg = mapAsBag(mp)
-# print(bg)
-
-
-
+  static sumNumeric(col) 
+  { var result = 0;
+    for (var x of col) 
+    { result = result + x; }
+    return result;
+  }
+
+  static sumString(col)  
+  { var result = "";
+    for (var x of col) 
+    { result = result + x; }
+    return result;
+  }
+
+  static prd(col)  
+  { var result = 1;
+    for (var x of col) 
+    { result *= x; }
+    return result;
+  }
+
+  static includesAllMap(supset,subset) 
+  { for (var [x,v] of subset)
+    { if (supset.has(x) && 
+          v == supset.get(x))
+      { }  
+      else
+      { return false; }
+    }
+    return true;
+  }
+
+  static excludesAllMap(supset,subset) 
+  { for (var [x,v] of subset)
+    { if (supset.has(x))
+      { if (v == supset.get(x))
+        { return false; }
+      }
+    }
+    return true;
+  }
+
+  static existsMap(m,f) 
+  { for (var [x,v] of m)
+    { if (f(v))
+      { return true; }
+    }
+    return false;
+  }
+
+  static forAllMap(m,f) 
+  { for (var [x,v] of m)
+    { if (f(v)) { }
+      else
+      { return false; }
+    }
+    return true;
+  }
+
+  static exists1Map(m,f) 
+  { var found = false;
+    for (var [x,v] of m)
+    { if (f(v))
+      { if (found)
+        { return false; }
+        else 
+        { found = true; }
+      }
+    }
+    return found;
+  }
+
+  static includingMap(m,x,y) 
+  { var res = new Map(m);
+    res.set(x,y);
+    return res;
+  }
+
+  static excludeAllMap(s1,s2)
+  { var res = new Map();
+    for (var [x,v] of s1)
+    { if (s2.has(x))
+      { } 
+      else 
+      { res.set(x,v); }
+    }
+    return res;
+  } // either set or map s2
+
+  static excludingMapKey(m,y) 
+  { var res = new Map();
+    for (var [x,v] of m)  
+    { if (x == y) { }
+      else 
+      { res.set(x,v); }
+    }
+    return res;
+  }
+
+  static excludingMapValue(s,y) 
+  { var res = new Map();
+    for (var [x,v] of s)
+    { if (v == y) { }
+      else 
+      { res.set(x,v); }
+    }
+    return res;
+  }
+
+  static maxMap(col)
+  { if (col.size == 0)
+    { return null; }
+    var result = null;
+    for (var [k,v] of col)
+    { if (result == null)
+      { result = v; }
+      else if (v > result)
+      { result = v; }
+    }
+    return result;
+  }
+
+  static minMap(col)
+  { if (col.size == 0)
+    { return null; }
+    var result = null;
+    for (var [k,v] of col)
+    { if (result == null)
+      { result = v; }
+      else if (v < result)
+      { result = v; }
+    }
+    return result;
+  }
+
+  static unionMap(s,t)
+  { var res = new Map(s);
+    for (var [x,v] of t)
+    { res.set(x, v); }
+    return res;
+  }
+
+  static unionAllMap(sq) 
+  { var res = new Map();
+    for (var s of sq) 
+    { res = Ocl.unionMap(res,s); }
+    return res;
+  }
+
+  static intersectionMap(s,t) 
+  { var res = new Map();
+    for (var [x,v] of s)
+    { if (t.has(x) && v == t.get(x))
+      { res.set(x,v); } 
+    }
+    return res;
+  }
+
+  static intersectAllMap(sq) 
+  { var res = new Map();
+    if (sq.length == 0) 
+    { return res; }
+    res = sq[0];
+
+    for (var s of sq) 
+    { res = Ocl.intersectionMap(res,s); }
+    return res;
+  }
+
+  static selectMap(m,p) 
+  { var res = new Map();
+    for (var [x,v] of m)
+    { if (p(v))
+      { res.set(x,v); }
+    }
+    return res;
+  }
+
+  static rejectMap(m,p) 
+  { var res = new Map();
+    for (var [x,v] of m)
+    { if (p(v)) { }
+      else
+      { res.set(x,v); }
+    }
+    return res;
+  }
+
+  static collectMap(m,e) 
+  { var res = new Map();
+    for (var [x,v] of m)
+    { res.set(x, e(v)); }
+    return res;
+  }
+
+  static restrict(m,ks) 
+  { var res = new Map();
+    for (var [x,v] of m)
+    { if (ks.has(x))
+      { res.set(x,v); }
+    }
+    return res;
+  }
+
+  static antirestrict(m,ks) 
+  { var res = new Map();
+    for (var [x,v] of m)
+    { if (ks.has(x))
+      { } 
+      else 
+      { res.set(x,v); }
+    }
+    return res;
+  }
+
+  static excludingAtMap(m,k) 
+  { var res = new Map();
+    for (var [x,v] of m) 
+    { if (x == k) { } 
+      else 
+      { res.set(x,v); }
+    }
+    return res;
+  }
+
+  static keys(m) 
+  { var res = new Set(m.keys());
+    return res;
+  }
+
+  static values(m) 
+  { var res = Array.from(m.values());
+    return res;
+  } // should be a sequence?
+
+}

@@ -4,41 +4,123 @@
 
 
 
-
 nestedTfunc71::
-Set |-->newSet
-Sequence |-->newList
-_* |-->newSet
+Set |-->Ocl.newSet
+Sequence |-->Ocl.newList
+Map |-->Ocl.newMap
+_* |-->Ocl.newSet
 
 seq2ruleset141::
 _* |-->_*`seq2subruleset140
 
+
 OclUnaryExpression::
-_1 ->size ( ) |-->_1.length
+_1 ->size ( ) |-->_1.length<when> _1`ocltype Sequence
+_1 ->size ( ) |-->_1.length<when> _1`ocltype String
+_1 ->size ( ) |-->_1.size<when> _1`ocltype Set
+_1 ->size ( ) |-->_1.size<when> _1`ocltype Map
+_1 ->size ( ) |-->Ocl.size(_1)
+
+_1 ->max ( ) |-->Ocl.maxMap(_1)<when> _1`ocltype Map
+_1 ->max ( ) |-->Ocl.maxCollection(_1)
+
+_1 ->min ( ) |-->Ocl.minMap(_1)<when> _1`ocltype Map
+_1 ->min ( ) |-->Ocl.minCollection(_1)
+
+_1 ->sum ( ) |-->Ocl.sumString(_1)<when> _1`oclelemtype String
+_1 ->sum ( ) |-->Ocl.sumNumeric(_1)
+_1 ->prd ( ) |-->Ocl.prd(_1)
+
+_1 ->copy ( ) |-->Ocl.copy(_1)
+
+_1 ->any ( ) |-->Ocl.anyMap(_1)<when> _1`ocltype Map
+_1 ->any ( ) |-->Ocl.any(_1)
+
+_1 ->first ( ) |-->Ocl.firstMap(_1)<when> _1`ocltype Map
+_1 ->first ( ) |-->Ocl.first(_1)
+
+_1 ->last ( ) |-->Ocl.lastMap(_1)<when> _1`ocltype Map
+_1 ->last ( ) |-->Ocl.last(_1)
+
+_1 ->reverse ( ) |-->Ocl.reverseString(_1)<when> _1`ocltype String
+_1 ->reverse ( ) |-->Ocl.reverseSequence(_1)<when> _1`ocltype Sequence
+_1 ->reverse ( ) |-->Ocl.reverseSet(_1)<when> _1`ocltype Set
+_1 ->reverse ( ) |-->_1
+
+_1 ->sort ( ) |-->Ocl.sortSet(_1)<when> _1`ocltype Set
+_1 ->sort ( ) |-->Ocl.sortMap(_1)<when> _1`ocltype Map
+_1 ->sort ( ) |-->Ocl.sortSequence(_1)<when> _1`ocltype Sequence
+_1 ->sort ( ) |-->_1
 
 lambda _1 : _2 in _3 |-->function(_1) { return _3; }
 
-_1 _2 ( )  |-->_2`nestedTfunc68 ( _1 ) 
+_1 ->abs ( ) |-->Math.abs(_1)
+_1 ->round ( ) |-->Math.fround(_1)
+_1 ->floor ( ) |-->Math.floor(_1)
+_1 ->ceil ( ) |-->Math.ceil(_1)
+
+_1 ->isEmpty ( ) |-->(Ocl.size(_1) == 0)
+_1 ->notEmpty ( ) |-->(Ocl.size(_1) > 0)
+
+_1 ->byte2char ( ) |-->Ocl.byte2char(_1)
+_1 ->char2byte ( ) |-->Ocl.char2byte(_1)
+
+_1 ->cos ( ) |-->Math.cos(_1)
+_1 ->sin ( ) |-->Math.sin(_1)
+_1 ->tan ( ) |-->Math.tan(_1)
+
+_1 ->acos ( ) |-->Math.acos(_1)
+_1 ->asin ( ) |-->Math.asin(_1)
+_1 ->atan ( ) |-->Math.atan(_1)
+
+_1 ->exp ( ) |-->Math.exp(_1)
+_1 ->log ( ) |-->Math.log(_1)
+_1 ->log10 ( ) |-->Math.log(_1)
+
+_1 ->cosh ( ) |-->Math.cosh(_1)
+_1 ->sinh ( ) |-->Math.sinh(_1)
+_1 ->tanh ( ) |-->Math.tanh(_1)
+
+_1 ->sqr ( ) |-->((_1)*(_1))
+_1 ->sqrt ( ) |-->Math.sqrt(_1)
+_1 ->cbrt ( ) |-->Math.cbrt(_1)
+
+_1 ->oclIsUndefined ( ) |-->Ocl.oclIsUndefined(_1)
+_1 ->oclIsInvalid ( ) |-->Ocl.oclIsInvalid(_1)
+
+_1 ->unionAll ( ) |-->Ocl.unionAllSet(_1)<when> _1`oclelemtype Set
+_1 ->unionAll ( ) |-->Ocl.concatenateAll(_1)<when> _1`oclelemtype Sequence
+_1 ->unionAll ( ) |-->Ocl.unionAllMap(_1)<when> _1`oclelemtype Map
+_1 ->unionAll ( ) |-->Ocl.unionAll(_1)
+
+_1 ->concatenateAll ( ) |-->Ocl.concatenateAll(_1)
+
+_1 ->intersectAll ( ) |-->Ocl.intersectAllSet(_1)<when> _1`oclelemtype Set
+_1 ->intersectAll ( ) |-->Ocl.intersectAllSequence(_1)<when> _1`oclelemtype Sequence
+_1 ->intersectAll ( ) |-->Ocl.intersectAllMap(_1)<when> _1`oclelemtype Map
+_1 ->intersectAll ( ) |-->Ocl.intersectAll(_1)
+
+
+_1 _2 ( )  |-->Ocl._2`nestedTfunc68( _1 ) 
 _1 _2  |-->_1`func67 _2 
+
 
 seq2subruleset140::
 _1 _2 |-->_1
-_1 _2 _3  |-->_1 
+_1 _2 _3  |-->_1<action> _1 _3 
 _0 |-->_0
 
+OclParameterList::
+_1 |-->_1
+_1 , _* |-->_1, _*`recurse
+
 OclParameter::
-_1 : _2 |-->_1
+_1 : _2 |-->_1<action> _1 _2
+
 
 OclOperation::
-operation _2 ( ) : void pre: _3  post: _4  |-->this . _2 = function ( ) { } ; 
-operation _2 ( _* ) : void pre: _3  post: _4  |-->this . _2 = function ( _*`seq2ruleset141 ) { } ; 
-query _2 ( ) : _3 pre: _4  post: _5  |-->this . _2 = function ( ) { } ; 
-query _2 ( _* ) : _3 pre: _4  post: _5  |-->this . _2 = function ( _*`seq2ruleset115 ) { } ; 
-
-operation _2 ( ) : void pre: _3  post: _4  activity: _5  |-->this . _2 = function ( ) { _5 } ; 
-operation _2 ( _* ) : void pre: _3  post: _4  activity: _5  |-->this . _2 = function ( _*`seq2ruleset141 ) { _5 } ; 
-query _2 ( ) : _3 pre: _4  post: _5  activity: _6  |-->this . _2 = function ( ) { _6 } ; 
-query _2 ( _* ) : _3 pre: _4  post: _5  activity: _6  |-->this . _2 = function ( _*`seq2ruleset115 ) { _6 } ; 
+operation _* |-->
+query _* |-->
 
 static operation _2 ( ) : void pre: _3  post: _4  |--> 
 static operation _2 ( _* ) : void pre: _3  post: _4  |--> 
@@ -52,9 +134,10 @@ static query _2 ( _* ) : _3 pre: _4  post: _5  activity: _6  |-->
 
 
 seq3ruleset151::
-; |-->,
-literal _2  |-->_2 : _2`nestedTfunc150 
+; |-->
+literal _2 = _3 |-->  static _2 = _3;\n 
 _0 |-->_0
+
 
 OclType::
 void  |-->Null 
@@ -63,12 +146,21 @@ int |-->Number
 double |-->Number
 long |-->Number
 boolean |-->Boolean
-String  |-->String 
-Set ( _3 )  |-->Object 
-Sequence ( _3 )  |-->Object 
-_1  |-->Object 
+String  |-->String
+ 
+Set |-->Set
+Set ( _3 )  |-->Set 
+
+Sequence |-->Sequence 
+Sequence ( _3 )  |-->Sequence 
+
+Function |-->Function 
 Function ( _3 , _5 )  |-->Function 
+
+Map |-->Map 
 Map ( _3 , _5 )  |-->Map 
+
+_1  |-->Object 
 
 
 typInit::
@@ -79,16 +171,20 @@ double |-->0.0
 long |-->0
 boolean |-->false
 String  |-->"" 
-Set   |-->[ ]  
+
+Set   |-->new Set()  
 Sequence  |-->[ ] 
-Set ( _1 )   |-->[ ] 
+Map |-->new Map()
+
+Set ( _1 )   |-->new Set() 
 Sequence ( _1 )   |-->[ ]
-Map ( _1 , _2 ) |-->{ }  
-_1 |-->{ } 
+Map ( _1 , _2 ) |-->new Map()
+
+_1 |-->null 
 
 
 nestedTfunc150::
-_1 |-->'_1'
+_1 |-->_1
 
 nestedSfunc64::
 this |-->self
@@ -103,53 +199,52 @@ _* |-->_*`seq3ruleset76
 
 
 OclClass::
-class _2 { }  |-->class _2 { _2 ( ) { } }  
-class _2 { _4 }  |-->class _2 { _4`staticClassContents constructor _2 ( ) { _4 }  } 
-class _2 { _* }  |-->class _2 { _2 ( ) { _* }  } 
+class _2 { }  |-->class _2 {\n  constructor( ) { } }  
+class _2 { _4 }  |-->class _2 {\n  constructor( ) { _4 }\n_4`staticClassContents} 
 
-class _2 extends _4 { }  |-->class _2 extends _4 { _2 ( ) { } }  
-class _2 extends _4 { _6 }  |-->class _2 extends _4 { _6`staticClassContents _2 ( ) { _6 } }  
-class _2 extends _4 { _* }  |-->class _2 extends _4 { _2 ( ) { _* } } 
+class _2 extends _4 { }  |-->class _2 extends _4 {\n  constructor( ) { super(); }\n}  
+class _2 extends _4 { _6 }  |-->class _2 extends _4 {\n  constructor( ) { super(); _6 }\n_6`staticClassContents}  
 
-abstract class _2 { }  |-->class _2 { _2 ( ) { } }  
-abstract class _2 { _4 }  |-->class _2 { _4`staticClassContents _2 ( ) { _4 } }  
-abstract class _2 { _* }  |-->class _2 { _2 ( ) { _* }  } 
+abstract class _2 { }  |-->class _2 { constructor( ) { } }  
+abstract class _2 { _4 }  |-->class _2 {\n  constructor( ) { _4 }\n_4`staticClassContents}  
 
-abstract class _2 extends _4 { }  |-->class _2 extends _4 { _2 ( ) { } }  
-abstract class _2 extends _4 { _6 }  |-->class _2 extends _4 { _6`staticClassContents _2 ( ) { _6 } }  
-abstract class _2 extends _4 { _* }  |-->class _2 extends _4 { _2 ( ) { _* } } 
+abstract class _2 extends _4 { }  |-->class _2 extends _4 { constructor( ) { super(); } }  
+abstract class _2 extends _4 { _6 }  |-->class _2 extends _4 {\n constructor( ) { super(); _6 }\n_6`staticClassContents}  
 
 
 
 seq3subruleset147::
 _* |-->_*`seq3ruleset146
 
+
 OclCollectionExpression::
-Set { _3 }  |-->newSet _3`seq3subruleset73 
-Sequence { _3 }  |-->newList _3`seq3subruleset75 
-_1 { }  |-->_1`nestedTfunc71 ( ) 
+Set { } |-->new Set()
+Set { _3 }  |-->Ocl.newSet_3`seq3subruleset73
+Sequence { } |-->[] 
+Sequence { _3 }  |-->Array.of_3`seq3subruleset75
+Map { } |-->new Map()
+Map { _3 } |-->Ocl.newMap_3`seq3subruleset73 
+_1 { }  |-->_1`nestedTfunc71( ) 
+
 
 seq3ruleset65::
 _1 |-->_1 
 _0 |-->_0
 
+
 nestedTfunc68::
+->oclType |-->oclType
 ->toLowerCase |-->toLowerCase
 ->toUpperCase |-->toUpperCase
 ->front |-->front
 ->tail |-->tail
 ->first |-->first
 ->last |-->last
-->cos |-->cos
-->sin |-->sin
-->tan |-->tan
-->exp |-->exp
-->log |-->log
-->cosh |-->cosh
-->sin |-->sinh
-->tan |-->tanh
-->sqrt |-->sqrt
-->cbrt |-->cbrt
+->any |-->any
+->values |-->values
+->keys |-->keys
+->trim |-->trim
+->characters |-->characters
 
 _1 |-->_1
 
@@ -159,7 +254,7 @@ _* |-->_*`seq2subruleset114
 
 nestedTfunc69::
 ->including |-->including
-->union |-->union
+->excluding |-->excluding
 ->intersection |-->intersection
 ->excludesAll |-->excludesAll
 ->excludes |-->excludes
@@ -170,6 +265,22 @@ nestedTfunc69::
 ->prepend |-->prepend
 ->pow |-->pow
 ->gcd |-->gcd
+->oclIsTypeOf |-->oclIsTypeOf
+->oclIsKindOf |-->oclIsTypeOf
+
+->equalsIgnoreCase |-->equalsIgnoreCase
+->compareTo |-->compareTo
+
+->excludingValue |-->excludingMapValue
+->excludingKey |-->excludingMapKey
+->restrict |-->restrict
+->antirestrict |-->antirestrict
+
+->split |-->split
+->before |-->before
+->after |-->after
+->isMatch |-->isMatch
+->hasMatch |-->hasMatch
 
 _1 |-->_1
 
@@ -187,13 +298,36 @@ OclBasicExpression::
 null  |-->null
 self |-->this
 
+Integer . subrange ( _1 ) |-->Ocl.integerSubrange(_1`first, _1`last)
+
+_1 . subrange ( _2 ) |-->_1.slice(_2`first-1, _2`last)
+
+_1 . setAt ( _2 ) |-->Ocl.setAtMap(_1, _2`first, _2`last)<when> _1`ocltype Map
+_1 . setAt ( _2 ) |-->Ocl.setAtString(_1, _2`first, _2`last)<when> _1`ocltype String
+_1 . setAt ( _2 ) |-->Ocl.setAtSequence(_1, _2`first, _2`last)
+
+_1 . insertAt ( _2 ) |-->Ocl.insertAtString(_1, _2`first, _2`last)<when> _1`ocltype String
+_1 . insertAt ( _2 ) |-->Ocl.insertAtSequence(_1, _2`first, _2`last)
+
+_1 . insertInto ( _2 ) |-->Ocl.insertInto(_1, _2`first, _2`last)
+_1 . excludingSubrange ( _2 ) |-->Ocl.excludingSubrange(_1, _2`first, _2`last)
+_1 . setSubrange ( _2 ) |-->Ocl.setSubrange(_1, _2`first, _2`last)
+
+_1 . replace ( _2 ) |-->Ocl.replace(_1, _2`first, _2`last)
+_1 . replaceAll ( _2 ) |-->Ocl.replaceAll(_1, _2`first, _2`last)
+_1 . replaceAllMatches ( _2 ) |-->Ocl.replaceAllMatches(_1, _2`first, _2`last)
+_1 . replaceFirstMatch ( _2 ) |-->Ocl.replaceFirstMatch(_1, _2`first, _2`last)
+
+_1 [ _3 ]  |-->_1.get(_3) <when> _1`ocltype Map
+_1 [ _3 ]  |-->_1.at( _3 - 1 )
+
+
 _1 . _3 ( )  |-->_1._3( ) 
-_1 [ _3 ]  |-->_1[ _3 - 1 ] <when> _1 Sequence
-_1 [ _3 ]  |-->_1->at( _3 - 1 ) <when> _1 String
-_1 [ _3 ]  |-->_1[ _3 ]
 
 _1 . _3 ( _5 )  |-->_1._3 _5`seq3subruleset66 
+
 _1 . _3  |-->_1._3 
+
 _1 |-->_1
 
 
@@ -206,8 +340,13 @@ _1 => _2 |-->(_1?_2:true)
 _1 * _3  |-->_1 * _3 
 _1 + _3  |-->_1 + _3 
 
-_1 - _3 |-->Ocl.excludingAll(_1,_3)<when> _1 Set
-_1 - _3 |-->Ocl.excludingAll(_1,_3)<when> _1 Sequence
+_1 - _3 |-->Ocl.subtractString(_1,_3)<when> _1`ocltype String
+_1 - _3 |-->Ocl.subtractString(_1,_3)<when> _3`ocltype String
+
+_1 - _3 |-->Ocl.excludeAllSet(_1,_3)<when> _1`ocltype Set
+_1 - _3 |-->Ocl.excludeAllSequence(_1,_3)<when> _1`ocltype Sequence
+_1 - _3 |-->Ocl.excludeAllMap(_1,_3)<when> _1`ocltype Map
+
 _1 - _3  |-->_1 - _3 
 
 _1 /= _3  |-->_1 != _3 
@@ -219,26 +358,164 @@ _1 = _3  |-->_1 == _3
 _1 > _3  |-->_1 > _3 
 _1 >= _3  |-->_1 >= _3 
 
+_1 |-> _3 |-->[_1, _3]
+
 _1 ->apply _2 |-->_1(_2)
 
-_1 ->at ( _2 ) |-->_1->at(_2-1)<when> _1 String
-_1 ->at ( _2 ) |-->_1[_2-1]<when> _1 Sequence
-_1 ->at ( _2 ) |-->_1.get(_2) 
+_1 ->at ( _2 ) |-->_1.at(_2-1)<when> _1`ocltype String
+_1 ->at ( _2 ) |-->_1[_2-1]<when> _1`ocltype Sequence
+_1 ->at ( _2 ) |-->_1.get(_2)<when> _1`ocltype Map 
+_1 ->at ( _2 ) |-->Ocl.at(_1,_2) 
 
-_1 ->gcd ( _2 ) |-->gcd(_1, _2)
+_1 ->gcd ( _2 ) |-->Ocl.gcd(_1, _2)
+_1 ->pow ( _2 ) |-->(_1 ** (_2))
 
 _1 ->oclAsType ( _2 ) |-->_1
 
-_1 ->collect _2 |-->collect(_1, function(self) { return _2; } )
-_1 ->collect ( _2 | _3 ) |-->collect(_1, function(_2) { return _3; })
+_1 ->includes ( _2 ) |-->(_1.has(_2))<when> _1`ocltype Set
+_1 ->includes ( _2 ) |-->(_1.includes(_2))<when> _1`ocltype Sequence
+_1 ->includes ( _2 ) |-->Ocl.includes(_1,_2)
 
-_1 ->select _2 |-->select(_1, function(self) { return _2; } )
-_1 ->select ( _2 | _3 ) |-->select(_1, function(_2) { return _3; })
+_1 ->excludes ( _2 ) |-->!(_1.has(_2))<when> _1`ocltype Set
+_1 ->excludes ( _2 ) |-->!(_1.includes(_2))<whem> _1`ocltype Sequence
+_1 ->excludes ( _2 ) |-->Ocl.excludes(_1,_2)
 
-_1 ->reject _2 |-->reject(_1, function(self) { return _2; } )
-_1 ->reject ( _2 | _3 ) |-->reject(_1, function(_2) { return _3; })
+_1 ->indexOf ( _2 ) |-->Ocl.indexOfSubSequence(_1, _2)<when> _1`ocltype Sequence, _2`ocltype Sequence
+_1 ->lastIndexOf ( _2 ) |-->Ocl.lastIndexOfSubSequence(_1, _2)<when> _1`ocltype Sequence, _2`ocltype Sequence
 
-_1 _2 ( _4 )  |-->_2`nestedTfunc69 ( _1 , _4 ) 
+_1 ->indexOf ( _2 ) |-->Ocl.indexOf(_1, _2)
+_1 ->lastIndexOf ( _2 ) |-->Ocl.lastIndexOf(_1, _2)
+
+
+_1 ->hasPrefix ( _2 ) |-->Ocl.hasPrefixSequence(_1,_2)<when> _1`ocltype Sequence
+_1 ->hasSuffix ( _2 ) |-->Ocl.hasSuffixSequence(_1,_2)<when> _1`ocltype Sequence
+
+_1 ->hasPrefix ( _2 ) |-->_1.startsWith(_2)
+_1 ->hasSuffix ( _2 ) |-->_1.endsWith(_2)
+
+_1 ->excludingAt ( _2 ) |-->Ocl.excludingAtMap(_1, _2)<when> _1`ocltype Map
+_1 ->excludingAt ( _2 ) |-->Ocl.removeAt(_1, _2)
+
+_1 ->excludingFirst ( _2 ) |-->Ocl.excludingFirst(_1, _2)
+
+_1 ->includesAll ( _2 ) |-->Ocl.includesAllSet(_1,_2)<when> _1`ocltype Set
+_1 ->includesAll ( _2 ) |-->Ocl.includesAllMap(_1,_2)<when> _1`ocltype Map
+_1 ->includesAll ( _2 ) |-->Ocl.includesAllSequence(_1,_2)<when> _1`ocltype Sequence
+_1 ->includesAll ( _2 ) |-->Ocl.includesAll(_1,_2)
+
+_1 ->excludesAll ( _2 ) |-->Ocl.excludesAllSet(_1,_2)<when> _1`ocltype Set
+_1 ->excludesAll ( _2 ) |-->Ocl.excludesAllMap(_1,_2)<when> _1`ocltype Map
+_1 ->excludesAll ( _2 ) |-->Ocl.excludesAllSequence(_1,_2)<when> _1`ocltype Sequence
+_1 ->excludesAll ( _2 ) |-->Ocl.excludesAll(_1,_2)
+
+_1 ->including ( _2 ) |-->Ocl.includingSet(_1,_2)<when> _1`ocltype Set
+_1 ->including ( _2 ) |-->Ocl.includingSequence(_1,_2)<when> _1`ocltype Sequence
+_1 ->including ( _2 ) |-->Ocl.including(_1,_2)
+
+_1 ->union ( _2 ) |-->Ocl.unionSet(_1,_2)<when> _1`ocltype Set
+_1 ->union ( _2 ) |-->Ocl.unionMap(_1,_2)<when> _1`ocltype Map
+_1 ->union ( _2 ) |-->Ocl.unionSequence(_1,_2)<when> _1`ocltype Sequence
+_1 ->union ( _2 ) |-->Ocl.union(_1,_2)
+
+_1 ->concatenate ( _2 ) |-->Ocl.concatenate(_1,_2)
+
+_1 ->excluding ( _2 ) |-->Ocl.excludingSet(_1,_2)<when> _1`ocltype Set
+_1 ->excluding ( _2 ) |-->Ocl.excludingSequence(_1,_2)<when> _1`ocltype Sequence
+_1 ->excluding ( _2 ) |-->Ocl.excluding(_1,_2)
+
+_1 ->intersection ( _2 ) |-->Ocl.intersectionSet(_1,_2)<when> _1`ocltype Set
+_1 ->intersection ( _2 ) |-->Ocl.intersectionMap(_1,_2)<when> _1`ocltype Map
+_1 ->intersection ( _2 ) |-->Ocl.intersectionSequence(_1,_2)<when> _1`ocltype Sequence
+_1 ->intersection ( _2 ) |-->Ocl.intersection(_1,_2)
+
+_1 ->forAll ( _2 ) |-->Ocl.forAllMap( _1, function(self) { return _2; } )<when> _1`ocltype Map 
+_1 ->forAll ( _2 ) |-->Ocl.forAll( _1, function(self) { return _2; } )
+
+_1 ->forAll ( _2 | _3 ) |-->Ocl.forAllMap( _1, function(_2) { return _3; } )<when> _1`ocltype Map 
+_1 ->forAll ( _2 | _3 ) |-->Ocl.forAll( _1, function(_2) { return _3; } )
+ 
+_1 ->exists ( _2 ) |-->Ocl.existsMap( _1, function(self) { return _2; } )<when> _1`ocltype Map 
+_1 ->exists ( _2 ) |-->Ocl.exists( _1, function(self) { return _2; } )
+
+_1 ->exists ( _2 | _3 ) |-->Ocl.existsMap( _1, function(_2) { return _3; } )<when> _1`ocltype Map 
+_1 ->exists ( _2 | _3 ) |-->Ocl.exists( _1, function(_2) { return _3; } )
+
+_1 ->exists1 ( _2 ) |-->Ocl.exists1Map( _1, function(self) { return _2; } )<when> _1`ocltype Map 
+_1 ->exists1 ( _2 ) |-->Ocl.exists1( _1, function(self) { return _2; } )
+
+_1 ->exists1 ( _2 | _3 ) |-->Ocl.exists1Map( _1, function(_2) { return _3; } )<when> _1`ocltype Map 
+_1 ->exists1 ( _2 | _3 ) |-->Ocl.exists1( _1, function(_2) { return _3; } )
+
+
+_1 ->collect _2 |-->Ocl.collectMap(_1, function(self) { return _2; } )<when> _1`ocltype Map
+_1 ->collect ( _2 | _3 ) |-->Ocl.collectMap(_1, function(_2) { return _3; })<when> _1`ocltype Map
+
+_1 ->collect _2 |-->Ocl.collect(_1, function(self) { return _2; } )
+_1 ->collect ( _2 | _3 ) |-->Ocl.collect(_1, function(_2) { return _3; })
+
+
+_1 ->any _2 |-->Ocl.anyMapElement(_1, function(self) { return _2; } )<when> _1`ocltype Map
+_1 ->any ( _2 | _3 ) |-->Ocl.anyMapElement(_1, function(_2) { return _3; })<when> _1`ocltype Map
+
+_1 ->any _2 |-->Ocl.anyCollection(_1, function(self) { return _2; } )
+_1 ->any ( _2 | _3 ) |-->Ocl.anyCollection(_1, function(_2) { return _3; })
+
+_1 ->isUnique _2 |-->Ocl.isUniqueMap(_1, function(self) { return _2; } )<when> _1`ocltype Map
+_1 ->isUnique ( _2 | _3 ) |-->Ocl.isUniqueMap(_1, function(_2) { return _3; })<when> _1`ocltype Map
+
+_1 ->isUnique _2 |-->Ocl.isUnique(_1, function(self) { return _2; } )
+_1 ->isUnique ( _2 | _3 ) |-->Ocl.isUnique(_1, function(_2) { return _3; })
+
+
+_1 ->sortedBy _2 |-->Ocl.sortedBy(_1, function(self) { return _2; } )
+_1 ->sortedBy ( _2 | _3 ) |-->Ocl.sortedBy(_1, function(_2) { return _3; })
+
+
+_1 ->select _2 |-->Ocl.selectSet(_1, function(self) { return _2; } )<when> _1`ocltype Set
+_1 ->select ( _2 | _3 ) |-->Ocl.selectSet(_1, function(_2) { return _3; })<when> _1`ocltype Set
+
+_1 ->select _2 |-->Ocl.selectSequence(_1, function(self) { return _2; } )<when> _1`ocltype Sequence
+_1 ->select ( _2 | _3 ) |-->Ocl.selectSequence(_1, function(_2) { return _3; })<when> _1`ocltype Sequence
+
+_1 ->select _2 |-->Ocl.selectMap(_1, function(self) { return _2; } )<when> _1`ocltype Map
+_1 ->select ( _2 | _3 ) |-->Ocl.selectMap(_1, function(_2) { return _3; })<when> _1`ocltype Map
+
+
+_1 ->reject _2 |-->Ocl.rejectSet(_1, function(self) { return _2; } )<when> _1`ocltype Set
+_1 ->reject ( _2 | _3 ) |-->Ocl.rejectSet(_1, function(_2) { return _3; })<when> _1`ocltype Set
+
+_1 ->reject _2 |-->Ocl.rejectSequence(_1, function(self) { return _2; } )<when> _1`ocltype Sequence
+_1 ->reject ( _2 | _3 ) |-->Ocl.rejectSequence(_1, function(_2) { return _3; })<when> _1`ocltype Sequence
+
+_1 ->reject _2 |-->Ocl.rejectMap(_1, function(self) { return _2; } )<when> _1`ocltype Map
+_1 ->reject ( _2 | _3 ) |-->Ocl.rejectMap(_1, function(_2) { return _3; })<when> _1`ocltype Map
+
+
+_1 ->selectMinimals _2 |-->Ocl.selectMinimalsSet(_1, function(self) { return _2; } )<when> _1`ocltype Set
+_1 ->selectMinimals ( _2 | _3 ) |-->Ocl.selectMinimalsSet(_1, function(_2) { return _3; })<when> _1`ocltype Set
+
+_1 ->selectMinimals _2 |-->Ocl.selectMinimalsSequence(_1, function(self) { return _2; } )<when> _1`ocltype Sequence
+_1 ->selectMinimals ( _2 | _3 ) |-->Ocl.selectMinimalsSequence(_1, function(_2) { return _3; })<when> _1`ocltype Sequence
+
+_1 ->selectMinimals _2 |-->Ocl.selectMinimalsMap(_1, function(self) { return _2; } )<when> _1`ocltype Map
+_1 ->selectMinimals ( _2 | _3 ) |-->Ocl.selectMinimalsMap(_1, function(_2) { return _3; })<when> _1`ocltype Map
+
+_1 ->selectMinimals _2 |-->Ocl.selectMinimals(_1, function(self) { return _2; } )
+_1 ->selectMinimals ( _2 | _3 ) |-->Ocl.selectMinimals(_1, function(_2) { return _3; })
+
+_1 ->selectMaximals _2 |-->Ocl.selectMaximalsSet(_1, function(self) { return _2; } )<when> _1`ocltype Set
+_1 ->selectMaximals ( _2 | _3 ) |-->Ocl.selectMaximalsSet(_1, function(_2) { return _3; })<when> _1`ocltype Set
+
+_1 ->selectMaximals _2 |-->Ocl.selectMaximalsSequence(_1, function(self) { return _2; } )<when> _1`ocltype Sequence
+_1 ->selectMaximals ( _2 | _3 ) |-->Ocl.selectMaximalsSequence(_1, function(_2) { return _3; })<when> _1`ocltype Sequence
+
+_1 ->selectMaximals _2 |-->Ocl.selectMaximalsMap(_1, function(self) { return _2; } )<when> _1`ocltype Map
+_1 ->selectMaximals ( _2 | _3 ) |-->Ocl.selectMaximalsMap(_1, function(_2) { return _3; })<when> _1`ocltype Map
+
+_1 ->selectMaximals _2 |-->Ocl.selectMaximals(_1, function(self) { return _2; } )
+_1 ->selectMaximals ( _2 | _3 ) |-->Ocl.selectMaximals(_1, function(_2) { return _3; })
+
+_1 _2 ( _4 )  |-->Ocl._2`nestedTfunc69( _1, _4 ) 
 
 
 seq3ruleset72::
@@ -254,14 +531,21 @@ int |-->Number
 double |-->Number
 long |-->Number
 boolean |-->Boolean
-_* |-->Number
+OclAny |-->Object
+Map |-->Map
+Set |-->Set
+Sequence |-->Array
+_1 |-->_1
+
 
 seq2subruleset114::
-_1 _2 _3  |-->_1 
+_1 _2 _3  |-->_1 <action> _1 _3
 _0 |-->_0
+
 
 OclConditionalExpression::
 if _2 then _4 else _6 endif  |-->( _2 ) ? _4 : _6 
+
 
 seq3subruleset66::
 _* |-->( _*`seq3ruleset65 )
@@ -273,7 +557,7 @@ _* |-->-
 
 seq3ruleset76::
 ; |--> 
-_1 := _3  |-->_1 = _3 ; 
+_1 := _3  |-->  _1 = _3 ; 
 _0 |-->_0
 
 seq3subruleset152::
@@ -288,26 +572,41 @@ _1 ; _* |-->_1`staticProperty _*`recurse
 
 
 staticProperty::
-static attribute _2 : double   |--> static _2 = 0.0;
-static attribute _2 : String   |--> static _2 = ""; 
-static attribute _2 : int  |--> static _2 = 0;
-static attribute _2 : long  |--> static _2 = 0;
-static attribute _2 : _4  |--> static _2 = null; 
+static attribute _2 : double   |-->  static _2 = 0.0;\n<action> _2 Number
+static attribute _2 : String   |-->  static _2 = "";\n<action> _2 String 
+static attribute _2 : int  |-->  static _2 = 0;\n<action> _2 Number
+static attribute _2 : long  |-->  static _2 = 0;\n<action> _2 Number
 
-attribute _2 : _4 |-->
+static attribute _2 : _4 := _6 |-->  static _2 = _6;\n<action> _2 _4 
+static attribute _2 : _4  |-->  static _2 = null;\n<action> _2 _4 
 
-static operation _2 ( ) : void pre: _3  post: _4  |--> static _2( ) { } ; 
-static operation _2 ( _* ) : void pre: _3  post: _4  |--> static _2( _*`seq2ruleset141 ) { } ; 
-static query _2 ( ) : _3 pre: _4  post: _5  |--> static _2( ) { } ; 
-static query _2 ( _* ) : _3 pre: _4  post: _5  |--> static _2( _*`seq2ruleset115 ) { } ; 
+attribute _2 : _4 := _6 |--><action> _2 _4
+attribute _2 : _4 |--><action> _2 _4
 
-static operation _2 ( ) : void pre: _3  post: _4  activity: _5  |--> static _2( ) { _5 } ; 
-static operation _2 ( _* ) : void pre: _3  post: _4  activity: _5  |--> static _2( _*`seq2ruleset141 ) { _5 } ; 
-static query _2 ( ) : _3 pre: _4  post: _5  activity: _6  |--> static _2( ) { _6 } ; 
-static query _2 ( _* ) : _3 pre: _4  post: _5  activity: _6  |--> static _2( _*`seq2ruleset115 ) { _6 } ; 
+static operation _2 ( ) : void pre: _3  post: _4  |-->  static _2( ) { }\n 
+static operation _2 ( _* ) : void pre: _3  post: _4  |-->  static _2( _*`seq2ruleset141 ) { }\n 
 
-operation _* |-->
-query _* |-->
+static query _2 ( ) : _3 pre: _4  post: _5  |-->  static _2( ) { }\n 
+static query _2 ( _* ) : _3 pre: _4  post: _5  |-->  static _2( _*`seq2ruleset115 ) { }\n 
+
+static operation _2 ( ) : void pre: _3  post: _4  activity: _5  |-->  static _2( ) { _5 }\n 
+static operation _2 ( _* ) : void pre: _3  post: _4  activity: _5  |-->  static _2( _*`seq2ruleset141 ) { _5 }\n 
+
+static query _2 ( ) : _3 pre: _4  post: _5  activity: _6  |-->  static _2( ) { _6 }\n 
+static query _2 ( _* ) : _3 pre: _4  post: _5  activity: _6  |-->  static _2( _*`seq2ruleset115 ) { _6 }\n
+
+operation _2 ( ) : void pre: _3  post: _4  |-->  _2( ) { }\n  
+operation _2 ( _* ) : void pre: _3  post: _4  |-->  _2( _*`seq2ruleset141 ) { } \n
+ 
+query _2 ( ) : _3 pre: _4  post: _5  |-->  _2( ) { }\n  
+query _2 ( _* ) : _3 pre: _4  post: _5  |-->  _2( _*`seq2ruleset115 ) { } \n
+
+operation _2 ( ) : void pre: _3  post: _4  activity: _5  |-->  _2( ) { _5 } \n
+operation _2 ( _* ) : void pre: _3  post: _4  activity: _5  |-->  _2( _*`seq2ruleset141 ) { _5 } \n
+
+query _2 ( ) : _3 pre: _4  post: _5  activity: _6  |-->  _2( ) { _6 } \n
+query _2 ( _* ) : _3 pre: _4  post: _5  activity: _6  |-->  _2( _*`seq2ruleset115 ) { _6 } \n
+
 
 
 OclClassContents::
@@ -320,37 +619,346 @@ _1 ; _* |-->_1 _*`recurse
 
 
 OclAttribute::
-attribute _2 : double   |--> this._2 = 0.0;
-attribute _2 : String   |--> this._2 = ""; 
-attribute _2 : int  |--> this._2 = 0;
-attribute _2 : long  |--> this._2 = 0;
-attribute _2 : _4  |--> this._2 = null 
+attribute _2 : String := _3  |-->  this._2 = _3;\n<action> _2 String
+attribute _2 : String  |-->  this._2 = "";\n<action> _2 String
 
-static attribute _2 : _4  |--> 
+attribute _2 : Set := _3  |-->  this._2 = _3;\n<action> _2 Set
+attribute _2 : Set  |-->  this._2 = new Set();\n<action> _2 Set
+
+attribute _2 : Sequence := _3 |-->  this._2 = _3;\n<action> _2 Sequence
+attribute _2 : Sequence  |-->  this._2 = [];\n<action> _2 Sequence
+
+attribute _2 : Map := _3  |-->  this._2 = _3;\n<action> _2 Map
+attribute _2 : Map  |-->  this._2 = new Map();\n<action> _2 Map
+
+attribute _2 : _4 := _6 |-->  this._2 = _6;\n<action> _2 _4  
+attribute _2 : _4  |-->  this._2 = _4`typInit;\n<action> _2 _4  
+
+static attribute _2 : _4 := _6 |--> 
+static attribute _2 : _4 |--> 
 
 
 OclEnumeration::
-enumeration _2 { _4 }  |-->const _2 = _4`seq3subruleset152 <EOF> 
+enumeration _2 { _4 }  |-->class _2 _4`seq3subruleset152
 
 OclStatement::
 skip |-->
-var _2 : Map ( _3  , _4  )   |-->let _2 = { } ; 
-var _2 : int   |-->let _2 = 0 ; 
-var _2 : long   |-->let _2 = 0 ; 
-var _2 : double   |-->let _2 = 0.0 ; 
-var _2 : boolean   |-->let _2 = false ; 
-var _2 : String   |-->let _2 = "" ; 
-var _2 : _4   |-->let _2 = _4`typInit ; 
+
+var _2 : Map ( _3  , _4  )   |-->  let _2 = new Map();<action> _2 Map 
+var _2 : Set ( _3 )   |-->  let _2 = new Set();<action> _2 Set 
+var _2 : Sequence ( _3 )   |-->  let _2 = []; <action> _2 Sequence
+
+var _2 : int   |-->  let _2 = 0 ; <action> _2 Number
+var _2 : long   |-->  let _2 = 0 ; <action> _2 Number 
+var _2 : double   |-->  let _2 = 0.0 ; <action> _2 Number
+var _2 : boolean   |-->  let _2 = false ; <action> _2 Boolean
+var _2 : String   |-->  let _2 = "" ; <action> _2 String
+var _2 : _4   |-->  let _2 = _4`typInit ; <action> _2 _4
+
 ( _2 )  |-->{ _2`seq3subruleset77 } 
-return _2  |-->return _2 ; 
-call _2  |-->_2 ; 
-while _2 do _4  |-->while ( _2 ) { _4 } 
-_1 := _3  |-->_1 = _3 ; 
-if _2 then _4 else _6  |-->if ( _2 ) { _4 } else { _6 } 
-for _2 : _4 do _6  |-->for ( var _2 of _4 ) { _6 } 
-break  |-->break ; 
-continue  |-->continue ; 
-return  |-->return ; 
+return _2  |-->  return _2 ; 
+call _2  |-->  _2 ; 
+while _2 do _4  |-->  while ( _2 ) { _4 } 
+_1 := _3  |-->  _1 = _3 ;
+ 
+if _2 then _4 else skip  |-->  if ( _2 ) { _4 } 
+if _2 then _4 else _6  |-->  if ( _2 ) { _4 } else { _6 }
+ 
+for _2 : _4 do _6  |-->  for ( var _2 of _4 ) { _6 } 
+
+break  |-->  break ; 
+continue  |-->  continue ; 
+return  |-->  return ; 
+
+assert _1 do _2 |-->    if (_1) { }\n    else { throw new Error(_2); }\n
+assert _1 |-->    if (_1) { }\n    else { throw new Error("_1 fails here"); }\n
+error _1 |-->    throw _1;\n
+
+try _1 _2 _3 |-->    try { _1    }\n_2 _3\n
+try _1 _2 |-->    try { _1    }\n_2\n
+
+catch _1 do _2 |-->      catch (_1`jsCatchTest) { _2      }\n
+finally _1 |-->      finally { _1      }\n
+
+
+jsCatchTest::
+_1 : _2 |-->_1
+_1 |-->_1
+
+
+ocltype::
+Set { } |-->Set
+Set { _3 }  |-->Set
+Sequence { } |-->Sequence 
+Sequence { _3 }  |-->Sequence
+Map { } |-->Map
+Map { _3 } |-->Map 
+
+
+_1 . setAt ( _2 ) |-->_1`ocltype
+Integer . subrange ( _2 ) |-->Sequence
+_1 . subrange ( _2 ) |-->_1`ocltype
+
+_1 . replace ( _2 ) |-->String
+_1 . replaceAll ( _2 ) |-->String
+_1 . replaceAllMatches ( _2 ) |-->String
+_1 . replaceFirstMatch ( _2 ) |-->String
+
+_1 . insertAt ( _2 ) |-->_1`ocltype
+_1 . insertInto ( _2 ) |-->_1`ocltype
+_1 . excludingSubrange ( _2 ) |-->_1`ocltype
+_1 . setSubrange ( _2 ) |-->_1`ocltype
+
+_1 + _2 |-->_1`ocltype
+_1 - _2 |-->_1`ocltype
+_1 * _2 |-->Number
+_1 / _2 |-->Number
+
+_1 mod _2 |-->Number
+_1 div _2 |-->Number
+
+_1 ->gcd ( _2 ) |-->Number
+_1 ->pow ( _2 ) |-->Number
+
+_1 ->truncateTo ( _2 ) |-->Number
+_1 ->roundTo ( _2 ) |-->Number
+
+_1 & _2 |-->Boolean
+_1 or _2 |-->Boolean
+_1 => _2 |-->Boolean
+
+_1 < _2 |-->Boolean
+_1 <= _2 |-->Boolean
+_1 > _2 |-->Boolean
+_1 >= _2 |-->Boolean
+
+_1 = _2 |-->Boolean
+_1 /= _2 |-->Boolean
+
+not _1 |-->Boolean
+
+_1 ->forAll ( _2 ) |-->Boolean
+_1 ->exists ( _2 ) |-->Boolean
+_1 ->exists1 ( _2 ) |-->Boolean
+_1 ->isUnique ( _2 ) |-->Boolean
+
+_1 ->forAll ( _2 | _3 ) |-->Boolean
+_1 ->exists ( _2 | _3 ) |-->Boolean
+_1 ->exists1 ( _2 | _3 ) |-->Boolean
+_1 ->isUnique ( _2 | _3 ) |-->Boolean
+
+_1 ->includes ( _2 ) |-->Boolean
+_1 ->excludes ( _2 ) |-->Boolean
+_1 ->includesAll ( _2 ) |-->Boolean
+_1 ->excludesAll ( _2 ) |-->Boolean
+
+_1 ->including ( _2 ) |-->_1`ocltype
+_1 ->excluding ( _2 ) |-->_1`ocltype
+_1 ->excludingAt ( _2 ) |-->_1`ocltype
+_1 ->excludingFirst ( _2 ) |-->_1`ocltype
+
+_1 ->union ( _2 ) |-->_1`ocltype
+_1 ->intersection ( _2 ) |-->_1`ocltype
+_1 ->symmetricDifference ( _2 ) |-->_1`ocltype
+
+_1 ->concatenate ( _2 ) |-->Sequence
+_1 ->append ( _2 ) |-->Sequence
+_1 ->prepend ( _2 ) |-->Sequence
+
+
+_1 ->indexOf ( _2 ) |-->Number
+_1 ->lastIndexOf ( _2 ) |-->Number
+
+_1 ->split ( _2 ) |-->Sequence
+_1 ->before ( _2 ) |-->String
+_1 ->after ( _2 ) |-->String
+_1 ->trim ( ) |-->String
+_1 ->characters ( ) |-->Sequence
+
+_1 ->hasMatch ( _2 ) |-->Boolean
+_1 ->isMatch ( _2 ) |-->Boolean
+
+_1 ->hasPrefix ( _2 ) |-->Boolean
+_1 ->hasSuffix ( _2 ) |-->Boolean
+
+_1 ->excludingValue ( _2 ) |-->Map
+_1 ->excludingKey ( _2 ) |-->Map
+_1 ->restrict ( _2 ) |-->Map
+_1 ->antirestrict ( _2 ) |-->Map
+
+_1 ->keys ( ) |-->Set
+_1 ->values ( ) |-->Sequence
+
+_1 ->front ( ) |-->_1`ocltype
+_1 ->tail ( ) |-->_1`ocltype
+_1 ->reverse ( ) |-->_1`ocltype
+_1 ->sort ( ) |-->_1`ocltype
+_1 ->copy ( ) |-->_1`ocltype
+
+_1 [ _3 ]  |-->_1`oclelemtype
+_1 ->at ( _3 ) |-->_1`oclelemtype
+_1 ->first ( ) |-->_1`oclelemtype
+_1 ->last ( ) |-->_1`oclelemtype
+_1 ->max ( ) |-->_1`oclelemtype
+_1 ->min ( ) |-->_1`oclelemtype
+
+_1 ->any ( ) |-->_1`oclelemtype
+_1 ->any ( _2 | _3 ) |-->_1`oclelemtype
+
+_1 ->sum ( ) |-->_1`oclelemtype
+_1 ->prd ( ) |-->_1`oclelemtype
+
+_1 ->select ( _2 ) |-->_1`ocltype
+_1 ->select ( _2 | _3 ) |-->_1`ocltype
+
+_1 ->reject ( _2 ) |-->_1`ocltype
+_1 ->reject ( _2 | _3 ) |-->_1`ocltype
+
+_1 ->collect ( _2 ) |-->Map<when> _1`ocltype Map
+_1 ->collect ( _2 ) |-->Sequence
+
+_1 ->collect ( _2 | _3 ) |-->Map<when> _1`ocltype Map
+_1 ->collect ( _2 | _3 ) |-->Sequence
+
+_1 ->selectMinimals ( _2 ) |-->_1`ocltype
+_1 ->selectMinimals ( _2 | _3 ) |-->_1`ocltype
+
+_1 ->selectMaximals ( _2 ) |-->_1`ocltype
+_1 ->selectMaximals ( _2 | _3 ) |-->_1`ocltype
+
+_1 ->unionAll ( ) |-->_1`oclelemtype
+_1 ->concatenateAll ( ) |-->Sequence
+_1 ->intersectAll ( ) |-->_1`oclelemtype
+
+_1 ->byte2char ( ) |-->String
+_1 ->char2byte ( ) |-->Number
+
+_1 ->abs ( ) |-->Number
+_1 ->round ( ) |-->Number
+_1 ->floor ( ) |-->Number
+_1 ->ceil ( ) |-->Number
+
+_1 ->cos ( ) |-->Number
+_1 ->sin ( ) |-->Number
+_1 ->tan ( ) |-->Number
+
+_1 ->acos ( ) |-->Number
+_1 ->asin ( ) |-->Number
+_1 ->atan ( ) |-->Number
+
+_1 ->exp ( ) |-->Number
+_1 ->log ( ) |-->Number
+_1 ->log10 ( ) |-->Number
+
+_1 ->cosh ( ) |-->Number
+_1 ->sinh ( ) |-->Number
+_1 ->tanh ( ) |-->Number
+
+_1 ->sqr ( ) |-->Number
+_1 ->sqrt ( ) |-->Number
+_1 ->cbrt ( ) |-->Number
+
+_1 ->oclType ( ) |-->String
+_1 ->oclIsTypeOf ( _2 ) |-->Boolean
+_1 ->oclIsKindOf ( _2 ) |-->Boolean
+
+_1 ->oclIsUndefined ( ) |-->Boolean
+_1 ->oclIsInvalid ( ) |-->Boolean
+
+_1 ->isEmpty ( ) |-->Boolean
+_1 ->notEmpty ( ) |-->Boolean
+
+_1 ->equalsIgnoreCase ( _2 ) |-->Boolean
+_1 ->compareTo ( _2 ) |-->Numeric
+
+lambda _1 : _2 in _3 |-->Function
+
+if _1 then _2 else _3 endif |-->_2`ocltype
+
+_1 . _2 |-->_2`ocltype
+
+_1 |-->Set<when> _1 Set
+_1 |-->Sequence<when> _1 Sequence
+_1 |-->Map<when> _1 Map
+
+_1 |-->String<when> _1 String
+
+_1 |-->Set<when> _1`type Set
+_1 |-->Sequence<when> _1`type Sequence
+_1 |-->Map<when> _1`type Map
+
+_1 |-->String<when> _1`type String
+
+_1 |-->OclAny
+
+
+oclelemtype::
+_1 . _2 |-->_2`oclelemtype
+
+_1 . setAt ( _2 ) |-->_1`oclelemtype
+Integer . subrange ( _2 ) |-->Number
+_1 . subrange ( _2 ) |-->_1`oclelemtype
+
+_1 . replace ( _2 ) |-->String
+_1 . replaceAll ( _2 ) |-->String
+_1 . replaceAllMatches ( _2 ) |-->String
+_1 . replaceFirstMatch ( _2 ) |-->String
+
+_1 . insertAt ( _2 ) |-->_1`oclelemtype
+_1 . insertInto ( _2 ) |-->_1`oclelemtype
+_1 . excludingSubrange ( _2 ) |-->_1`oclelemtype
+_1 . setSubrange ( _2 ) |-->_1`oclelemtype
+
+
+_1 ->sort ( ) |-->_1`oclelemtype
+_1 ->reverse ( ) |-->_1`oclelemtype
+_1 ->front ( ) |-->_1`oclelemtype
+_1 ->tail ( ) |-->_1`oclelemtype
+_1 ->values ( ) |-->_1`oclelemtype
+_1 ->copy ( ) |-->_1`oclelemtype
+_1 ->characters ( ) |-->String
+
+_1 ->union ( _2 ) |-->_1`oclelemtype
+_1 ->intersection ( _2 ) |-->_1`oclelemtype
+_1 ->symmetricDifference ( _2 ) |-->_1`oclelemtype
+
+_1 ->concatenate ( _2 ) |-->_1`oclelemtype
+_1 ->append ( _2 ) |-->_1`oclelemtype
+_1 ->prepend ( _2 ) |-->_1`oclelemtype
+
+_1 ->including ( _2 ) |-->_1`oclelemtype
+_1 ->excluding ( _2 ) |-->_1`oclelemtype
+
+_1 ->select ( _2 ) |-->_1`oclelemtype
+_1 ->select ( _2 | _3 ) |-->_1`oclelemtype
+
+_1 ->reject ( _2 ) |-->_1`oclelemtype
+_1 ->reject ( _2 | _3 ) |-->_1`oclelemtype
+
+_1 ->collect ( _2 ) |-->_2`ocltype
+_1 ->collect ( _2 | _3 ) |-->_3`ocltype
+
+_1 ->selectMinimals ( _2 ) |-->_1`oclelemtype
+_1 ->selectMinimals ( _2 | _3 ) |-->_1`oclelemtype
+
+_1 ->selectMaximals ( _2 ) |-->_1`oclelemtype
+_1 ->selectMaximals ( _2 | _3 ) |-->_1`oclelemtype
+
+_1 ->excludingValue ( _2 ) |-->_1`oclelemtype
+_1 ->excludingKey ( _2 ) |-->_1`oclelemtype
+_1 ->restrict ( _2 ) |-->_1`oclelemtype
+_1 ->antirestrict ( _2 ) |-->_1`oclelemtype
+
+lambda _1 : _2 in _3 |-->_3`ocltype
+if _1 then _2 else _3 endif |-->_2`oclelemtype
+
+_1 |-->Set<when> _1`elementType Set
+_1 |-->Sequence<when> _1`elementType Sequence
+_1 |-->Map<when> _1`elementType Map
+_1 |-->String<when> _1`elementType String
+
+_1 |-->_1`elementType
+
 
 
 

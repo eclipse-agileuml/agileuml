@@ -20,9 +20,17 @@ abstract class Statement implements Cloneable
   protected boolean brackets = false; 
   protected boolean unusedStatement = false; 
 
+  // Enumeration of loop kinds: 
   public static final int WHILE = 0; 
   public static final int FOR = 1; 
   public static final int REPEAT = 2; 
+
+  // Enumeration of execution status: 
+  public static final int NORMAL = 0; 
+  public static final int CONTINUE = 1; 
+  public static final int BREAK = 2;
+  public static final int RETURN = 3; 
+  public static final int EXCEPTION = 4; 
 
   public static final String[] spaces = { "", "  ", "    ", "      ", "        ", "          ", "            ", "              ", "                ", "                  ", "                    " }; 
   // spaces[i] is i*2 spaces
@@ -476,6 +484,9 @@ abstract class Statement implements Cloneable
 
     return stat; 
   } 
+
+  public int execute(ModelSpecification sigma, ModelState beta)
+  { return Statement.NORMAL; } // default is to do nothing
 
   public static Statement cumulativeCode(Expression var,
                                          Expression rng, 
@@ -3774,9 +3785,12 @@ abstract class Statement implements Cloneable
           { actualtyp = new Type("Sequence", null); } 
           else 
           { actualtyp = new Type("Set",null); }  
-          actualtyp.setElementType(preterm.getElementType()); 
-          newdec = actualtyp.getCSharp() + " " + pre_var + " = new ArrayList();\n" + 
-                   "    " + pre_var + ".AddRange(" + pretermqf + ");\n"; 
+          actualtyp.setElementType(preterm.getElementType());
+          String csharptype = actualtyp.getCSharp(); 
+ 
+          newdec = 
+            "    " + csharptype + " " + pre_var + " = new " + csharptype + "();\n" + 
+            "    " + pre_var + " = SystemTypes.union(" + pre_var + ", " + pretermqf + ");\n"; 
         } 
         else 
         { actualtyp = typ;
@@ -3799,6 +3813,7 @@ abstract class Statement implements Cloneable
       // newpost.typeCheck(types,entities,context,localatts);
       return newdecs + "\n  " + newpost.updateFormCSharp(env,local);
     } 
+
     return post.updateFormCSharp(env,local);  
   }  
 
@@ -3933,6 +3948,16 @@ class ReturnStatement extends Statement
 
   public Expression getValue() 
   { return value; } 
+
+  public int execute(ModelSpecification sigma, 
+                      ModelState beta)
+  { if (value != null)
+    { Expression expr = value.evaluate(sigma, beta); 
+      beta.setVariableValue("result", expr); 
+    } 
+
+    return Statement.RETURN; 
+  } 
 
   public Expression definedness()
   { if (value != null) 
@@ -4404,6 +4429,9 @@ class BreakStatement extends Statement
     return res;  
   } 
 
+  public int execute(ModelSpecification sigma, ModelState beta)
+  { return Statement.BREAK; } 
+
   public boolean containsSubexpression(Expression expr) 
   { return false; } 
 
@@ -4594,6 +4622,9 @@ class ContinueStatement extends Statement
 
   public String toString() 
   { return "continue"; } 
+
+  public int execute(ModelSpecification sigma, ModelState beta)
+  { return Statement.CONTINUE; } 
 
   public String toAST()
   { String res = "(OclStatement continue)"; 
@@ -4934,6 +4965,68 @@ class InvocationStatement extends Statement
     res.parameters = new Vector();
     res.callExp = expr;
     return res;  
+  } 
+
+  public int execute(ModelSpecification sigma, 
+                      ModelState beta)
+  { int res = Statement.NORMAL; 
+
+    if (callExp == null) 
+    { return res; } 
+
+    if ("skip".equals(callExp + "")) 
+    { return res; } 
+
+    if (callExp instanceof BasicExpression)
+    { BasicExpression cexpr = (BasicExpression) callExp; 
+      Expression obj = cexpr.getObjectRef(); 
+      // if null, it is a call on self. 
+      String op = cexpr.getData(); 
+      Vector actualPars = cexpr.getParameters(); 
+      int npars = actualPars.size(); 
+
+      Expression selfobject; 
+
+      if (obj != null) 
+      { selfobject = obj.evaluate(sigma, beta); } 
+      else 
+      { selfobject = beta.getVariableValue("self"); } 
+
+      if (selfobject == null) // error
+      { return res; } 
+
+      ObjectSpecification ospec = 
+                 sigma.getObjectSpec("" + selfobject);
+
+      if (ospec == null) // error
+      { return res; }
+ 
+      Entity ent = ospec.getEntity(); 
+
+      if (ent == null) 
+      { return res; } 
+
+      BehaviouralFeature bf = ent.getOperation(op, npars);
+      // assume not static:  
+
+      if (bf == null) 
+      { return res; } 
+
+      ModelState opstackframe = (ModelState) beta.clone(); 
+      opstackframe.addNewEnvironment(); 
+      opstackframe.addVariable("self", selfobject); 
+
+      Vector parValues = new Vector(); 
+      for (int i = 0; i < actualPars.size(); i++) 
+      { Expression pval = (Expression) actualPars.get(i); 
+        Expression parval = pval.evaluate(sigma, beta); 
+        parValues.add(parval); // could be null; 
+      } 
+
+      bf.execute(sigma, opstackframe, parValues);  
+    }
+
+    return res; 
   } 
 
   public Statement removeSlicedParameters(
@@ -5941,8 +6034,9 @@ class ImplicitInvocationStatement extends Statement
 
 
   public String bupdateForm()
-  { return " " + callExp; }   // ANY vars' WHERE callExp[vars'/vars] THEN vars := vars' 
-                              // where vars are variables of callExp 
+  { return " " + callExp; }   
+  // ANY vars' WHERE callExp[vars'/vars] THEN vars := vars' 
+  // where vars are variables of callExp 
 
   public BStatement bupdateForm(java.util.Map env, boolean local)
   { return callExp.bupdateForm(env,local); 
@@ -6006,7 +6100,9 @@ class ImplicitInvocationStatement extends Statement
 
   public boolean typeInference(Vector types, Vector entities, Vector ctxs, Vector env, java.util.Map vartypes)
   { if (callExp != null)
-    { callExp.typeInference(types,entities,ctxs,env,vartypes); } 
+    { callExp.typeInference(types,entities,
+                            ctxs,env,vartypes); 
+    } 
     return true;
   }  
 
@@ -6344,7 +6440,6 @@ class WhileStatement extends Statement
 
   public void setBody(Statement stat)
   { body = stat; } 
- 
 
   public void setLoopKind(int lk)
   { loopKind = lk; } 
@@ -6381,6 +6476,9 @@ class WhileStatement extends Statement
   public Statement getLoopBody()
   { return body; } 
 
+  public Expression getLoopVar()
+  { return loopVar; } 
+
   public Expression getTest()
   { return loopTest; } 
 
@@ -6410,6 +6508,124 @@ class WhileStatement extends Statement
     res.setVariant(var); 
 
     return res; 
+  } 
+
+  public int execute(ModelSpecification sigma, 
+                      ModelState beta)
+  { int res = Statement.NORMAL; 
+
+    if (loopKind == Statement.WHILE)
+    { Expression testvalue = 
+         loopTest.evaluate(sigma, beta); 
+      while ("true".equals(testvalue + ""))
+      { res = body.execute(sigma, beta);
+        System.out.println("---> iteration of while loop: " + sigma + ", " + beta + " " + res);
+
+        if (res == Statement.BREAK)
+        { return Statement.NORMAL; } 
+
+        if (res == Statement.RETURN)
+        { return res; }   
+
+        testvalue = loopTest.evaluate(sigma, beta); 
+      } 
+
+      return Statement.NORMAL; 
+    } 
+    else if (loopKind == Statement.REPEAT)
+    { res = body.execute(sigma, beta); 
+
+      if (res == Statement.BREAK)
+      { return Statement.NORMAL; } 
+
+      if (res == Statement.RETURN)
+      { return res; }   
+
+      Expression testvalue = 
+         loopTest.evaluate(sigma, beta); 
+      while ("false".equals(testvalue + ""))
+      { res = body.execute(sigma, beta);
+        System.out.println("---> iteration of repeat loop: " + sigma + ", " + beta + " " + res);
+
+        if (res == Statement.BREAK)
+        { return Statement.NORMAL; } 
+
+        if (res == Statement.RETURN)
+        { return res; }   
+  
+        testvalue = loopTest.evaluate(sigma, beta); 
+      }
+
+      return Statement.NORMAL;  
+    } 
+    else if (loopKind == Statement.FOR)
+    { Expression rng = loopRange.evaluate(sigma, beta); 
+      // must be a SetExpression
+      if (rng instanceof SetExpression)
+      { SetExpression serange = (SetExpression) rng;   
+        int n = serange.size();     
+
+        // ModelState local = (ModelState) beta.clone(); 
+
+        String lv = "" + loopVar; 
+        beta.addNewEnvironment(); 
+        beta.addVariable(lv, new BasicExpression("null")); 
+   
+        for (int i = 0; i < n; i++) 
+        { Expression val = serange.getElement(i); 
+          beta.setVariableValue(lv, val); 
+          res = body.execute(sigma, beta); 
+          System.out.println("---> iteration of for loop: " + sigma + ", " + beta + " " + res);
+
+          if (res == Statement.BREAK)
+          { return Statement.NORMAL; } 
+
+          if (res == Statement.RETURN)
+          { return res; }   
+        } 
+     
+        beta.removeLastEnvironment();
+
+        return Statement.NORMAL;  
+      } 
+    } 
+
+    return Statement.NORMAL; 
+  } 
+
+
+  public Statement loopContinuation()
+  { // FOR i : Integer.subrange(a,b) loop: 
+    //   while i < b do (i := i + 1; loopBody)
+    // Other loops, just the loop itself
+
+    if (loopKind == Statement.FOR)
+    { Expression lv = null; 
+      if (loopVar != null) 
+      { lv = (Expression) loopVar.clone(); } 
+ 
+      BasicExpression lr = null; 
+      if (loopRange != null && 
+          (loopRange + "").startsWith("Integer.subrange(") &&
+          loopRange.getParameters() != null) 
+      { lr = (BasicExpression) loopRange.clone(); 
+        Expression par2 = lr.getParameter(2); 
+        Expression newtest = new BinaryExpression("<", lv, par2); 
+        Statement newassign = 
+           new AssignStatement(lv, 
+             new BinaryExpression("+", lv, 
+                                  new BasicExpression(1)));  
+        SequenceStatement newbody = new SequenceStatement(); 
+        newbody.addStatement(newassign); 
+        newbody.addStatement(body); 
+        WhileStatement ws = 
+           new WhileStatement(newtest, newbody); 
+        ws.setLoopKind(Statement.WHILE); 
+        return ws; 
+      } 
+    } 
+  
+    return (Statement) this.clone(); 
   } 
 
   public Statement dereference(BasicExpression var)
@@ -7913,7 +8129,7 @@ class WhileStatement extends Statement
         Type et = loopRange.getElementType(); 
         String etr = "object"; 
         if (et == null) 
-        { System.err.println("Error: null element type for " + loopRange);
+        { System.err.println("!! Error: null element type for " + loopRange);
           if (loopVar.getType() != null)
           { etr = loopVar.getType().getCSharp(); }
         }  
@@ -7929,12 +8145,14 @@ class WhileStatement extends Statement
         Vector preterms = body.allPreTerms(lv); 
         String newbody = processPreTermsCSharp(body, preterms, env1, local); 
 
-        return "  ArrayList " + rang + " = " + lr + ";\n" + 
+        return "  ArrayList " + rang + 
+                 " = SystemTypes.asSequence(" + lr + ");\n" + 
                "  for (int " + ind + " = 0; " + ind + " < " + rang + ".Count; " + ind + "++)\n" + 
                "  { " + etr + " " + lv + " = (" + etr + ") " + rang + "[" + ind + "];\n" +
-               "    " + newbody + " }"; 
+               "    " + newbody + "\n  }"; 
       } 
-      else if (loopTest != null && (loopTest instanceof BinaryExpression))
+      else if (loopTest != null && 
+               (loopTest instanceof BinaryExpression))
       { // assume it is  var : exp 
         BinaryExpression lt = (BinaryExpression) loopTest; 
         String lv = lt.left.queryFormCSharp(env, local); 
@@ -7960,10 +8178,10 @@ class WhileStatement extends Statement
         Vector preterms = body.allPreTerms(lv); 
         String newbody = processPreTermsCSharp(body, preterms, env1, local); 
 
-        return "  ArrayList " + rang + " = " + lr + ";\n" + 
+        return "  ArrayList " + rang + " = SystemTypes.asSequence(" + lr + ");\n" + 
                "  for (int " + ind + " = 0; " + ind + " < " + rang + ".Count; " + ind + "++)\n" + 
                "  { " + etr + " " + lv + " = (" + etr + ") " + rang + "[" + ind + "];\n" +
-               "    " + newbody + " }"; 
+               "    " + newbody + "\n  }"; 
       } 
       return "  for (" + loopTest.queryFormCSharp(env,local) + ") \n" + 
              "  { " + body.updateFormCSharp(env,local) + " }"; 
@@ -8511,6 +8729,23 @@ class CreationStatement extends Statement
     return res; 
   } 
 
+  public int execute(ModelSpecification sigma, ModelState beta)
+  { // add assignsTo as new variable, set to initialExpression
+
+    if (initialExpression != null) 
+    { Expression val = initialExpression.evaluate(sigma, beta); 
+      beta.addVariable(assignsTo, val);
+    } // else use default value 
+    else if (instanceType != null)  
+    { Expression defaultInit = 
+        Type.defaultInitialValueExpression(instanceType);
+      Expression val = defaultInit.evaluate(sigma, beta); 
+      beta.addVariable(assignsTo, val);
+    }
+
+    return Statement.NORMAL; 
+  } 
+
   public Expression definedness()
   { if (initialExpression != null) 
     { return initialExpression.definedness(); } 
@@ -8526,7 +8761,16 @@ class CreationStatement extends Statement
   }  
 
   public Map energyUse(Map uses, Vector rUses, Vector aUses)
-  { if (initialExpression != null) 
+  { if (instanceType != null) 
+    { int tcomp = instanceType.complexity(); 
+      if (tcomp > TestParameters.nestedTypeLimit) 
+      { int acount = (int) uses.get("amber"); 
+        uses.set("amber", acount + 1); 
+        aUses.add("! Warning (MNC) flaw: complex type with complexity " + tcomp + ": " + instanceType); 
+      } 
+    } 
+
+    if (initialExpression != null) 
     { initialExpression.energyUse(uses, rUses, aUses); 
 
       int syncomp = initialExpression.syntacticComplexity(); 
@@ -8544,10 +8788,12 @@ class CreationStatement extends Statement
   public java.util.Map collectionOperatorUses(int lev, 
                                  java.util.Map uses,
                                  Vector vars)
-  { if (initialExpression != null) 
+  { 
+    if (initialExpression != null) 
     { initialExpression.collectionOperatorUses(lev, 
                                         uses, vars); 
     } 
+
     return uses; 
   } 
 
@@ -9152,7 +9398,11 @@ class CreationStatement extends Statement
       { return "  " + jType + " " + assignsTo + ";"; } 
       else if (Type.isMapType(instanceType))
       { return "  Hashtable " + assignsTo + ";"; }
-      else if (Type.isCollectionType(instanceType))
+      else if (Type.isSetType(instanceType))
+      { Type et = instanceType.getElementType(); 
+        return "  HashSet<" + Type.getCSharptype(et) + "> " + assignsTo + ";"; 
+      }
+      else if (Type.isSequenceType(instanceType))
       { return "  ArrayList " + assignsTo + ";"; } 
       else if (Type.isFunctionType(instanceType))
       { String kt = "object"; 
@@ -9183,8 +9433,9 @@ class CreationStatement extends Statement
         } 
       } 
     } 
-    else if (createsInstanceOf.startsWith("Set") || 
-             createsInstanceOf.startsWith("Sequence"))
+    else if (createsInstanceOf.startsWith("Set"))
+    { return "  HashSet<object> " + assignsTo + ";"; }  
+    else if (createsInstanceOf.startsWith("Sequence"))
     { return "  ArrayList " + assignsTo + ";"; } 
     else if (createsInstanceOf.startsWith("Map"))
     { return "  Hashtable "  + assignsTo + ";"; }
@@ -9815,6 +10066,31 @@ class SequenceStatement extends Statement
     res.setBrackets(brackets); 
     return res;  
   } 
+
+  public int execute(ModelSpecification sigma, ModelState beta)
+  { // create new environment, then execute each statement 
+    // in turn.
+
+    int res = Statement.NORMAL; 
+
+    // ModelState local = (ModelState) beta.clone(); 
+    beta.addNewEnvironment(); 
+
+    for (int i = 0; i < statements.size(); i++) 
+    { Statement stat = (Statement) statements.get(i); 
+      res = stat.execute(sigma, beta);
+
+      if (res == Statement.BREAK || res == Statement.RETURN ||
+          res == Statement.CONTINUE)
+      { beta.removeLastEnvironment();
+        return res; 
+      }   
+    } 
+
+    beta.removeLastEnvironment();
+    return Statement.NORMAL;  
+  } 
+
 
   public Expression definedness()
   { Expression res = new BasicExpression(true); 
@@ -14755,6 +15031,55 @@ class AssignStatement extends Statement
     // rhs.elementType = t; 
   } 
 
+  public int execute(ModelSpecification sigma, ModelState beta)
+  { Expression rhsValue = rhs.evaluate(sigma, beta); 
+
+    if (lhs instanceof BasicExpression)
+    { BasicExpression lbe = (BasicExpression) lhs;
+      Expression obj = lbe.getObjectRef(); 
+      Expression indx = lbe.getArrayIndex(); 
+      String var = lbe.getData(); 
+
+      // System.out.println("LHS: " + obj + "." + var + indx + " " + lhs.isAttribute() + " " + beta); 
+      
+      if (obj == null && 
+          indx == null)
+      { // simple variable or attribute
+
+        if (lhs.isAttribute()) // of "self"
+        { Expression oid = beta.getVariableValue("self"); 
+          ObjectSpecification ref = 
+                sigma.getObjectSpec("" + oid); 
+          if (ref != null)
+          { ref.setOCLValue(var, rhsValue); }
+        }   
+        else 
+        { beta.setVariableValue(var, rhsValue); } 
+      } 
+      else if (obj == null)
+      { // simple array variable 
+        Expression indv = indx.evaluate(sigma, beta); 
+        Expression arr = beta.getVariableValue(var); 
+
+        if (arr instanceof SetExpression)
+        { int indval = Integer.parseInt("" + indv); 
+          ((SetExpression) arr).setExpression(indval, rhsValue); 
+        } 
+      }  
+      else if (obj != null && 
+          indx == null)
+      { // object attribute
+        Expression oid = obj.evaluate(sigma, beta); 
+        ObjectSpecification ref = sigma.getObjectSpec("" + oid); 
+        if (ref != null)
+        { ref.setOCLValue(var, rhsValue); }   
+      } 
+    } 
+
+    System.out.println(">> Updated state: " + beta);
+    return Statement.NORMAL;  
+  } 
+
   public Expression definedness()
   { Expression ldef = lhs.definedness(); 
     Expression rdef = rhs.definedness(); 
@@ -16104,6 +16429,17 @@ class ConditionalStatement extends Statement
     return new ConditionalStatement(tst,stat,els); 
   } 
 
+  public int execute(ModelSpecification sigma, ModelState beta)
+  { Expression tval = test.evaluate(sigma, beta); 
+    if ("true".equals(tval + ""))
+    { int res = ifPart.execute(sigma, beta); 
+      return res; 
+    } 
+    else 
+    { int res = elsePart.execute(sigma, beta); 
+      return res; 
+    } 
+  } // assuming no side-effects in the test. 
 
   public String cg(CGSpec cgs)
   { String etext = this + "";

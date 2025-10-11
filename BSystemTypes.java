@@ -88,10 +88,11 @@ public class BSystemTypes extends BComponent
     index = 0; 
   } 
 
-  public static String getSelectDefinition(Expression left, String lqf,
-                                           Expression pred, String selectvar, 
-                                           java.util.Map env,
-                                           Vector pars)
+  public static String getSelectDefinition(
+     Expression left, String lqf,
+     Expression pred, String selectvar, 
+     java.util.Map env,
+     Vector pars)
   { String signature = Attribute.parList(pars); 
 
     if (Expression.isSimpleEntity(left)) 
@@ -218,10 +219,11 @@ public class BSystemTypes extends BComponent
     } 
   } 
 
-  public static String getSelectDefinitionJava6(Expression left, String lqf,
-                                           Expression pred, String selectvar, 
-                                           java.util.Map env,
-                                           Vector pars)
+  public static String getSelectDefinitionJava6(
+             Expression left, String lqf,
+             Expression pred, String selectvar, 
+             java.util.Map env,
+             Vector pars)
   { String signature = Attribute.parList(pars); 
 
     if (Expression.isSimpleEntity(left)) 
@@ -513,10 +515,11 @@ public class BSystemTypes extends BComponent
     } 
   } 
 
-  public static String getSelectDefinitionCSharp(Expression left, String lqf,
-                                           Expression pred, String selectvar, 
-                                           java.util.Map env,
-                                           Vector pars)
+  public static String getSelectDefinitionCSharp(
+             Expression left, String lqf,
+             Expression pred, String selectvar, 
+             java.util.Map env,
+             Vector pars)
   { String signature = Attribute.parList(pars); 
 
     if (Expression.isSimpleEntity(left)) 
@@ -526,6 +529,10 @@ public class BSystemTypes extends BComponent
       lqf = "Controller.inst().get" + instances + "()"; 
     }         
 
+    String csharptype = "ArrayList"; 
+    if (left.getType() != null) 
+    { csharptype = left.getType().getCSharp(); } 
+
     String ename; 
     Type e = left.getElementType(); 
     if (e == null || "OclAny".equals(e.getName())) 
@@ -534,7 +541,11 @@ public class BSystemTypes extends BComponent
     { ename = e.getName(); }
 
     String tname = ename; 
-    if (ename.equals("Set") || ename.equals("Sequence"))
+    if (ename.equals("Set"))
+    { Type ee = e.getElementType(); 
+      tname = "HashSet<" + Type.getCSharptype(ee) + ">"; 
+    } 
+    else if (ename.equals("Sequence"))
     { tname = "ArrayList"; } 
     else if (ename.equals("String"))
     { tname = "string"; } 
@@ -559,7 +570,10 @@ public class BSystemTypes extends BComponent
       else 
       { var = ename.toLowerCase() + "_" + oldindex + "_xx"; }
 
-      String res = "  public static ArrayList select_" + oldindex + "(ArrayList _l"; 
+      String res = 
+         "  public static " + csharptype + 
+            " select_" + oldindex + "(" + csharptype + " _l";
+ 
       java.util.Map newenv = (java.util.Map) ((java.util.HashMap) env).clone(); 
       if (selectvar == null && e != null && e.isEntity()) 
       { newenv.put(ename,var); }  
@@ -572,9 +586,18 @@ public class BSystemTypes extends BComponent
       } 
       res = res + ")\n"; 
       res = res + "  { // Implements: " + left + "->select(" + var + " | " + pred + ")\n" + 
-                  "    ArrayList _results_" + oldindex + " = new ArrayList();\n" + 
-                  "    for (int _iselect = 0; _iselect < _l.Count; _iselect++)\n" + 
-                  "    { " + tname + " " + var + " = (" + tname + ") _l[_iselect];\n"; 
+                  "    " + csharptype + " _results_" + oldindex + " = new " + csharptype + "();\n"; 
+
+      if (left.isSequence()) 
+      { res = res +
+            "    for (int _iselect = 0; _iselect < _l.Count; _iselect++)\n" + 
+            "    { " + tname + " " + var + " = (" + tname + ") _l[_iselect];\n"; 
+      } 
+      else 
+      { res = res +
+            "    foreach (object _iselect in _l)\n" + 
+            "    { " + tname + " " + var + " = (" + tname + ") _iselect;\n"; 
+      } 
 
       String test = pred.queryFormCSharp(newenv,false); 
       res = res + "      if (" + test + ")\n" + 
@@ -595,10 +618,11 @@ public class BSystemTypes extends BComponent
     } 
   } 
 
-  public static String getSelectDefinitionCPP(Expression left, String lqf,
-                                              Expression pred, String selectvar,
-                                              java.util.Map env,
-                                              Vector pars)
+  public static String getSelectDefinitionCPP(
+           Expression left, String lqf,
+           Expression pred, String selectvar,
+           java.util.Map env,
+           Vector pars)
   { String signature = Attribute.parList(pars); 
 
     if (Expression.isSimpleEntity(left)) 
@@ -692,10 +716,11 @@ public class BSystemTypes extends BComponent
     } 
   } 
 
-  public static String getCollectDefinition(Expression left, String lqf,
-                                           Expression exp, boolean rprim,
-                                           String collectvar, java.util.Map env,
-                                           Vector pars)
+  public static String getCollectDefinition(
+             Expression left, String lqf,
+             Expression exp, boolean rprim,
+             String collectvar, java.util.Map env,
+             Vector pars)
   { String signature = Attribute.parList(pars); 
 
     if (Expression.isSimpleEntity(left)) 
@@ -802,10 +827,11 @@ public class BSystemTypes extends BComponent
     } 
   } 
 
-  public static String getCollectDefinitionJava6(Expression left, String lqf,
-                                           Expression exp, boolean rprim,
-                                           String collectvar, java.util.Map env,
-                                           Vector pars)
+  public static String getCollectDefinitionJava6(
+            Expression left, String lqf,
+            Expression exp, boolean rprim,
+            String collectvar, java.util.Map env,
+            Vector pars)
   { String signature = Attribute.parList(pars); 
 
     if (Expression.isSimpleEntity(left))  
@@ -1010,13 +1036,12 @@ public class BSystemTypes extends BComponent
     } 
   } 
 
-  public static String getCollectDefinitionCSharp(Expression left, String lqf,
-                                           Expression exp, boolean rprim,
-                                           String collectvar, java.util.Map env,
-                                           Vector pars)
+  public static String getCollectDefinitionCSharp(
+            Expression left, String lqf,
+            Expression exp, boolean rprim,
+            String collectvar, java.util.Map env,
+            Vector pars)
   { String signature = Attribute.parList(pars); 
-
-   
 
     if (Expression.isSimpleEntity(left)) 
     { BasicExpression lbe = (BasicExpression) left;
@@ -1024,6 +1049,10 @@ public class BSystemTypes extends BComponent
       String instances = lbedata.toLowerCase() + "_s"; 
       lqf = "Controller.inst().get" + instances + "()"; 
     }         
+
+    String csharptype = "ArrayList"; 
+    if (left.getType() != null) 
+    { csharptype = left.getType().getCSharp(); } 
 
     String ename; 
     Type e = left.getElementType(); 
@@ -1033,7 +1062,11 @@ public class BSystemTypes extends BComponent
     { ename = e.getName(); }
 
     String tname = ename; 
-    if (ename.equals("Set") || ename.equals("Sequence"))
+    if (ename.equals("Set"))
+    { Type ee = e.getElementType(); 
+      tname = "HashSet<" + Type.getCSharptype(ee) + ">"; 
+    }
+    else if (ename.equals("Sequence"))
     { tname = "ArrayList"; } 
     else if (ename.equals("String"))
     { tname = "string"; } 
@@ -1055,18 +1088,32 @@ public class BSystemTypes extends BComponent
       else 
       { var = ename.toLowerCase() + "_" + oldindex + "_xx"; }
 
-      String res = "  public static ArrayList collect_" + oldindex + "(ArrayList _l"; 
+      String res = "  public static ArrayList collect_" + 
+                   oldindex + "(" + csharptype + " _l";
+ 
       for (int i = 0; i < pars.size(); i++) 
       { Attribute par = (Attribute) pars.get(i); 
-        System.out.println(">> Collect parameter " + par + " " + par.getType()); 
+        // System.out.println(">> Collect parameter " + par + " " + par.getType()); 
 
         res = res + ", " + par.getType().getCSharp() + " " + par.getName(); 
       } 
+
       res = res + ")\n"; 
-      res = res + "  { // Implements: " + left + "->collect( " +  var + " | " + exp + " )\n" +
-                  "    ArrayList _results_" + oldindex + " = new ArrayList();\n" + 
-                  "    for (int _icollect = 0; _icollect < _l.Count; _icollect++)\n" + 
-                  "    { " + tname + " " + var + " = (" + tname + ") _l[_icollect];\n"; 
+      res = res + 
+        "  { // Implements: " + left + "->collect( " +  var + " | " + exp + " )\n" +
+        "    ArrayList _results_" + oldindex + " = new ArrayList();\n"; 
+
+      if (left.isSequence()) 
+      { res = res +
+          "    for (int _icollect = 0; _icollect < _l.Count; _icollect++)\n" + 
+          "    { " + tname + " " + var + " = (" + tname + ") _l[_icollect];\n";
+      } 
+      else 
+      { res = res +
+          "    foreach (object _icollect in _l)\n" + 
+          "    { " + tname + " " + var + " = (" + tname + ") _icollect;\n";
+      } 
+ 
       java.util.Map newenv = (java.util.Map) ((java.util.HashMap) env).clone(); 
 
       if (collectvar == null && e != null && e.isEntity())
@@ -1094,10 +1141,11 @@ public class BSystemTypes extends BComponent
     } 
   } 
 
-  public static String getCollectDefinitionCPP(Expression left, String lqf,
-                                           Expression exp, boolean rprim,
-                                           String collectvar, java.util.Map env,
-                                           Vector pars)
+  public static String getCollectDefinitionCPP(
+           Expression left, String lqf,
+           Expression exp, boolean rprim,
+           String collectvar, java.util.Map env,
+           Vector pars)
   { String signature = Attribute.parList(pars); 
 
     if (Expression.isSimpleEntity(left)) 
@@ -1337,10 +1385,11 @@ public class BSystemTypes extends BComponent
 
 
   // distinguish cases where elem is an object and primitive: wrap(exp.getType(), 
-  public static String getRejectDefinition(Expression left, String lqf,
-                                           Expression pred, String selectvar, 
-                                           java.util.Map env,
-                                           Vector pars)
+  public static String getRejectDefinition(
+     Expression left, String lqf,
+     Expression pred, String selectvar, 
+     java.util.Map env,
+     Vector pars)
   { String signature = Attribute.parList(pars); 
 
     if (Expression.isSimpleEntity(left)) 
@@ -1462,10 +1511,11 @@ public class BSystemTypes extends BComponent
     } 
   } 
 
-  public static String getRejectDefinitionJava6(Expression left, String lqf,
-                                           Expression pred, String selectvar,
-                                           java.util.Map env,
-                                           Vector pars)
+  public static String getRejectDefinitionJava6(
+            Expression left, String lqf,
+            Expression pred, String selectvar,
+            java.util.Map env,
+            Vector pars)
   { String signature = Attribute.parList(pars); 
 
     if (Expression.isSimpleEntity(left)) 
@@ -1763,10 +1813,11 @@ public class BSystemTypes extends BComponent
     } 
   } 
 
-  public static String getRejectDefinitionCSharp(Expression left, String lqf,
-                                           Expression pred, String selectvar, 
-                                           java.util.Map env,
-                                           Vector pars)
+  public static String getRejectDefinitionCSharp(
+             Expression left, String lqf,
+             Expression pred, String selectvar, 
+             java.util.Map env,
+             Vector pars)
   { String signature = Attribute.parList(pars); 
 
     if (Expression.isSimpleEntity(left))
@@ -1776,6 +1827,10 @@ public class BSystemTypes extends BComponent
       lqf = "Controller.inst().get" + instances + "()"; 
     }         
 
+    String csharptype = "ArrayList"; 
+    if (left.getType() != null) 
+    { csharptype = left.getType().getCSharp(); } 
+
     String ename; 
     Type e = left.getElementType(); 
     if (e == null || "OclAny".equals(e.getName())) 
@@ -1784,7 +1839,11 @@ public class BSystemTypes extends BComponent
     { ename = e.getName(); }
 
     String tname = ename; 
-    if (ename.equals("Set") || ename.equals("Sequence"))
+    if (ename.equals("Set"))
+    { Type ee = e.getElementType(); 
+      tname = "HashSet<" + Type.getCSharptype(ee) + ">"; 
+    } 
+    else if (ename.equals("Sequence"))
     { tname = "ArrayList"; } 
     else if (ename.equals("String"))
     { tname = "string"; } 
@@ -1810,7 +1869,10 @@ public class BSystemTypes extends BComponent
       if (selectvar == null && e != null && e.isEntity()) 
       { newenv.put(ename,var); } 
 
-      String res = "  public static ArrayList reject_" + oldindex + "(ArrayList _l"; 
+      String res = "  public static " + csharptype + 
+                      " reject_" + oldindex + "(" + 
+                      csharptype + " _l";
+ 
       for (int i = 0; i < pars.size(); i++) 
       { Attribute par = (Attribute) pars.get(i); 
         res = res + "," + par.getType().getCSharp() + " " + par.getName(); 
@@ -1818,11 +1880,21 @@ public class BSystemTypes extends BComponent
         // { newenv.put(par.getType().getName(),"self"); } 
       } 
       res = res + ")\n"; 
-      res = res + "  { // implements: " + left + "->reject( " +  var + " | " + pred + " )\n\n" +
-                  "    ArrayList _results_" + oldindex + 
-                                    " = new ArrayList();\n" + 
-                  "    for (int _ireject = 0; _ireject < _l.Count; _ireject++)\n" + 
-                  "    { " + tname + " " + var + " = (" + tname + ") _l[_ireject];\n";
+      res = res + 
+          "  { // implements: " + left + "->reject( " +  var + " | " + pred + " )\n\n" +
+          "    " + csharptype + " _results_" + oldindex + 
+                           " = new " + csharptype + "();\n"; 
+
+      if (left.isSequence())
+      { res = res +
+          "    for (int _ireject = 0; _ireject < _l.Count; _ireject++)\n" + 
+          "    { " + tname + " " + var + " = (" + tname + ") _l[_ireject];\n";
+      } 
+      else 
+      { res = res +
+          "    foreach (object _ireject in _l)\n" + 
+          "    { " + tname + " " + var + " = (" + tname + ") _ireject;\n";
+      }       
 
       String test = ""; 
       if (Expression.isLambdaApplication(pred))
@@ -1850,10 +1922,11 @@ public class BSystemTypes extends BComponent
     } 
   } 
 
-  public static String getRejectDefinitionCPP(Expression left, String lqf,
-                                              Expression pred, String selectvar,
-                                              java.util.Map env,
-                                              Vector pars)
+  public static String getRejectDefinitionCPP(
+            Expression left, String lqf,
+            Expression pred, String selectvar,
+            java.util.Map env,
+            Vector pars)
   { String signature = Attribute.parList(pars); 
 
     if (Expression.isSimpleEntity(left)) 
@@ -2359,10 +2432,11 @@ public class BSystemTypes extends BComponent
   } 
   
   // For:  left->any(pred)
-  public static String getAnyDefinitionCSharp(Expression left, String lqf,
-                                           Expression pred, String exvar, 
-                                           java.util.Map env,
-                                           Vector pars)
+  public static String getAnyDefinitionCSharp(
+     Expression left, String lqf,
+     Expression pred, String exvar, 
+     java.util.Map env,
+     Vector pars)
   { String signature = Attribute.parList(pars); 
 
     if (left == null) 
@@ -2377,12 +2451,18 @@ public class BSystemTypes extends BComponent
       lqf = "Controller.inst()." + instances; 
     }         
 
+    String csharptype = "ArrayList"; 
+    if (left.getType() != null) 
+    { csharptype = left.getType().getCSharp(); } 
+
     String ename; 
     Type e = left.getElementType(); 
     if (e == null || "OclAny".equals(e.getName())) 
     { ename = "object"; } 
     else if ("Set".equals(e.getName()))
-    { ename = "ArrayList"; } 
+    { Type ee = e.getElementType(); 
+      ename = "HashSet<" + Type.getCSharptype(ee) + ">"; 
+    } 
     else if ("Sequence".equals(e.getName()))
     { ename = "ArrayList"; } 
     else
@@ -2417,7 +2497,9 @@ public class BSystemTypes extends BComponent
       if (exvar == null && e != null && e.isEntity()) 
       { newenv.put(ename,var); } 
       
-      String res = "  public static " + tname + " any_" + oldindex + "(ArrayList _l"; 
+      String res = 
+      "  public static " + tname + " any_" + oldindex + "(" + csharptype + " _l";
+ 
       for (int i = 0; i < pars.size(); i++) 
       { Attribute par = (Attribute) pars.get(i); 
         Type partype = par.getType(); 
@@ -2456,34 +2538,63 @@ public class BSystemTypes extends BComponent
       } 
 
 
-      res = res + "  { // Implements: " + left + "->any(" + var + "|" + pred + ")\n" + 
-                  "    for (int _iany = 0; _iany < _l.Count; _iany++)\n"; 
-      if ("int".equals(ename) || "Integer".equals(tname))
-      { res = res + 
+      res = res + 
+          "  { // Implements: " + left + "->any(" + var + "|" + pred + ")\n"; 
+
+      if (left.isSequence()) 
+      { res = res +
+            "    for (int _iany = 0; _iany < _l.Count; _iany++)\n"; 
+        if ("int".equals(ename) || "Integer".equals(tname))
+        { res = res + 
             "    { int " + var + " = (int) _l[_iany];\n";
-      } 
-      else if ("double".equals(ename))
-      { res = res + 
+        } 
+        else if ("double".equals(ename))
+        { res = res + 
             "    { double " + var + " = (double) _l[_iany];\n";
-      } 
-      else if (ename.equals("boolean"))
-      { res = res + 
+        } 
+        else if (ename.equals("boolean"))
+        { res = res + 
             "    { bool " + var + " = (bool) _l[_iany];\n"; 
-      } 
-      else if ("long".equals(ename))
-      { res = res + 
+        } 
+        else if ("long".equals(ename))
+        { res = res + 
             "    { long " + var + " = (long) _l[_iany];\n";
-      } 
-      else
-      { res = res + 
+        } 
+        else
+        { res = res + 
             "    { " + tname + " " + var + " = (" + tname + ") _l[_iany];\n";
+        } 
       } 
-
-
+      else 
+      { res = res +
+            "    foreach (object _iany in _l)\n";
+ 
+        if ("int".equals(ename) || "Integer".equals(tname))
+        { res = res + 
+            "    { int " + var + " = (int) _iany;\n";
+        } 
+        else if ("double".equals(ename))
+        { res = res + 
+            "    { double " + var + " = (double) _iany;\n";
+        } 
+        else if (ename.equals("boolean"))
+        { res = res + 
+            "    { bool " + var + " = (bool) _iany;\n"; 
+        } 
+        else if ("long".equals(ename))
+        { res = res + 
+            "    { long " + var + " = (long) _iany;\n";
+        } 
+        else
+        { res = res + 
+            "    { " + tname + " " + var + " = (" + tname + ") _iany;\n";
+        } 
+      } 
+    
  
       String test = pred.queryFormCSharp(newenv,false); 
       res = res + "      if (" + test + ")\n" + 
-	              "      { return (" + tname + ") _l[_iany]; }\n"; 
+                  "      { return " + var + "; }\n"; 
       res = res + "    }\n"; 
       res = res + "    return null;\n  }"; 
 
@@ -2500,10 +2611,11 @@ public class BSystemTypes extends BComponent
   } 
 
   // For:  left->exists(pred)
-  public static String getExistsDefinition(Expression left, String lqf,
-                                           Expression pred, String exvar, 
-                                           java.util.Map env,
-                                           Vector pars)
+  public static String getExistsDefinition(
+             Expression left, String lqf,
+             Expression pred, String exvar, 
+             java.util.Map env,
+             Vector pars)
   { String signature = Attribute.parList(pars); 
 
     if (left == null) 
@@ -2635,10 +2747,11 @@ public class BSystemTypes extends BComponent
     } 
   } 
 
-  public static String getExistsDefinitionJava6(Expression left, String lqf,
-                                           Expression pred, String exvar, 
-                                           java.util.Map env,
-                                           Vector pars)
+  public static String getExistsDefinitionJava6(
+                  Expression left, String lqf,
+                  Expression pred, String exvar, 
+                  java.util.Map env,
+                  Vector pars)
   { String signature = Attribute.parList(pars); 
 
     // System.out.println("Quantifier range: " + left); 
@@ -2754,10 +2867,11 @@ public class BSystemTypes extends BComponent
     } 
   } 
 
-  public static String getExistsDefinitionJava7(Expression left, String lqf,
-                                           Expression pred, String exvar, 
-                                           java.util.Map env,
-                                           Vector pars)
+  public static String getExistsDefinitionJava7(
+                   Expression left, String lqf,
+                   Expression pred, String exvar, 
+                   java.util.Map env,
+                   Vector pars)
   { String signature = Attribute.parList(pars); 
 
     // System.out.println("Quantifier range: " + left); 
@@ -2877,10 +2991,11 @@ public class BSystemTypes extends BComponent
     } 
   } 
 
-  public static String getExistsDefinitionCSharp(Expression left, String lqf,
-                                           Expression pred, String exvar, 
-                                           java.util.Map env,
-                                           Vector pars)
+  public static String getExistsDefinitionCSharp(
+            Expression left, String lqf,
+            Expression pred, String exvar, 
+            java.util.Map env,
+            Vector pars)
   { String signature = Attribute.parList(pars); 
 
     // System.out.println("Quantifier range: " + left); 
@@ -2892,6 +3007,10 @@ public class BSystemTypes extends BComponent
       lqf = "Controller.inst().get" + instances + "()"; 
     }         
 
+    String csharptype = "ArrayList"; 
+    if (left.getType() != null) 
+    { csharptype = left.getType().getCSharp(); } 
+
     String ename; 
     Type e = left.getElementType(); 
     if (e == null || "OclAny".equals(e.getName())) 
@@ -2900,7 +3019,11 @@ public class BSystemTypes extends BComponent
     { ename = e.getName(); }
 
     String tname = ename; 
-    if (ename.equals("Set") || ename.equals("Sequence"))
+    if (ename.equals("Set"))
+    { Type ee = e.getElementType(); 
+      tname = "HashSet<" + Type.getCSharptype(ee) + ">"; 
+    } 
+    else if (ename.equals("Sequence"))
     { tname = "ArrayList"; } 
     else if (ename.equals("String"))
     { tname = "string"; } 
@@ -2928,7 +3051,7 @@ public class BSystemTypes extends BComponent
       if (exvar == null && e != null && e.isEntity()) 
       { newenv.put(ename,var); } 
       
-      String res = "  public static bool exists_" + oldindex + "(ArrayList _l"; 
+      String res = "  public static bool exists_" + oldindex + "(" + csharptype + " _l"; 
       for (int i = 0; i < pars.size(); i++) 
       { Attribute par = (Attribute) pars.get(i); 
         res = res + ", " + par.getType().getCSharp() + " " + par.getName(); 
@@ -2948,9 +3071,9 @@ public class BSystemTypes extends BComponent
             String endexpqf = endexp.queryFormCSharp(env,false); 
             String inttest = pred.queryFormCSharp(env,false);
             res = res + "  { \n" + 
-                  "    for (int " + var + " = " + startexpqf + "; " + 
-                            var + " <= " + endexpqf + "; " + var + "++)\n" + 
-                  "    { if (" + inttest + ") { return true; } }\n"; 
+                "    for (int " + var + " = " + startexpqf + "; " + 
+                var + " <= " + endexpqf + "; " + var + "++)\n" + 
+                "    { if (" + inttest + ") { return true; } }\n"; 
             res = res + "    return false;\n  }";
 
             existsList.add(pp); 
@@ -2961,10 +3084,19 @@ public class BSystemTypes extends BComponent
         }
       } 
 
+      res = res + "  { // Implements: " + left + "->exists(" + var + "|" + pred + ")\n"; 
 
-      res = res + "  { // Implements: " + left + "->exists(" + var + "|" + pred + ")\n" + 
+      if (left.isSequence()) 
+      { res = res +   
             "    for (int _iexists = 0; _iexists < _l.Count; _iexists++)\n" + 
-            "    { " + tname + " " + var + " = (" + tname + ") _l[_iexists];\n"; 
+            "    { " + tname + " " + var + " = (" + tname + ") _l[_iexists];\n";
+      } 
+      else 
+      { res = res +   
+            "    foreach (object _iexists in _l)\n" + 
+            "    { " + tname + " " + var + " = (" + tname + ") _iexists;\n";
+      } 
+ 
       String test = pred.queryFormCSharp(newenv,false); 
       res = res + "      if (" + test + ") { return true; }\n"; 
       res = res + "    }\n"; 
@@ -2982,10 +3114,11 @@ public class BSystemTypes extends BComponent
     } 
   } 
 
-  public static String getExistsDefinitionCPP(Expression left, String lqf,
-                                           Expression pred, String exvar, 
-                                           java.util.Map env,
-                                           Vector pars)
+  public static String getExistsDefinitionCPP(
+                   Expression left, String lqf,
+                   Expression pred, String exvar, 
+                   java.util.Map env,
+                   Vector pars)
   { String signature = Attribute.parList(pars); 
 
     // System.out.println("Quantifier range: " + left); 
@@ -2996,7 +3129,6 @@ public class BSystemTypes extends BComponent
       String instances = lbedata.toLowerCase() + "_s"; 
       lqf = "Controller::inst()->get" + instances + "()"; 
     }         
-
 
     String pp = lqf + " " + pred + "(" + signature + ")"; 
     String op = (String) existsOps.get(pp); 
@@ -3078,7 +3210,8 @@ public class BSystemTypes extends BComponent
       { if (left instanceof BasicExpression)
         { BasicExpression leftbe = (BasicExpression) left; 
           Vector leftpars = leftbe.getParameters(); 
-          if (leftpars != null && leftpars.size() >= 2 && "subrange".equals(leftbe.data))
+          if (leftpars != null && leftpars.size() >= 2 && 
+              "subrange".equals(leftbe.data))
           { Expression startexp = (Expression) leftpars.get(0); 
             Expression endexp = (Expression) leftpars.get(1);
             String startexpqf = startexp.queryFormCPP(env,false); 
@@ -3101,9 +3234,10 @@ public class BSystemTypes extends BComponent
       } 
 
 
-      res1 = res1 + "  { // Implements: " + left + "->exists(" + var + "|" + pred + ")\n" + 
-            "    for (" + argtype1 + "::iterator _iexists = _l->begin(); _iexists != _l->end(); ++_iexists)\n" + 
-            "    { " + cet + " " + var + " = *_iexists;\n";
+      res1 = res1 + 
+         "  { // Implements: " + left + "->exists(" + var + "|" + pred + ")\n" + 
+         "    for (" + argtype1 + "::iterator _iexists = _l->begin(); _iexists != _l->end(); ++_iexists)\n" + 
+         "    { " + cet + " " + var + " = *_iexists;\n";
       String test = pred.queryFormCPP(newenv,false); 
       res1 = res1 + "      if (" + test + ") { return true; }\n"; 
       res1 = res1 + "    }\n"; 
@@ -3129,10 +3263,11 @@ public class BSystemTypes extends BComponent
     } 
   } 
 
-  public static String getExists1Definition(Expression left, String lqf,
-                                           Expression pred, String exvar, 
-                                           java.util.Map env,
-                                           Vector pars)
+  public static String getExists1Definition(
+             Expression left, String lqf,
+             Expression pred, String exvar, 
+             java.util.Map env,
+             Vector pars)
   { String signature = Attribute.parList(pars); 
 
     if (Expression.isSimpleEntity(left)) 
@@ -3262,10 +3397,11 @@ public class BSystemTypes extends BComponent
     } 
   } 
 
-  public static String getExists1DefinitionJava6(Expression left, String lqf,
-                                           Expression pred, String exvar, 
-                                           java.util.Map env,
-                                           Vector pars)
+  public static String getExists1DefinitionJava6(
+             Expression left, String lqf,
+             Expression pred, String exvar, 
+             java.util.Map env,
+             Vector pars)
   { String signature = Attribute.parList(pars); 
 
     if (Expression.isSimpleEntity(left)) 
@@ -3274,7 +3410,6 @@ public class BSystemTypes extends BComponent
       String instances = lbedata.toLowerCase() + "s"; 
       lqf = "Controller.inst()." + instances; 
     }         
-
 
     // System.out.println("Exists1 definition for " + pp + " is " + op); 
 
@@ -3391,13 +3526,15 @@ public class BSystemTypes extends BComponent
     } 
   } 
 
-  public static String getExists1DefinitionJava7(Expression left, String lqf,
-                                           Expression pred, String exvar, 
-                                           java.util.Map env,
-                                           Vector pars)
+  public static String getExists1DefinitionJava7(
+                   Expression left, String lqf,
+                   Expression pred, String exvar, 
+                   java.util.Map env,
+                   Vector pars)
   { String signature = Attribute.parList(pars); 
 
-    if (left.umlkind == Expression.CLASSID && (left instanceof BasicExpression) &&
+    if (left.umlkind == Expression.CLASSID && 
+        (left instanceof BasicExpression) &&
         ((BasicExpression) left).arrayIndex == null) 
     { BasicExpression lbe = (BasicExpression) left;
       String lbedata = lbe.data;  
@@ -3525,10 +3662,11 @@ public class BSystemTypes extends BComponent
   } 
 
 
-  public static String getExists1DefinitionCSharp(Expression left, String lqf,
-                                           Expression pred, String exvar, 
-                                           java.util.Map env,
-                                           Vector pars)
+  public static String getExists1DefinitionCSharp(
+            Expression left, String lqf,
+            Expression pred, String exvar, 
+            java.util.Map env,
+            Vector pars)
   { String signature = Attribute.parList(pars); 
 
     if (Expression.isSimpleEntity(left))
@@ -3544,13 +3682,21 @@ public class BSystemTypes extends BComponent
 
     // System.out.println("Exists1 definition for " + pp + " is " + op); 
 
+    String csharptype = "ArrayList"; 
+    if (left.getType() != null) 
+    { csharptype = left.getType().getCSharp(); } 
+
     if (op == null) 
     { // add new definitions 
       String ename; 
       Type e = left.getElementType(); 
       if (e == null || "OclAny".equals(e.getName())) 
       { ename = "object"; } 
-      else if ("Set".equals(e.getName()) || "Sequence".equals(e.getName()))
+      else if ("Set".equals(e.getName()))
+      { Type ee = e.getElementType(); 
+        ename = "HashSet<" + Type.getCSharptype(ee) + ">"; 
+      } 
+      else if ("Sequence".equals(e.getName()))
       { ename = "ArrayList"; } 
       else if ("String".equals(e.getName()))
       { ename = "string"; }
@@ -3571,7 +3717,7 @@ public class BSystemTypes extends BComponent
       if (exvar == null && e != null && e.isEntity()) 
       { newenv.put(ename,var); } 
       
-      String res = "  public static bool exists1_" + oldindex + "(ArrayList _l"; 
+      String res = "  public static bool exists1_" + oldindex + "(" + csharptype + " _l"; 
       for (int i = 0; i < pars.size(); i++) 
       { Attribute par = (Attribute) pars.get(i); 
         res = res + ", " + par.getType().getCSharp() + " " + par.getName(); 
@@ -3609,11 +3755,20 @@ public class BSystemTypes extends BComponent
         }
       } 
 
-
       res = res + "  { \n" + 
-            "    bool _alreadyfound = false;\n" + 
+            "    bool _alreadyfound = false;\n"; 
+
+      if (left.isSequence())
+      { res = res + 
             "    for (int _iexists1 = 0; _iexists1 < _l.Count; _iexists1++)\n" + 
             "    { " + ename + " " + var + " = (" + ename + ") _l[_iexists1];\n"; 
+      } 
+      else 
+      { res = res + 
+            "    foreach (object _iexists1 in _l)\n" + 
+            "    { " + ename + " " + var + " = (" + ename + ") _iexists1;\n"; 
+      } 
+
       String test = pred.queryFormCSharp(newenv,false); 
       res = res + "      if (" + test + ")\n" + 
                   "      { if (_alreadyfound) { return false; }\n" + 
@@ -3635,10 +3790,11 @@ public class BSystemTypes extends BComponent
     } 
   } 
 
-  public static String getExists1DefinitionCPP(Expression left, String lqf,
-                                           Expression pred, String exvar, 
-                                           java.util.Map env,
-                                           Vector pars)
+  public static String getExists1DefinitionCPP(
+                  Expression left, String lqf,
+                  Expression pred, String exvar, 
+                  java.util.Map env,
+                  Vector pars)
   { String signature = Attribute.parList(pars); 
 
     // System.out.println("Quantifier range: " + left); 
@@ -3783,10 +3939,11 @@ public class BSystemTypes extends BComponent
   } 
 
   // For:  left->forAll(pred)
-  public static String getForAllDefinition(Expression left, String lqf,
-                                           Expression pred, String exvar, 
-                                           java.util.Map env,
-                                           Vector pars)
+  public static String getForAllDefinition(
+             Expression left, String lqf,
+             Expression pred, String exvar, 
+             java.util.Map env,
+             Vector pars)
   { String signature = Attribute.parList(pars); 
 
     if (Expression.isSimpleEntity(left)) 
@@ -3906,10 +4063,11 @@ public class BSystemTypes extends BComponent
     } 
   } 
 
-  public static String getForAllDefinitionJava6(Expression left, String lqf,
-                                           Expression pred, String exvar, 
-                                           java.util.Map env,
-                                           Vector pars)
+  public static String getForAllDefinitionJava6(
+             Expression left, String lqf,
+             Expression pred, String exvar, 
+             java.util.Map env,
+             Vector pars)
   { String signature = Attribute.parList(pars); 
 
     if (Expression.isSimpleEntity(left)) 
@@ -3960,7 +4118,7 @@ public class BSystemTypes extends BComponent
       { Attribute par = (Attribute) pars.get(i); 
         Type partype = par.getType(); 
         if (partype == null) 
-        { System.err.println("ERROR: no type for " + par); } 
+        { System.err.println("!! ERROR: no type for " + par); } 
         else 
         { res = res + ", " + partype.getJava6() + " " + par.getName(); }  
       } 
@@ -4025,10 +4183,11 @@ public class BSystemTypes extends BComponent
     } 
   } 
 
-  public static String getForAllDefinitionJava7(Expression left, String lqf,
-                                           Expression pred, String exvar, 
-                                           java.util.Map env,
-                                           Vector pars)
+  public static String getForAllDefinitionJava7(
+            Expression left, String lqf,
+            Expression pred, String exvar, 
+            java.util.Map env,
+            Vector pars)
   { String signature = Attribute.parList(pars); 
 
     if (left.umlkind == Expression.CLASSID && (left instanceof BasicExpression) &&
@@ -4147,13 +4306,15 @@ public class BSystemTypes extends BComponent
     } 
   } 
 
-  public static String getForAllDefinitionCSharp(Expression left, String lqf,
-                                           Expression pred, String exvar, 
-                                           java.util.Map env,
-                                           Vector pars)
+  public static String getForAllDefinitionCSharp(
+            Expression left, String lqf,
+            Expression pred, String exvar, 
+            java.util.Map env,
+            Vector pars)
   { String signature = Attribute.parList(pars); 
 
-    if (left.umlkind == Expression.CLASSID && (left instanceof BasicExpression) &&
+    if (left.umlkind == Expression.CLASSID && 
+        (left instanceof BasicExpression) &&
         ((BasicExpression) left).arrayIndex == null) 
     { BasicExpression lbe = (BasicExpression) left;
       String lbedata = lbe.data;  
@@ -4165,13 +4326,21 @@ public class BSystemTypes extends BComponent
     String op = (String) forAllOps.get(pp); 
     // But may be different left element type with same pred
 
+    String csharptype = "ArrayList"; 
+    if (left.getType() != null) 
+    { csharptype = left.getType().getCSharp(); } 
+
     if (op == null) 
     { // add new definitions 
       String ename; 
       Type e = left.getElementType(); 
       if (e == null || "OclAny".equals(e.getName())) 
       { ename = "object"; } 
-      else if ("Set".equals(e.getName()) || "Sequence".equals(e.getName()))
+      else if ("Set".equals(e.getName()))
+      { Type ee = e.getElementType(); 
+        ename = "HashSet<" + Type.getCSharptype(ee) + ">"; 
+      }
+      else if ("Sequence".equals(e.getName()))
       { ename = "ArrayList"; } 
       else if ("String".equals(e.getName()))
       { ename = "string"; }
@@ -4193,7 +4362,8 @@ public class BSystemTypes extends BComponent
       if (exvar == null && e != null && e.isEntity()) 
       { newenv.put(ename,var); } 
       
-      String res = "  public static bool forAll_" + oldindex + "(ArrayList _l"; 
+      String res = "  public static bool forAll_" + oldindex + "(" + csharptype + " _l";
+ 
       for (int i = 0; i < pars.size(); i++) 
       { Attribute par = (Attribute) pars.get(i); 
         res = res + "," + par.getType().getCSharp() + " " + par.getName(); 
@@ -4228,9 +4398,19 @@ public class BSystemTypes extends BComponent
         } 
       } 
 
-      res = res + "  { \n" + 
-            "    for (int _iforall = 0; _iforall < _l.Count; _iforall++)\n" + 
-            "    { " + ename + " " + var + " = (" + ename + ") _l[_iforall];\n"; 
+      res = res + "  { \n"; 
+   
+      if (left.isSequence())
+      { res = res +
+          "    for (int _iforall = 0; _iforall < _l.Count; _iforall++)\n" + 
+          "    { " + ename + " " + var + " = (" + ename + ") _l[_iforall];\n";
+      } 
+      else 
+      { res = res +
+          "    foreach (object _iforall in _l)\n" + 
+          "    { " + ename + " " + var + " = (" + ename + ") _iforall;\n";
+      } 
+ 
       String test = pred.queryFormCSharp(newenv,false); 
       res = res + "      if (" + test + ") { }\n" + 
                   "      else { return false; } \n"; 
@@ -4249,10 +4429,11 @@ public class BSystemTypes extends BComponent
     } 
   } 
 
-  public static String getForAllDefinitionCPP(Expression left, String lqf,
-                                           Expression pred, String exvar, 
-                                           java.util.Map env,
-                                           Vector pars)
+  public static String getForAllDefinitionCPP(
+             Expression left, String lqf,
+             Expression pred, String exvar, 
+             java.util.Map env,
+             Vector pars)
   { String signature = Attribute.parList(pars); 
 
     if (left.umlkind == Expression.CLASSID && (left instanceof BasicExpression) &&
@@ -4529,7 +4710,8 @@ public class BSystemTypes extends BComponent
   }     
 
   public static String generateCopyOps() // Java4
-  { String res = "  public static Vector copyCollection(Vector s)\n" + 
+  { String res = 
+      "  public static Vector copyCollection(Vector s)\n" + 
       "  { Vector result = new Vector();\n" +  
       "    result.addAll(s);\n" +  
       "    return result;\n" + 
@@ -4728,7 +4910,8 @@ public class BSystemTypes extends BComponent
 
 
   public static String generateCopyOpsCSharp() 
-  { String res = "  public static ArrayList copyCollection(ArrayList a)\n" +
+  { String res = 
+      "  public static ArrayList copyCollection(ArrayList a)\n" +
       "  { ArrayList res = new ArrayList();\n" +
       "    res.AddRange(a); \n" +
       "    return res; \n" + 
@@ -4738,6 +4921,14 @@ public class BSystemTypes extends BComponent
        "  public static SortedSet<T> copyCollection<T>(SortedSet<T> a)\n" +
        "  {\n" +
        "    SortedSet<T> res = new SortedSet<T>();\n" +
+       "    res.UnionWith(a);\n" +
+       "    return res;\n" +
+       "  }\n\n";
+
+     res = res + 
+       "  public static HashSet<T> copyCollection<T>(HashSet<T> a)\n" +
+       "  {\n" +
+       "    HashSet<T> res = new HashSet<T>();\n" +
        "    res.UnionWith(a);\n" +
        "    return res;\n" +
        "  }\n\n";
@@ -4760,6 +4951,15 @@ public class BSystemTypes extends BComponent
 
     res = res +
        "  public static ArrayList collectSortedSet<T>(SortedSet<T> col, Func<T, object> f)\n" +
+       "  {\n" +
+       "    ArrayList res = new ArrayList();\n" +
+       "    foreach (T x in col)\n" +
+       "    { res.Add(f(x)); }\n" +
+       "    return res;\n" +
+       "  }\n\n"; 
+
+    res = res +
+       "  public static ArrayList collectSet<T>(HashSet<T> col, Func<T, object> f)\n" +
        "  {\n" +
        "    ArrayList res = new ArrayList();\n" +
        "    foreach (T x in col)\n" +
@@ -5187,6 +5387,17 @@ public class BSystemTypes extends BComponent
       "    return true;\n" +
       "  }\n\n";
  
+    res = res + 
+      "  public static bool excludesAll<T>(HashSet<T> col1, HashSet<T> col2)\n" +
+      "  {\n" +
+      "    foreach (T x in col1)\n" +
+      "    {\n" +
+      "      if (col2.Contains(x))\n" +
+      "      { return false; }\n" +
+      "    }\n" +
+      "    return true;\n" +
+      "  }\n\n";
+ 
    return res; 
  } 
 
@@ -5274,6 +5485,7 @@ public class BSystemTypes extends BComponent
      "     } \n" +
      "     return res; \n" +
      "   } \n\n";
+
      res = res + 
      "   public static Hashtable restrictMap(Hashtable m1, ArrayList ks) \n" +
      "   { Hashtable res = new Hashtable();  \n" +
@@ -5296,12 +5508,14 @@ public class BSystemTypes extends BComponent
      "     } \n" +
      "     return res; \n" +
      "   } \n\n"; 
+
      res = res + 
      "   public static ArrayList mapKeys(Hashtable m) \n" +
      "   { ArrayList res = new ArrayList();  \n" +
      "     res.AddRange(m.Keys);\n" +
      "     return res; \n" +
      "   } \n\n"; 
+
      res = res + 
      "   public static ArrayList mapValues(Hashtable m) \n" +
      "   { ArrayList res = new ArrayList();  \n" +
@@ -6038,20 +6252,29 @@ public class BSystemTypes extends BComponent
   }  // but should disregard null elements. 
 
   public static String generateSetEqualsOpCSharp()
-  { String res = "    public static bool isSubset(ArrayList a, ArrayList b)\n" + 
-                 "    { bool res = true; \n" + 
-                 "      for (int i = 0; i < a.Count; i++)\n" +  
-                 "      { if (a[i] != null && b.Contains(a[i])) { }\n" +  
-                 "        else { return false; }\n" +  
-                 "      }\n" +  
-                 "      return res;\n" + 
-                 "    }\n\n" +
-     "    public static bool equalsSet(ArrayList a, ArrayList b)\n" + 
-     "    { return isSubset(a,b) && isSubset(b,a); }\n\n"; 
+  { String res = 
+      "    public static bool isSubset(ArrayList a, ArrayList b)\n" + 
+      "    { bool res = true; \n" + 
+      "      for (int i = 0; i < a.Count; i++)\n" +  
+      "      { if (a[i] != null && b.Contains(a[i])) { }\n" +  
+      "        else { return false; }\n" +  
+      "      }\n" +  
+      "      return res;\n" + 
+      "    }\n\n" +
+    
+      "    public static bool equalsSet(ArrayList a, ArrayList b)\n" + 
+      "    { return isSubset(a,b) && isSubset(b,a); }\n\n"; 
+
     res = res + 
       "    public static bool isSubset<T>(SortedSet<T> a, SortedSet<T> b)\n" + 
         "    { return a.IsSubsetOf(b); }\n\n" +  
         "    public static bool equalsSet<T>(SortedSet<T> a, SortedSet<T> b)\n" + 
+        "    { return a.SetEquals(b); }\n\n"; 
+
+    res = res + 
+      "    public static bool isSubset<T>(HashSet<T> a, HashSet<T> b)\n" + 
+        "    { return a.IsSubsetOf(b); }\n\n" +  
+        "    public static bool equalsSet<T>(HashSet<T> a, HashSet<T> b)\n" + 
         "    { return a.SetEquals(b); }\n\n"; 
 
     return res; 
@@ -6179,6 +6402,21 @@ public class BSystemTypes extends BComponent
     res = res + "      if (res.CompareTo(e) < 0) { res = e; } }\n";
     res = res + "    return res; }\n\n";
 
+    res = res + 
+      "  public static object max<T>(HashSet<T> l)\n" + 
+      "  {\n" + 
+      "    IComparable res = null;\n" + 
+      "    if (l.Count == 0) { return res; }\n" + 
+      "    foreach (T e in l)\n" + 
+      "    {\n" + 
+      "      IComparable x = (IComparable) e;\n" + 
+      "      if (res == null) { res = x; } \n" + 
+      "      else if (res.CompareTo(x) < 0)\n" +  
+      "      { res = x; }\n" + 
+      "    }\n" + 
+      "    return res;\n" + 
+      "  }\n\n"; 
+
      res = res +
        "  public static T max<T>(SortedSet<T> st)\n" + 
        "  { return st.Max; }\n\n"; 
@@ -6250,6 +6488,21 @@ public class BSystemTypes extends BComponent
     res = res + "      if (res.CompareTo(e) > 0) { res = e; } }\n";
     res = res + "    return res;\n" + 
                 "  }\n\n";
+
+    res = res + 
+      "  public static object min<T>(HashSet<T> l)\n" + 
+      "  {\n" + 
+      "    IComparable res = null;\n" + 
+      "    if (l.Count == 0) { return res; }\n" + 
+      "    foreach (T e in l)\n" + 
+      "    {\n" + 
+      "      IComparable x = (IComparable) e;\n" + 
+      "      if (res == null) { res = x; } \n" + 
+      "      else if (res.CompareTo(x) > 0)\n" +  
+      "      { res = x; }\n" + 
+      "    }\n" + 
+      "    return res;\n" + 
+      "  }\n\n"; 
 
      res = res +
        "  public static T min<T>(SortedSet<T> st)\n" + 
@@ -6794,22 +7047,35 @@ public class BSystemTypes extends BComponent
   }
 
   public static String generateUnionOpCSharp()
-  { String res = "  public static ArrayList union(ArrayList a, ArrayList b)\n" +
+  { String res = 
+      "  public static ArrayList union(ArrayList a, ArrayList b)\n" +
       "  { ArrayList res = new ArrayList(); \n" +
-      "    for (int i = 0; i < a.Count; i++)\n" +
+      /* "    for (int i = 0; i < a.Count; i++)\n" +
       "    { if (a[i] == null || res.Contains(a[i])) { }\n" + 
       "      else { res.Add(a[i]); }\n" + 
       "    }\n" +
       "    for (int j = 0; j < b.Count; j++)\n" +
       "    { if (b[j] == null || res.Contains(b[j])) { }\n" + 
       "      else { res.Add(b[j]); }\n" + 
-      "    }\n" +
-      "    return res; }\n\n";
+      "    }\n" + */ 
+      "    res.AddRange(a);\n" + 
+      "    res.AddRange(b);\n" + 
+      "    return res;\n" +
+      "  }\n\n";
 
     res = res + 
         "  public static SortedSet<T> union<T>(SortedSet<T> a, IEnumerable<T> b)\n" +
         "  {\n" +
         "    SortedSet<T> res = new SortedSet<T>();\n" +
+        "    res.UnionWith(a);\n" +
+        "    res.UnionWith(b);\n" +
+        "    return res;\n" +
+        "  }\n\n"; 
+
+    res = res + 
+        "  public static HashSet<T> union<T>(HashSet<T> a, IEnumerable<T> b)\n" +
+        "  {\n" +
+        "    HashSet<T> res = new HashSet<T>();\n" +
         "    res.UnionWith(a);\n" +
         "    res.UnionWith(b);\n" +
         "    return res;\n" +
@@ -6949,7 +7215,8 @@ public class BSystemTypes extends BComponent
   }
 
   public static String generateConcatOpCSharp()
-  { String res = "  public static ArrayList concatenate(ArrayList a, ArrayList b)\n" +
+  { String res = 
+      "  public static ArrayList concatenate(ArrayList a, ArrayList b)\n" +
       "  { ArrayList res = new ArrayList(); \n" +
       "    res.AddRange(a); \n" + 
       "    res.AddRange(b); \n" + 
@@ -7059,22 +7326,28 @@ public class BSystemTypes extends BComponent
       "  { HashSet<T> res = new HashSet<T>(); \n" +
       "    res.addAll(a);\n" +
       "    res.removeAll(b);\n" +
-      "    return res; }\n\n" +
+      "    return res;\n" + 
+      "  }\n\n" +
       "  public static <T> TreeSet<T> subtract(TreeSet<T> a, Collection<T> b)\n" +
       "  { TreeSet<T> res = new TreeSet<T>(); \n" +
       "    res.addAll(a);\n" +
       "    res.removeAll(b);\n" +
-      "    return res; }\n\n" + 
+      "    return res;\n" + 
+      "  }\n\n" + 
       "  public static <T> ArrayList<T> subtract(ArrayList<T> a, Collection<T> b)\n" +
       "  { ArrayList<T> res = new ArrayList<T>(); \n" +
       "    res.addAll(a);\n" +
       "    res.removeAll(b);\n" +
-      "    return res; }\n\n" + 
+      "    return res;\n" +
+      "  }\n\n" + 
       "  public static String subtract(String a, String b)\n" +
       "  { String res = \"\"; \n" +
       "    for (int i = 0; i < a.length(); i++)\n" +
-      "    { if (b.indexOf(a.charAt(i)) < 0) { res = res + a.charAt(i); } }\n" +
-      "    return res; }\n\n";
+      "    { if (b.indexOf(a.charAt(i)) < 0)\n" + 
+      "      { res = res + a.charAt(i); } \n" + 
+      "    }\n" +
+      "    return res;\n" + 
+      "  }\n\n";
     return res;
   }
 
@@ -7088,13 +7361,21 @@ public class BSystemTypes extends BComponent
       "    return res;\n" + 
       "  }\n\n" +
 
-        "  public static SortedSet<T> subtract<T>(SortedSet<T> a, IEnumerable<T> b)\n" +
-        "  {\n" +
-        "    SortedSet<T> res = new SortedSet<T>();\n" +
-        "    res.UnionWith(a);\n" +
-        "    res.ExceptWith(b);\n" +
-        "    return res;\n" +
-        "  }\n\n" +  
+      "  public static SortedSet<T> subtract<T>(SortedSet<T> a, IEnumerable<T> b)\n" +
+      "  {\n" +
+      "    SortedSet<T> res = new SortedSet<T>();\n" +
+      "    res.UnionWith(a);\n" +
+      "    res.ExceptWith(b);\n" +
+      "    return res;\n" +
+      "  }\n\n" +  
+
+      "  public static HashSet<T> subtract<T>(HashSet<T> a, IEnumerable<T> b)\n" +
+      "  {\n" +
+      "    HashSet<T> res = new HashSet<T>();\n" +
+      "    res.UnionWith(a);\n" +
+      "    res.ExceptWith(b);\n" +
+      "    return res;\n" +
+      "  }\n\n" +  
 
       "  public static ArrayList subtract(ArrayList a, object b)\n" +
       "  { ArrayList res = new ArrayList(); \n" +
@@ -7105,13 +7386,21 @@ public class BSystemTypes extends BComponent
       "    return res;\n" + 
       "  }\n\n" + 
 
-        "  public static SortedSet<T> subtract<T>(SortedSet<T> a, T b)\n" +
-        "  {\n" +
-        "    SortedSet<T> res = new SortedSet<T>();\n" +
-        "    res.UnionWith(a);\n" +
-        "    res.Remove(b); \n" +
-        "    return res;\n" +
-        "  }\n\n" +
+      "  public static SortedSet<T> subtract<T>(SortedSet<T> a, T b)\n" +
+      "  {\n" +
+      "    SortedSet<T> res = new SortedSet<T>();\n" +
+      "    res.UnionWith(a);\n" +
+      "    res.Remove(b); \n" +
+      "    return res;\n" +
+      "  }\n\n" +
+
+      "  public static HashSet<T> subtract<T>(HashSet<T> a, T b)\n" +
+      "  {\n" +
+      "    HashSet<T> res = new HashSet<T>();\n" +
+      "    res.UnionWith(a);\n" +
+      "    res.Remove(b); \n" +
+      "    return res;\n" +
+      "  }\n\n" +
 
       "  public static string subtract(string a, string b)\n" +
       "  { string res = \"\"; \n" +
@@ -7215,7 +7504,8 @@ public class BSystemTypes extends BComponent
   } // TreeSet version is valid? 
 
   public static String generateIntersectionOpCSharp()
-  { String res = "  public static ArrayList intersection(ArrayList a, ArrayList b)\n" +
+  { String res = 
+      "  public static ArrayList intersection(ArrayList a, ArrayList b)\n" +
       "  { ArrayList res = new ArrayList(); \n" +
       "    for (int i = 0; i < a.Count; i++)\n" + 
       "    { if (a[i] != null && b.Contains(a[i]))\n" + 
@@ -7224,7 +7514,7 @@ public class BSystemTypes extends BComponent
       "    return res;\n" + 
       "  }\n\n";
 
-        res = res + 
+    res = res + 
           "  public static SortedSet<T> intersection<T>(SortedSet<T> a, IEnumerable<T> b)\n" +
           "  {\n" +
           "    SortedSet<T> res = new SortedSet<T>();\n" +
@@ -7232,6 +7522,15 @@ public class BSystemTypes extends BComponent
           "    res.IntersectWith(b); \n" +
           "    return res;\n" +
           "  }\n\n"; 
+
+    res = res + 
+      "  public static HashSet<T> intersection<T>(HashSet<T> a, IEnumerable<T> b)\n" +
+      "  {\n" +
+      "    HashSet<T> res = new HashSet<T>();\n" +
+      "    res.UnionWith(a);\n" +
+      "    res.IntersectWith(b); \n" +
+      "    return res;\n" +
+      "  }\n\n"; 
 
     return res;
   }
@@ -7318,10 +7617,21 @@ public class BSystemTypes extends BComponent
       "    return res;\n" + 
       "  }\n\n";
 
-        res = res + 
-          "  public static SortedSet<T> intersectAllSet<T>(ArrayList se)\n" +
+    res = res + 
+          "  public static SortedSet<T> intersectAllSortedSet<T>(ArrayList se)\n" +
           "  {\n" +
           "    SortedSet<T> res = new SortedSet<T>();\n" +
+          "    if (se.Count == 0) { return res; }\n" +
+          "    res.UnionWith((IEnumerable<T>) se[0]);\n" +
+          "    for (int i = 1; i < se.Count; i++)\n" +
+          "    { res.IntersectWith((IEnumerable<T>) se[i]); }\n" +
+          "    return res;\n" +
+          "  }\n\n"; 
+
+    res = res + 
+          "  public static HashSet<T> intersectAllSet<T>(ArrayList se)\n" +
+          "  {\n" +
+          "    HashSet<T> res = new HashSet<T>();\n" +
           "    if (se.Count == 0) { return res; }\n" +
           "    res.UnionWith((IEnumerable<T>) se[0]);\n" +
           "    for (int i = 1; i < se.Count; i++)\n" +
@@ -7451,9 +7761,19 @@ public class BSystemTypes extends BComponent
       "  }\n\n";
 
     res = res + 
-       "  public static SortedSet<T> unionAllSet<T>(ArrayList se)\n" +
+       "  public static SortedSet<T> unionAllSortedSet<T>(ArrayList se)\n" +
        "  {\n" +
        "    SortedSet<T> res = new SortedSet<T>();\n" +
+       "    if (se.Count == 0) { return res; }\n" +
+       "    for (int i = 0; i < se.Count; i++)\n" +
+       "    { res.UnionWith((IEnumerable<T>) se[i]); }\n" +
+       "    return res;\n" +
+       "  }\n\n"; 
+
+    res = res + 
+       "  public static HashSet<T> unionAllSet<T>(ArrayList se)\n" +
+       "  {\n" +
+       "    HashSet<T> res = new HashSet<T>();\n" +
        "    if (se.Count == 0) { return res; }\n" +
        "    for (int i = 0; i < se.Count; i++)\n" +
        "    { res.UnionWith((IEnumerable<T>) se[i]); }\n" +
@@ -8066,58 +8386,142 @@ public class BSystemTypes extends BComponent
 
 
   public static String generateSumOpsCSharp()
-  { String res = "  public static int sumint(ArrayList a)\n" +
+  { String res = 
+      "  public static int sumint(ArrayList a)\n" +
       "  { int sum = 0; \n" +
       "    for (int i = 0; i < a.Count; i++)\n" +
       "    { int x = (int) a[i]; \n" +
       "      sum += x; \n" + 
       "    } \n" + 
-      "    return sum; }\n\n";
-    res = res + "  public static double sumdouble(ArrayList a)\n" +
+      "    return sum;\n" + 
+      "  }\n\n";
+
+    res = res + 
+      "  public static int sumint(HashSet<int> a)\n" +
+      "  {\n" +
+      "    int sum = 0;\n" +
+      "    foreach (int x in a)\n" +
+      "    { sum += x; }\n" +
+      "\n" +
+      "    return sum;\n" +
+      "  }\n\n";
+
+    res = res + 
+      "  public static double sumdouble(ArrayList a)\n" +
       "  { double sum = 0.0; \n" +
       "    for (int i = 0; i < a.Count; i++)\n" +
       "    { double x = double.Parse(\"\" + a[i]); \n" +
       "      sum += x; \n" + 
       "    } \n" + 
-      "    return sum; }\n\n";
-    res = res + "  public static long sumlong(ArrayList a)\n" +
+      "    return sum;\n" + 
+      "  }\n\n";
+
+    res = res + 
+      "  public static double sumdouble<T>(HashSet<T> a)\n" +
+      "  { double sum = 0.0;\n" +
+      "    foreach (T x in a)\n" +
+      "    { double xx = double.Parse(\"\" + x);\n" +
+      "      sum += xx;\n" +
+      "    }\n" +
+      "    return sum;\n" +
+      "  }\n\n"; 
+
+    res = res + 
+      "  public static long sumlong(ArrayList a)\n" +
       "  { long sum = 0; \n" +
       "    for (int i = 0; i < a.Count; i++)\n" +
       "    { long x = (long) a[i]; \n" +
       "      sum += x; \n" + 
       "    } \n" + 
-      "    return sum; }\n\n";
-    res = res + "  public static string sumString(ArrayList a)\n" +
+      "    return sum;\n" + 
+      "  }\n\n";
+
+    res = res + 
+      "  public static long sumlong(HashSet<long> a)\n" +
+      "  { long sum = 0;\n" +
+      "    foreach (long x in a)\n" +
+      "    { sum += x; }\n" +
+      "    return sum;\n" +
+      "  }\n\n"; 
+
+    res = res + 
+      "  public static string sumString(ArrayList a)\n" +
       "  { string sum = \"\"; \n" +
       "    for (int i = 0; i < a.Count; i++)\n" +
       "    { object x = a[i]; \n" +
       "      sum = sum + x; }\n" + 
-      "    return sum;  }\n\n";
+      "    return sum;\n" +
+      "  }\n\n";
+
+    res = res +
+      "  public static string sumString<T>(HashSet<T> a)\n" +
+      "  { string sum = \"\";\n" +
+      "    foreach (T x in a)\n" +
+      "    { sum = sum + x; }\n" +
+      "    return sum;\n" +
+      "  }\n\n"; 
+
     return res;
   } // maps
 
   public static String generatePrdOpsCSharp()
-  { String res = "  public static int prdint(ArrayList a)\n" +
+  { String res = 
+      "  public static int prdint(ArrayList a)\n" +
       "  { int _prd = 1; \n" +
       "    for (int i = 0; i < a.Count; i++)\n" +
       "    { int x = (int) a[i]; \n" +
       "      _prd *= x; \n" + 
       "    } \n" + 
-      "    return _prd; }\n\n";
-    res = res + "  public static double prddouble(ArrayList a)\n" +
+      "    return _prd;\n" + 
+      " }\n\n";
+
+   res = res + 
+      "  public static int prdint(HashSet<int> a)\n" +
+      "  { int _prd = 1; \n" +
+      "    foreach (int x in a)\n" +
+      "    { _prd *= x; \n" + 
+      "    } \n" + 
+      "    return _prd;\n" + 
+      " }\n\n";
+
+    res = res + 
+      "  public static double prddouble(ArrayList a)\n" +
       "  { double _prd = 1; \n" +
       "    for (int i = 0; i < a.Count; i++)\n" +
       "    { double x = (double) a[i]; \n" +
       "      _prd *= x; \n" + 
       "    } \n" + 
-      "    return _prd; }\n\n";
-    res = res + "  public static long prdlong(ArrayList a)\n" +
+      "    return _prd;\n" + 
+      "  }\n\n";
+
+    res = res + 
+      "  public static double prddouble(HashSet<double> a)\n" +
+      "  { double _prd = 1; \n" +
+      "    foreach (double x in a)\n" +
+      "    { _prd *= x; \n" + 
+      "    } \n" + 
+      "    return _prd;\n" + 
+      "  }\n\n";
+
+    res = res + 
+      "  public static long prdlong(ArrayList a)\n" +
       "  { long _prd = 1; \n" +
       "    for (int i = 0; i < a.Count; i++)\n" +
       "    { long x = (long) a[i]; \n" +
       "      _prd *= x;\n" + 
       "    } \n" + 
-      "    return _prd; }\n\n";
+      "    return _prd;\n" + 
+      "  }\n\n";
+
+    res = res + 
+      "  public static long prdlong(HashSet<long> a)\n" +
+      "  { long _prd = 1; \n" +
+      "    foreach (long x in a)\n" +
+      "    { _prd *= x;\n" + 
+      "    } \n" + 
+      "    return _prd;\n" + 
+      "  }\n\n";
+
     return res;
   } // maps
 
@@ -8254,16 +8658,18 @@ public class BSystemTypes extends BComponent
   }
 
   public static String generateAsSetOpCSharp()
-  { String res = "  public static ArrayList asSet(ArrayList a)\n" +
-      "  { ArrayList res = new ArrayList(); \n" +
+  { String res = 
+      "  public static HashSet<object> asSet(ArrayList a)\n" +
+      "  { HashSet<object> res = new HashSet<object>(); \n" +
       "    for (int i = 0; i < a.Count; i++)\n" +
       "    { object obj = a[i];\n" +
-      "      if (res.Contains(obj)) { } \n" + 
-      "      else { res.Add(obj); }\n" + 
+      "      res.Add(obj);\n" + 
       "    } \n" + 
       "    return res; \n" + 
       "  }\n\n"; 
-    res = res + "  public static ArrayList asOrderedSet(ArrayList a)\n" +
+
+    res = res + 
+      "  public static ArrayList asOrderedSet(ArrayList a)\n" +
       "  { ArrayList res = new ArrayList(); \n" +
       "    for (int i = 0; i < a.Count; i++)\n" +
       "    { object obj = a[i];\n" +
@@ -8290,6 +8696,22 @@ public class BSystemTypes extends BComponent
       "  }\n\n";   
 
     res = res + 
+      "  public static ArrayList asSequence<T>(HashSet<T> r)\n" +
+      "  { ArrayList res = new ArrayList(); \n" +
+      "    foreach (T x in r)\n" +
+      "    { res.Add(x); }\n" +
+      "    return res;\n" +
+      "  }\n\n";   
+
+    res = res + 
+      "  public static ArrayList asSequence<T>(SortedSet<T> r)\n" +
+      "  { ArrayList res = new ArrayList(); \n" +
+      "    foreach (T x in r)\n" +
+      "    { res.Add(x); }\n" +
+      "    return res;\n" +
+      "  }\n\n";   
+
+    res = res + 
       "  public static ArrayList asSequence(Hashtable m)\n" +
       "  { ArrayList res = new ArrayList();\n" +
       "    foreach (DictionaryEntry pair in m)\n" +
@@ -8298,6 +8720,13 @@ public class BSystemTypes extends BComponent
       "      maplet[key] = pair.Value;\n" + 
       "      res.Add(maplet);\n" +
       "    }\n" +
+      "    return res;\n" + 
+      "  }\n\n"; 
+
+    res = res + 
+      "  public static ArrayList asSequence(ArrayList sq)\n" +
+      "  { ArrayList res = new ArrayList();\n" +
+      "    res.AddRange(sq);\n" + 
       "    return res;\n" + 
       "  }\n\n"; 
 
@@ -8637,12 +9066,23 @@ public class BSystemTypes extends BComponent
   } 
 
   public static String generateAsBagOpCSharp()
-  { String res = "  public static ArrayList asBag(ArrayList a)\n" + 
+  { String res = 
+      "  public static ArrayList asBag(ArrayList a)\n" + 
       "  { ArrayList res = new ArrayList();\n" + 
       "    res.AddRange(a);\n" +
       "    res.Sort();\n" + 
       "    return res;\n" +   
-      "  }\n\n"; 
+      "  }\n\n";
+
+    res = res + 
+      "  public static ArrayList asBag<T>(HashSet<T> a)\n" + 
+      "  { ArrayList res = new ArrayList();\n" + 
+      "    ArrayList aseq = SystemTypes.asSequence(a);\n" + 
+      "    res.AddRange(aseq);\n" +
+      "    res.Sort();\n" + 
+      "    return res;\n" +   
+      "  }\n\n";
+ 
     return res; 
   } 
 
@@ -9139,14 +9579,23 @@ public class BSystemTypes extends BComponent
     "    return res;\n" + 
     "  }\n\n"; 
 
-     res = res + 
-        "  public static SortedSet<T> symmetricDifference<T>(SortedSet<T> a, IEnumerable<T> b)\n" +
-        "  {\n" +
-        "    SortedSet<T> res = new SortedSet<T>();\n" +
-        "    res.UnionWith(a);\n" +
-        "    res.SymmetricExceptWith(b); \n" +
-        "    return res;\n" +
-        "  }\n\n"; 
+    res = res + 
+      "  public static SortedSet<T> symmetricDifference<T>(SortedSet<T> a, IEnumerable<T> b)\n" +
+      "  {\n" +
+      "    SortedSet<T> res = new SortedSet<T>();\n" +
+      "    res.UnionWith(a);\n" +
+      "    res.SymmetricExceptWith(b); \n" +
+      "    return res;\n" +
+      "  }\n\n"; 
+
+    res = res + 
+      "  public static HashSet<T> symmetricDifference<T>(HashSet<T> a, IEnumerable<T> b)\n" +
+      "  {\n" +
+      "    HashSet<T> res = new HashSet<T>();\n" +
+      "    res.UnionWith(a);\n" +
+      "    res.SymmetricExceptWith(b); \n" +
+      "    return res;\n" +
+      "  }\n\n"; 
 
     return res; 
   }   
@@ -9219,14 +9668,26 @@ public class BSystemTypes extends BComponent
     "  }\n\n";
 
     res = res + 
-    "  public static <T, S extends Comparable> TreeSet<T> maximalElements(TreeSet<T> s, List<S> v)\n" +
-    "  { ArrayList<T> lst = new ArrayList<T>();\n" +
-    "    lst.addAll(s); \n" +
-    "    ArrayList<T> lres = maximalElements(lst, v);\n" + 
-    "    TreeSet<T> res = new TreeSet<T>(); \n" +
-    "    res.addAll(lres); \n" +
-    "    return res;\n" +
-    "  }\n\n"; 
+      "  public static <T, S extends Comparable> TreeSet<T> maximalElements(TreeSet<T> s, List<S> v)\n" +
+      "  { TreeSet<T> res = new TreeSet<T>();\n" +
+      "    if (s.size() == 0) \n" +
+      "    { return res; }\n" +
+      "    Comparable largest = (Comparable) v.get(0);\n" +
+      "    res.add(s.first());\n" +
+      "    int i = 0; \n" +
+      "    for (T x : s)\n" +
+      "    { Comparable next = (Comparable) v.get(i);\n" +
+      "      if (largest.compareTo(next) < 0)\n" +
+      "      { largest = next;\n" +
+      "        res.clear();\n" +
+      "        res.add(x);\n" +
+      "      }\n" +
+      "      else if (largest.compareTo(next) == 0)\n" +
+      "      { res.add(x); }\n" +
+      "      i++; \n" +
+      "    }\n" +
+      "    return res;\n" +  
+      "  }\n\n"; 
 
     return res; 
   } 
@@ -9250,7 +9711,29 @@ public class BSystemTypes extends BComponent
     "      { res.Add(s[i]); }\n" +
     "    }\n" +
     "    return res;\n" + 
-    "  }"; 
+    "  }\n\n";
+
+    res = res + 
+    "  public static SortedSet<T> maximalElements<T>(SortedSet<T> s, ArrayList v)\n" +
+    "  { SortedSet<T> res = new SortedSet<T>();\n" +
+    "    if (s.Count == 0) { return res; }\n" +
+    "    IComparable largest = (IComparable) v[0];\n" +
+    "    res.Add(s.Min);\n" +
+    "    int i = 0; \n" +
+    "    foreach (T x in s)\n" +
+    "    { IComparable next = (IComparable) v[i];\n" +
+    "      if (largest.CompareTo(next) < 0)\n" +
+    "      { largest = next;\n" +
+    "        res.Clear();\n" +
+    "        res.Add(x);\n" +
+    "      }\n" +
+    "      else if (largest.CompareTo(next) == 0)\n" +
+    "      { res.Add(x); }\n" +
+    "      i++;\n" + 
+    "    }\n" +
+    "    return res;\n" +
+    "  }\n\n"; 
+ 
     return res; 
   } 
 
@@ -9400,15 +9883,27 @@ public class BSystemTypes extends BComponent
     "  }\n\n";
 
     res = res + 
-    "  public static <T, S extends Comparable> TreeSet<T> minimalElements(TreeSet<T> s, List<S> v)\n" +
-    "  { ArrayList<T> lst = new ArrayList<T>();\n" +
-    "    lst.addAll(s); \n" +
-    "    ArrayList<T> lres = minimalElements(lst, v);\n" + 
-    "    TreeSet<T> res = new TreeSet<T>(); \n" +
-    "    res.addAll(lres); \n" +
-    "    return res;\n" +
-    "  }\n\n"; 
- 
+      "  public static <T, S extends Comparable> TreeSet<T> minimalElements(TreeSet<T> s, List<S> v)\n" +
+      "  { TreeSet<T> res = new TreeSet<T>();\n" +
+      "    if (s.size() == 0) \n" +
+      "    { return res; }\n" +
+      "    Comparable smallest = (Comparable) v.get(0);\n" +
+      "    res.add(s.first());\n" +
+      "    int i = 0; \n" +
+      "    for (T x : s)\n" +
+      "    { Comparable next = (Comparable) v.get(i);\n" +
+      "      if (smallest.compareTo(next) > 0)\n" +
+      "      { largest = next;\n" +
+      "        res.clear();\n" +
+      "        res.add(x);\n" +
+      "      }\n" +
+      "      else if (smallest.compareTo(next) == 0)\n" +
+      "      { res.add(x); }\n" +
+      "      i++; \n" +
+      "    }\n" +
+      "    return res;\n" +  
+      "  }\n\n"; 
+
     return res; 
   } 
 
@@ -9431,7 +9926,29 @@ public class BSystemTypes extends BComponent
     "      { res.Add(s[i]); }\n" +
     "    }\n" +
     "    return res;\n" +
-    "  }\n"; 
+    "  }\n\n";
+
+    res = res + 
+    "  public static SortedSet<T> minimalElements<T>(SortedSet<T> s, ArrayList v)\n" +
+    "  { SortedSet<T> res = new SortedSet<T>();\n" +
+    "    if (s.Count == 0) { return res; }\n" +
+    "    IComparable smallest = (IComparable) v[0];\n" +
+    "    res.Add(s.Min);\n" +
+    "    int i = 0;\n" +
+    "    foreach (T x in s)\n" +
+    "    { IComparable next = (IComparable) v[i];\n" +
+    "      if (smallest.CompareTo(next) > 0)\n" +
+    "      { smallest = next;\n" +
+    "        res.Clear();\n" +
+    "        res.Add(x);\n" +
+    "      }\n" +
+    "      else if (smallest.CompareTo(next) == 0)\n" +
+    "      { res.Add(x); }\n" +
+    "      i++;\n" +
+    "    }\n" +
+    "    return res;\n" +
+    "  }\n\n"; 
+ 
     return res; 
   } 
 
@@ -9455,6 +9972,7 @@ public class BSystemTypes extends BComponent
     "    }\n" +
     "    return res;\n" +
     "  }\n\n" + 
+
     "  static vector<_T>* minimalElements(vector<_T>* s, vector<long>* v)\n" +
     "  { vector<_T>* res = new vector<_T>();\n" +
     "    if (s->size() == 0) { return res; }\n" +
@@ -9473,6 +9991,7 @@ public class BSystemTypes extends BComponent
     "    }\n" +
     "    return res;\n" +
     "  }\n\n" + 
+
     "  static vector<_T>* minimalElements(vector<_T>* s, vector<string>* v)\n" +
     "  { vector<_T>* res = new vector<_T>();\n" +
     "    if (s->size() == 0) { return res; }\n" +
@@ -9491,6 +10010,7 @@ public class BSystemTypes extends BComponent
     "    }\n" +
     "    return res;\n" +
     "  }\n\n" + 
+
     "  static vector<_T>* minimalElements(vector<_T>* s, vector<double>* v)\n" +
     "  { vector<_T>* res = new vector<_T>();\n" +
     "    if (s->size() == 0) { return res; }\n" +
@@ -9607,6 +10127,12 @@ public class BSystemTypes extends BComponent
       "  }\n\n" +
  
         "  public static int count<T>(SortedSet<T> st, T x)\n" +
+        "  { if (st.Contains(x))\n" +
+        "    { return 1; }\n" +
+        "    return 0; \n" +
+        "  }\n\n" +
+
+        "  public static int count<T>(HashSet<T> st, T x)\n" +
         "  { if (st.Contains(x))\n" +
         "    { return 1; }\n" +
         "    return 0; \n" +
@@ -11141,7 +11667,14 @@ public class BSystemTypes extends BComponent
       "      vals.Add(ob);\n" + 
       "    }\n" +
       "    return true;\n" +  
-      "  }\n";  
+      "  }\n\n";
+
+   res = res + 
+      "  public static bool isUnique<T>(HashSet<T> evals)\n" +
+      "  { return true; }\n\n" +
+      "  public static bool isUnique<T>(SortedSet<T> evals)\n" +
+      "  { return true; }\n\n"; 
+  
     return res; 
   } 
 

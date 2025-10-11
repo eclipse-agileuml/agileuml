@@ -118,6 +118,9 @@ public class CSTL
     String mode = "none"; 
     String category = null; 
 
+    int rulesetCount = 0; 
+    int ruleCount = 0; 
+
     for (int i = 0; i < lines.size(); i++)
     { String s = (String) lines.get(i); 
       s = s.trim(); 
@@ -130,18 +133,21 @@ public class CSTL
       { mode = "texts";
         int colonindex = s.indexOf(":");  
         category = s.substring(0,colonindex); 
+        rulesetCount++; 
       }         
       else if ("texts".equals(mode) && category != null)
       { Compiler2 c = new Compiler2(); 
         CGRule r = c.parse_TextCodegenerationrule(s.trim()); 
         if (r != null) 
-        { res.addCategoryRule(category,r); }
+        { res.addCategoryRule(category,r); 
+          ruleCount++; 
+        }
         else 
         { alertRule("!! Could not parse category " + category + " rule", s); }  
       }         
     }
 
-    // System.err.println(">>> Parsed: " + res); 
+    System.err.println(">>> Parsed " + lines.size() + " lines " + rulesetCount + " rulesets and " + ruleCount + " rules"); 
     
     return res; 
   } 
@@ -151,6 +157,7 @@ public class CSTL
     BufferedReader br = null;
     String s;
     boolean eof = false;
+    int lineCount = 0; 
     
     try
     { br = new BufferedReader(new FileReader(file)); }
@@ -159,14 +166,16 @@ public class CSTL
       return null; 
     }
 
-    int noflines = 0; 
     String mode = "none"; 
     String category = null; 
+
+    int rulesetCount = 0; 
+    int ruleCount = 0; 
 
     while (!eof)
     { try { s = br.readLine(); }
       catch (IOException _ex)
-      { System.err.println("ERROR!!: Reading CSTL file failed.");
+      { System.err.println("!!ERROR!!: Reading CSTL file failed.");
         return null; 
       }
 
@@ -176,6 +185,7 @@ public class CSTL
       }
       
       s = s.trim(); 
+      lineCount++; 
 
       if (s.startsWith("/*") && s.endsWith("*/")) 
       { } 
@@ -189,47 +199,69 @@ public class CSTL
       //   }
       // }  
       else if (s.equals("Type::"))
-      { mode = "types"; }         
+      { mode = "types"; 
+        rulesetCount++; 
+      }         
       else if (s.equals("Enumeration::"))
-      { mode = "enumerations"; }         
+      { mode = "enumerations";  
+        rulesetCount++; 
+      }         
       else if (s.equals("Datatype::"))
-      { mode = "datatypes"; }         
+      { mode = "datatypes";
+        rulesetCount++; 
+      }         
       else if (s.equals("BasicExpression::"))
-      { mode = "basicexpressions"; }  
+      { mode = "basicexpressions";   rulesetCount++; 
+      }  
       else if (s.equals("UnaryExpression::"))
-      { mode = "unaryexpressions"; }  
+      { mode = "unaryexpressions";   rulesetCount++; 
+      }  
       else if (s.equals("BinaryExpression::"))
-      { mode = "binaryexpressions"; }  
+      { mode = "binaryexpressions";   rulesetCount++; 
+      }  
       else if (s.equals("SetExpression::"))
-      { mode = "setexpressions"; }  
+      { mode = "setexpressions";   rulesetCount++; 
+      }  
       else if (s.equals("ConditionalExpression::"))
-      { mode = "conditionalexpressions"; }  
+      { mode = "conditionalexpressions";   rulesetCount++; 
+      }  
       else if (s.equals("Class::"))
-      { mode = "entities"; }  
+      { mode = "entities";   rulesetCount++; 
+      }  
       else if (s.equals("Attribute::"))
-      { mode = "attributes"; }  
+      { mode = "attributes";   rulesetCount++; 
+      }  
       else if (s.equals("Parameter::"))
-      { mode = "parameters"; }  
+      { mode = "parameters";   rulesetCount++; 
+      }  
       else if (s.equals("ParameterArgument::"))
-      { mode = "parameterarguments"; }  
+      { mode = "parameterarguments";   rulesetCount++; 
+      }  
       else if (s.equals("Operation::"))
-      { mode = "operations"; }  
+      { mode = "operations";   rulesetCount++; 
+      }  
       else if (s.equals("Statement::"))
-      { mode = "statements"; }  
+      { mode = "statements";   rulesetCount++; 
+      }  
       else if (s.equals("Package::"))
-      { mode = "packages"; }  
+      { mode = "packages";   rulesetCount++; 
+      }  
       else if (s.equals("UseCase::"))
-      { mode = "usecases"; }  
+      { mode = "usecases";   rulesetCount++; 
+      }  
       else if (s.endsWith("::"))
       { mode = "texts";
         int colonindex = s.indexOf(":");  
         category = s.substring(0,colonindex); 
+        rulesetCount++; 
       }         
       else if ("types".equals(mode))
       { Compiler2 c = new Compiler2(); 
         CGRule r = c.parse_TypeCodegenerationrule(s.trim());
         if (r != null) 
-        { res.addTypeUseRule(r); } 
+        { res.addTypeUseRule(r); 
+          ruleCount++; 
+        } 
         else 
         { alertRule("Type", s); }
       }  
@@ -237,7 +269,9 @@ public class CSTL
       { Compiler2 c = new Compiler2(); 
         CGRule r = c.parse_ExpressionCodegenerationrule(s.trim());
         if (r != null) 
-        { res.addBasicExpressionRule(r); } 
+        { res.addBasicExpressionRule(r); 
+          ruleCount++; 
+        } 
         else 
         { alertRule("Basic expression", s); }
       }  
@@ -245,7 +279,9 @@ public class CSTL
       { Compiler2 c = new Compiler2(); 
         CGRule r = c.parse_UnaryExpressionCodegenerationrule(s.trim());
         if (r != null) 
-        { res.addUnaryExpressionRule(r); } 
+        { res.addUnaryExpressionRule(r);  
+          ruleCount++; 
+        } 
         else 
         { alertRule("Unary expression", s); }
       }  
@@ -253,7 +289,9 @@ public class CSTL
       { Compiler2 c = new Compiler2(); 
         CGRule r = c.parse_ExpressionCodegenerationrule(s.trim());
         if (r != null) 
-        { res.addBinaryExpressionRule(r); } 
+        { res.addBinaryExpressionRule(r);  
+          ruleCount++; 
+        } 
         else 
         { alertRule("Binary expression", s); }
       }  
@@ -261,7 +299,9 @@ public class CSTL
       { Compiler2 c = new Compiler2(); 
         CGRule r = c.parse_ExpressionCodegenerationrule(s.trim());
         if (r != null) 
-        { res.addSetExpressionRule(r); }
+        { res.addSetExpressionRule(r);  
+          ruleCount++; 
+        }
         else 
         { alertRule("Set expression", s); }
       }  
@@ -269,7 +309,9 @@ public class CSTL
       { Compiler2 c = new Compiler2(); 
         CGRule r = c.parse_ExpressionCodegenerationrule(s.trim());
         if (r != null) 
-        { res.addConditionalExpressionRule(r); } 
+        { res.addConditionalExpressionRule(r);  
+          ruleCount++; 
+        } 
         else 
         { alertRule("Conditional expression", s); }
       }  
@@ -277,7 +319,9 @@ public class CSTL
       { Compiler2 c = new Compiler2(); 
         CGRule r = c.parse_EntityCodegenerationrule(s.trim()); 
         if (r != null) 
-        { res.addClassRule(r); } 
+        { res.addClassRule(r);  
+          ruleCount++; 
+        } 
         else 
         { alertRule("Entity", s); }
       }         
@@ -285,7 +329,9 @@ public class CSTL
       { Compiler2 c = new Compiler2(); 
         CGRule r = c.parse_EntityCodegenerationrule(s.trim()); 
         if (r != null) 
-        { res.addEnumerationRule(r); } 
+        { res.addEnumerationRule(r);  
+          ruleCount++; 
+        } 
         else 
         { alertRule("Enumeration", s); }
       } 
@@ -293,7 +339,9 @@ public class CSTL
       { Compiler2 c = new Compiler2(); 
         CGRule r = c.parse_EntityCodegenerationrule(s.trim());
         if (r != null) 
-        { res.addDatatypeRule(r); } 
+        { res.addDatatypeRule(r);  
+          ruleCount++; 
+        } 
         else 
         { alertRule("Datatype", s); }
       }          
@@ -301,7 +349,9 @@ public class CSTL
       { Compiler2 c = new Compiler2(); 
         CGRule r = c.parse_EntityCodegenerationrule(s.trim()); 
         if (r != null) 
-        { res.addPackageRule(r); } 
+        { res.addPackageRule(r);  
+          ruleCount++; 
+        } 
         else 
         { alertRule("Package", s); }
       }         
@@ -309,7 +359,9 @@ public class CSTL
       { Compiler2 c = new Compiler2(); 
         CGRule r = c.parse_AttributeCodegenerationrule(s.trim()); 
         if (r != null) 
-        { res.addAttributeRule(r); }
+        { res.addAttributeRule(r);  
+          ruleCount++; 
+        }
         else 
         { alertRule("Attribute/reference", s); }
       }         
@@ -317,7 +369,9 @@ public class CSTL
       { Compiler2 c = new Compiler2(); 
         CGRule r = c.parse_OperationCodegenerationrule(s.trim()); 
         if (r != null) 
-        { res.addOperationRule(r); } 
+        { res.addOperationRule(r);  
+          ruleCount++; 
+        } 
         else 
         { alertRule("Operation", s); }
       }  
@@ -325,7 +379,9 @@ public class CSTL
       { Compiler2 c = new Compiler2(); 
         CGRule r = c.parse_OperationCodegenerationrule(s.trim()); 
         if (r != null) 
-        { res.addParameterRule(r); }
+        { res.addParameterRule(r);  
+          ruleCount++; 
+        }
         else 
         { alertRule("Parameter", s); } 
       }       
@@ -333,7 +389,9 @@ public class CSTL
       { Compiler2 c = new Compiler2(); 
         CGRule r = c.parse_OperationCodegenerationrule(s.trim()); 
         if (r != null) 
-        { res.addParameterArgumentRule(r); } 
+        { res.addParameterArgumentRule(r);  
+          ruleCount++; 
+        } 
         else 
         { alertRule("Parameter argument", s); } 
       }       
@@ -341,7 +399,9 @@ public class CSTL
       { Compiler2 c = new Compiler2(); 
         CGRule r = c.parse_StatementCodegenerationrule(s.trim(),entities,types); 
         if (r != null) 
-        { res.addStatementRule(r); } 
+        { res.addStatementRule(r);  
+          ruleCount++; 
+        } 
         else 
         { alertRule("Statement", s); } 
       }         
@@ -349,7 +409,9 @@ public class CSTL
       { Compiler2 c = new Compiler2(); 
         CGRule r = c.parse_UseCaseCodegenerationrule(s.trim(),entities,types); 
         if (r != null) 
-        { res.addUseCaseRule(r); }
+        { res.addUseCaseRule(r);  
+          ruleCount++; 
+        }
         else 
         { alertRule("UseCase", s); }  
       }         
@@ -357,13 +419,15 @@ public class CSTL
       { Compiler2 c = new Compiler2(); 
         CGRule r = c.parse_TextCodegenerationrule(s.trim()); 
         if (r != null) 
-        { res.addCategoryRule(category,r); }
+        { res.addCategoryRule(category,r);  
+          ruleCount++; 
+        }
         else 
         { alertRule("!! Could not parse category " + category + " rule", s); }  
       }         
     }
 
-    // System.err.println(">>> Parsed: " + res); 
+    System.err.println(">>> Parsed " + lineCount + " lines " + rulesetCount + " rulesets and " + ruleCount + " rules"); 
     return res; 
   }
 

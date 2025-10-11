@@ -25,6 +25,7 @@ class OclAttribute {
 
   String name = "";
   OclType type = null;
+  HashSet<String> stereotypes = new HashSet<String>(); 
 
   public String getName()
   { return name; }
@@ -32,5 +33,13 @@ class OclAttribute {
   public OclType getType()
   { return type; }
 
+  public boolean hasStereotype(String s)
+  { return stereotypes.contains(s); } 
+
+  public void addStereotype(String s)
+  { stereotypes.add(s); } 
+
+  public void removeStereotype(String s)
+  { stereotypes.remove(s); } 
 }
 

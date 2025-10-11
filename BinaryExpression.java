@@ -7977,7 +7977,9 @@ public boolean conflictsWithIn(String op, Expression el,
     { return collectQueryFormJava6(lqf,rqf,rprim,env,local); } 
 
     if (operator.equals("|A") || operator.equals("->any"))   
-    { String getany = anyQueryFormJava6(lqf,rqf,rprim,env,local); 
+    { String getany = 
+         anyQueryFormJava6(lqf,rqf,rprim,env,local);
+ 
       if (Type.isPrimitiveType(type))
       { return unwrapJava6(getany); } 
        
@@ -8497,10 +8499,12 @@ public boolean conflictsWithIn(String op, Expression el,
     } 
 
     if (operator.equals("->selectMaximals"))
-    { String col = collectQueryFormJava7(lqf,rqf,rprim,env,local); 
+    { String col = 
+         collectQueryFormJava7(lqf,rqf,rprim,env,local); 
       String jType = type.getJava7(elementType); 
       if (left.umlkind == CLASSID)
-      { lqf = ((BasicExpression) left).classExtentQueryFormJava7(env,local); } 
+      { lqf = ((BasicExpression) left).classExtentQueryFormJava7(env,local); }
+ 
       return "((" + jType + ") Ocl.maximalElements(" + lqf + ", ((ArrayList<Comparable>) " + col + ")))"; 
     } 
 
@@ -8516,7 +8520,8 @@ public boolean conflictsWithIn(String op, Expression el,
     }
 
     if (operator.equals("->selectMinimals"))
-    { String col = collectQueryFormJava7(lqf,rqf,rprim,env,local); 
+    { String col = 
+         collectQueryFormJava7(lqf,rqf,rprim,env,local); 
       String jType = type.getJava7(elementType); 
       if (left.umlkind == CLASSID)
       { lqf = ((BasicExpression) left).classExtentQueryFormJava7(env,local); } 
@@ -8638,7 +8643,8 @@ public boolean conflictsWithIn(String op, Expression el,
       { res = "(" + lqf + " - (" + rqf + "))"; } 
       else if (left.isString())
       { res = "((Comparable) " + lqf + ").compareTo(\"\" + " + rqf + ")"; } 
-      else if (left.hasSequenceType() && right.hasSequenceType())
+      else if (left.hasSequenceType() && 
+               right.hasSequenceType())
       { res = "Ocl.sequenceCompare(" + lqf + "," + rqf + ")"; } 
       else 
       { res = "((Comparable) " + lqf + ").compareTo(" + rqf + ")"; }  
@@ -8666,8 +8672,10 @@ public boolean conflictsWithIn(String op, Expression el,
     } 
 
     if (operator.equals("->unionAll"))
-    { String col = collectQueryFormJava7(lqf,rqf,rprim,env,local); 
-      String jtype = type.getJava7(elementType); 
+    { String col = 
+         collectQueryFormJava7(lqf,rqf,rprim,env,local); 
+      String jtype = type.getJava7(elementType);
+ 
       if (left.isOrdered() && (right.isOrdered() || 
           "self".equals(right + "")))
       { return "((" + jtype + ") Ocl.concatenateAll(" + col + "))"; } 
@@ -8699,7 +8707,8 @@ public boolean conflictsWithIn(String op, Expression el,
     } 
 
     if (right.umlkind == CLASSID && 
-        ((BasicExpression) right).arrayIndex == null && operator.equals("->oclIsTypeOf"))  
+        ((BasicExpression) right).arrayIndex == null && 
+        operator.equals("->oclIsTypeOf"))  
     { return "(" + lqf + ".getClass() == " + right + ".class)"; } 
 
     if (operator.equals("->oclIsTypeOf"))  
@@ -8718,21 +8727,25 @@ public boolean conflictsWithIn(String op, Expression el,
     } 
 
     if (left.umlkind == CLASSID && 
-        ((BasicExpression) left).arrayIndex == null && operator.equals("->includes"))  
+        ((BasicExpression) left).arrayIndex == null && 
+        operator.equals("->includes"))  
     { return "(" + rqf + " instanceof " + left + ")"; } 
 
     if (left.umlkind == CLASSID && 
-        ((BasicExpression) left).arrayIndex == null && operator.equals("->includesAll"))  
+        ((BasicExpression) left).arrayIndex == null && 
+        operator.equals("->includesAll"))  
     { lqf = ((BasicExpression) left).classExtentQueryFormJava7(env,local);
       return "(" + lqf + ".containsAll(" + rqf + "))"; 
     } 
 
     if (left.umlkind == CLASSID && 
-        ((BasicExpression) left).arrayIndex == null && operator.equals("->excludes")) 
+        ((BasicExpression) left).arrayIndex == null && 
+        operator.equals("->excludes")) 
     { return "!(" + rqf + " instanceof " + left + ")"; } 
 
     if (left.umlkind == CLASSID && 
-        ((BasicExpression) left).arrayIndex == null && operator.equals("->excludesAll"))  
+        ((BasicExpression) left).arrayIndex == null && 
+        operator.equals("->excludesAll"))  
     { lqf = ((BasicExpression) left).classExtentQueryFormJava7(env,local);
       return "Collections.disjoint(" + lqf + "," + rqf + ")"; 
     } 
@@ -8994,21 +9007,70 @@ public boolean conflictsWithIn(String op, Expression el,
     if (operator.equals("|C") || operator.equals("->collect"))
     { return collectQueryFormCSharp(lqf,rqf,rprim,env,local); } 
 
-    if (operator.equals("->selectMaximals"))
+    if (operator.equals("->selectMaximals") && 
+        left.isSequence())
     { String col = 
-         collectQueryFormCSharp(lqf,rqf,rprim,env,local); 
+         collectQueryFormCSharp(lqf,rqf,rprim,env,local);
+ 
       if (left.umlkind == CLASSID)
       { lqf = ((BasicExpression) left).classExtentQueryFormCSharp(env,local); }   
+
       return "SystemTypes.maximalElements(" + lqf + ", " + col + ")"; 
     } 
 
-    if (operator.equals("|selectMaximals"))
-    { String col = collectQueryFormCSharp(lqf,rqf,rprim,env,local);
+    if (operator.equals("->selectMaximals") && 
+        left.isSet())
+    { // Same as 
+      // left->asSequence()->selectMaximals(right)->asSet()
+
+      if (left.umlkind == CLASSID)
+      { lqf = ((BasicExpression) left).classExtentQueryFormCSharp(env,local); }   
+      else 
+      { Expression leftseq = 
+          new UnaryExpression("->asSequence", left); 
+        Type lefttypesq = new Type("Sequence", null); 
+        lefttypesq.setElementType(left.getElementType()); 
+        leftseq.setType(lefttypesq); 
+
+        lqf = leftseq.queryFormCSharp(env, local); 
+      } 
+
+      String col = 
+         collectQueryFormCSharp(lqf,rqf,rprim,env,local);
+
+      return "SystemTypes.asSet(SystemTypes.maximalElements(" + lqf + ", " + col + "))"; 
+    } 
+
+    if (operator.equals("|selectMaximals") && 
+        ((BinaryExpression) left).getRight().isSequence())
+    { String col = 
+         collectQueryFormCSharp(lqf,rqf,rprim,env,local);
       Expression actualLeft = ((BinaryExpression) left).getRight();  
       lqf = actualLeft.queryFormCSharp(env,local); 
       if (actualLeft.umlkind == CLASSID)
       { lqf = ((BasicExpression) actualLeft).classExtentQueryFormCSharp(env,local); }   
       return "SystemTypes.maximalElements(" + lqf + ", " + col + ")"; 
+    } 
+
+    if (operator.equals("|selectMaximals") && 
+        ((BinaryExpression) left).getRight().isSet())
+    { Expression actualLeft = ((BinaryExpression) left).getRight();  
+
+      if (actualLeft.umlkind == CLASSID)
+      { lqf = ((BasicExpression) actualLeft).classExtentQueryFormCSharp(env,local); }   
+      else 
+      { Expression leftseq = 
+          new UnaryExpression("->asSequence", actualLeft); 
+        Type lefttypesq = new Type("Sequence", null); 
+        lefttypesq.setElementType(actualLeft.getElementType()); 
+        leftseq.setType(lefttypesq); 
+
+        lqf = leftseq.queryFormCSharp(env, local); 
+      } 
+
+      String col = 
+         collectQueryFormCSharp(lqf,rqf,rprim,env,local);
+      return "SystemTypes.asSet(SystemTypes.maximalElements(" + lqf + ", " + col + "))"; 
     } 
 
     if (operator.equals("->iterate") && accumulator != null && 
@@ -9030,14 +9092,38 @@ public boolean conflictsWithIn(String op, Expression el,
                 ", (" + iteratorVariable + "_x) => ( (" + acc + "_x) => { " + csacctype + " " + acc + " = (" + csacctype + ") " + acc + "_x;  " + letypestr + " " + iteratorVariable + " = (" + letypestr + ") " + iteratorVariable + "_x; return " + rqf + "; } ) )"; 
     } 
 
-    if (operator.equals("->selectMinimals"))
+    if (operator.equals("->selectMinimals") && left.isSequence())
     { String col = collectQueryFormCSharp(lqf,rqf,rprim,env,local); 
       if (left.umlkind == CLASSID)
       { lqf = ((BasicExpression) left).classExtentQueryFormCSharp(env,local); } 
       return "SystemTypes.minimalElements(" + lqf + ", " + col + ")"; 
     } 
 
-    if (operator.equals("|selectMinimals"))
+    if (operator.equals("->selectMinimals") && 
+        left.isSet())
+    { // Same as 
+      // left->asSequence()->selectMinimals(right)->asSet()
+
+      if (left.umlkind == CLASSID)
+      { lqf = ((BasicExpression) left).classExtentQueryFormCSharp(env,local); }   
+      else 
+      { Expression leftseq = 
+          new UnaryExpression("->asSequence", left); 
+        Type lefttypesq = new Type("Sequence", null); 
+        lefttypesq.setElementType(left.getElementType()); 
+        leftseq.setType(lefttypesq); 
+
+        lqf = leftseq.queryFormCSharp(env, local); 
+      } 
+
+      String col = 
+         collectQueryFormCSharp(lqf,rqf,rprim,env,local);
+
+      return "SystemTypes.asSet(SystemTypes.minimalElements(" + lqf + ", " + col + "))"; 
+    } 
+
+    if (operator.equals("|selectMinimals") && 
+        ((BinaryExpression) left).getRight().isSequence())
     { String col = 
         collectQueryFormCSharp(lqf,rqf,rprim,env,local);
       Expression actualLeft = 
@@ -9048,8 +9134,30 @@ public boolean conflictsWithIn(String op, Expression el,
       return "SystemTypes.minimalElements(" + lqf + ", " + col + ")"; 
     } 
 
+    if (operator.equals("|selectMinimals") && 
+        ((BinaryExpression) left).getRight().isSet())
+    { Expression actualLeft = ((BinaryExpression) left).getRight();  
+
+      if (actualLeft.umlkind == CLASSID)
+      { lqf = ((BasicExpression) actualLeft).classExtentQueryFormCSharp(env,local); }   
+      else 
+      { Expression leftseq = 
+          new UnaryExpression("->asSequence", actualLeft); 
+        Type lefttypesq = new Type("Sequence", null); 
+        lefttypesq.setElementType(actualLeft.getElementType()); 
+        leftseq.setType(lefttypesq); 
+
+        lqf = leftseq.queryFormCSharp(env, local); 
+      } 
+
+      String col = 
+         collectQueryFormCSharp(lqf,rqf,rprim,env,local);
+      return "SystemTypes.asSet(SystemTypes.minimalElements(" + lqf + ", " + col + "))"; 
+    } 
+
     if (operator.equals("->sortedBy"))
-    { String col = collectQueryFormCSharp(lqf,rqf,rprim,env,local); 
+    { String col = 
+        collectQueryFormCSharp(lqf,rqf,rprim,env,local); 
       if (left.umlkind == CLASSID)
       { lqf = ((BasicExpression) left).classExtentQueryFormCSharp(env,local); } 
       return "SystemTypes.sortedBy(" + lqf + ", " + col + ")"; 
@@ -9072,7 +9180,6 @@ public boolean conflictsWithIn(String op, Expression el,
 
     if (operator.equals("->restrict"))
     { return "SystemTypes.restrictMap(" + lqf + "," + rqf + ")"; } 
-
 
     if (operator.equals("->antirestrict"))
     { return "SystemTypes.antirestrictMap(" + lqf + "," + rqf + ")"; } 
@@ -9141,7 +9248,8 @@ public boolean conflictsWithIn(String op, Expression el,
     { return lqf + ".Invoke(" + rqf + ")"; } 
 
     if (operator.equals("|A") || operator.equals("->any"))   
-    { String getany = anyQueryFormCSharp(lqf,rqf,rprim,env,local); 
+    { String getany = 
+         anyQueryFormCSharp(lqf,rqf,rprim,env,local); 
       String typ = type.getCSharp(); 
       return "((" + typ + ") " + getany + ")"; 
     } 
@@ -9163,7 +9271,6 @@ public boolean conflictsWithIn(String op, Expression el,
       { return lqf; } 
       return "SystemTypes.roundTo(" + lqf + "," + rqf + ")"; 
     } 
-
 
     if (operator.equals("<>=")) 
     { res = lqf + " == " + rqf; 
@@ -9213,18 +9320,22 @@ public boolean conflictsWithIn(String op, Expression el,
     }  
 
     if (operator.equals("->isUnique"))  // and define for B
-    { String fcollect = collectQueryFormCSharp(lqf,rqf,rprim,env,local);
+    { String fcollect = 
+        collectQueryFormCSharp(lqf,rqf,rprim,env,local);
       return "SystemTypes.isUnique(" + fcollect + ")"; 
     } 
 
     if (operator.equals("->intersectAll"))
-    { String col = collectQueryFormCSharp(lqf,rqf,rprim,env,local); 
+    { String col = 
+        collectQueryFormCSharp(lqf,rqf,rprim,env,local); 
       return "SystemTypes.intersectAll(" + col + ")"; 
     } 
 
     if (operator.equals("->unionAll"))
-    { String col = collectQueryFormCSharp(lqf,rqf,rprim,env,local); 
-      if (left.isOrdered() && (right.isOrdered() || "self".equals(right + "")))
+    { String col = 
+         collectQueryFormCSharp(lqf,rqf,rprim,env,local); 
+      if (left.isOrdered() && 
+          (right.isOrdered() || "self".equals(right + "")))
       { return "SystemTypes.concatenateAll(" + col + ")"; } 
       return "SystemTypes.unionAll(" + col + ")"; 
     } 
@@ -9232,10 +9343,12 @@ public boolean conflictsWithIn(String op, Expression el,
     if (operator.equals("->closure"))
     { String rel = right + ""; 
       if (entity == null) 
-      { JOptionPane.showMessageDialog(null, "No entity for: " + this, 
-                                      "Semantic error", JOptionPane.ERROR_MESSAGE);
+      { JOptionPane.showMessageDialog(null, 
+           "No entity for: " + this, 
+           "Semantic error", JOptionPane.ERROR_MESSAGE);
         return ""; 
       }  
+
       return "SystemTypes.closure" + entity.getName() + rel + "(" + lqf + ")"; 
     } // left must be set-valued. 
 
@@ -9280,17 +9393,20 @@ public boolean conflictsWithIn(String op, Expression el,
     } 
 
     if (left.umlkind == CLASSID && 
-        ((BasicExpression) left).arrayIndex == null && operator.equals("->includes"))  
+        ((BasicExpression) left).arrayIndex == null && 
+        operator.equals("->includes"))  
     { return "(" + rqf + " is " + left + ")"; } 
 
     if (left.umlkind == CLASSID && 
-        ((BasicExpression) left).arrayIndex == null && operator.equals("->includesAll"))  
+        ((BasicExpression) left).arrayIndex == null && 
+        operator.equals("->includesAll"))  
     { lqf = ((BasicExpression) left).classExtentQueryFormCSharp(env,local);
       return "(SystemTypes.isSubset(" + rqf + ", " + lqf + "))"; 
     } 
 
     if (left.umlkind == CLASSID && 
-        ((BasicExpression) left).arrayIndex == null && operator.equals("->excludes")) 
+        ((BasicExpression) left).arrayIndex == null && 
+        operator.equals("->excludes")) 
     { return "!(" + rqf + " is " + left + ")"; } 
 
 
@@ -9336,7 +9452,8 @@ public boolean conflictsWithIn(String op, Expression el,
     if (!lmult && !rmult)
     { if (operator.equals("=")) // and comparitors
       { res = composeEqQueryFormsCSharp(lqf,rqf,lprim,rprim); }
-      else if (operator.equals("/=") || operator.equals("!=") || operator.equals("<>"))
+      else if (operator.equals("/=") || 
+               operator.equals("!=") || operator.equals("<>"))
       { res = composeNeqQueryFormsCSharp(lqf,rqf,lprim,rprim); }
       else if (comparitors.contains(operator))
       { res = 
@@ -9375,7 +9492,8 @@ public boolean conflictsWithIn(String op, Expression el,
       { res = "SystemTypes.allMatches(" + lqf + "," + rqf + ")"; } 
       else if (operator.equals("->firstMatch"))
       { res = "SystemTypes.firstMatch(" + lqf + "," + rqf + ")"; } 
-      else if (operator.equals("->excludingAt") && left.isString())
+      else if (operator.equals("->excludingAt") && 
+               left.isString())
       { res = "SystemTypes.removeAtString(" + 
                                       lqf + "," + rqf + ")"; 
       }
@@ -9414,7 +9532,8 @@ public boolean conflictsWithIn(String op, Expression el,
       } 
       else if (operator.equals("->excludingFirst"))
       { res = "SystemTypes.removeFirst(" + lqf + "," + rw + ")"; }
-      else if (operator.equals("->including") && left.isOrdered())
+      else if (operator.equals("->including") && 
+               left.isOrdered())
       { res = "SystemTypes.concatenate(" + lqf + "," + rss + ")"; }
       else if (operator.equals("->including"))
       { res = "SystemTypes.union(" + lqf + "," + rss + ")"; }
@@ -9426,7 +9545,8 @@ public boolean conflictsWithIn(String op, Expression el,
           else 
           { res = lqf + ".Equals(" + rs + ")"; }
         } 
-        else if (operator.equals("/=") || operator.equals("!=") || operator.equals("<>"))
+        else if (operator.equals("/=") || 
+                 operator.equals("!=") || operator.equals("<>"))
         { if (Type.isSetType(left.getType()))
           { res = "!(SystemTypes.equalsSet(" + lqf + "," + rs + "))"; } 
           else 
@@ -9467,17 +9587,27 @@ public boolean conflictsWithIn(String op, Expression el,
       } 
     }
     else if (rmult && !lmult)
-    { String ls = left.makeSetCSharp(lqf);
+    { String ls = left.makeSequenceCSharp(lqf);
       String lw = lqf; 
 
       if (operator.equals("="))
-      { if (Type.isSetType(right.getType()))
-        { res = "SystemTypes.equalsSet(" + ls + "," + rqf + ")"; } 
+      { if (Type.isSortedSetType(right.getType()))
+        { ls = left.makeSortedSetCSharp(); 
+          res = "SystemTypes.equalsSet(" + ls + "," + rqf + ")"; } 
+        else if (Type.isSetType(right.getType()))
+        { ls = left.makeSetCSharp(); 
+          res = "SystemTypes.equalsSet(" + ls + "," + rqf + ")"; } 
         else 
         { res = ls + ".Equals(" + rqf + ")"; } 
       }
-      else if (operator.equals("/=") || operator.equals("!=") || operator.equals("<>"))
-      { if (Type.isSetType(right.getType()))
+      else if (operator.equals("/=") || 
+               operator.equals("!=") || 
+               operator.equals("<>"))
+      { if (Type.isSortedSetType(right.getType()))
+        { ls = left.makeSortedSetCSharp(); 
+          res = "!(SystemTypes.equalsSet(" + ls + "," + rqf + "))"; 
+        } 
+        else if (Type.isSetType(right.getType()))
         { res = "!(SystemTypes.equalsSet(" + ls + "," + rqf + "))"; } 
         else 
         { res = "!(" + ls + ".Equals(" + rqf + "))"; } 
@@ -12671,7 +12801,7 @@ public boolean conflictsWithIn(String op, Expression el,
     }  
     else 
     { if (left.elementType == null) 
-      { System.err.println("DESIGN ERROR!!: no element type for: " + left); 
+      { System.err.println("!!DESIGN ERROR!!: no element type for: " + left); 
         /* JOptionPane.showMessageDialog(null, "no element type for " + left + " in " + this, 
            "Design error", JOptionPane.ERROR_MESSAGE); */ 
       } 
@@ -12749,7 +12879,9 @@ public boolean conflictsWithIn(String op, Expression el,
     } 
 
     // System.out.println("Creating Collect " + uses + " " + env); 
-    String res =       BSystemTypes.getCollectDefinitionCSharp(collectleft,lqf,right,rprim,collectvar,env1,pars); 
+    String res =       
+      BSystemTypes.getCollectDefinitionCSharp(
+          collectleft,lqf,right,rprim,collectvar,env1,pars); 
     return "SystemTypes." + res.substring(0,res.length()-1) + callpars + ")"; 
   } 
 
@@ -13077,12 +13209,13 @@ public boolean conflictsWithIn(String op, Expression el,
     Entity localentity = null; 
  
     String lqf = ""; 
-    if ("->existsLC".equals(operator) || operator.equals("->exists"))
+    if ("->existsLC".equals(operator) || 
+        operator.equals("->exists"))
     { lqf = left.queryFormCSharp(env,local);
       existsleft = left; 
       // localentity = left.getEntity(); // or entity of the elementType
       if (left.elementType == null) 
-      { System.err.println("DESIGN ERROR: no element type for: " + left); 
+      { System.err.println("!!DESIGN ERROR: no element type for: " + left); 
         JOptionPane.showMessageDialog(null, "no element type for " + left + " in " + this, 
                                       "Design error", JOptionPane.ERROR_MESSAGE);
       } 
@@ -13096,7 +13229,7 @@ public boolean conflictsWithIn(String op, Expression el,
       existsvar = beleft.left + ""; 
       // localentity = beleft.right.getEntity(); // or entity of the elementType
       if (beleft.right == null || beleft.right.elementType == null)
-      { System.out.println("DESIGN ERROR: no element type of: " + beleft);
+      { System.out.println("!!DESIGN ERROR: no element type of: " + beleft);
         JOptionPane.showMessageDialog(null, "no element type for " + beleft + " in " + this, 
                                       "Design error", JOptionPane.ERROR_MESSAGE);
       }
@@ -14326,13 +14459,13 @@ public boolean conflictsWithIn(String op, Expression el,
   private String composeSetQueryFormsCSharp(String lqf, String rqf)
   { String res = lqf + " " + operator + " " + rqf; 
     if (operator.equals("="))
-    { if (Type.isSetType(left.getType()) || Type.isSetType(right.getType()))
+    { if (Type.isSetType(left.getType()))
       { res = "SystemTypes.equalsSet(" + lqf + "," + rqf + ")"; } 
       else 
       { res = lqf + ".Equals(" + rqf + ")"; }  
     } // order shouldn't matter
     else if (operator.equals("/=") || operator.equals("!=") || operator.equals("<>"))
-    { if (Type.isSetType(left.getType()) || Type.isSetType(right.getType()))
+    { if (Type.isSetType(left.getType()))
       { res = "!(SystemTypes.equalsSet(" + lqf + "," + rqf + "))"; } 
       else 
       { res = "!(" + lqf + ".Equals(" + rqf + "))"; }
@@ -14344,13 +14477,13 @@ public boolean conflictsWithIn(String op, Expression el,
 	  { res = "SystemTypes.includesAllMap(" + lqf + "," + rqf + ")"; } 
 	  else 
 	  { res = "SystemTypes.isSubset(" + rqf + "," + lqf + ")"; }
-	} 
+    } 
     else if (operator.equals("-"))
     { if (left.isMap() && right.isMap())
 	  { res = "SystemTypes.excludeAllMap(" + lqf + "," + rqf + ")"; } 
 	  else 
 	  { res = "SystemTypes.subtract(" + lqf + "," + rqf + ")"; }
-	} 
+    } 
     else if (operator.equals("->excluding"))  
     { res = "SystemTypes.subtract(" + lqf + "," + rqf + ")"; } 
     else if (operator.equals("\\/") || operator.equals("->union")) 
@@ -14369,10 +14502,10 @@ public boolean conflictsWithIn(String op, Expression el,
     } 
     else if (operator.equals("/\\") || operator.equals("->intersection"))
     { if (left.isMap() && right.isMap())
-	  { res = "SystemTypes.intersectionMap(" + lqf + "," + rqf + ")"; } 
-	  else 
-	  { res = "SystemTypes.intersection(" + lqf + "," + rqf + ")"; }
-	} 
+      { res = "SystemTypes.intersectionMap(" + lqf + "," + rqf + ")"; } 
+      else 
+      { res = "SystemTypes.intersection(" + lqf + "," + rqf + ")"; }
+    } 
     else if (operator.equals("/:") || operator.equals("/<:"))
     { res = "!(SystemTypes.isSubset(" + lqf + ", " + rqf + "))"; } 
     else if (operator.equals("->excludesAll"))
@@ -16319,13 +16452,20 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       String tname = "";       
       Type eleft = beleft.right.getElementType();  // Must be an entity type 
       if (eleft == null || "null".equals(eleft + "")) 
-      { eleftname = "object"; tname = "object"; } 
+      { eleftname = "object"; 
+        tname = "object"; 
+      } 
       else 
       { eleftname = eleft.getName();  
         // System.out.println(">>>>>" + eleftname); 
         tname = eleftname; 
 
-        if (eleftname.startsWith("Set") || eleftname.startsWith("Sequence"))
+        if (eleftname.startsWith("Set"))
+        { eleftname = 
+            "HashSet<" + Type.getCSharptype(eleft.getElementType()) + ">"; 
+          tname = "HashSet<object>"; 
+        } 
+        else if (eleftname.startsWith("Sequence"))
         { eleftname = "ArrayList"; 
           tname = "ArrayList"; 
         } 
@@ -16359,7 +16499,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       if ("Integer".equals(eleftname))
       { return  
         "    ArrayList " + elist + " = new ArrayList();\n" + 
-        "    " + elist + ".AddRange(" + lqf1 + ");\n" + 
+        "    " + elist + ".AddRange(SystemTypes.asSequence(" + lqf1 + "));\n" + 
         "    for (int " + indvar + " = 0; " + indvar + " < " + elist + ".Count; " + indvar + "++)\n" + 
         "    { int " + evarname + " = (int) " + elist + "[" + indvar + "];\n" + 
         "      " + ufr1 + "\n" + 
@@ -16367,7 +16507,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       } 
       else if (eleft != null && Type.isBasicType(eleft))
       { return  "    ArrayList " + elist + " = new ArrayList();\n" + 
-        "    " + elist + ".AddRange(" + lqf1 + ");\n" + 
+        "    " + elist + ".AddRange(SystemTypes.asSequence(" + lqf1 + "));\n" + 
         "    for (int " + indvar + " = 0; " + indvar + " < " + elist + ".Count; " + indvar + "++)\n" + 
         "    { " + tname + " " + evarname + 
                    " = ((" + tname + ") " + elist + "[" + indvar + "]);\n" +
@@ -16377,7 +16517,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
 
       return 
         "    ArrayList " + elist + " = new ArrayList();\n" + 
-        "    " + elist + ".AddRange(" + lqf1 + ");\n" + 
+        "    " + elist + ".AddRange(SystemTypes.asSequence(" + lqf1 + "));\n" + 
         "    for (int " + indvar + " = 0; " + indvar + " < " + elist + ".Count; " + indvar + "++)\n" + 
         "    { " + eleftname + " " + evarname + " = (" + eleftname + ") " + elist + 
                      "[" + indvar + "];\n" + 
@@ -16429,7 +16569,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
     else if (operator.equals("=") && left instanceof SetExpression)
     { val2 = right.queryFormCSharp(env,local);
       return ((SetExpression) left).updateForm("CSharp",env,operator,val2,right,local);
-    }
+    } // must be a sequence
     else if (operator.equals("->includesAll") && left instanceof BasicExpression)
     { val2 = right.queryFormCSharp(env,local);
       return ((BasicExpression) left).updateFormCSharp(env,"<:",val2,right,local);
@@ -18905,6 +19045,13 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
     return simplify(operator,lsimp,rsimp,vars); 
   }
 
+  public Expression evaluate(ModelSpecification sigma, 
+                             ModelState beta)
+  { Expression lft = left.evaluate(sigma, beta); 
+    Expression rgt = right.evaluate(sigma, beta); 
+    return simplify(operator, lft, rgt, false); 
+  } 
+
   public Expression simplify() 
   { Expression lsimp = left.simplify();
     Expression rsimp = right.simplify();
@@ -18913,8 +19060,10 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
 
   public Expression substitute(final Expression oldE,
                                final Expression newE)
-  { if (operator.equals("#") || operator.equals("#1") || operator.equals("!") || operator.equals("|A") ||
-        operator.equals("#LC") || operator.equals("|") || operator.equals("|C") || operator.equals("|R"))
+  { if (operator.equals("#") || operator.equals("#1") || 
+        operator.equals("!") || operator.equals("|A") ||
+        operator.equals("#LC") || operator.equals("|") || 
+        operator.equals("|C") || operator.equals("|R"))
     { Expression var = ((BinaryExpression) left).left; 
       Vector vars = oldE.getVariableUses();
       Vector vars1 = newE.getVariableUses(); 
@@ -20522,8 +20671,20 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       { BasicExpression bel = (BasicExpression) left; 
         res.add(bel.getData()); 
       } 
+  
       return res; 
     }   
+
+    if (operator.equals(":") || operator.equals("<:") || 
+        operator.equals("/:") || 
+        operator.equals("/<:"))
+    { if (right instanceof BasicExpression) 
+      { BasicExpression ber = (BasicExpression) right; 
+        res.add(ber.getData()); 
+      } 
+  
+      return res; 
+    } // direct updates  
 
     if (operator.equals("&") || operator.equals("xor"))
     { res = left.writeFrame(); 
@@ -20531,7 +20692,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       return res; 
     } 
 
-    if (operator.equals("#") || operator.equals("#LC") || operator.equals("#1"))
+    if (operator.equals("#") || operator.equals("#LC") || 
+        operator.equals("#1"))
     { res = right.writeFrame();
       if (left instanceof BinaryExpression) 
       { BinaryExpression leftbe = (BinaryExpression) left; 
@@ -20554,6 +20716,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         } 
         return VectorUtil.union(res,wrleft);  
       }
+  
       return res; 
     } 
 
@@ -20590,7 +20753,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
     if (operator.equals("&") || operator.equals("xor"))
     { return VectorUtil.union(left.wr(assocs),right.wr(assocs)); } 
 
-    if (operator.equals("#") || operator.equals("#LC") || operator.equals("#1"))
+    if (operator.equals("#") || operator.equals("#LC") || 
+        operator.equals("#1"))
     { // left is not written if it is preform, abstract class or not a class
       res = right.wr(assocs); 
       if (left instanceof BinaryExpression) 
@@ -21341,6 +21505,9 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
     if ("->at".equals(operator)) 
     { return Expression.simplifyAt(lexpr, rexpr); } 
 
+    if ("let".equals(operator)) 
+    { return Expression.simplifyLet(accumulator, lexpr, rexpr); } 
+
     if ("|C".equals(operator))
     { BinaryExpression beleft = (BinaryExpression) lexpr; 
       Expression lvar = beleft.getLeft(); 
@@ -21756,9 +21923,36 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       res.set("amber", ascore+1);
     } 
 
+    /* int mchain = maximumReferenceChain(); 
+    if (mchain > TestParameters.referenceChainLimit)
+    { oUses.add("!! (LRC) flaw: The expression " + left + " has too many (" + maxleft + ") chained references"); 
+      int ascore = (int) res.get("amber"); 
+      res.set("amber", ascore+1); 
+    } */ 
+
     left.energyUse(res, rUses, aUses); 
     right.energyUse(res, rUses, aUses); 
 
+    if ("let".equals(operator))
+    { if (accumulator == null) 
+      { aUses.add("! >> OCL efficiency smell (OES): Redundant let expression: " + this + "\n");
+        int ascore = (int) res.get("amber"); 
+        res.set("amber", ascore+1);
+      }
+      else 
+      { Vector names = new Vector(); 
+        names.add(accumulator + "");
+        Vector evars = right.variablesUsedIn(names); 
+
+        if (evars.size() == 0) 
+        { aUses.add("! >> OCL efficiency smell (OES): Redundant let expression: " + this + "\n");
+          int ascore = (int) res.get("amber"); 
+          res.set("amber", ascore+1);
+        }
+      }
+    } 
+
+       
     if (("&".equals(operator) || "or".equals(operator)) && 
         synLeft > synRight)
     { aUses.add("! >> OCL efficiency smell (OES): Possibly inefficient execution order: " + this + "\n>> c(left) = " + synLeft + ", c(right) = " + synRight);
@@ -22075,10 +22269,24 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
     return res; 
   } // and the left and right. 
 
+  public int maximumReferenceChain() 
+  { int maxleft = left.maximumReferenceChain();
+
+    if (maxleft > TestParameters.referenceChainLimit)
+    { System.out.println("!! (LRC) flaw: The expression " + left + " has too many (" + maxleft + ") chained references"); } 
+
+    int maxright = right.maximumReferenceChain();
+
+    if (maxright > TestParameters.referenceChainLimit)
+    { System.out.println("!! (LRC) flaw: The expression " + right + " has too many (" + maxright + ") chained references"); } 
+
+    return Math.max(maxleft, maxright); 
+  } 
 
   public int syntacticComplexity() 
   { int res = left.syntacticComplexity();
     res = res + right.syntacticComplexity(); 
+
     if (operator.equals("#") || operator.equals("#1") || 
         operator.equals("#LC") || operator.equals("!") ||
         operator.equals("|") || operator.equals("|R") || 
@@ -22090,6 +22298,13 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         operator.equals("|selectMaximals")
        )
     { return res; }  
+
+    if ("let".equals(operator) && accumulator != null) 
+    { Expression init = accumulator.getInitialExpression(); 
+      if (init != null) 
+      { res = res + init.syntacticComplexity(); } 
+      return res + 2; 
+    } 
 
     if (operator.equals("->iterate"))
     { if (accumulator != null) 
@@ -22111,13 +22326,18 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
              operator.equals("or") || operator.equals("=>"))
     { return left.cyclomaticComplexity() + right.cyclomaticComplexity(); }  
 
-    if (operator.equals("->iterate"))
-    { int res = left.cyclomaticComplexity() + right.cyclomaticComplexity();
+    if (operator.equals("->iterate") || 
+        operator.equals("let"))
+    { int res = 
+                left.cyclomaticComplexity() + 
+                right.cyclomaticComplexity();
+
       if (accumulator != null) 
       { Expression init = accumulator.getInitialExpression(); 
         if (init != null) 
         { res = res + init.cyclomaticComplexity(); } 
       }
+
       return res;  
     } 
 
@@ -22126,7 +22346,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
 
   // assume outermost operator is an exists
   public Expression isExistsForall(Vector foralls, Expression tracest)
-  { if (operator.equals("#") || operator.equals("#LC") || operator.equals("#1"))
+  { if (operator.equals("#") || operator.equals("#LC") || 
+        operator.equals("#1"))
     { Expression rem = right.isExistsForall(foralls, tracest);
       if (rem == null) { return null; }
       else
