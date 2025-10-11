@@ -335,6 +335,13 @@ public void findPlugins()
       "Creates UML/OCL from source Python code");
     fileMenu.add(fromPython);
 
+    JMenuItem fromPlantUMLSource = 
+      new JMenuItem("From PlantUML Source",openIcon);
+    fromPlantUMLSource.addActionListener(this);
+    fromPlantUMLSource.setToolTipText(
+      "Creates UML/OCL from source PlantUML");
+    fileMenu.add(fromPlantUMLSource);
+
     fileMenu.addSeparator(); 
 
     JMenuItem fromCMI = 
@@ -380,6 +387,13 @@ public void findPlugins()
     fromSQL.setToolTipText(
       "Creates UML/OCL from AST produced by ANTLR SQLite parser, in output/ast.txt");
     fileMenu.add(fromSQL);
+
+  /*  JMenuItem fromPlantUML = 
+      new JMenuItem("From PlantUML AST",openIcon);
+    fromPlantUML.addActionListener(this);
+    fromPlantUML.setToolTipText(
+      "Creates UML/OCL from AST produced by ANTLR PlantUML parser, in output/ast.txt");
+    fileMenu.add(fromPlantUML); */ 
 
     fileMenu.addSeparator(); 
 
@@ -825,6 +839,10 @@ public void findPlugins()
     JMenuItem ddepsItem = new JMenuItem("Data dependencies"); 
     ddepsItem.addActionListener(this);
     analyseMenu.add(ddepsItem);
+
+    JMenuItem simulate = new JMenuItem("Simulate"); 
+    simulate.addActionListener(this);
+    analyseMenu.add(simulate);
 
     /* View Menu */ 
     JMenu viewMenu = new JMenu("View"); 
@@ -1438,14 +1456,20 @@ public void findPlugins()
 
     JMenuItem cstlGenerator = new JMenuItem("Use CSTL specification"); 
     cstlGenerator.addActionListener(this);
+    cstlGenerator.setToolTipText(
+      "For code generators in restricted CSTL format for AgileUML, e.g., cgJava8.cstl"); 
     buildMenu.add(cstlGenerator); 
 
     JMenuItem cgtlGenerator = new JMenuItem("Use CGTL specification"); 
     cgtlGenerator.addActionListener(this);
+    cgtlGenerator.setToolTipText(
+      "For code generators in general CSTL format for OCL source"); 
     buildMenu.add(cgtlGenerator); 
 
     JMenuItem cstl4ast = new JMenuItem("Apply CSTL/CGTL to AST"); 
     cstl4ast.addActionListener(this);
+    cstl4ast.setToolTipText(
+      "Apply a CSTL file to output/ast.txt"); 
     buildMenu.add(cstl4ast); 
 
     buildMenu.addSeparator(); 
@@ -1894,6 +1918,11 @@ public void findPlugins()
         ucdArea.loadFromPython(fname);
         saved = true; 
       }
+      else if (label.equals("From PlantUML Source")) 
+      { String fname = JOptionPane.showInputDialog("Enter PlantUML file name: "); 
+        ucdArea.loadFromPlantUML(fname);
+        saved = true; 
+      }
       else if (label.equals("From C AST")) 
       { ucdArea.fromCAST();
         saved = true; 
@@ -1916,6 +1945,10 @@ public void findPlugins()
       }
       else if (label.equals("From SQL AST")) 
       { ucdArea.loadFromSQL();
+        saved = true; 
+      }
+      else if (label.equals("From PlantUML AST")) 
+      { ucdArea.loadFromPlantUML();
         saved = true; 
       }
       else if (label.equals("Random model")) 
@@ -2530,6 +2563,8 @@ public void findPlugins()
       }  
       else if (label.equals("Energy analysis"))
       { ucdArea.energyAnalysis(); }  
+      else if (label.equals("Simulate"))
+      { simulatedExecution(); } 
       else if (label.equals("Clean architecture properties"))
       { ucdArea.cleanArchitectureCheck(); }
       else if (label.equals("Data dependencies"))
@@ -3941,6 +3976,31 @@ public void findPlugins()
         if (vals[i] instanceof Entity)
         { Entity ent = (Entity) vals[i]; 
           ent.makeSingleton(); 
+        } 
+        else 
+        { System.out.println(vals[i] + " is not a class"); }
+      } 
+    } 
+  }
+
+  private void simulatedExecution()
+  { if (listShowDialog == null)
+    { listShowDialog = new ListShowDialog(this);
+      listShowDialog.pack();
+      listShowDialog.setLocationRelativeTo(this); 
+    }
+    listShowDialog.setOldFields(ucdArea.getEntities()); 
+    thisLabel.setText("Select entities to simulate"); 
+    
+    listShowDialog.setVisible(true); 
+
+    Object[] vals = listShowDialog.getSelectedValues();
+    if (vals != null && vals.length > 0)
+    { for (int i = 0; i < vals.length; i++) 
+      { System.out.println(vals[i]);
+        if (vals[i] instanceof Entity)
+        { Entity ent = (Entity) vals[i]; 
+          ucdArea.simulatedExecution(ent); 
         } 
         else 
         { System.out.println(vals[i] + " is not a class"); }

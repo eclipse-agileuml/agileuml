@@ -139,6 +139,51 @@ public class BehaviouralFeature extends ModelElement
     return UnaryExpression.newLambdaUnaryExpression(be,this); 
   } 
 
+  public Expression execute(ModelSpecification sigma, 
+                      ModelState beta,
+                      Vector parValues)
+  { if (activity == null) 
+    { return null; } 
+
+    // return value is that computed by this operation,
+    // if it returns a value. 
+
+    ModelState local = (ModelState) beta.clone();
+ 
+    System.out.println(">> Executing operation " + this + 
+                       " on parameters " + parValues + 
+                       " in environment " + sigma + ", " +
+                       beta); 
+
+    // add the parameters: 
+    for (int i = 0; i < parameters.size(); i++) 
+    { Attribute par = (Attribute) parameters.get(i); 
+      Type typ = par.getType(); 
+      String pname = par.getName(); 
+      if (i < parValues.size())
+      { Expression pval = (Expression) parValues.get(i); 
+        local.addVariable(pname, pval); 
+      } 
+      else if (typ != null) 
+      { Expression def = Type.defaultInitialValueExpression(typ); 
+        local.addVariable(pname, def); 
+      }    
+    } 
+
+    if (resultType != null) 
+    { Expression res = 
+         Type.defaultInitialValueExpression(resultType);
+      local.addVariable("result", res); 
+    } 
+
+    int status = activity.execute(sigma,local); 
+
+    if (resultType != null) 
+    { return local.getVariableValue("result"); } 
+
+    return null; 
+  } 
+
   public void jsClassFromConstructor(Entity ent, Entity cclass, Vector inits, Vector entities) 
   { // For each statement  self.att := expr  in activity
     // make att an attribute of ent, with initialisation expr
@@ -164,8 +209,8 @@ public class BehaviouralFeature extends ModelElement
       Vector calls = 
         Statement.getOperationCalls(activity); 
 
-      System.out.println("^^^^^^^ Operation calls: " + calls); 
-      System.out.println(); 
+      // System.out.println("^^^^^^^ Operation calls: " + calls); 
+      // System.out.println(); 
 
       Vector pars = new Vector(); 
       Vector exprs = new Vector();  
@@ -297,7 +342,7 @@ public class BehaviouralFeature extends ModelElement
           if (calledname.startsWith("initialise"))
           { String superclassName = 
                calledname.substring(10);
-            System.out.println("^^^^^ Superclass: " + superclassName);  
+            // System.out.println("^^^^^ Superclass: " + superclassName);  
             Entity superEnt = 
               (Entity) ModelElement.lookupByName(
                            superclassName, entities); 
@@ -2518,12 +2563,16 @@ public class BehaviouralFeature extends ModelElement
     return res; 
   }         
 
-  public Vector getWriteFrame(Vector assocs)
-  { if (writefr != null) { return writefr; }   // to avoid recursion
+  public Vector getWriteFrame()
+  { if (writefr != null) 
+    { return writefr; }   // to avoid recursion
+
     writefr = new Vector(); 
     Vector res = new Vector(); 
+
     if (post != null) 
-    { res.addAll(post.wr(assocs)); }  
+    { res.addAll(post.writeFrame()); }
+  
     if (activity != null) 
     { res.addAll(activity.writeFrame()); } 
 
@@ -2537,6 +2586,74 @@ public class BehaviouralFeature extends ModelElement
     writefr = res; 
     return res; 
   }         
+
+  public Vector getWriteFrame(Vector assocs)
+  { if (writefr != null) 
+    { return writefr; }   // to avoid recursion
+
+    writefr = new Vector(); 
+    Vector res = new Vector(); 
+
+    if (post != null) 
+    { res.addAll(post.wr(assocs)); }
+  
+    if (activity != null) 
+    { res.addAll(activity.writeFrame()); } 
+
+    // subtract each params name:
+    for (int p = 0; p < parameters.size(); p++) 
+    { String par = "" + parameters.get(p); 
+      res.remove(par); 
+    } 
+
+    // System.out.println("Invocation " + this + " WRITE FRAME= " + res); 
+    writefr = res; 
+    return res; 
+  }         
+
+  public boolean isSideEffecting()
+  { // if there is a object-valued or collection-valued parameter
+    // or if an attribute is written (not a local parameter). 
+
+    Vector writtenVars = new Vector(); 
+    if (post != null) 
+    { writtenVars.addAll(post.writeFrame()); }
+  
+    if (activity != null) 
+    { writtenVars.addAll(activity.writeFrame()); } 
+
+    Vector removals = new Vector(); 
+
+    System.err.println(">> Write frame of " + this + " is " + 
+                       writtenVars); 
+
+    for (int p = 0; p < parameters.size(); p++) 
+    { Attribute par = (Attribute) parameters.get(p); 
+      String pname = par.getName(); 
+      removals.add(pname); 
+
+      if (writtenVars.contains(pname))
+      { Type ptype = par.getType(); 
+        if (Type.isCollectionType(ptype) || 
+            Type.isMapType(ptype) || 
+            Type.isRefType(ptype))
+        { System.err.println("! Warning: operation " + this + 
+             " writes parameter of reference type: " + pname); 
+          return true; 
+        } 
+      } 
+    } 
+
+    writtenVars.removeAll(removals); 
+    if (writtenVars.size() > 0)
+    { System.err.println("! Warning: operation " + this + 
+                     " writes non-local variable(s) " + 
+                     writtenVars); 
+    }     
+    
+    return false; 
+  } 
+
 
   public Statemachine getSm()
   { return sm; } 
@@ -3115,7 +3232,6 @@ public class BehaviouralFeature extends ModelElement
       if (instanceScope == false && entity != null)
       { selfexpr1 = entity.getName() + "." + selfexpr; }
 
-
       if (VectorUtil.containsEqualString(selfexpr, calls) ||
           VectorUtil.containsEqualString(selfexpr1, calls))
       { 
@@ -3218,6 +3334,34 @@ public class BehaviouralFeature extends ModelElement
       if (i < pars.size())
       { Expression arg = (Expression) pars.get(i); 
         arg.formalParameter = par;
+      } 
+      else 
+      { Expression nullInit = 
+          Type.nullInitialValueExpression(pt); 
+        nullInit.formalParameter = par; 
+        extrapars.add(nullInit); 
+      } 
+    } 
+
+    pars.addAll(extrapars); 
+  } // Used in code generation, eg., for Swift. 
+
+  public void setFormalParameters(Vector pars, java.util.Map vartypes)
+  { if (pars == null || parameters == null) 
+    { return; }
+ 
+    Vector extrapars = new Vector(); 
+
+    for (int i = 0; i < parameters.size(); i++) 
+    { Attribute par = (Attribute) parameters.get(i); 
+      Type pt = par.getType(); 
+
+      if (i < pars.size())
+      { Expression arg = (Expression) pars.get(i); 
+        arg.formalParameter = par;
+        if (arg instanceof BasicExpression && 
+            pt != null)
+        { vartypes.put(arg + "", pt); } 
       } 
       else 
       { Expression nullInit = 
@@ -3713,14 +3857,18 @@ public class BehaviouralFeature extends ModelElement
               types,localEntities,contexts,env,localvartypes);
     } 
 
+    System.out.println(); 
     System.out.println(">>> Typed variables = " + 
                        localvartypes); 
+    System.out.println(); 
 
     Type rtype = (Type) localvartypes.get("result"); 
     if ((resultType == null || 
          "OclAny".equals(resultType + "")) && 
         rtype != null) 
-    { resultType = rtype; } 
+    { resultType = rtype;
+      elementType = rtype.getElementType(); 
+    } 
 
     for (int i = 0; i < parameters.size(); i++) 
     { Attribute par = (Attribute) parameters.get(i); 
@@ -4393,7 +4541,7 @@ public class BehaviouralFeature extends ModelElement
 
     if (opuses.contains(entity + "::" + name) && 
         activity != null)
-    { boolean tailrec = Statement.isTailRecursive(this, name, 
+    { boolean tailrec = Statement.isTailRecursion(this, name, 
                                                   activity); 
       System.err.println(); 
 
@@ -4417,6 +4565,7 @@ public class BehaviouralFeature extends ModelElement
         }  
       } 
 
+      System.err.println(); 
       System.err.println(); 
     }
     else if (opuses.contains(entity + "::" + name) && 
@@ -4442,6 +4591,7 @@ public class BehaviouralFeature extends ModelElement
             "!!! Use 'Make operation cached' refactoring"); 
       } 
 
+      System.err.println(); 
       System.err.println(); 
     }	 
 
@@ -4511,6 +4661,7 @@ public class BehaviouralFeature extends ModelElement
     
     out.println("*** Total complexity of operation " + nme + " = " + complexity); 
     out.println(); 
+
     if (cyc > TestParameters.cyclomaticComplexityLimit) 
     { System.err.println("!!! Code smell (CC): high cyclomatic complexity (" + cyc + ") for " + nme);
       System.err.println(">>> Recommend refactoring by splitting operation"); 
@@ -5187,6 +5338,8 @@ public class BehaviouralFeature extends ModelElement
 
     if (isStatic())
     { out.print("    static operation "); } 
+    else if (isAbstract())
+    { out.print("    abstract operation "); } 
     else 
     { out.print("    operation "); } 
 
@@ -5244,6 +5397,8 @@ public class BehaviouralFeature extends ModelElement
 
     if (isStatic())
     { res = "    static" + res; } 
+    else if (isAbstract())
+    { res = "    abstract" + res; } 
     else 
     { res = "   " + res; }
 

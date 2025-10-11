@@ -6,6 +6,7 @@ class OclAttribute
 
   attribute name : String; 
   reference type : OclType;
+  attribute stereotypes : Set(String); 
 
   query getName() : String
   pre: true 
@@ -14,6 +15,19 @@ class OclAttribute
   query getType() : OclType
   pre: true
   post: result = type; 
+
+  operation hasStereotype(s : String) 
+  pre: true
+  post: result = (stereotypes->includes(s)); 
+
+  operation addStereotype(s : String) 
+  pre: true
+  post: stereotypes->includes(s); 
+
+  operation removeStereotype(s : String) 
+  pre: true
+  post: stereotypes->excludes(s); 
+
 }
 
 class OclOperation
@@ -38,7 +52,11 @@ class OclOperation
 
   query getParameters() : Sequence(OclAttribute)
   pre: true
-  post: result = parameters; 
+  post: result = parameters;
+
+  operation invoke(pars : Sequence(OclAny))
+  pre: true
+  post: true;  
 }
 
 class OclType 
@@ -54,6 +72,10 @@ class OclType
   reference innerClasses : Sequence(OclType); 
   reference componentType : Sequence(OclType); 
   reference superclasses : Sequence(OclType); 
+
+  static operation newOclType(nme : String) : OclType
+  pre: true 
+  post: OclType->exists( t | t.name = nme & result = t ); 
   
   query getName() : String
   pre: true 
@@ -106,6 +128,11 @@ class OclType
   post: 
     result = operations - superclasses->collect( sc | sc.getMethods() )->unionAll(); 
 
+  query getMethod(nme : String, types: Sequence(OclType)) : OclOperation
+  pre: true
+  post: result = operations->any( op | op.name = nme & 
+                     types = op.parameters->collect( type )); 
+
   query getConstructors() : Sequence(OclOperation)
   pre: true 
   post: result = constructors;
@@ -127,6 +154,9 @@ class OclType
   post: true; 
 
   static operation removeAttribute(obj : OclAny, att: String) : void
+  pre: true post: true; 
+
+  operation addAttributeToClass(att: String, val : OclAny) : void
   pre: true post: true; 
 
   operation newInstance() : OclAny

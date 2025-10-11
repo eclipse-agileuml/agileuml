@@ -3,7 +3,7 @@ import java.io.*;
 import javax.swing.JOptionPane; 
 
 /******************************
-* Copyright (c) 2003--2024 Kevin Lano
+* Copyright (c) 2003--2025 Kevin Lano
 * This program and the accompanying materials are made available under the
 * terms of the Eclipse Public License 2.0 which is available at
 * http://www.eclipse.org/legal/epl-2.0
@@ -37,20 +37,24 @@ public class ModelSpecification
     return res; 
   } 
 
+  public ObjectSpecification getObjectSpec(String nme)
+  { return (ObjectSpecification) objectmap.get(nme); } 
 
   public void addObject(ObjectSpecification obj) 
   { if (objects.contains(obj)) { } 
     else 
     { objects.add(obj); } 
 	
-    objectmap.put(obj.getName(),obj); 
+    objectmap.put(obj.getName(),obj);
+ 
     if (obj.entity != null) 
-    { Entity ent = obj.entity; 
-      Vector res = (Vector) objectsOfClass.get(ent.getName()); 
+    { Entity ent = obj.entity;
+      String ename = ent.getName();  
+      Vector res = (Vector) objectsOfClass.get(ename); 
       if (res == null) 
       { res = new Vector(); } 
       res.add(obj);
-      objectsOfClass.put(ent.getName(),res);  
+      objectsOfClass.put(ename, res);  
     } 
   } 
 
@@ -82,6 +86,17 @@ public class ModelSpecification
 	return res; 
   }  
 
+  public Expression getObjectAttributeValue(String obj, String att)
+  { ObjectSpecification os = 
+          (ObjectSpecification) objectmap.get(obj);
+
+    if (os != null)
+    { Expression res = os.getOCLValue(att); 
+      return res;
+    } 
+
+    return null;  
+  } 
 
   public void addCorrespondence(ObjectSpecification x, ObjectSpecification y) 
   { correspondence.add(x,y); 

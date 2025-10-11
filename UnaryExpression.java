@@ -382,6 +382,9 @@ public class UnaryExpression extends Expression
   public Vector getParameters() 
   { return new Vector(); } 
 
+  public Expression getInnerObjectRef()
+  { return argument.getInnerObjectRef(); } 
+
   public void setOperator(String op) 
   { operator = op; } 
 
@@ -444,6 +447,19 @@ public class UnaryExpression extends Expression
 
   public boolean isLambdaExpression()
   { return "lambda".equals(operator); } 
+
+  public void refineLambdaParameterType(Type typ)
+  { if (accumulator != null) 
+    { Type oldtype = accumulator.getType(); 
+      if (oldtype == null || "OclAny".equals(oldtype + ""))
+      { if (typ != null && !("OclAny".equals(typ + "")))
+        { accumulator.setType(typ); 
+          type.setKeyType(typ); 
+        } 
+      } 
+    } 
+  } 
+
 
   public boolean isTailRecursion(BehaviouralFeature bf)
   { // bfname does not occur in this 
@@ -756,6 +772,18 @@ public void findClones(java.util.Map clones,
     // ->select(...)->any() is a red flag.  
 
     argument.energyUse(res, rUses, aUses); 
+
+    if (operator.equals("lambda") && 
+        accumulator != null) 
+    { Type typ = accumulator.getType(); 
+      if (typ != null && 
+          typ.complexity() > TestParameters.nestedTypeLimit)
+      { aUses.add("! Warning (MNC) flaw: complex type with complexity " + typ.complexity() + ": " + typ);
+        int ascore = (int) res.get("amber");
+        ascore = ascore + 1;
+        res.set("amber", ascore);
+      } 
+    } 
 
     if (operator.equals("->notEmpty") && 
         argument instanceof BinaryExpression)
@@ -1133,8 +1161,10 @@ public void findClones(java.util.Map clones,
 
       Vector vuses = variablesUsedIn(vars); 
       if (level > 1 && vuses.size() == 0)
-      { System.out.println("!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
+      { System.out.println(); 
+        System.out.println("!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
           "Use Extract local variable to optimise.");
+        System.out.println(); 
         refactorELV = true;  
       }
           
@@ -1146,9 +1176,19 @@ public void findClones(java.util.Map clones,
 
 
   public int syntacticComplexity() 
-  { int res = argument.syntacticComplexity(); 
-    return res + 1; 
+  { int res = argument.syntacticComplexity() + 1; 
+
+    if ("lambda".equals(operator) && accumulator != null) 
+    { Type typ = accumulator.getType(); 
+      if (typ != null) 
+      { res = res + typ.complexity(); } 
+    } 
+ 
+    return res; 
   } 
+
+  public int maximumReferenceChain() 
+  { return argument.maximumReferenceChain(); } 
 
   public int cyclomaticComplexity() 
   { int res = argument.cyclomaticComplexity(); 
@@ -1802,6 +1842,15 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
     return pre + ""; 
   } 
   
+  public Expression evaluate(ModelSpecification sigma, 
+                             ModelState beta)
+  { // Special cases for !e and ?x in sandboxed memory 
+    // space in sigma. 
+
+    Expression pre = argument.evaluate(sigma, beta);
+    return Expression.simplify(operator, pre); 
+  } 
+
   public String updateForm(java.util.Map env, boolean local)
   { String cont = "Controller.inst()"; 
     String pre = argument.queryForm(env,local);
@@ -1816,8 +1865,9 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
       return pre + "." + op + "()";
     } 
 
-    if ("let".equals(operator) && accumulator != null)
+    /* if ("let".equals(operator) && accumulator != null)
     { // let acc : T = init in argument is { acc; argumentUF }
+
       String accname = accumulator.getName(); 
       Expression init = accumulator.getInitialExpression(); 
       Type acctype = accumulator.getType(); 
@@ -1827,7 +1877,7 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
         accname + " = " + init.queryForm(env,local) + ";\n    " +
         argument.updateForm(env,local) + "  }\n"; 
       return res; 
-    } 
+    } */ 
 
     if ("->isDeleted".equals(operator))
     { if (argument.umlkind == CLASSID && 
@@ -1943,7 +1993,7 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
       return pre + "." + op + "()";
     } 
 
-    if ("let".equals(operator) && accumulator != null)
+    /* if ("let".equals(operator) && accumulator != null)
     { // let acc : T = init in argument is { acc; argumentUF }
       String accname = accumulator.getName(); 
       Expression init = accumulator.getInitialExpression(); 
@@ -1954,7 +2004,7 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
         accname + " = " + init.queryFormJava6(env,local) + ";\n    " +
         argument.updateFormJava6(env,local) + "  }\n"; 
       return res; 
-    } 
+    } */ 
 
     if ("->isDeleted".equals(operator))
     { if (argument.umlkind == CLASSID && (argument instanceof BasicExpression) && 
@@ -2228,7 +2278,7 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
                             precopy + ".Count)";
             if (argument.isSequence())
             { return precopy + " = SystemTypes.concatenate(" + subrange1 + ", " + subrange2 + ");"; } 
-            else 
+            else // string
             { return precopy + " = " + subrange1 + " + (" + subrange2 + ");"; }  
           }
         } 
@@ -2413,24 +2463,35 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
   { Vector res = new Vector(); 
  
     if ("->isDeleted".equals(operator))
-    { if (argument.umlkind == CLASSID && (argument instanceof BasicExpression)) 
+    { if (argument instanceof BasicExpression) 
       { BasicExpression arg = (BasicExpression) argument; 
         res.add(arg.getData()); 
-        if (arg.getEntity() != null) 
-        { res.addAll(arg.getEntity().allDataDependents(new Vector())); } 
+
+        if (argument.umlkind == CLASSID && 
+            arg.getEntity() != null) 
+        { Entity argent = arg.getEntity(); 
+          res.addAll(argent.allDataDependents(new Vector())); 
+        } 
+
         return res;  
       } 
+
       String eename = argument.type + ""; 
-      if (argument.isMultiple()) 
+      if (argument.isMultiple() && 
+          argument.elementType != null && 
+          argument.elementType.isEntity()) 
       { 
         eename = argument.elementType + ""; 
+        res.add(eename);
       } 
-      res.add(eename); 
+ 
       res.addAll(argument.wr(new Vector())); 
-      if (argument.elementType != null && argument.elementType.isEntity())
+      if (argument.elementType != null && 
+          argument.elementType.isEntity())
       { res.addAll(argument.elementType.getEntity().allDataDependents(new Vector())); } 
       return res; 
     }
+
     return res; 
   }   // default. lambda should not have a write frame. 
 
@@ -2590,7 +2651,20 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
   { return argument.innermostVariables(); } 
 
   public Vector allAttributesUsedIn()
-  { return argument.allAttributesUsedIn(); } 
+  { Vector res = argument.allAttributesUsedIn(); 
+
+    if (operator.equals("lambda") && 
+        accumulator != null)
+    { Vector removals = new Vector(); 
+      for (int i = 0; i < res.size(); i++) 
+      { if ((accumulator + "").equals(res.get(i) + ""))
+        { removals.add(res.get(i)); } 
+      } 
+      res.removeAll(removals); 
+    } 
+
+    return res; 
+  } 
 
   public Vector allVariableNames()
   { if (operator.equals("lambda"))
@@ -2614,12 +2688,18 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
 
   public Vector getVariableUses()
   { if (operator.equals("lambda"))
-    { Vector ss = argument.getVariableUses(); 
+    { Vector ss = argument.getVariableUses();
+ 
       Vector removals = new Vector(); 
       if (accumulator != null)
-      { removals.add(new BasicExpression(accumulator)); } 
-    
-      ss.removeAll(removals);
+      { for (int i = 0; i < ss.size(); i++) 
+        { Expression e1 = (Expression) ss.get(i); 
+          if ((e1 + "").equals(accumulator + ""))
+          { removals.add(e1); } 
+        } 
+        ss.removeAll(removals);
+      }
+
       return ss; 
     } 
     
@@ -2779,10 +2859,35 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
       Vector env1 = new Vector(); 
       env1.addAll(env); 
       env1.add(accumulator); 
-      boolean rtc = argument.typeCheck(typs,ents,context,env1);
-      type = new Type("Function",accumulator.getType(),argument.type);
-      elementType = argument.elementType; 
+      boolean rtc = 
+         argument.typeCheck(typs,ents,context,env1);
+      type = new Type("Function",
+                      accumulator.getType(),
+                      argument.type);
+      elementType = argument.elementType;
+
+      // if there are variables in argument other than 
+      // accumulator, issue a warning. 
+
+      Vector allvars = argument.getVariableUses(); 
+      for (int i = 0; i < allvars.size(); i++) 
+      { Expression var = (Expression) allvars.get(i); 
+        if ((var + "").equals(accumulator + "")) { } 
+        else 
+        { System.out.println("!Warning: " + var + " used in lambda body, only " + accumulator + " should be used"); } 
+      } 
+
+      Vector allatts = argument.allAttributesUsedIn(); 
+      for (int i = 0; i < allatts.size(); i++) 
+      { String var = "" + allatts.get(i); 
+        if (var.equals(accumulator + "")) { } 
+        else 
+        { System.out.println("!Warning: " + var + " used in lambda body, only " + accumulator + " should be used"); } 
+      } 
+
       System.out.println(">>> Typechecked lambda expression: " + rtc + " " + type); 
+      System.out.println(); 
+
       return true; 
     }
 
@@ -2857,18 +2962,25 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
           (argumentType.isMapType() || 
            argumentType.isStringType()))
       { type = argumentType; } 
+      else if (argumentType != null && 
+               argumentType.elementType != null) 
+      { type = argumentType.elementType; } 
       else 
       { type = argument.elementType; }
- 
+
+      
       if (type != null && 
-          (type.isCollectionType() || 
-           type.isMapType()) 
-         )
+          type.isStringType())
+      { elementType = new Type("String", null); } 
+      else if (type != null && 
+        (type.isCollectionType() || 
+         type.isMapType()) 
+        )
       { multiplicity = ModelElement.MANY; 
         elementType = type.getElementType(); 
       } 
       else if (type == null)
-      { System.err.println("!! ERROR: No type for: " + this); 
+      { System.err.println("!! ERROR: Argument type is " + argumentType + " No type for: " + this); 
         type = new Type("OclAny", null); 
       } 
       else 
@@ -2959,6 +3071,8 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
           type.keyType = argument.elementType.getKeyType();  
           type.elementType = elementType; 
         }
+
+        type.setSorted(argument.elementType.isSorted()); 
       } 
       else 
       { elementType = argument.elementType; } 
@@ -2980,6 +3094,10 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
           type.keyType = argument.elementType.getKeyType();  
           type.elementType = elementType; 
         }
+
+        if (argument.elementType.isSorted())
+        { type.setSorted(true); } 
+        // type is sorted if the elements are
       }
       else 
       { elementType = argument.elementType; }  
@@ -3444,12 +3562,19 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
     if (operator.equals("->last") || 
         operator.equals("->first"))
     { type = argument.elementType; 
-      if (type != null && type.isCollectionType())
+
+      if (type == null && argument.getType() != null)
+      { Type argTyp = argument.getType(); 
+        type = argTyp.getElementType(); 
+      } 
+
+      if (type != null && (type.isCollectionType() || 
+                           type.isMapType()))
       { multiplicity = ModelElement.MANY; 
         elementType = type.getElementType(); 
       } 
       else if (type == null)
-      { System.err.println("!! ERROR: No type for: " + this); 
+      { System.err.println("!! ERROR: Argument type is " + argument.getType() + " No type for: " + this); 
         type = new Type("OclAny", null); 
       } 
       else 
@@ -3670,6 +3795,8 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
           type.keyType = argument.elementType.getKeyType();  
           type.elementType = elementType; 
         }
+
+        type.setSorted(argument.elementType.isSorted()); 
       } 
       else 
       { elementType = argument.elementType; } 
@@ -3701,6 +3828,8 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
           type.keyType = argument.elementType.getKeyType();  
           type.elementType = elementType; 
         }
+
+        type.setSorted(argument.elementType.isSorted()); 
       }
       else 
       { elementType = argument.elementType; }  
@@ -5515,18 +5644,21 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
       return "-" + qf; 
     } 
 
+    if (operator.equals("+"))
+    { return qf; } 
+
     if (operator.equals("?"))
     { String res = qf; 
       if (argument.isCollection() || 
           argument.isFunctionType() || 
           argument.isClassEntityType())
-      { } 
+      { } // already its own reference
       else 
       { res = "&" + qf; } 
 
       if (needsBracket) 
       { res = "(" + res + ")"; }
-	  return res;  
+      return res;  
     } 
 
     if (operator.equals("!"))
@@ -5542,7 +5674,7 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
 
       if (needsBracket) 
       { res = "(" + res + ")"; }
-	  return res;  
+      return res;  
     } // functions, classes, collections, maps have ?x = x
 
     if (operator.equals("not"))
@@ -5580,6 +5712,9 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
     { if (argument.isRef())
       { return "SystemTypes.asSequence(" + qf + ")"; }
       
+      if (argument.isSet())
+      { return "SystemTypes.asSequence(" + qf + ")"; }
+      
       if (argument.isMap())
       { return "SystemTypes.asSequence((Hashtable) " + qf + ")"; } 
        
@@ -5590,8 +5725,12 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
         type.isSet())
     { return qf; } 
 
+    if (operator.equals("->asSet") && type != null && 
+        type.isSequence())
+    { return "SystemTypes.asSet(" + qf + ")"; } 
+
     if (operator.equals("->asBag"))
-    { return "SystemTypes.sort(" + qf + ")"; } 
+    { return "SystemTypes.asBag(" + qf + ")"; } 
 
     if (operator.equals("->asReference"))
     { return "SystemTypes.asReference(" + qf + ")"; } 
@@ -5644,17 +5783,22 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
     if ("->copy".equals(operator))
     { if (type == null) 
       { return qf; } 
+
       if (type.isEntity())
       { String tcs = type.getCSharp(); 
         return "((" + tcs + ")" + qf + ".MemberwiseClone())"; 
       }
+
       String tname = type.getName(); 
       if ("String".equals(tname))
       { return "(\"\"" + qf + ")"; } 
+
       if ("Set".equals(tname) || "Sequence".equals(tname))
       { return "SystemTypes.copyCollection(" + qf + ")"; } 
+
       if ("Map".equals(tname))
       { return "SystemTypes.copyMap(" + qf + ")"; } 
+
       return qf; 
     }    
 
@@ -5677,6 +5821,16 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
         argument.elementType.isMap())
     { return "SystemTypes.unionAllMap(" + qf + ")"; } 
 
+    if (operator.equals("->unionAll") && 
+        argument.elementType != null &&
+        argument.elementType.isSortedSet())
+    { return "SystemTypes.unionAllSortedSet(" + qf + ")"; } 
+
+    if (operator.equals("->unionAll") && 
+        argument.elementType != null &&
+        argument.elementType.isSet())
+    { return "SystemTypes.unionAllSet(" + qf + ")"; } 
+
     if (operator.equals("->unionAll"))
     { return "SystemTypes.unionAll(" + qf + ")"; } 
     
@@ -5685,24 +5839,40 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
         argument.elementType.isMap())
     { return "SystemTypes.intersectAllMap(" + qf + ")"; } 
 
+    if (operator.equals("->intersectAll") && 
+        argument.elementType != null &&
+        argument.elementType.isSortedSet())
+    { return "SystemTypes.intersectAllSortedSet(" + qf + ")"; } 
+
+    if (operator.equals("->intersectAll") && 
+        argument.elementType != null &&
+        argument.elementType.isSet())
+    { return "SystemTypes.intersectAllSet(" + qf + ")"; } 
+
     if (operator.equals("->intersectAll"))
     { return "SystemTypes.intersectAll(" + qf + ")"; } 
 
-    if (operator.equals("->flatten")) 
-    { if (Type.isSequenceType(argument.type))
+    if (operator.equals("->flatten") && 
+        argument.elementType != null) 
+    { Type et = argument.elementType;
+ 
+      if (Type.isSequenceType(et))
       { return "SystemTypes.concatenateAll(" + qf + ")"; } 
-      else if (Type.isSetType(argument.type))
-      { return "SystemTypes.unionAll(" + qf + ")"; } 
-      else if (Type.isMapType(argument.type))
+      else if (Type.isSetType(et))
+      { return "SystemTypes.unionAllSet(" + qf + ")"; } 
+      else if (Type.isMapType(et))
       { return "SystemTypes.unionAllMap(" + qf + ")"; } 
+
       return qf; 
     } // but only goes one level down. 
+    else if (operator.equals("->flatten"))
+    { return qf; } 
 
     String pre = qf;
     String data = operator; 
 	
-	if (operator.startsWith("->"))
-	{ data = operator.substring(2,operator.length()); }
+    if (operator.startsWith("->"))
+    { data = operator.substring(2,operator.length()); }
 
     if (extensionoperators.containsKey(operator))
     { String op = operator;
@@ -5745,18 +5915,23 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
     else if (data.equals("trim"))
     { return pre + ".Trim()"; } 
     else if (data.equals("sum"))
-    { Type sumtype = argument.getElementType();  // int, double, long, String 
+    { Type sumtype = argument.getElementType();  
+      // must be int, double, long, String
+ 
       if (sumtype == null) 
       { JOptionPane.showMessageDialog(null, 
               "No type for: " + this, 
               "Type error", JOptionPane.ERROR_MESSAGE);
         return ""; 
       }
+
       String tname = sumtype.getName(); 
       return "SystemTypes.sum" + tname + "(" + pre + ")"; 
     } 
     else if (data.equals("prd"))
-    { Type sumtype = argument.getElementType();  // int, double, long 
+    { Type sumtype = argument.getElementType();  
+      // must be int, double, long
+ 
       if (sumtype == null) 
       { JOptionPane.showMessageDialog(null, 
                      "No type for: " + this, 
@@ -5770,14 +5945,27 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
     { return "(" + pre + ".Count == 0)"; } 
     else if (data.equals("notEmpty"))
     { return "(" + pre + ".Count != 0)"; } 
-    else if (data.equals("reverse") || data.equals("sort") ||
-             data.equals("asSet")) 
-    { return "SystemTypes." + data + "(" + pre + ")"; } 
+    else if (data.equals("reverse"))
+    { if (argument.isSet() || argument.isMap())
+      { return pre; }
+      return "SystemTypes.reverse(" + pre + ")";
+    }  
+    else if (data.equals("sort"))
+    { if (argument.isSet() || argument.isMap())
+      { return pre; }
+      return "SystemTypes.sort(" + pre + ")";
+    }
+    else if (data.equals("asSet")) 
+    { if (argument.isSet() || argument.isMap())
+      { return pre; }
+      return "SystemTypes.asSet(" + pre + ")"; 
+    } 
     else if (data.equals("keys"))
     { return "SystemTypes.mapKeys(" + pre + ")"; }
     else if (data.equals("values"))
     { return "SystemTypes.mapValues(" + pre + ")"; }
-    else if (data.equals("closure") && (argument instanceof BasicExpression))
+    else if (data.equals("closure") && 
+             (argument instanceof BasicExpression))
     { String rel = ((BasicExpression) argument).data;
       Expression arg = ((BasicExpression) argument).objectRef;  
       if (entity == null) 
@@ -5788,7 +5976,8 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
       { return "SystemTypes.closure" + entity.getName() + rel + "(new ArrayList())"; }  
       return "SystemTypes.closure" + entity.getName() + rel + "(" + arg.queryFormCSharp(env,local) + ")";
     } 
-    else if (argument.type != null && "String".equals("" + argument.getType()))
+    else if (argument.type != null && 
+             "String".equals("" + argument.getType()))
     { // last,first,front,tail on strings
       if (data.equals("first") || data.equals("any"))
       { return pre + ".Substring(0,1)"; } 
@@ -5800,7 +5989,8 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
       { return pre + ".Substring(1," + pre + ".Length-1)"; } 
     } 
     else if (data.equals("max") || data.equals("min") ||
-             data.equals("any") || data.equals("last") || data.equals("first"))
+             data.equals("any") || data.equals("last") || 
+             data.equals("first"))
     { Type et = argument.elementType; 
       if (et != null) 
       { if ("String".equals("" + et))
@@ -5809,7 +5999,7 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
         { return "((" + et + ") SystemTypes." + data + "(" + pre + "))"; }
         else if (Type.isPrimitiveType(et))
         { return unwrapCSharp("SystemTypes." + data + "(" + pre + ")"); } 
-        else 
+        else // sequences and sorted sets
         { String elemTyp = et.getCSharp(); 
           return "((" + elemTyp + ") SystemTypes." + data + "(" + pre + "))"; 
         } 
@@ -6906,7 +7096,8 @@ private BExpression subcollectionsBinvariantForm(BExpression bsimp)
     { out.println(id + ".elementType = " + tname); } 
 
     out.println(id + ".needsBracket = " + needsBracket); 
-    out.println(id + ".umlKind = " + umlkind); 
+    out.println(id + ".umlKind = " + umlkind);
+ 
     if (accumulator != null) 
     { out.println(id + ".variable = \"" + accumulator.getName() + "\""); 
       Type vtype = accumulator.getType(); 
@@ -7042,12 +7233,14 @@ private BExpression subcollectionsBinvariantForm(BExpression bsimp)
 
   public Expression simplify()
   { Expression argsimp = argument.simplify(); 
+
     if ("->size".equals(operator))
     { return simplifySize(argsimp); } 
+
     UnaryExpression clne = (UnaryExpression) clone(); 
     clne.argument = argsimp; 
     return clne; 
-  } 
+  } // also let x : T = e in expr when x not occuring in expr
 
 
   public Expression filter(final Vector vars)
@@ -7141,20 +7334,24 @@ private BExpression subcollectionsBinvariantForm(BExpression bsimp)
       if ((argument + "").equals(right + ""))  // l : e & e->isDeleted()
       { return true; } 
     } 
+
     if ("->isDeleted".equals(operator) && op.equals("->includes"))
     { if ((argument + "").equals(right + ""))   // e->includes(l) & l->isDeleted()
       { return true; } 
       if ((argument + "").equals(left + ""))  // e->includes(r) & e->isDeleted()
       { return true; } 
     } 
+
     if ("->isEmpty".equals(operator) && op.equals(":"))
     { if ((argument + "").equals(right + ""))  // l : e & e->isEmpty()
       { return true; } 
     } 
+
     if ("->isEmpty".equals(operator) && op.equals("->includes"))
     { if ((argument + "").equals(left + ""))  // e->includes(l) & e->isEmpty()
       { return true; } 
     } 
+
     return false; 
   } 
 

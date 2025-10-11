@@ -297,7 +297,7 @@ class MatrixLib_Aux
 
   public static ArrayList<Double> collect_16(Collection<Object> _l)
   { // Implements: Sequence{}->collect( object_16_xx | 0.0 )
-   ArrayList<Double> _results_16 = new ArrayList<Double>();
+    ArrayList<Double> _results_16 = new ArrayList<Double>();
     for (Object _i : _l)
     { Object object_16_xx = (Object) _i;
      _results_16.add(new Double(0.0));
@@ -307,10 +307,20 @@ class MatrixLib_Aux
 
   public static ArrayList<ArrayList<Object>> collect_17(Collection<Object> _l,double x)
   { // Implements: m->collect( _r | MatrixLib.elementwiseMult(_r->oclAsType(Sequence),x) )
-   ArrayList<ArrayList<Object>> _results_17 = new ArrayList<ArrayList<Object>>();
+    ArrayList<ArrayList<Object>> _results_17 = new ArrayList<ArrayList<Object>>();
     for (Object _i : _l)
     { Object _r = (Object) _i;
      _results_17.add(MatrixLib.elementwiseMult(((ArrayList) _r),x));
+    }
+    return _results_17;
+  }
+
+  public static ArrayList<ArrayList<Object>> collect_Power(Collection<Object> _l,double x)
+  { // Implements: m->collect( _r | MatrixLib.elementwisePower(_r->oclAsType(Sequence),x) )
+   ArrayList<ArrayList<Object>> _results_17 = new ArrayList<ArrayList<Object>>();
+    for (Object _i : _l)
+    { Object _r = (Object) _i;
+     _results_17.add(MatrixLib.elementwisePower(((ArrayList) _r),x));
     }
     return _results_17;
   }
@@ -667,15 +677,13 @@ else {      }
     return dmat;
   }
 
-    public static ArrayList elementwiseMult(ArrayList m,double x)
+  public static ArrayList elementwiseMult(ArrayList m,double x)
   { ArrayList result;
-if ((m).size() == 0)
-{     return (new ArrayList<Object>()); }
+    if ((m).size() == 0) 
+    { return (new ArrayList<Object>()); }
 
-
-  if ((((Object) m.get(1 - 1)) instanceof ArrayList))
-{     return MatrixLib_Aux.collect_17(m,x); }
-
+    if ((((Object) m.get(1 - 1)) instanceof ArrayList))
+    { return MatrixLib_Aux.collect_17(m,x); }
 
     ArrayList<Double> dmat = MatrixLib_Aux.collect_16((new ArrayList<Object>()));
 
@@ -685,15 +693,32 @@ if ((m).size() == 0)
     { Object z = (Object) _range9.get(_i8);
       double y = ((double) z);
 
-    dmat = Ocl.append(dmat,y * x);
+      dmat = Ocl.append(dmat,y * x);
+    }
 
-
+    return dmat;
   }
-      return dmat;
 
+  public static ArrayList elementwisePower(ArrayList m,double x)
+  { ArrayList result;
+    if ((m).size() == 0) 
+    { return (new ArrayList<Object>()); }
 
+    if ((((Object) m.get(1 - 1)) instanceof ArrayList))
+    { return MatrixLib_Aux.collect_Power(m,x); }
 
+    ArrayList<Double> dmat = MatrixLib_Aux.collect_16((new ArrayList<Object>()));
 
+    ArrayList<Object> _range9 = new ArrayList<Object>();
+    _range9.addAll(m);
+    for (int _i8 = 0; _i8 < _range9.size(); _i8++)
+    { Object z = (Object) _range9.get(_i8);
+      double y = ((double) z);
+
+      dmat = Ocl.append(dmat, Math.pow(y,x));
+    }
+
+    return dmat;
   }
 
 

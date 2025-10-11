@@ -54,6 +54,10 @@ public class ConditionalExpression extends Expression
   public Vector getParameters() 
   { return new Vector(); } 
 
+  public Expression getInnerObjectRef()
+  { return this; } 
+
+
   public Expression transformPythonSelectExpressions()
   { Expression tqf = test.transformPythonSelectExpressions();
     Expression lqf = ifExp.transformPythonSelectExpressions();
@@ -292,6 +296,8 @@ public class ConditionalExpression extends Expression
       res.set("amber", ascore+1);
     } 
 
+    this.maximumReferenceChain(); 
+
     test.energyUse(res,rUses,oUses); 
     ifExp.energyUse(res,rUses,oUses); 
     elseExp.energyUse(res,rUses,oUses);
@@ -396,6 +402,13 @@ public class ConditionalExpression extends Expression
     res = res + ifExp.syntacticComplexity(); 
     res = res + elseExp.syntacticComplexity(); 
     return res + 1; 
+  } 
+
+  public int maximumReferenceChain()
+  { int res = test.maximumReferenceChain(); 
+    res = Math.max(res, ifExp.maximumReferenceChain()); 
+    res = Math.max(res, elseExp.maximumReferenceChain()); 
+    return res; 
   } 
 
 public void findClones(java.util.Map clones, String rule, String op)

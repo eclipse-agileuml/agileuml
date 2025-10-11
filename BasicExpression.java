@@ -316,6 +316,9 @@ class BasicExpression extends Expression
     { type = new Type(obj.getEntity());
       elementType = type; 
     } 
+    else 
+    { type = new Type("OclAny", null); } 
+
     // multiplicity = ModelElement.MANY; 
     umlkind = VALUE; 
   } 
@@ -681,6 +684,17 @@ class BasicExpression extends Expression
     return res; 
   } 
 
+  public static BasicExpression newQueryCallBasicExpression(
+                     String f, Expression obj, Vector pars) 
+  { BasicExpression res = new BasicExpression(f);
+    res.setObjectRef(obj);  
+    res.umlkind = QUERY;
+    res.parameters = new Vector();
+    res.parameters.addAll(pars);  
+    res.isEvent = true; 
+    return res; 
+  } 
+
   public static BasicExpression newCallBasicExpression(String f, Expression obj) 
   { BasicExpression res = new BasicExpression(f);
     res.setObjectRef(obj);  
@@ -779,6 +793,19 @@ class BasicExpression extends Expression
     return res; 
   } 
 
+  public static BasicExpression 
+     newStaticQueryCallBasicExpression(
+                        String f, Expression obj, Vector pars) 
+  { BasicExpression res = new BasicExpression(f);
+    obj.umlkind = CLASSID; 
+    res.setObjectRef(obj);  
+    res.umlkind = QUERY;
+    res.isStatic = true; 
+    res.isEvent = true; 
+    res.parameters = pars; 
+    return res; 
+  } 
+
   public static BasicExpression newStaticCallBasicExpression(
                       String f, String arg, Expression par) 
   { Vector pars = new Vector(); 
@@ -809,6 +836,22 @@ class BasicExpression extends Expression
     return res; 
   } 
 
+ public static BasicExpression 
+           newStaticQueryCallExpression(
+                      String f, String arg, Expression par) 
+  { Vector pars = new Vector(); 
+    pars.add(par); 
+    BasicExpression res = new BasicExpression(f);
+    BasicExpression obj = new BasicExpression(arg); 
+    obj.umlkind = CLASSID; 
+    res.setObjectRef(obj);  
+    res.umlkind = QUERY;
+    res.isStatic = true; 
+    res.isEvent = true; 
+    res.parameters = pars; 
+    return res; 
+  } 
+
   public static BasicExpression newStaticCallBasicExpression(
                String f, Expression obj, Expression par) 
   { Vector pars = new Vector(); 
@@ -817,6 +860,21 @@ class BasicExpression extends Expression
     obj.umlkind = CLASSID; 
     res.setObjectRef(obj);  
     res.umlkind = UPDATEOP;
+    res.isStatic = true; 
+    res.isEvent = true; 
+    res.parameters = pars; 
+    return res; 
+  } 
+
+  public static BasicExpression 
+       newStaticQueryCallBasicExpression(
+               String f, Expression obj, Expression par) 
+  { Vector pars = new Vector(); 
+    pars.add(par); 
+    BasicExpression res = new BasicExpression(f);
+    obj.umlkind = CLASSID; 
+    res.setObjectRef(obj);  
+    res.umlkind = QUERY;
     res.isStatic = true; 
     res.isEvent = true; 
     res.parameters = pars; 
@@ -846,6 +904,20 @@ class BasicExpression extends Expression
     obj.umlkind = CLASSID; 
     res.setObjectRef(obj);  
     res.umlkind = UPDATEOP;
+    res.isStatic = true; 
+    res.isEvent = true; 
+    res.parameters = pars; 
+    return res; 
+  } 
+
+  public static BasicExpression 
+       newStaticQueryCallBasicExpression(
+               String f, String obj, Vector pars) 
+  { BasicExpression res = new BasicExpression(f);
+    BasicExpression objx = new BasicExpression(obj); 
+    objx.umlkind = CLASSID; 
+    res.setObjectRef(objx);  
+    res.umlkind = QUERY;
     res.isStatic = true; 
     res.isEvent = true; 
     res.parameters = pars; 
@@ -2473,6 +2545,16 @@ class BasicExpression extends Expression
     { ((BasicExpression) objectRef).setInnerObjectRef(e); } 
   }  
 
+  public Expression getInnerObjectRef() 
+  { if (objectRef == null) 
+    { return this; }
+    
+    if (objectRef instanceof BasicExpression)
+    { return ((BasicExpression) objectRef).getInnerObjectRef(); }
+
+    return this;  
+  }  
+
   public void setArrayIndex(Expression ind)
   { arrayIndex = ind; } 
 
@@ -2534,7 +2616,7 @@ class BasicExpression extends Expression
   public String toAST() 
   { String res = "(OclBasicExpression ";
     if (objectRef != null)
-    { res = res + objectRef.toAST() + " . " + data; } 
+    { res = res + objectRef.toAST() + " . (OclBasicExpression " + data + ")"; } 
     else 
     { res = res + data; } 
 
@@ -3544,7 +3626,7 @@ class BasicExpression extends Expression
       return true;
     }
 
-    if (Expression.isLong(data))
+    if (Expression.isLongValue(data))
     { type = new Type("long",null);
       elementType = type; 
       entity = null;
@@ -3555,7 +3637,7 @@ class BasicExpression extends Expression
       return true;
     }
 
-    if (isDouble(data))
+    if (Expression.isDoubleValue(data))
     { type = new Type("double",null);
       elementType = type; 
       entity = null;
@@ -3565,7 +3647,7 @@ class BasicExpression extends Expression
       return true;
     }
 
-    if (isString(data))
+    if (Expression.isStringValue(data))
     { type = new Type("String",null);
       elementType = type; 
       entity = null;
@@ -3751,7 +3833,7 @@ class BasicExpression extends Expression
               "Type warning", JOptionPane.WARNING_MESSAGE); 
           }  
 
-          bf.setFormalParameters(parameters); 
+          bf.setFormalParameters(parameters, vartypes); 
           System.out.println("** Setting formal parameters of " + this);
 
           type = bf.getResultType(); 
@@ -3862,6 +3944,7 @@ class BasicExpression extends Expression
         !data.equals("excludingSubrange") && 
         !data.equals("setSubrange") && 
         !(data.equals("replace")) && 
+        !(data.equals("split")) && 
         !(data.equals("replaceFirstMatch")) && 
         !(data.equals("replaceAll")) && 
         !(data.equals("replaceAllMatches")) && 
@@ -3879,7 +3962,7 @@ class BasicExpression extends Expression
         bf = e.getDefinedOperation(data,parameters);
   
         if (bf != null) 
-        { System.out.println("*>>* Type of " + data + " is operation, of class: " + e);
+        { System.out.println("*>>* Type of " + data + " is operation, of class: " + e + " result type = " + bf.getType() + " " + bf.getElementType());
           entity = e;
           if (bf.parametersMatch(parameters)) { } 
           else 
@@ -3892,7 +3975,7 @@ class BasicExpression extends Expression
           System.out.println("** Setting formal parameters of " + data + " operation: " + parameters);
           System.out.println(); 
 
-          bf.setFormalParameters(parameters); 
+          bf.setFormalParameters(parameters, vartypes); 
 
           if (bf.isQuery())
           { umlkind = QUERY; 
@@ -3956,7 +4039,7 @@ class BasicExpression extends Expression
             { type = bf.getResultType(); 
               elementType = bf.getElementType(); 
             
-              bf.setFormalParameters(parameters); 
+              bf.setFormalParameters(parameters, vartypes); 
 
               if (bf.isQuery())
               { umlkind = QUERY; }
@@ -4235,6 +4318,25 @@ class BasicExpression extends Expression
         type = par1.elementType; // Type is the casted type
         elementType = type; 
       } 
+      else if (data.equals("split"))
+      { type = new Type("Sequence", null); 
+        elementType = new Type("String", null); 
+        type.elementType = elementType;
+
+        if (objectRef.isString())
+        { } 
+        else 
+        { System.err.println("! objectRef of " + this +
+              " must be string");
+          objectRef.setType(new Type("String", null)); 
+        }  
+
+        if (objectRef instanceof BasicExpression) 
+        { vartypes.put(
+              ((BasicExpression) objectRef).basicString(),
+              objectRef.getType());
+        }  
+      }  
       else if (data.equals("subrange"))
       { // 3 cases - Integer.subrange, 
         // str.subrange, col.subrange
@@ -4931,7 +5033,7 @@ class BasicExpression extends Expression
       return true;
     } // double values that represent invalid doubles
 
-    if (isInteger(data))
+    if (Expression.isIntegerValue(data))
     { type = new Type("int",null);
       elementType = type; 
       entity = null;
@@ -4942,7 +5044,7 @@ class BasicExpression extends Expression
       return true;
     }
 
-    if (Expression.isLong(data))
+    if (Expression.isLongValue(data))
     { type = new Type("long",null);
       elementType = type; 
       entity = null;
@@ -4953,7 +5055,7 @@ class BasicExpression extends Expression
       return true;
     }
 
-    if (isDouble(data))
+    if (Expression.isDoubleValue(data))
     { type = new Type("double",null);
       elementType = type; 
       entity = null;
@@ -4963,7 +5065,7 @@ class BasicExpression extends Expression
       return true;
     }
 
-    if (isString(data))
+    if (Expression.isStringValue(data))
     { type = new Type("String",null);
       elementType = type; 
       entity = null;
@@ -5649,7 +5751,7 @@ class BasicExpression extends Expression
         !data.equals("setSubrange") && 
         !data.equals("insertAt") && 
         !data.equals("insertInto") && 
-        // !(data.equals("split")) && 
+        !(data.equals("split")) && 
         !(data.equals("replace")) && 
         !(data.equals("replaceFirstMatch")) && 
         !(data.equals("replaceAll")) && 
@@ -5662,14 +5764,14 @@ class BasicExpression extends Expression
       // the objectRef, or of an ancestor of it. 
       BehaviouralFeature bf; 
 
-
       for (int i = 0; i < context.size(); i++) 
       { Entity e = (Entity) context.get(i); 
         bf = e.getDefinedOperation(data,parameters);
   
         if (bf != null) 
-        { System.out.println("** Type of " + data + " is operation, of: " + e);
+        { System.out.println("** Type of " + data + " is operation, of: " + e + " result type " + bf.getType() + " " + bf.getElementType());
           entity = e;
+
           if (bf.parametersMatch(parameters)) { } 
           else 
           { JOptionPane.showMessageDialog(null, 
@@ -5850,12 +5952,19 @@ class BasicExpression extends Expression
         return true;  
       } 
 
+      if (data.equals("split"))
+      { type = new Type("Sequence", null); 
+        elementType = new Type("String", null); 
+        type.elementType = elementType; 
+        return true; 
+      } 
+
       if (data.equals("toLong") || data.equals("gcd"))
       { type = new Type("long", null); 
         elementType = type; 
       } 
       else if (data.equals("size") || 
-               data.equals("floor") || data.equals("count") ||
+          data.equals("floor") || data.equals("count") ||
           data.equals("toInteger") || 
           data.equals("indexOf") || 
           data.equals("ceil") || data.equals("round"))
@@ -6667,7 +6776,7 @@ class BasicExpression extends Expression
     { Entity e = (Entity) entities.get(i); 
       BehaviouralFeature bf = e.getOperation(data);  
       if (bf != null) 
-      { System.out.println("**Type of " + data + " is operation, of: " + e);
+      { System.out.println("**Type of " + data + " is operation, of: " + e + " type: " + bf.getType() + " " + bf.getElementType());
         entity = e;
         if (bf.isQuery())
         { umlkind = QUERY; 
@@ -7053,16 +7162,23 @@ class BasicExpression extends Expression
       { Expression se = buildSetExpression(data); 
         if (arrayIndex != null)
         { String ind = arrayIndex.queryForm(env,local); 
-          String indopt = evaluateString("-",ind,"1"); 
+          String indopt = 
+                    Expression.evaluateString("-",ind,"1"); 
           if (se.elementType != null)
           { if (Type.isPrimitiveType(se.elementType))
-            { return se.unwrap(se.queryForm(env,local) + ".get(" + indopt + ")"); }
+            { return se.unwrap(se.queryForm(env,local) + 
+                               ".get(" + indopt + ")"); 
+            }
             else 
             { String jtype = se.elementType.getJava(); 
-              return "((" + jtype + ") " + se.queryForm(env,local) + ".get(" + indopt + "))"; 
+              return "((" + jtype + ") " + 
+                se.queryForm(env,local) + 
+                ".get(" + indopt + "))"; 
             } 
           }  
-          return se.queryForm(env,local) + ".get(" + indopt + ")";
+
+          return se.queryForm(env,local) + 
+                 ".get(" + indopt + ")";
         }
         return se.queryForm(env,local); 
       } 
@@ -7071,7 +7187,8 @@ class BasicExpression extends Expression
 
       if (isString(data) && arrayIndex != null)
       { String ind = arrayIndex.queryForm(env,local); 
-        String indopt = evaluateString("-",ind,"1"); 
+        String indopt = 
+                  Expression.evaluateString("-",ind,"1"); 
         return "(\"" + "\" + " + data + ".charAt(" + indopt + "))"; 
       } 
 
@@ -7102,14 +7219,16 @@ class BasicExpression extends Expression
       else // entity == null) 
       if (arrayIndex != null)
       { String ind = arrayIndex.queryForm(env,local); 
-        String indopt = evaluateString("-",ind,"1"); 
+        String indopt = 
+                  Expression.evaluateString("-",ind,"1"); 
         if (type != null)
         { if (variable != null && "String".equals(variable.getType() + ""))
           { return "(" + data + ".charAt(" + indopt + ") + \"\")"; } 
           if (arrayIndex.type != null && arrayIndex.type.getName().equals("int"))
 		  // if (Type.isPrimitiveType(type))
           { return unwrap(data + ".get(" + indopt + ")"); }
-          else if (arrayIndex.type != null && arrayIndex.type.getName().equals("String"))
+          else if (arrayIndex.type != null && 
+                   arrayIndex.type.getName().equals("String"))
           { return unwrap(data + ".get(" + ind + ")"); }
 		   
           String jType = type.getJava(); 
@@ -7461,7 +7580,9 @@ class BasicExpression extends Expression
             String ind = arrayIndex.queryForm(env,local); 
             if (isQualified())
             { return "get" + data + "(" + ind + ")"; } 
-            String indopt = evaluateString("-",ind,"1"); // not for qualified ones
+            String indopt = 
+              Expression.evaluateString("-",ind,"1"); 
+              // not for qualified ones
             if (type.getName().equals("String"))
             { return "(\"\" + " + 
                    data + ".charAt(" + indopt + "))";
@@ -7483,7 +7604,9 @@ class BasicExpression extends Expression
         if (entity.isClassScope(data))   // entity cannot be an interface
         { if (arrayIndex != null) 
           { String ind = arrayIndex.queryForm(env,local); 
-            String indopt = evaluateString("-",ind,"1"); // not for qualified ones
+            String indopt = 
+               Expression.evaluateString("-",ind,"1"); 
+               // not for qualified ones
             if (type.getName().equals("String"))
             { return "(\"\" + " + 
                    nme + "." + data + ".charAt(" + indopt + "))";
@@ -7510,7 +7633,9 @@ class BasicExpression extends Expression
           if (isQualified())
           { return var + ".get" + data + "(" + ind + ")"; } 
 
-          String indopt = evaluateString("-",ind,"1"); // not for qualified   
+          String indopt = 
+            Expression.evaluateString("-",ind,"1"); 
+            // not for qualified   
           if (type.getName().equals("String"))
           { return "(\"\" + " + 
                    res + ".charAt(" + indopt + "))";
@@ -7568,7 +7693,9 @@ class BasicExpression extends Expression
 
         if (isQualified())
         { return "(" + res + ").get(" + ind + ")"; } 
-        String indopt = evaluateString("-",ind,"1"); // not for qualified, Strings
+        String indopt = 
+           Expression.evaluateString("-",ind,"1"); 
+           // not for qualified, Strings
 
         if (type.getName().equals("String"))
         { return "(\"\" + " + 
@@ -7641,7 +7768,8 @@ class BasicExpression extends Expression
       { Expression se = buildSetExpression(data); 
         if (arrayIndex != null)
         { String ind = arrayIndex.queryFormJava6(env,local); 
-          String indopt = evaluateString("-",ind,"1"); 
+          String indopt = 
+            Expression.evaluateString("-",ind,"1"); 
           if (se.elementType != null)
           { if (Type.isPrimitiveType(se.elementType))
             { return se.unwrapJava6(
@@ -7661,7 +7789,8 @@ class BasicExpression extends Expression
 
       if (isString(data) && arrayIndex != null)
       { String ind = arrayIndex.queryFormJava6(env,local); 
-        String indopt = evaluateString("-",ind,"1"); 
+        String indopt = 
+          Expression.evaluateString("-",ind,"1"); 
         return "(\"" + "\" + " + data + ".charAt(" + indopt + "))"; 
       } 
    
@@ -7687,7 +7816,8 @@ class BasicExpression extends Expression
       else // entity == null) 
       if (arrayIndex != null)
       { String ind = arrayIndex.queryFormJava6(env,local); 
-        String indopt = evaluateString("-",ind,"1"); 
+        String indopt = 
+          Expression.evaluateString("-",ind,"1"); 
         if (type != null)
         { if (variable != null && "String".equals(variable.getType() + ""))
           { return "(" + data + ".charAt(" + indopt + ") + \"\")"; } 
@@ -7704,7 +7834,9 @@ class BasicExpression extends Expression
         }         
         return data + ".get(" + indopt + ")";
       } // unwrap it, also for primitive types
-      else if (parameters != null && variable != null && variable.getType().isFunctionType()) // application of a Function(S,T)
+      else if (parameters != null && variable != null && 
+               variable.getType().isFunctionType()) 
+      // application of a Function(S,T)
       { String pars = ""; 
         for (int h = 0; h < parameters.size(); h++) 
         { Expression par = (Expression) parameters.get(h); 
@@ -8006,7 +8138,9 @@ class BasicExpression extends Expression
           { String ind = arrayIndex.queryFormJava6(env,local); 
             if (isQualified())
             { return "get" + data + "(" + ind + ")"; } 
-            String indopt = evaluateString("-",ind,"1"); // not for qualified ones
+            String indopt = 
+              Expression.evaluateString("-",ind,"1"); 
+              // not for qualified ones
             if (type.getName().equals("String"))
             { return "(\"\" + " + 
                    data + ".charAt(" + indopt + "))";
@@ -8026,7 +8160,9 @@ class BasicExpression extends Expression
         if (entity.isClassScope(data))   // entity cannot be an interface
         { if (arrayIndex != null) 
           { String ind = arrayIndex.queryFormJava6(env,local); 
-            String indopt = evaluateString("-",ind,"1"); // not for qualified ones
+            String indopt = 
+              Expression.evaluateString("-",ind,"1"); 
+              // not for qualified ones
             if (type.getName().equals("String"))
             { return "(\"\" + " + 
                    nme + "." + data + ".charAt(" + indopt + "))";
@@ -8053,7 +8189,9 @@ class BasicExpression extends Expression
           if (isQualified())
           { return var + ".get" + data + "(" + ind + ")"; } 
 
-          String indopt = evaluateString("-",ind,"1"); // not for qualified   
+          String indopt = 
+            Expression.evaluateString("-",ind,"1"); 
+            // not for qualified   
           if (type.getName().equals("String"))
           { return "(\"\" + " + 
                    res + ".charAt(" + indopt + "))";
@@ -8108,7 +8246,9 @@ class BasicExpression extends Expression
       { String ind = arrayIndex.queryFormJava6(env,local); 
         if (isQualified())
         { return "(" + res + ").get(" + ind + ")"; } 
-        String indopt = evaluateString("-",ind,"1"); // not for qualified ones
+        String indopt = 
+          Expression.evaluateString("-",ind,"1"); 
+          // not for qualified ones
         if (type.getName().equals("String"))
         { return "(\"\" + " + 
                  res + ".charAt(" + indopt + "))";
@@ -8183,7 +8323,8 @@ class BasicExpression extends Expression
       { Expression se = buildSetExpression(data); 
         if (arrayIndex != null)
         { String ind = arrayIndex.queryFormJava7(env,local); 
-          String indopt = evaluateString("-",ind,"1"); 
+          String indopt = 
+            Expression.evaluateString("-",ind,"1"); 
           if (se.elementType != null)
           { if (Type.isPrimitiveType(se.elementType))
             { return se.unwrapJava7(
@@ -8202,7 +8343,8 @@ class BasicExpression extends Expression
 	  
       if (isString(data) && arrayIndex != null)
       { String ind = arrayIndex.queryFormJava7(env,local); 
-        String indopt = evaluateString("-",ind,"1"); 
+        String indopt = 
+          Expression.evaluateString("-",ind,"1"); 
         return "(\"" + "\" + " + data + ".charAt(" + indopt + "))"; 
       } 
 
@@ -8230,7 +8372,8 @@ class BasicExpression extends Expression
       else // entity == null) 
       if (arrayIndex != null)
       { String ind = arrayIndex.queryFormJava7(env,local); 
-        String indopt = evaluateString("-",ind,"1"); 
+        String indopt = 
+          Expression.evaluateString("-",ind,"1"); 
         if (type != null)
         { if (variable != null && 
               "String".equals(variable.getType() + ""))
@@ -8574,7 +8717,9 @@ class BasicExpression extends Expression
           { String ind = arrayIndex.queryFormJava7(env,local); 
             if (isQualified())
             { return "get" + data + "(" + ind + ")"; } 
-            String indopt = evaluateString("-",ind,"1"); // not for qualified ones
+            String indopt = 
+               Expression.evaluateString("-",ind,"1"); 
+               // not for qualified ones
 
             if (arrayIndex.isString())
             { return unwrapJava7(data + ".get(\"\" + " + ind + ")"); }
@@ -8605,7 +8750,9 @@ class BasicExpression extends Expression
         if (entity.isClassScope(data))   // entity cannot be an interface
         { if (arrayIndex != null) 
           { String ind = arrayIndex.queryFormJava7(env,local); 
-            String indopt = evaluateString("-",ind,"1"); // not for qualified ones
+            String indopt =
+              Expression.evaluateString("-",ind,"1"); 
+              // not for qualified ones
             if (arrayIndex.isString())
             { return unwrapJava7(nme + "." + data + ".get(\"\" + " + ind + ")"); }
 
@@ -8635,7 +8782,9 @@ class BasicExpression extends Expression
           if (isQualified())
           { return var + ".get" + data + "(" + ind + ")"; } 
 
-          String indopt = evaluateString("-",ind,"1"); // not for qualified   
+          String indopt = 
+            Expression.evaluateString("-",ind,"1"); 
+            // not for qualified   
           
           if (arrayType != null && arrayType.isMap())
           { return unwrapJava7(var + ".get" + data + "().get(" + ind + ")"); }
@@ -8698,7 +8847,9 @@ class BasicExpression extends Expression
       { String ind = arrayIndex.queryFormJava7(env,local); 
         if (isQualified())
         { return "(" + res + ").get(" + ind + ")"; } 
-        String indopt = evaluateString("-",ind,"1"); // not for qualified ones
+        String indopt = 
+          Expression.evaluateString("-",ind,"1"); 
+          // not for qualified ones
         if (type.getName().equals("String"))
         { return "(\"\" + " + 
                  res + ".charAt(" + indopt + "))";
@@ -8721,7 +8872,8 @@ class BasicExpression extends Expression
     if (umlkind == VARIABLE)
     { if (arrayIndex != null)
       { String ind = arrayIndex.queryFormJava7(env,local); 
-        String indopt = evaluateString("-",ind,"1"); 
+        String indopt = 
+          Expression.evaluateString("-",ind,"1"); 
         if (type != null)
         { if (arrayIndex.type != null && arrayIndex.type.getName().equals("int"))
           { return data + "[" + indopt + "]"; }
@@ -8740,7 +8892,9 @@ class BasicExpression extends Expression
           { String ind = arrayIndex.queryFormJava7(env,local); 
             if (isQualified())
             { return data + "[" + ind + "]"; } 
-            String indopt = evaluateString("-",ind,"1"); // not for qualified ones
+            String indopt = 
+              Expression.evaluateString("-",ind,"1"); 
+              // not for qualified ones
 
             if (arrayIndex.isString())
             { return data + "[" + ind + "]"; }
@@ -8760,7 +8914,9 @@ class BasicExpression extends Expression
         if (entity.isClassScope(data))   // entity cannot be an interface
         { if (arrayIndex != null) 
           { String ind = arrayIndex.queryFormJava7(env,local); 
-            String indopt = evaluateString("-",ind,"1"); // not for qualified ones
+            String indopt = 
+              Expression.evaluateString("-",ind,"1"); 
+              // not for qualified ones
             if (arrayIndex.isString())
             { return nme + "." + data + "[" + ind + "]"; }
 
@@ -8781,7 +8937,9 @@ class BasicExpression extends Expression
           if (isQualified())
           { return var + "." + data + "[" + ind + "]"; } 
 
-          String indopt = evaluateString("-",ind,"1"); // not for qualified   
+          String indopt = 
+            Expression.evaluateString("-",ind,"1"); 
+            // not for qualified   
           if (arrayType != null && arrayType.isMap())
           { return var + "." + data + "[" + ind + "]"; }
           else if (arrayType != null && arrayType.isSequence())
@@ -8815,7 +8973,9 @@ class BasicExpression extends Expression
       { String ind = arrayIndex.queryFormJava7(env,local); 
         if (isQualified())
         { return "(" + res + ")[" + ind + "]"; } 
-        String indopt = evaluateString("-",ind,"1"); // not for qualified ones
+        String indopt = 
+          Expression.evaluateString("-",ind,"1"); 
+          // not for qualified ones
         return res + "[" + indopt + "]"; 
       } 
       return res; 
@@ -9006,16 +9166,19 @@ class BasicExpression extends Expression
       { Expression se = buildSetExpression(data); 
         if (arrayIndex != null)
         { String ind = arrayIndex.queryFormCSharp(env,local); 
-          String indopt = evaluateString("-",ind,"1"); 
+          String indopt = 
+            Expression.evaluateString("-",ind,"1"); 
           String cstype = type.getCSharp(); 
           return "((" + cstype + ") " + se.queryFormCSharp(env,local) + "[" + indopt + "])";
         }
+
         return se.queryFormCSharp(env,local); 
       } 
 
       if (isString(data) && arrayIndex != null)
       { String ind = arrayIndex.queryFormCSharp(env,local); 
-        String indopt = evaluateString("-",ind,"1"); 
+        String indopt = 
+          Expression.evaluateString("-",ind,"1"); 
         return "(\"" + "\" + " + data + "[" + indopt + "])"; 
       } 
 
@@ -9043,7 +9206,8 @@ class BasicExpression extends Expression
       else // entity == null) 
       if (arrayIndex != null)
       { String ind = arrayIndex.queryFormCSharp(env,local); 
-        String indopt = evaluateString("-",ind,"1");
+        String indopt = 
+          Expression.evaluateString("-",ind,"1");
 
         // JOptionPane.showMessageDialog(null, "Variable: " + this + " arrayType: " + arrayType + " variable: " + variable, 
         //    "Error", JOptionPane.ERROR_MESSAGE); 
@@ -9396,7 +9560,8 @@ class BasicExpression extends Expression
         
             if (isQualified())
             { return "((" + etype + ") " + data + "[" + ind + "])"; } 
-            String indopt = evaluateString("-",ind,"1"); 
+            String indopt = 
+              Expression.evaluateString("-",ind,"1"); 
             // not for qualified ones
 
             if (arrayIndex.isString())
@@ -9428,7 +9593,8 @@ class BasicExpression extends Expression
         { if (arrayIndex != null) 
           { String ind = 
               arrayIndex.queryFormCSharp(env,local); 
-            String indopt = evaluateString("-",ind,"1"); 
+            String indopt = 
+              Expression.evaluateString("-",ind,"1"); 
                 // not for qualified ones
             String etype = type.getCSharp(); 
             
@@ -9472,7 +9638,8 @@ class BasicExpression extends Expression
               " type: " + type, 
               "Error", JOptionPane.ERROR_MESSAGE); */ 
 
-          String indopt = evaluateString("-",ind,"1"); // not for qualified   
+          String indopt = 
+            Expression.evaluateString("-",ind,"1"); // not for qualified   
    
           if (arrayType != null && arrayType.isMap())
           { return "((" + etype + ") " + var + ".get" + data + "()[" + ind + "])"; }
@@ -9531,7 +9698,8 @@ class BasicExpression extends Expression
       { String ind = arrayIndex.queryFormCSharp(env,local); 
         if (isQualified())
         { return res + "[" + ind + "]"; } 
-        String indopt = evaluateString("-",ind,"1"); // not for qualified, Strings
+        String indopt = 
+          Expression.evaluateString("-",ind,"1"); // not for qualified, Strings
         if (type.getName().equals("String"))
         { return res + ".Substring(" + indopt + ", 1)"; } 
         String cstype = type.getCSharp(); 
@@ -10883,7 +11051,7 @@ public Statement generateDesignSubtract(Expression rhs)
                  pars.substring(1,pars.length()); 
         }
         return "  ArrayList " + var + " = new ArrayList();\n" + 
-               "  " + var + ".AddRange(" + pre + ");\n" +
+               "  " + var + ".AddRange(SystemTypes.asSequence(" + pre + "));\n" +
                "  for (int " + ind + " = 0; " + ind + " < " + var + ".Count; " +
                        ind + "++)\n" +
                "  { "  + call + "; }\n";
@@ -11126,8 +11294,8 @@ public Statement generateDesignSubtract(Expression rhs)
   }
 
   public String updateFormCSharp(java.util.Map env,
-                           String operator,
-                           String val2, Expression exp2, boolean local)
+                    String operator,
+                    String val2, Expression exp2, boolean local)
   { if (operator.equals("="))
     { return updateFormEqCSharp(env,val2,exp2,local); }
     else if (operator.equals(":"))
@@ -12456,8 +12624,8 @@ public Statement generateDesignSubtract(Expression rhs)
     // System.out.println(">>> Assignment " + this + " = " + val2); 
 
      if (Type.isSequenceType(type) && 
-        (var.isNumeric() || var.isString() || 
-         var.isBoolean()))
+         (var.isNumeric() || var.isString() || 
+          var.isBoolean()))
      { // this := 
        //   MatrixLib.singleValueMatrix(
        //       Sequence{this->size()}, var)
@@ -12491,8 +12659,6 @@ public Statement generateDesignSubtract(Expression rhs)
            scope, local); 
      }   
 
-
-
     String datax = data;
 
     if (objectRef != null) 
@@ -12517,7 +12683,6 @@ public Statement generateDesignSubtract(Expression rhs)
            "subrange", objectRef, pars1); 
       rng1.setType(objectRef.getType()); 
       rng1.setElementType(objectRef.getElementType()); 
-
 
       Expression rng2 = 
          BasicExpression.newFunctionBasicExpression(
@@ -12569,15 +12734,15 @@ public Statement generateDesignSubtract(Expression rhs)
                                  env,newval2,newvar,local); 
       } 
     } 
-                
 
-
-    if (umlkind == VALUE || umlkind == CONSTANT || umlkind == FUNCTION ||
+    if (umlkind == VALUE || umlkind == CONSTANT || 
+        umlkind == FUNCTION ||
         umlkind == QUERY || umlkind == UPDATEOP || prestate)
     { return "  {} /* can't assign to: " + data + " */"; }
     
     if (umlkind == CLASSID && arrayIndex == null) 
-    { if (val2.equals("{}") || val2.equals("Set{}") || val2.equals("Sequence{}"))  // delete the class extent
+    { if (val2.equals("{}") || val2.equals("Set{}") || 
+          val2.equals("Sequence{}"))  // delete the class extent
       { String datas = classExtentQueryFormCSharp(env,local);  
         return "ArrayList _" + data + " = new ArrayList(); \n" + 
                "  _" + data + ".AddRange(" + datas + "); \n" + 
@@ -13310,7 +13475,8 @@ public Statement generateDesignSubtract(Expression rhs)
     if (entity != null)
     { nme = entity.getName(); }
      
-    if (umlkind == VALUE || umlkind == CONSTANT || umlkind == QUERY ||
+    if (umlkind == VALUE || umlkind == CONSTANT || 
+        umlkind == QUERY ||
         umlkind == FUNCTION || umlkind == UPDATEOP || prestate)
     { return "{} /* can't add to: " + data + " */"; }
 
@@ -13342,7 +13508,7 @@ public Statement generateDesignSubtract(Expression rhs)
       { if (type != null && Type.isCollectionType(type))
         { return data + ".Add(" + val2 + ");"; }  
         else 
-        { return "{} /* can't add to single-valued attribute */"; }
+        { return "{} /* can't add to single-valued or map attribute */"; }
       } 
       if (umlkind == ROLE)
       { if (multiplicity == ModelElement.ONE)
@@ -13784,7 +13950,8 @@ public Statement generateDesignSubtract(Expression rhs)
                                  String val2, Expression exp2, boolean local)
   { String cont = "Controller.inst()"; 
 
-    if (umlkind == VALUE || umlkind == CONSTANT || umlkind == FUNCTION ||
+    if (umlkind == VALUE || umlkind == CONSTANT || 
+        umlkind == FUNCTION ||
         umlkind == QUERY || umlkind == UPDATEOP || prestate)
     { return "{} /* can't remove from: " + data + " */"; }
 
@@ -14516,17 +14683,22 @@ public Statement generateDesignSubtract(Expression rhs)
                               String val2, boolean local)
   { String cont = "Controller.inst()"; 
 
-    if (umlkind == VALUE || umlkind == CONSTANT || umlkind == FUNCTION ||
+    if (umlkind == VALUE || umlkind == CONSTANT || 
+        umlkind == FUNCTION ||
         umlkind == QUERY || umlkind == UPDATEOP || prestate)
     { return "{} /* can't add to: " + data + " */"; }
 
     if (umlkind == VARIABLE)
     { if (type != null && Type.isCollectionType(type))
-      { if (arrayIndex != null) 
+      { String unionop = "AddRange"; 
+        if (Type.isSetType(type))
+        { unionop = "UnionWith"; } 
+
+        if (arrayIndex != null) 
         { String indopt = arrayIndex.queryFormCSharp(env,local); 
-          return "((ArrayList) " + data + "[" + indopt + " -1]).AddRange(" + val2 + ");"; 
+          return "((ArrayList) " + data + "[" + indopt + " -1])." + unionop + "(" + val2 + ");"; 
         }
-        return data + ".AddRange(" + val2 + ");";
+        return data + "." + unionop + "(" + val2 + ");";
       } 
       else 
       { return "{} /* can't add to single-valued variable: " + this + " */"; }
@@ -14544,15 +14716,21 @@ public Statement generateDesignSubtract(Expression rhs)
     if (objectRef == null)
     { if (umlkind == ATTRIBUTE)
       { if (type != null && Type.isCollectionType(type))
-        { if (arrayIndex != null) 
+        { String unionop = "AddRange"; 
+          if (Type.isSetType(type))
+          { unionop = "UnionWith"; } 
+
+          if (arrayIndex != null) 
           { String indopt = arrayIndex.queryFormCSharp(env,local); 
-            return "((ArrayList) " + data + "[" + indopt + " -1]).AddRange(" + val2 + ");"; 
+            return "((ArrayList) " + data + "[" + indopt + " -1])." + unionop + "(" + val2 + ");"; 
           }
-          return data + ".AddRange(" + val2 + ");"; 
+
+          return data + "." + unionop + "(" + val2 + ");"; 
         }
         else  
         { return "{} /* can't add to single-valued attribute: " + this + " */"; }
       }
+
       if (umlkind == ROLE)
       { if (multiplicity == ModelElement.ONE)
         { return "{} /* can't add to ONE role */"; }
@@ -14564,7 +14742,13 @@ public Statement generateDesignSubtract(Expression rhs)
           return cont + ".union" + data + "(" + var + ", " + ind + ", " + val2 + ");"; 
         } 
 
-        if (local) { return data + ".AddRange(" + val2 + ");"; } 
+        if (local) 
+        { String unionop = "AddRange"; 
+          if (Type.isSetType(type))
+          { unionop = "UnionWith"; } 
+
+          return data + "." + unionop + "(" + val2 + ");"; 
+        } 
         
         return cont + ".union" + data + "(" + var + "," + val2 + ");";
       } // no need to wrap -- val2 must be a list
@@ -14885,9 +15069,11 @@ public Statement generateDesignSubtract(Expression rhs)
     if (umlkind == VARIABLE && Type.isCollectionType(type))
     { if (arrayIndex != null) 
       { String indopt = arrayIndex.queryFormCSharp(env,local); 
-        return data + "[" + indopt + " -1] = SystemTypes.subtract((ArrayList) " + 
-                                           data + "[" + indopt + " -1], " + val2 + ");"; 
+        return data + 
+          "[" + indopt + " -1] = SystemTypes.subtract(" + 
+                 data + "[" + indopt + " -1], " + val2 + ");"; 
       }
+
       return data + " = SystemTypes.subtract(" + data + ", " + val2 + ");"; 
     }
       // val2 must be a list
@@ -14902,8 +15088,11 @@ public Statement generateDesignSubtract(Expression rhs)
     { if (umlkind == ATTRIBUTE && Type.isCollectionType(type))
       { if (arrayIndex != null) 
         { String indopt = arrayIndex.queryFormCSharp(env,local); 
-          return data + "[" + indopt + " -1] = SystemTypes.subtract((ArrayList) " + data + "[" + indopt + " -1], " + val2 + ");"; 
+          return data + 
+            "[" + indopt + " -1] = SystemTypes.subtract((ArrayList) " + data + 
+               "[" + indopt + " -1], " + val2 + ");"; 
         }
+
         return data + " = SystemTypes.subtract(" + data + ", " + val2 + ");"; 
       }      
 
@@ -14918,7 +15107,8 @@ public Statement generateDesignSubtract(Expression rhs)
           return cont + ".subtract" + data + "(" + var + ", " + ind + ", " + val2 + ");"; 
         } 
 
-        if (local) { return data + " = SystemTypes.subtract(" + data + ", " + val2 + ");"; } 
+        if (local) 
+        { return data + " = SystemTypes.subtract(" + data + ", " + val2 + ");"; } 
 
         return cont + ".subtract" + data + "(" + var + "," + val2 + ");";
       } // no need to wrap -- val2 must be a list
@@ -16739,6 +16929,309 @@ public Statement generateDesignSubtract(Expression rhs)
   public Expression simplify(final Vector vars) 
   { return simplify(); }
 
+  public Expression evaluate(
+                ModelSpecification sigma, ModelState beta)
+  { if (umlkind == VARIABLE)
+    { String nme = getData(); 
+      Expression expr = beta.getVariableValue(nme); 
+
+      if (expr != null) 
+      { if (arrayIndex != null && 
+            expr instanceof SetExpression) 
+        { // expect a sequence
+
+          Expression indval = arrayIndex.evaluate(sigma,beta);
+          int indx = Integer.parseInt("" + indval); 
+          return ((SetExpression) expr).getExpression(indx); 
+        } 
+      } 
+
+      return expr; 
+    }
+
+    if (umlkind == ATTRIBUTE && objectRef != null)
+    { String nme = getData(); 
+      Expression obj = objectRef.evaluate(sigma,beta);
+ 
+      if (obj != null) 
+      { return sigma.getObjectAttributeValue(obj + "", nme); }       
+    } // and with arrayIndex != null
+
+    if (umlkind == ATTRIBUTE && objectRef == null)
+    { // attribute of self
+      String nme = getData(); 
+      Expression obj = beta.getVariableValue("self");
+ 
+      if (obj != null) 
+      { return sigma.getObjectAttributeValue(obj + "", nme); }       
+    } // and with arrayIndex != null
+
+    if (umlkind == QUERY || 
+        umlkind == UPDATEOP)
+    { // call returning a value 
+      Expression obj = this.getObjectRef(); 
+      // if null, it is a call on self. 
+      String op = this.getData(); 
+      Vector actualPars = this.getParameters(); 
+      int npars = actualPars.size(); 
+
+      Expression selfobject; 
+
+      if (obj != null) 
+      { selfobject = obj.evaluate(sigma, beta); } 
+      else 
+      { selfobject = beta.getVariableValue("self"); } 
+
+      if (selfobject == null) // error
+      { return this; } 
+
+      ObjectSpecification ospec = 
+                 sigma.getObjectSpec("" + selfobject);
+
+      if (ospec == null) // error
+      { return this; }
+ 
+      Entity ent = ospec.getEntity(); 
+
+      if (ent == null) 
+      { return this; } 
+
+      BehaviouralFeature bf = ent.getOperation(op, npars);
+      // assume not static:  
+
+      if (bf == null) 
+      { return this; } 
+
+      ModelState opstackframe = (ModelState) beta.clone(); 
+      opstackframe.addNewEnvironment(); 
+      opstackframe.addVariable("self", selfobject); 
+
+      Vector parValues = new Vector(); 
+      for (int i = 0; i < actualPars.size(); i++) 
+      { Expression pval = (Expression) actualPars.get(i); 
+        Expression parval = pval.evaluate(sigma, beta); 
+        parValues.add(parval); // could be null; 
+      } 
+
+      Expression res = 
+         bf.execute(sigma, opstackframe, parValues);  
+      return res; 
+    } 
+
+    if (umlkind == Expression.FUNCTION)
+    { if (data.equals("insertInto")) 
+      { Expression obj = this.getObjectRef(); 
+        Expression col = obj.evaluate(sigma, beta); 
+
+        Expression indx = (Expression) parameters.get(0); 
+        Expression valx = (Expression) parameters.get(1); 
+
+        Expression ind = indx.evaluate(sigma, beta); 
+        Expression val = valx.evaluate(sigma, beta); 
+
+        if (col instanceof SetExpression && 
+            Expression.isIntegerValue("" + ind) && 
+            val instanceof SetExpression) 
+        { int index = Expression.convertInteger("" + ind); 
+          return SetExpression.insertInto(
+                    (SetExpression) col, index, 
+                    (SetExpression) val); 
+        } 
+        else 
+        { Vector vect = new Vector(); 
+          vect.add(ind); 
+          vect.add(val); 
+          return BasicExpression.newFunctionBasicExpression(
+                      "insertInto", col, vect); 
+        } 
+      } 
+
+      if (data.equals("insertAt")) 
+      { Expression obj = this.getObjectRef(); 
+        Expression col = obj.evaluate(sigma, beta); 
+
+        Expression indx = (Expression) parameters.get(0); 
+        Expression valx = (Expression) parameters.get(1); 
+
+        Expression ind = indx.evaluate(sigma, beta); 
+        Expression val = valx.evaluate(sigma, beta); 
+
+        if (col instanceof SetExpression && 
+            Expression.isIntegerValue("" + ind)) 
+        { int index = Expression.convertInteger("" + ind); 
+          return SetExpression.insertAt(
+                    (SetExpression) col, index, 
+                    val); 
+        } 
+        else 
+        { Vector vect = new Vector(); 
+          vect.add(ind); 
+          vect.add(val); 
+          return BasicExpression.newFunctionBasicExpression(
+                      "insertAt", col, vect); 
+        } 
+      } 
+
+      if (data.equals("setAt")) 
+      { Expression obj = this.getObjectRef(); 
+        Expression col = obj.evaluate(sigma, beta); 
+
+        Expression indx = (Expression) parameters.get(0); 
+        Expression valx = (Expression) parameters.get(1); 
+
+        Expression ind = indx.evaluate(sigma, beta); 
+        Expression val = valx.evaluate(sigma, beta); 
+
+        if (col instanceof SetExpression && 
+            Expression.isIntegerValue("" + ind)) 
+        { int index = Expression.convertInteger("" + ind); 
+          return SetExpression.setAt(
+                    (SetExpression) col, index, 
+                    val); 
+        } 
+        else 
+        { Vector vect = new Vector(); 
+          vect.add(ind); 
+          vect.add(val); 
+          return BasicExpression.newFunctionBasicExpression(
+                      "setAt", col, vect); 
+        } 
+      } 
+
+      if (data.equals("excludingSubrange")) 
+      { Expression obj = this.getObjectRef(); 
+        Expression col = obj.evaluate(sigma, beta); 
+
+        Expression ind1x = (Expression) parameters.get(0); 
+        Expression ind2x = (Expression) parameters.get(1); 
+
+        Expression ind1 = ind1x.evaluate(sigma, beta); 
+        Expression ind2 = ind2x.evaluate(sigma, beta); 
+
+        if (col instanceof SetExpression && 
+            Expression.isIntegerValue("" + ind1) && 
+            Expression.isIntegerValue("" + ind2)) 
+        { int index1 = Expression.convertInteger("" + ind1); 
+          int index2 = Expression.convertInteger("" + ind2); 
+          return SetExpression.excludingSubrange(
+                    (SetExpression) col, index1, index2); 
+        } 
+        else 
+        { Vector vect = new Vector(); 
+          vect.add(ind1); 
+          vect.add(ind2); 
+          return BasicExpression.newFunctionBasicExpression(
+                      "excludingSubrange", col, vect); 
+        } 
+      } 
+
+      if (data.equals("subrange") && 
+          "Integer".equals("" + objectRef))
+      { Expression par1 = (Expression) parameters.get(0); 
+        Expression par2 = (Expression) parameters.get(1); 
+ 
+        Expression val1 = par1.evaluate(sigma, beta); 
+        Expression val2 = par2.evaluate(sigma, beta); 
+
+        if (Expression.isIntegerValue("" + val1) && 
+            Expression.isIntegerValue("" + val2))
+        { int v1 = Expression.convertInteger("" + val1); 
+          int v2 = Expression.convertInteger("" + val2); 
+          
+          return SetExpression.integerSubrange(v1, v2);
+        } 
+        else 
+        { Vector vect = new Vector(); 
+          vect.add(val1); 
+          vect.add(val2); 
+          return BasicExpression.newFunctionBasicExpression(
+                      "subrange", "Integer", vect); 
+        } 
+      } 
+
+      if (data.equals("subrange") && parameters.size() == 2) 
+      { Expression obj = this.getObjectRef(); 
+        Expression col = obj.evaluate(sigma, beta); 
+
+        Expression ind1x = (Expression) parameters.get(0); 
+        Expression ind2x = (Expression) parameters.get(1); 
+
+        Expression ind1 = ind1x.evaluate(sigma, beta); 
+        Expression ind2 = ind2x.evaluate(sigma, beta); 
+
+        if (col instanceof SetExpression && 
+            Expression.isIntegerValue("" + ind1) && 
+            Expression.isIntegerValue("" + ind2)) 
+        { int index1 = Expression.convertInteger("" + ind1); 
+          int index2 = Expression.convertInteger("" + ind2); 
+          return ((SetExpression) col).subrange(index1, index2); 
+        } 
+        else 
+        { Vector vect = new Vector(); 
+          vect.add(ind1); 
+          vect.add(ind2); 
+          return BasicExpression.newFunctionBasicExpression(
+                      "subrange", col, vect); 
+        } 
+      } // or subrange of a string
+
+      if (data.equals("subrange") && parameters.size() == 1) 
+      { Expression obj = this.getObjectRef(); 
+        Expression col = obj.evaluate(sigma, beta); 
+
+        Expression ind1x = (Expression) parameters.get(0); 
+ 
+        Expression ind1 = ind1x.evaluate(sigma, beta); 
+ 
+        if (col instanceof SetExpression && 
+            Expression.isIntegerValue("" + ind1)) 
+        { int index1 = Expression.convertInteger("" + ind1); 
+          return ((SetExpression) col).subrange(index1); 
+        } 
+        else 
+        { Vector vect = new Vector(); 
+          vect.add(ind1); 
+          return BasicExpression.newFunctionBasicExpression(
+                      "subrange", col, vect); 
+        } 
+      } // could also be a string
+
+      if (data.equals("setSubrange")) 
+      { Expression obj = this.getObjectRef(); 
+        Expression col = obj.evaluate(sigma, beta); 
+
+        Expression ind1x = (Expression) parameters.get(0); 
+        Expression ind2x = (Expression) parameters.get(1); 
+        Expression valx = (Expression) parameters.get(2); 
+
+        Expression ind1 = ind1x.evaluate(sigma, beta); 
+        Expression ind2 = ind2x.evaluate(sigma, beta); 
+        Expression val = valx.evaluate(sigma, beta); 
+
+        if (col instanceof SetExpression && 
+            Expression.isIntegerValue("" + ind1) && 
+            Expression.isIntegerValue("" + ind2) && 
+            val instanceof SetExpression) 
+        { int index1 = Expression.convertInteger("" + ind1); 
+          int index2 = Expression.convertInteger("" + ind2); 
+          return SetExpression.setSubrange(
+                    (SetExpression) col, index1, index2, 
+                    (SetExpression) val); 
+        } 
+        else 
+        { Vector vect = new Vector(); 
+          vect.add(ind1); 
+          vect.add(ind2); 
+          vect.add(val); 
+          return BasicExpression.newFunctionBasicExpression(
+                      "setSubrange", col, vect); 
+        } 
+      } 
+    } 
+
+    return this;  
+  } 
+
   public Expression simplify() 
   { if (umlkind == FUNCTION)
     { if (objectRef == null)
@@ -16752,18 +17245,34 @@ public Statement generateDesignSubtract(Expression rhs)
       { SetExpression se = (SetExpression) ors; 
         return se.getLastElement(); 
       } 
-      else if (data.equals("first") && 
-               (ors instanceof SetExpression))
+
+      if (data.equals("last") && 
+          Expression.isStringValue("" + ors))
+      { return Expression.simplifyLast(ors); } 
+
+      if (data.equals("first") && 
+          (ors instanceof SetExpression))
       { SetExpression se = (SetExpression) ors; 
         return se.getFirstElement(); 
       }
-      else if (data.equals("size") && 
-               (ors instanceof SetExpression))
+
+      if (data.equals("first") && 
+          Expression.isStringValue("" + ors))
+      { return Expression.simplifyFirst(ors); } 
+
+      if (data.equals("size") && 
+          (ors instanceof SetExpression))
       { SetExpression se = (SetExpression) ors; 
         return new BasicExpression(se.size()); 
       }
-      else if (data.equals("subrange") && 
+
+      if (data.equals("size") && 
+          Expression.isStringValue("" + ors))
+      { return Expression.simplifySize(ors); }
+
+      if (data.equals("subrange") && 
          ors instanceof BasicExpression && 
+         parameters != null && 
          ((BasicExpression) ors).objectRef != null &&
          ((BasicExpression) ors).data.equals("subrange"))
       { // e.subrange(a,b).subrange(c,d) is 
@@ -16798,34 +17307,51 @@ public Statement generateDesignSubtract(Expression rhs)
       return this;  
     }       
 
+    if (data.equals("subrange") && 
+        parameters != null && 
+        parameters.size() > 1 && 
+        objectRef != null) 
+    { Expression p1 = (Expression) parameters.get(0); 
+      Expression p2 = (Expression) parameters.get(1);
+      return Expression.simplifySubrange(objectRef, p1, p2); 
+    } 
+
     if (arrayIndex == null) { return this; } 
 
     Expression ai = arrayIndex.simplify(); 
-    if (isNumber("" + ai) && isString(data))
+    if (Expression.isIntegerValue("" + ai) && 
+        Expression.isStringValue(data))
     { int i = Integer.parseInt("" + ai); 
       String ss = data.substring(i-1,i);
       BasicExpression res = new BasicExpression("\"" + ss + "\""); 
       return res; 
       // and type check it?
     }  
-    if (isNumber("" + ai) && isSequence(data))
+
+    if (Expression.isIntegerValue("" + ai) && 
+        Expression.isSequenceValue(data))
     { int i = Integer.parseInt("" + ai); 
       SetExpression se = (SetExpression) buildSetExpression(data); 
       Expression res = se.getElement(i-1); 
       return res; 
       // and type check it?
     }  
+
     if (objectRef == null)
     { return this; }
+
     Expression ors = objectRef.simplify(); 
     objectRef = ors; 
-    if (isNumber("" + ai) && (ors instanceof SetExpression))
+
+    if (Expression.isIntegerValue("" + ai) && 
+        (ors instanceof SetExpression))
     { int i = Integer.parseInt("" + ai); 
       Expression ob = ((SetExpression) ors).getElement(i-1); 
       BasicExpression res = new BasicExpression(data); 
       res.objectRef = ob;  // and copy the object ref of ors? 
       return res; 
     } 
+
     arrayIndex = ai; 
     return this; 
   }
@@ -16833,7 +17359,8 @@ public Statement generateDesignSubtract(Expression rhs)
   public Vector getBaseEntityUses()
   { Vector res = new Vector();
     if (objectRef == null) 
-    { if (umlkind == ROLE || umlkind == QUERY || umlkind == ATTRIBUTE)
+    { if (umlkind == ROLE || umlkind == QUERY || 
+          umlkind == ATTRIBUTE)
       { if (entity != null) 
         { if (entity.isStaticFeature(data)) 
           { System.err.println("!! ERROR: Static feature should have class name objectref: " + this); }  
@@ -17115,11 +17642,15 @@ public Statement generateDesignSubtract(Expression rhs)
   } 
 
   public boolean isSelfCall(String nme)
-  { if (data.equals(nme) && 
+  { /* JOptionPane.showInputDialog(">>> Is self-call? " + 
+          nme + " " + data + " " + objectRef); */ 
+
+    if (data.equals(nme) && 
         "self".equals(objectRef + "") && 
         (umlkind == UPDATEOP || umlkind == QUERY ||
          isEvent)) 
     { return true; } 
+
     return false;  
   }
 
@@ -17882,7 +18413,7 @@ public Statement generateDesignSubtract(Expression rhs)
   public static void main(String[] args)
   { // System.out.println(Math.log10(100)); 
     // System.out.println(Math.log(100)/Math.log(10)); 
-    BasicExpression expr = new BasicExpression("x@100"); 
+    /* BasicExpression expr = new BasicExpression("x@100"); 
     System.out.println(expr); 
     BasicExpression expr1 = new BasicExpression("0xFFFFFFFFFFFFFFFFFFFF"); 
     System.out.println(expr1);
@@ -17892,6 +18423,12 @@ public Statement generateDesignSubtract(Expression rhs)
     expr1.typeCheck(t,e,v);  
     System.out.println(">>> Type of " + expr1 + " is: " + expr1.type + " ( " + expr1.elementType + " )"); 
 
+    BasicExpression be = new BasicExpression("\"\""); 
+    BasicExpression be1 = new BasicExpression("first"); 
+    be1.objectRef = be; 
+    be1.typeCheck(t,e,v);  
+    
+    System.out.println(be1.simplify()); */ 
   } 
 
   public Expression simplifyOCL() 
@@ -17975,8 +18512,15 @@ public Statement generateDesignSubtract(Expression rhs)
         int ascore = (int) res.get("amber"); 
         res.set("amber", ascore+1); 
       } 
-
     } 
+
+    int mchain = maximumReferenceChain(); 
+    if (mchain > TestParameters.referenceChainLimit)
+    { oUses.add("!! (LRC) flaw: The expression " + this + " has too many (" + mchain + ") chained references"); 
+      int ascore = (int) res.get("amber"); 
+      res.set("amber", ascore+1); 
+    } 
+
 
     if (umlkind == VALUE) {} 
     else if (umlkind == UPDATEOP || 
@@ -18055,6 +18599,17 @@ public Statement generateDesignSubtract(Expression rhs)
     return res; 
   } // and in the parameters and object ref
 
+  
+  public int maximumReferenceChain() 
+  { int res = 1; 
+
+    if (objectRef != null) 
+    { res = objectRef.maximumReferenceChain(); 
+      return res + 1; 
+    }
+
+    return res; 
+  } 
 
   public int syntacticComplexity() 
   { int res = 0; 

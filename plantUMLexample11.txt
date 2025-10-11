@@ -1,0 +1,6 @@
+@startuml
+class foo
+{ +op(x : Integer) : Integer }
+
+bar ()- foo
+@enduml

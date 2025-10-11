@@ -642,10 +642,18 @@ public class CGRule
      
     if ("type".equals(mffeat))
     { String repl = ASTTerm.getType(term);
-      if (repl == null) 
+
+      if ((repl == null || "OclAny".equals(repl)) && 
+          term.hasMetafeature("type"))
+      { repl = term.getMetafeatureValue("type"); } 
+         
+      if (repl == null || "OclAny".equals(repl)) 
       { Type tt = term.deduceType();
         repl = tt + ""; 
       } 
+
+      System.out.println(">>> Deduced type " + repl + " for " + term); 
+
       return repl;  
     }   
 
@@ -656,11 +664,14 @@ public class CGRule
     { return "" + term.getTag(); }   
 
     if ("trimQuotes".equals(mffeat)) 
-    { String rep = term.cg(cgs); 
+    { String rep = term.cg(cgs);
+ 
       if (rep.endsWith("\""))
       { rep = rep.substring(0,rep.length()-1); } 
+
       if (rep.startsWith("\""))
       { rep = rep.substring(1); } 
+
       return rep; 
     }  
       
@@ -720,6 +731,7 @@ public class CGRule
             return repl;
           } 
         }    
+
         if (term instanceof ASTSymbolTerm)
         { ASTSymbolTerm st = (ASTSymbolTerm) term;
           return "" + st.symbol.charAt(2);  
@@ -740,6 +752,7 @@ public class CGRule
             return repl;
           } 
         } 
+
         if (term instanceof ASTSymbolTerm)
         { ASTSymbolTerm st = (ASTSymbolTerm) term;
           return "" + st.symbol.charAt(3);  
@@ -820,6 +833,7 @@ public class CGRule
           String repl = ct1.cg(cgs); 
           return repl; 
         } 
+
         if (term instanceof ASTSymbolTerm)
         { ASTSymbolTerm st = (ASTSymbolTerm) term;
           int ssize = st.symbol.length();
@@ -955,6 +969,7 @@ public class CGRule
        else 
        { System.err.println(">!!!> cannot apply ruleset: " + mffeat + " to " + term); 
  
+         // Should this be an alternative at a higher level?
          if (term.hasMetafeature(mffeat))
          { String replx = term.getMetafeatureValue(mffeat); 
            if (replx != null) 
@@ -962,49 +977,49 @@ public class CGRule
            else 
            { System.err.println(">!!!> no metafeature: " + mffeat + " of " + term); 
            } 
-         }
-         else if (ASTTerm.hasTaggedValue(term,mffeat))
-         { String replx = ASTTerm.getTaggedValue(term,mffeat); 
-           if (replx != null) 
-           { return replx; }
-           else 
-           { System.err.println(">!!!> no tagged value: " + mffeat + " of " + term); 
-           } 
-         }       
-         else if (term instanceof ASTSymbolTerm)
-         { String replx = 
+        }
+        else if (ASTTerm.hasTaggedValue(term,mffeat))
+        { String replx = ASTTerm.getTaggedValue(term,mffeat); 
+          if (replx != null) 
+          { return replx; }
+          else 
+          { System.err.println(">!!!> no tagged value: " + mffeat + " of " + term); 
+          } 
+        }       
+        else if (term instanceof ASTSymbolTerm)
+        { String replx = 
                  ((ASTSymbolTerm) term).getSymbol(); 
-           return replx;  
-         } // specialised symbol functions go here.
-         else if (CSTL.hasTemplate(mffeat + ".cstl")) 
-         { // System.out.println(">>> Template exists: " + 
+          return replx;  
+        } // specialised symbol functions go here.
+        else if (CSTL.hasTemplate(mffeat + ".cstl")) 
+        { // System.out.println(">>> Template exists: " + 
            //                       mffeat + ".cstl"); 
-           CGSpec newcgs = CSTL.getTemplate(mffeat + ".cstl"); 
+          CGSpec newcgs = CSTL.getTemplate(mffeat + ".cstl"); 
            // System.out.println(); 
-           String replx = term.cg(newcgs);
+          String replx = term.cg(newcgs);
             
-           if (replx != null) 
-           { return replx; } 
-         } 
-         else 
-         { System.err.println("!! No template " + mffeat + ".cstl exists"); 
-           System.err.println(">>> Trying to load template ./cg/" + mffeat + ".cstl"); 
+          if (replx != null) 
+          { return replx; } 
+        } 
+        else 
+        { System.err.println("!! No template " + mffeat + ".cstl exists"); 
+          System.err.println(">>> Trying to load template ./cg/" + mffeat + ".cstl"); 
            // System.out.println(); 
 
-           File sub = new File("./cg/" + mffeat + ".cstl");
+          File sub = new File("./cg/" + mffeat + ".cstl");
       
-           Vector types = new Vector(); // CGTL.types; 
+          Vector types = new Vector(); // CGTL.types; 
 		   
-           CGSpec newcgs = new CGSpec(entities,types); 
-           CGSpec xcgs = 
+          CGSpec newcgs = new CGSpec(entities,types); 
+          CGSpec xcgs = 
                 CSTL.loadCSTL(newcgs,sub,types,entities); 
-           if (xcgs != null)
-           { CSTL.addTemplate(mffeat + ".cstl", xcgs); 
-             String rpl = term.cg(xcgs);   
-             return rpl;
-           }              
-         } 
-       }
+          if (xcgs != null)
+          { CSTL.addTemplate(mffeat + ".cstl", xcgs); 
+            String rpl = term.cg(xcgs);   
+            return rpl;
+          }              
+        } 
+      }
     } 
 
     // New: 8th March 2023
@@ -1402,15 +1417,17 @@ public class CGRule
           
           if ("type".equals(mffeat))
           { String repl = ASTTerm.getType(term);
-            if (repl == null) 
+
+            if (repl == null || "OclAny".equals(repl)) 
             { repl = ASTTerm.getTaggedValue(term,"type"); 
-              if (repl == null)
+              if (repl == null || "OclAny".equals(repl))
               { Type tt = term.deduceType();
                 repl = tt + "";
               } 
             } 
-            // System.out.println(">-->--> Type of " + term + " is " + repl); 
-            // System.out.println(); 
+
+            System.out.println(">-->--> Type of " + term + " is " + repl); 
+            System.out.println(); 
  
             if (repl != null)   
             { res = replaceByMetafeatureValue(res,mf,repl); }  
@@ -1675,10 +1692,10 @@ public class CGRule
             res = replaceByMetafeatureValue(res,mf,repl);
           }   
           else if (cgs.hasRuleset(mffeat))
-          { System.err.println(">***> Valid ruleset " + mffeat);  
+          { System.err.println(">***> Valid internal ruleset " + mffeat);  
             // System.out.println(); 
             String repl = cgs.applyRuleset(mffeat,(ASTTerm) obj);
-            System.err.println(">***> Applying ruleset " + mffeat + " to ASTTerm " + obj); 
+            // System.err.println(">***> Applying ruleset " + mffeat + " to ASTTerm " + obj); 
             // System.out.println(); 
 
             if (repl != null) 
@@ -1746,11 +1763,11 @@ public class CGRule
         }
         else if (obj instanceof String && 
                  cgs.hasRuleset(mffeat))
-        { System.err.println(">***> Valid ruleset " + mffeat);  
+        { System.err.println(">***> Valid internal ruleset " + mffeat);  
           System.err.println();
           ASTSymbolTerm asymbol = new ASTSymbolTerm(obj + "");  
           String repl = cgs.applyRuleset(mffeat, asymbol);
-          System.err.println(">***> Applying ruleset " + mffeat + " to ASTSymbolTerm " + obj); 
+          // System.err.println(">***> Applying ruleset " + mffeat + " to ASTSymbolTerm " + obj); 
           System.err.println(); 
 
           if (repl != null) 
@@ -1758,13 +1775,13 @@ public class CGRule
         }  // Other string functions could be added.  
         else if (obj instanceof Vector) // Of ASTTerm
         { Vector v = (Vector) obj;
-          System.err.println(">***> Applying " + mffeat + " to vector of terms " + v);
+          // System.err.println(">***> Applying " + mffeat + " to vector of terms " + v);
           System.err.println(); 
   
           String repl = "";
           
           if (cgs.hasRuleset(mffeat))
-          { System.err.println(">***> Valid ruleset " + mffeat);  
+          { System.err.println(">***> Valid internal ruleset " + mffeat);  
             System.err.println(); 
             String replv = ""; 
             for (int p = 0; p < v.size(); p++)

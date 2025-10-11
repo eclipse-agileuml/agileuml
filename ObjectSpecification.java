@@ -3,7 +3,7 @@ import java.io.*;
 import javax.swing.JOptionPane; 
 
 /******************************
-* Copyright (c) 2003--2022 Kevin Lano
+* Copyright (c) 2003--2025 Kevin Lano
 * This program and the accompanying materials are made available under the
 * terms of the Eclipse Public License 2.0 which is available at
 * http://www.eclipse.org/legal/epl-2.0
@@ -24,6 +24,10 @@ public class ObjectSpecification extends ModelElement
     // Collections are stored as Vectors
     // ASTs as ASTTerm instances. 
 
+  java.util.Map oclattvalues = new HashMap(); 
+    // String --> Expression
+    // values are stored as corresponding OCL values 
+
   List elements = new ArrayList(); // ObjectSpecification
   boolean isSwingObject = true; 
 
@@ -35,6 +39,13 @@ public class ObjectSpecification extends ModelElement
     { isSwingObject = true; } 
     else 
     { isSwingObject = false; } 
+  }
+
+  public ObjectSpecification(String nme, Entity cls)
+  { // objectName = nme;
+    super(nme);
+    objectClass = cls.getName();
+    entity = cls; 
   }
 
   public static ObjectSpecification getDefaultInstance()
@@ -75,6 +86,18 @@ public class ObjectSpecification extends ModelElement
 
   public Object getRawValue(String att) 
   { return attvalues.get(att); } 
+
+  public void setOCLValue(String att, Expression val) 
+  { oclattvalues.put(att,val);
+    attvalues.put(att, "" + val);
+
+    if (atts.contains(att)) { } 
+    else 
+    { atts.add(att); } 
+  }
+
+  public Expression getOCLValue(String att) 
+  { return (Expression) oclattvalues.get(att); }
 
   public String toString()
   { String res = getName() + " : " + objectClass; 

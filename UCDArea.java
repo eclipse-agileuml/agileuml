@@ -2249,17 +2249,30 @@ public class UCDArea extends JPanel
 
     // cgbe(); 
 
+    // Assert the types and element types of all attributes
+    // for use by a CSTL file that processes OclAttribute 
+    // and OclExpression items. 
 
-    System.out.println(">>> ASTs of classes and use cases: "); 
+    System.out.println(">>> ASTs of types, classes and use cases: "); 
     System.out.println(); 
 
+    Vector typasts = new Vector(); 
     Vector entasts = new Vector(); 
+
+    for (int i = 0; i < types.size(); i++) 
+    { Type t = (Type) types.get(i); 
+      String typast = t.toDeclarationAST();
+      typasts.add(typast);  
+      System.out.println(typast); 
+      System.out.println(); 
+    } 
 
     for (int i = 0; i < entities.size(); i++)
     { Entity ent = (Entity) entities.get(i); 
       String entast = ent.toAST(); 
       entasts.add(entast); 
       System.out.println(entast); 
+      System.out.println(); 
     } 
 
     Vector saved = new Vector(); 
@@ -2270,6 +2283,9 @@ public class UCDArea extends JPanel
         System.out.println(uc.toAST(saved)); 
       } 
     }  
+
+    System.out.println(); 
+    System.out.println(); 
 
     File cgtlfile = null; 
     try 
@@ -2299,31 +2315,71 @@ public class UCDArea extends JPanel
       return; 
     } 
 
-    Vector res = new Vector(); 
+    Vector typres = new Vector(); // ASTs of types
+    Vector actualtyps = new Vector(); // corresponding types
+
+    Vector res = new Vector(); // ASTs of classes
+    Vector actualents = new Vector(); // corresponding classes
+
+    java.util.Date d1 = new java.util.Date(); 
+    long t1 = d1.getTime(); 
+
+    for (int i = 0; i < typasts.size(); i++) 
+    { String s = (String) typasts.get(i); 
+      Compiler2 c = new Compiler2();    
+      ASTTerm xx =
+          c.parseGeneralAST(s); 
+
+      if (xx == null) 
+      { System.err.println("!! ERROR: Invalid text for general AST: " + s); 
+        System.err.println(c.lexicals); 
+          // return; 
+      }
+      else 
+      { typres.add(xx);
+        Type typ = (Type) types.get(i); 
+        actualtyps.add(typ); 
+      }
+    }
 
     for (int i = 0; i < entasts.size(); i++) 
     { String s = (String) entasts.get(i); 
       Compiler2 c = new Compiler2();    
       ASTTerm xx =
           c.parseGeneralAST(s); 
+
       if (xx == null) 
-      { System.err.println("!!ERROR: Invalid text for general AST: " + s); 
+      { System.err.println("!! ERROR: Invalid text for general AST: " + s); 
         System.err.println(c.lexicals); 
           // return; 
       }
       else 
-      { res.add(xx); }
+      { res.add(xx);
+        Entity ent = (Entity) entities.get(i); 
+        actualents.add(ent); 
+      }
     }
 
     Vector results = new Vector(); 
 
-    Date d1 = new Date(); 
-    long t1 = d1.getTime(); 
+    for (int i = 0; i < typres.size(); i++) 
+    { ASTTerm tt = (ASTTerm) typres.get(i); 
+      
+      String outtext = tt.cg(spec); 
+      String newt = CGRule.correctNewlines(outtext); 
+        
+      results.add(newt); 
+    } 
 
     for (int i = 0; i < res.size(); i++) 
     { ASTTerm tt = (ASTTerm) res.get(i); 
+      Entity ent = (Entity) actualents.get(i);
+      ent.assertTypeInformation(); 
+  
       String outtext = tt.cg(spec); 
-      results.add(outtext); 
+      String newt = CGRule.correctNewlines(outtext); 
+        
+      results.add(newt); 
     } 
 
     if (res.size() == 0) 
@@ -2333,6 +2389,11 @@ public class UCDArea extends JPanel
     { String tt = (String) results.get(i); 
       System.out.println(tt);  
     } 
+
+    java.util.Date d2 = new java.util.Date(); 
+    long t2 = d2.getTime();
+
+    System.out.println(">>> Code generation took " + (t2 - t1) + " ms");  
   }     
 
   public void validateCGBE()
@@ -3602,6 +3663,30 @@ public class UCDArea extends JPanel
       ent.simplifyOCL(); 
     }
   }
+
+  public void simulatedExecution(Entity cls)
+  { String op = JOptionPane.showInputDialog("Enter name of operation to simulate: "); 
+    BehaviouralFeature bf = cls.getOperation(op); 
+
+    if (bf != null) 
+    { ModelSpecification ms = new ModelSpecification(); 
+      ModelState beta = new ModelState();
+      Vector pvals = new Vector(); 
+      beta.addNewEnvironment();
+
+      // add self : cls object to the environment
+      // with attribute initialisations.
+      String oid = Identifier.newIdentifier("oid_");  
+      ObjectSpecification obj = cls.initialisedObject(oid); 
+      ms.addObject(obj);
+      beta.addVariable("self", new BasicExpression(obj));   
+      System.out.println(">> Initial state = " + ms + "; " + beta); 
+  
+      bf.execute(ms, beta, pvals); 
+      System.out.println(); 
+      System.out.println(">> Resulting state = " + ms + "; " + beta); 
+    } 
+  } 
 
   public void energyAnalysis()
   { java.util.Map clnes = new java.util.HashMap(); 
@@ -12188,18 +12273,30 @@ public void produceCUI(PrintWriter out)
      out.println("      if (x != null) { res.Add(x); }");
      out.println("      return res;");
      out.println("    }\n");
+     out.println("    public static HashSet<T> addSet<T>(HashSet<T> a, T x)"); 
+     out.println("    {");
+     out.println("      HashSet<T> res = new HashSet<T>();");
+     out.println("      res.UnionWith(a); ");
+     out.println("      if (x != null) { res.Add(x); }");
+     out.println("      return res;");
+     out.println("    }\n");
  
     out.println("    public static ArrayList makeSet(object x)"); 
     out.println("    { ArrayList res = new ArrayList();"); 
     out.println("      if (x != null) { res.Add(x); }"); 
     out.println("      return res;"); 
     out.println("    }\n");
-     out.println("    public static SortedSet<T> makeSortedSet<T>(T x)");
-     out.println("    {");
-     out.println("      SortedSet<T> res = new SortedSet<T>();");
-     out.println("      if (x != null) { res.Add(x); }");
-     out.println("      return res;");
-     out.println("    }\n");
+    out.println("    public static HashSet<T> makeSet<T>(T x)"); 
+    out.println("    { HashSet<T> res = new HashSet<T>();"); 
+    out.println("      if (x != null) { res.Add(x); }"); 
+    out.println("      return res;"); 
+    out.println("    }\n");
+    out.println("    public static SortedSet<T> makeSortedSet<T>(T x)");
+    out.println("    {");
+    out.println("      SortedSet<T> res = new SortedSet<T>();");
+    out.println("      if (x != null) { res.Add(x); }");
+    out.println("      return res;");
+    out.println("    }\n");
  
     out.println("    public static ArrayList removeSet(ArrayList a, object x)"); 
     out.println("    { ArrayList res = new ArrayList(); "); 
@@ -12207,13 +12304,21 @@ public void produceCUI(PrintWriter out)
     out.println("      while (res.Contains(x)) { res.Remove(x); }"); 
     out.println("      return res; }\n"); 
 
-     out.println("    public static SortedSet<T> removeSet<T>(SortedSet<T> a, T x)");
-     out.println("    {");
-     out.println("       SortedSet<T> res = new SortedSet<T>();");
-     out.println("       res.UnionWith(a);");
-     out.println("       res.Remove(x); ");
-     out.println("       return res;");
-     out.println("    }\n");
+    out.println("    public static SortedSet<T> removeSortedSet<T>(SortedSet<T> a, T x)");
+    out.println("    {");
+    out.println("       SortedSet<T> res = new SortedSet<T>();");
+    out.println("       res.UnionWith(a);");
+    out.println("       res.Remove(x); ");
+    out.println("       return res;");
+    out.println("    }\n");
+
+    out.println("    public static HashSet<T> removeSet<T>(HashSet<T> a, T x)");
+    out.println("    {");
+    out.println("       HashSet<T> res = new HashSet<T>();");
+    out.println("       res.UnionWith(a);");
+    out.println("       res.Remove(x); ");
+    out.println("       return res;");
+    out.println("    }\n");
     
     String mop = BSystemTypes.generateMaxOpCSharp(); 
     out.println("\n" + mop); 
@@ -14849,7 +14954,7 @@ public void produceCUI(PrintWriter out)
       String newt = t.cg(spec);
       newclasses = newclasses + newt + '\n'; 
       
-      System.out.println("Transformed entity is: " + newt); 
+      System.out.println(">>> Transformed entity is: " + newt); 
     } 
 
     /* Argument _4 of the package rule */ 
@@ -16081,16 +16186,16 @@ public void produceCUI(PrintWriter out)
     xx.enumtypes = new Vector(); 
     xx.enumtypes.addAll(types); 
 
-    xx.toKM3();
+    String ocltext = xx.toKM3();
  
     // System.out.println(); 
-    // System.out.println(); 
+    System.out.println(); 
 
     // Date d1 = new Date(); 
     // long time1 = d1.getTime(); 
 
     // String tt = xx.cg(spec); 
-    // System.out.println(tt); 
+    System.out.println(ocltext); 
     // System.out.println(); 
 
     // System.out.println(xx.toKM3()); 
@@ -16102,7 +16207,9 @@ public void produceCUI(PrintWriter out)
 
     // System.out.println(">>> Time for abstraction = " + (time2-time1)); 
 
-    // System.out.println(">>> System classes are: " + ASTTerm.entities); 
+    System.out.println(">>> System classes are: " + ASTTerm.entities); 
+
+    System.out.println(">>> System model elements are: " + xx.modelElements); 
 
     Vector newentities = new Vector(); 
     String pname = ASTTerm.packageName; 
@@ -16133,6 +16240,7 @@ public void produceCUI(PrintWriter out)
     else if (xx.modelElements != null) 
     { for (int i = 0; i < xx.modelElements.size(); i++) 
       { ModelElement me = (ModelElement) xx.modelElements.get(i); 
+
         if (me instanceof Entity) 
         { Entity newent = (Entity) me; 
           if (newent.isInterface() ||
@@ -16142,6 +16250,7 @@ public void produceCUI(PrintWriter out)
           { newent.addDefaultConstructor(); } 
 
           addEntity(newent, 100+(i*50), 100 + (150*i % 600));
+
           newentities.add(newent); 
         } 
         else if (me instanceof BehaviouralFeature)
@@ -28308,7 +28417,9 @@ public void produceCUI(PrintWriter out)
   } 
   
   public void qualityCheck()
-  { for (int i = 0; i < types.size(); i++) 
+  { // Quality analysis
+
+    for (int i = 0; i < types.size(); i++) 
     { Type tt = (Type) types.get(i); 
       tt.checkEnumerationNames(); 
     } 
@@ -28397,7 +28508,6 @@ public void produceCUI(PrintWriter out)
         System.out.println(); 
       } 
     } 
- 
   }  
 
   public void loadFromJavaScript()
@@ -28556,6 +28666,188 @@ public void produceCUI(PrintWriter out)
     tags.add("identifier"); // for JS
 
     compareModel2Program(xx, tags); 
+
+    repaint(); 
+  }
+
+  public void loadFromPlantUML(String sourcefile)
+  { if (sourcefile == null)
+    { loadFromPlantUML(); 
+      return; 
+    } 
+
+    BufferedReader br = null;
+    Vector res = new Vector();
+    String s;
+    
+    try
+    { br = new BufferedReader(new FileReader(sourcefile)); }
+    catch (FileNotFoundException _e)
+    { System.err.println("!! File not found: " + sourcefile);
+      return; 
+    }
+
+    String sline = ""; 
+    boolean eof = false; 
+    String jtext = ""; 
+    ASTTerm xx = null; 
+    String asttext = "";
+ 
+    while (!eof)
+    { try { sline = br.readLine(); }
+      catch (IOException _ex)
+      { System.err.println("!! Reading PlantUML file " + sourcefile + " failed.");
+        return; 
+      }
+
+      if (sline == null) 
+      { eof = true; 
+        break; 
+      }
+      else 
+      { jtext = jtext + sline + "\n"; } 
+    }
+
+    try { 
+      Runtime proc = Runtime.getRuntime(); 
+
+      Process p2 = proc.exec("java org.antlr.v4.gui.TestRig PlantUML classDiagram -tree"); 
+
+      OutputStream sout = p2.getOutputStream(); 
+      OutputStreamWriter outw = new OutputStreamWriter(sout); 
+      BufferedWriter brw = new BufferedWriter(outw);
+      brw.write(jtext + "\n"); 
+      brw.close();  
+  
+      InputStream sin2 = p2.getInputStream(); 
+      InputStreamReader inr2 = new InputStreamReader(sin2); 
+      BufferedReader ibr2 = new BufferedReader(inr2); 
+      String stext = "";
+ 
+      String oline2 = ibr2.readLine(); 
+        // System.out.println(">>> parsing .... " + jtext);
+      while (oline2 != null) 
+      { stext = oline2; 
+        oline2 = ibr2.readLine();
+      }
+
+      asttext = stext.trim();  
+      int exitjar2 = p2.waitFor(); 
+        // System.out.println(">>> Exit code: " + exitjar2);
+ 
+      System.out.println(asttext); 
+ 
+      Compiler2 cc = new Compiler2(); 
+      xx = cc.parseGeneralAST(asttext); 
+    } 
+    catch (Exception _expt) 
+    { _expt.printStackTrace(); } 
+
+    if (xx == null) 
+    { System.err.println("!! Invalid text for general AST: "); 
+      System.err.println(asttext); 
+      return; 
+    } 
+   
+    if (xx instanceof ASTCompositeTerm)  { } 
+    else 
+    { System.err.println("!! Not a valid PlantUML AST:"); 
+      System.err.println(asttext); 
+      return; 
+    } 
+  
+    File plantuml2km3 = new File("cg/plantUML2KM3.cstl"); 
+    Vector vbs = new Vector(); 
+    CGSpec spec = loadCSTL(plantuml2km3,vbs); 
+
+    if (spec == null) 
+    { System.err.println("!! ERROR: No file " + 
+                         plantuml2km3.getName()); 
+      return; 
+    } 
+
+    ASTTerm.metafeatures = new java.util.HashMap(); 
+    
+    String reskm3 = xx.cg(spec); 
+    String arg1 = CGRule.correctNewlines(reskm3);
+    System.out.println();  
+    System.out.println(arg1); 
+
+    loadKM3FromText(arg1); 
+
+    repaint(); 
+  }
+
+  public void loadFromPlantUML()
+  { BufferedReader br = null;
+    Vector res = new Vector();
+    String s;
+    boolean eof = false;
+    File sourcefile = new File("output/ast.txt");  
+      /* default */ 
+
+    try
+    { br = new BufferedReader(new FileReader(sourcefile)); }
+    catch (FileNotFoundException _e)
+    { System.err.println("!! File not found: " + sourcefile);
+      return; 
+    }
+
+    String sourcestring = ""; 
+    int noflines = 0; 
+
+    while (!eof)
+    { try { s = br.readLine(); }
+      catch (IOException _ex)
+      { System.err.println("!! Reading AST file output/ast.txt failed.");
+        return; 
+      }
+      if (s == null) 
+      { eof = true; 
+        break; 
+      }
+      else 
+      { sourcestring = sourcestring + s + " "; } 
+      noflines++; 
+    }
+
+    System.out.println(">>> Read " + noflines + " lines"); 
+
+    Compiler2 c = new Compiler2();    
+
+    ASTTerm xx =
+      c.parseGeneralAST(sourcestring); 
+
+    if (xx == null) 
+    { System.err.println("!! Invalid text for general AST"); 
+      System.err.println(c.lexicals); 
+      return; 
+    } 
+   
+    if (xx instanceof ASTCompositeTerm)  { } 
+    else 
+    { System.err.println("!! Not a valid PlantUML AST:"); 
+      System.err.println(c.lexicals); 
+      return; 
+    } 
+  
+    File vb2uml = new File("cg/plantUML2KM3.cstl"); 
+    Vector vbs = new Vector(); 
+    CGSpec spec = loadCSTL(vb2uml,vbs); 
+
+    if (spec == null) 
+    { System.err.println("!! ERROR: No file " + vb2uml.getName()); 
+      return; 
+    } 
+
+    ASTTerm.metafeatures = new java.util.HashMap(); 
+    
+    String reskm3 = xx.cg(spec); 
+    String arg1 = CGRule.correctNewlines(reskm3);
+    System.out.println();  
+    System.out.println(arg1); 
+
+    loadKM3FromText(arg1); 
 
     repaint(); 
   }

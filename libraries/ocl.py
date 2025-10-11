@@ -309,9 +309,10 @@ def setAtString(x,i,s) :
 def reverseString(st) :
   if len(st) == 0 : 
     return st
-  else :
-    return reverseString(st[1:]) + st[0:1]
-  
+  res = ""
+  for x in st : 
+    res = x + res
+  return res  
 
 def subtractString(s1,s2) :
   res = ''
@@ -1174,7 +1175,7 @@ def keys(m) :
     res.add(x)
   return res
 
-
+# values should be a Bag (Sequence)
 def values(m) : 
   res = set({})
   for x in m : 
@@ -1188,7 +1189,7 @@ def values(m) :
 # print(sdata)
 
 # ss = "a long string"
-# pp = setSubrange(ss, 3, 5, "and")
+# pp = reverseString(ss)
 # print(pp)
 
 # ss = [1, 4, 6, 7, 2]
