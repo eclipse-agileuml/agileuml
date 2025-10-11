@@ -2,7 +2,7 @@
 #include <string>
 #include <vector>
 #include <typeinfo>
-//#include "OCLC++11.h"
+#include "OCLC++11.h"
 
 using std::string;
 using std::vector;
