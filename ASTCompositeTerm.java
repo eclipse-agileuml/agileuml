@@ -49995,6 +49995,7 @@ public class ASTCompositeTerm extends ASTTerm
          new PrintWriter(new BufferedWriter(new FileWriter(outfile)));
     outcs.println("using System;"); 
     outcs.println("using System.Collections;"); 
+    outcs.println("using System.Collections.Generic;"); 
     outcs.println("using System.IO;"); 
     outcs.println("using System.Text;"); 
     outcs.println("using System.Text.RegularExpressions;"); 

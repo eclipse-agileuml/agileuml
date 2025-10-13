@@ -3788,10 +3788,15 @@ public class Attribute extends ModelElement
 
   public String addremOperationCSharp(Entity ent)
   { String res = "";
+
+    /* JOptionPane.showInputDialog(">> addrem for " + name + " " + 
+       isMultiple() + " " + isSet() + " " + isSequence()); */ 
+
     if (!isMultiple()) { return res; }
     if (isSet() || isSequence()) { }
     else 
     { return res; } 
+
     Type eType = elementType; 
     if (eType == null) 
     { eType = type.elementType; } 
@@ -3813,16 +3818,18 @@ public class Attribute extends ModelElement
              "  void remove" + nme + "(" + et + " " + attx + ");\n\n";
     }
     else if (instanceScope)
-    { return "  public void add" + nme + "(" + et + " " + attx + ")\n" + 
-             "  { " + nme + ".Add(" + wattx + "); }\n\n" +
-          "  public void remove" + nme + "(" + et + " " + attx + ")\n" + 
-          "  { " + nme + " = SystemTypes.subtract(" + nme + ", " + wattx + "); }\n\n";
+    { return 
+        "  public void add" + nme + "(" + et + " " + attx + ")\n" + 
+        "  { " + nme + ".Add(" + wattx + "); }\n\n" +
+        "  public void remove" + nme + "(" + et + " " + attx + ")\n" + 
+        "  { " + nme + " = SystemTypes.subtract(" + nme + ", " + wattx + "); }\n\n";
     }
     else // static
-    { return "  public static void add" + nme + "(" + et + " " + attx + ")\n" + 
-             "  { " + nme + ".Add(" + wattx + "); }\n\n" +
-          "  public static void remove" + nme + "(" + et + " " + attx + ")\n" + 
-          "  { " + nme + " = SystemTypes.subtract(" + nme + ", " + wattx + "); }\n\n";
+    { return 
+        "  public static void add" + nme + "(" + et + " " + attx + ")\n" + 
+        "  { " + nme + ".Add(" + wattx + "); }\n\n" +
+        "  public static void remove" + nme + "(" + et + " " + attx + ")\n" + 
+        "  { " + nme + " = SystemTypes.subtract(" + nme + ", " + wattx + "); }\n\n";
     }
   }
 
@@ -3842,12 +3849,13 @@ public class Attribute extends ModelElement
     String et = eType.getCPP();
     // String wattx = Expression.wrap(eType,attx); 
 
-    String remassign = "  vector<" + et + ">::iterator _pos = find(" + nme + "->begin(), " + 
-                                          nme + "->end(), " + attx + ");\n" + 
-                "  while (_pos != " + nme + "->end())\n" + 
-                "  { " + nme + "->erase(_pos);\n" + 
-                "    _pos = find(" + nme + "->begin(), " + nme + "->end(), " + attx + ");\n" +
-                "  }\n\n"; 
+    String remassign = 
+      "  vector<" + et + ">::iterator _pos = find(" + nme + "->begin(), " + 
+                              nme + "->end(), " + attx + ");\n" + 
+      "  while (_pos != " + nme + "->end())\n" + 
+      "  { " + nme + "->erase(_pos);\n" + 
+      "    _pos = find(" + nme + "->begin(), " + nme + "->end(), " + attx + ");\n" +
+      "  }\n\n"; 
 
     String qual = ""; 
     if (instanceScope) { } 

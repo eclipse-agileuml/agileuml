@@ -11596,6 +11596,11 @@ System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
           if (par != null) 
           { out.println("  " + par + "\n"); }
         } 
+        else if (att.isSet())
+        { par = att.addremOperationCSharp(this); 
+          if (par != null) 
+          { out.println("  " + par + "\n"); }
+        } 
         else if (att.isMap())
         { String par1 = 
             att.setMapIndexOperationCSharp(this, invariants, entities, types);
@@ -11655,6 +11660,7 @@ System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
           else
           { out.println("  " + pp + "\n"); }
         } 
+
         pp = ast.removeAllOperationCSharp(getName());
         if (pp != null)
         { if (isInterface()) 
@@ -11662,6 +11668,7 @@ System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
           else
           { out.println("  " + pp + "\n"); }
         }
+
         pp = ast.unionAllOperationCSharp(getName());
         if (pp != null)
         { if (isInterface()) 
@@ -11669,6 +11676,7 @@ System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
           else
           { out.println("  " + pp + "\n"); }
         }
+
         pp = ast.subtractAllOperationCSharp(getName());
         if (pp != null)
         { if (isInterface()) 
@@ -11700,6 +11708,7 @@ System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         else
         { out.println("  " + par + "\n"); }
       }
+
       par = att.getAllOrderedOperationCSharp(this,getName()); 
       if (par != null)
       { if (isInterface()) 
@@ -11729,6 +11738,7 @@ System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         else
         { out.println("  " + par + "\n"); }
       }
+
       par = ast.getAllOrderedOperationCSharp(getName()); 
       if (par != null)
       { if (isInterface()) 
@@ -19140,6 +19150,7 @@ public void iosDbiOperations(PrintWriter out)
 
     for (int i = 0; i < assts.size(); i++)
     { Association ast = (Association) assts.get(i);
+
       if (ast.isQualified()) { } 
       else if (ast.getCard2() != ONE) 
       { String ent2 = ast.getEntity2() + "";
@@ -19199,15 +19210,25 @@ public void iosDbiOperations(PrintWriter out)
 
     for (int j = 0; j < atts.size(); j++)
     { Attribute att = (Attribute) atts.get(j);
+
       if (att.isStatic()) { continue; } 
+
       String aname = att.getName();
       Type t = att.getType();
+      if (t == null) { continue; } 
+
       String tname = t.getName();
+
       String valc = "val";
+
       if ("Ref".equals(tname))
       { continue; } 
-      if ("Sequence".equals(tname) || "Set".equals(tname))
-      { valc = "new ArrayList()"; } 
+      if ("Sequence".equals(tname))
+      { valc = "new ArrayList()"; }
+      else if ("Set".equals(tname))
+      { String etype = Type.getCSharptype(t.getElementType()); 
+        valc = "new HashSet<" + etype + ">()"; 
+      }  
       else if ("Map".equals(tname))
       { valc = "new Hashtable()"; } 
       else if ("String".equals(tname))

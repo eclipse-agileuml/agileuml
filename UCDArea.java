@@ -13279,8 +13279,9 @@ public void produceCUI(PrintWriter out)
     }
     res = res + " }\n\n";
 
-    res = res + "  public void setObjectFeatureValue(string a, string f, string val)\n" +
-                "  {";
+    res = res + 
+        "  public void setObjectFeatureValue(string a, string f, string val)\n" +
+        "  {";
 
     for (int i = 0; i < entities.size(); i++)
     { Entity e = (Entity) entities.get(i);
