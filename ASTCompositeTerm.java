@@ -40770,7 +40770,7 @@ public class ASTCompositeTerm extends ASTTerm
           } 
         }  
 
-        JOptionPane.showInputDialog(">> Type parameters = " + modelElements); 
+        // JOptionPane.showInputDialog(">> Type parameters = " + modelElements); 
 
         return resx + ">"; 
       } 
@@ -42145,8 +42145,8 @@ public class ASTCompositeTerm extends ASTTerm
         { newEnt.addGenericTypeParameters(
                               contents.modelElements,
                               ASTTerm.entities); 
-          JOptionPane.showInputDialog("] Set type parameters of " + newEnt + " to " + newEnt.getTypeParameters());
-          JOptionPane.showInputDialog(newEnt.getKM3());  
+          // JOptionPane.showInputDialog("] Set type parameters of " + newEnt + " to " + newEnt.getTypeParameters());
+          // JOptionPane.showInputDialog(newEnt.getKM3());  
         } 
         else if (contents.modelElement != null && 
                  newEnt != null && 
@@ -44386,7 +44386,7 @@ public class ASTCompositeTerm extends ASTTerm
           if (modelElement != null) 
           { modelElements.add(modelElement); } 
     
-          JOptionPane.showInputDialog("+++ Type parameter: " + typepar0 + " " + typepar0.modelElement); 
+          // JOptionPane.showInputDialog("+++ Type parameter: " + typepar0 + " " + typepar0.modelElement); 
         } 
       } 
 

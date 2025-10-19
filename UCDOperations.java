@@ -14023,7 +14023,8 @@ public void produceCUI(PrintWriter out)
     
   // Saves the class diagram as an *instance model* of 
   // UML-RSDS metamodel
-  /* 
+  
+/*
   public void saveModelToFile(String f)
   { File file = new File(f);
     // JFileChooser fc = new JFileChooser();
@@ -14060,7 +14061,46 @@ public void produceCUI(PrintWriter out)
       catch (IOException e) 
       { System.err.println("!! Error saving model"); } 
     }
-  }  */ 
+  }  
+    */ 
+
+  public void saveModelToFileNoVisuals(String f)
+  { File file = new File(f);
+    // JFileChooser fc = new JFileChooser();
+    // fc.setCurrentDirectory(startingpoint);
+    // fc.setDialogTitle("Save Model as text file");
+    // int returnVal = fc.showSaveDialog(this);
+    // if (returnVal == JFileChooser.APPROVE_OPTION)
+    { // File file = fc.getSelectedFile();
+      try
+      { PrintWriter out =
+          new PrintWriter(
+            new BufferedWriter(new FileWriter(file)));
+
+        Vector visualentities = saveModelNoVisuals(out); 
+        // locals.addAll(constraints); 
+        // for (int i = 0; i < locals.size(); i++) 
+        // { Constraint inv = (Constraint) locals.get(i); 
+        //   inv.saveData(out); 
+        // } 
+
+        saveAdditionalOperations(visualentities, out); 
+
+        Vector saved = new Vector(); 
+        for (int p = 0; p < useCases.size(); p++) 
+        { ModelElement uc = (ModelElement) useCases.get(p); 
+
+          if (uc instanceof OperationDescription)
+          { ((OperationDescription) uc).saveModelData(out,saved); } 
+          else if (uc instanceof UseCase)
+          { ((UseCase) uc).saveModelData(out,saved,entities,types); }  
+        } 
+        out.close(); 
+      }
+      catch (IOException e) 
+      { System.err.println("!! Error saving model"); } 
+    }
+  }  
 
   public void saveUSEDataToFile(String f)
   { File file = new File("output/" + f);
@@ -14359,6 +14399,45 @@ public void produceCUI(PrintWriter out)
 
     return realentities; 
   } */ 
+
+  private Vector saveModelNoVisuals(PrintWriter out)
+  { Vector locals = new Vector(); 
+    Vector realentities = new Vector(); 
+
+    UCDArea.saveBasicTypes(out); 
+
+    for (int i = 0; i < types.size(); i++)
+    { Type me = (Type) types.get(i); 
+      me.asTextModel(out);  
+    } 
+    
+    for (int i = 0; i < entities.size(); i++)
+    { Entity me = (Entity) entities.get(i); 
+      me.asTextModel(out); 
+    }
+  
+    for (int i = 0; i < associations.size(); i++) 
+    { Association ast = (Association) associations.get(i); 
+      ast.saveModelData(out);
+    }  
+
+    for (int i = 0; i < generalisations.size(); i++) 
+    { Generalisation ast = (Generalisation) generalisations.get(i);
+      ast.asTextModel(out); 
+    } 
+   
+    for (int i = 0; i < entities.size(); i++) 
+    { Entity e = (Entity) entities.get(i);
+      e.asTextModel2(out,entities,types); 
+    } 
+
+    System.out.println(); 
+    System.out.println(">>> Design model saved to output/model.txt"); 
+    System.out.println(); 
+
+    realentities.addAll(entities); 
+    return realentities; 
+  } 
 
   private void saveAdditionalOperations(Vector realentities, PrintWriter out)
   { for (int i = 0; i < associations.size(); i++) 
@@ -29895,6 +29974,167 @@ public void produceCUI(PrintWriter out)
     }
     return res;
   }
+
+  public String getKM3() 
+  { String res = ""; 
+
+    for (int i = 0; i < types.size(); i++) 
+    { Type typ = (Type) types.get(i); 
+      res = res + typ.getKM3() + "\n\n"; 
+    }
+
+    for (int i = 0; i < entities.size(); i++) 
+    { Entity ext = (Entity) entities.get(i); 
+      res = res + ext.getKM3() + "\n\n"; 
+    } 
+
+    return res; 
+  } 
+
+  public static void main(String[] args)
+  { String cmd = ""; 
+    UCDOperations model = new UCDOperations(); 
+
+    while (!cmd.equals("exit"))
+    { System.out.println(); 
+      System.out.println("*********** AgileUML *******************"); 
+      System.out.println("* Commands: loadKM3, analyse, loadJava, ");
+      System.out.println("* view, simplify, loadPython, generateJava, generateCS, ");
+      System.out.println("* emulate cls op, ");  
+      System.out.println("* generatePython, generateCPP, exit "); 
+      System.out.println(); 
+
+      try 
+      { BufferedReader inputStreamReader = 
+            new BufferedReader(
+               new InputStreamReader(System.in)); 
+        cmd = 
+          inputStreamReader.readLine(); 
+      } catch (Exception _ex) 
+        { System.out.println("!! invalid command"); 
+          continue; 
+        } 
+
+      if ("loadKM3".equals(cmd))
+      { File oclfile = new File("output/mm.km3"); 
+        if (oclfile.exists())
+        { model.loadKM3FromFile(oclfile); }
+        else 
+        { System.err.println("! Warning: no file output/mm.km3"); }
+      }  
+      else if ("loadJava".equals(cmd))
+      { model.loadFromJavaAST("code.java"); } 
+      else if ("loadPython".equals(cmd))
+      { model.loadFromPython("code.py"); } 
+      else if ("view".equals(cmd))
+      { String res = model.getKM3(); 
+        System.out.println(res); 
+      } 
+      else if ("analyse".equals(cmd))
+      { model.typeCheck(); 
+        model.typeInference(); 
+        model.energyAnalysis(); 
+      }
+      else if ("simplify".equals(cmd))
+      { model.simplifyOCL(); } 
+      else if (cmd.startsWith("emulate"))
+      { String[] pars = cmd.split(" "); 
+        if (pars.length == 3)
+        { String cls = pars[1]; 
+          String op = pars[2]; 
+          Entity ent = (Entity)
+            ModelElement.lookupByName(cls, model.entities); 
+          if (ent != null) 
+          { ent.emulateOperation(op); } 
+        }  
+      } 
+      else if ("generateJava".equals(cmd))
+      { File file = new File("output/Application.java");
+
+        try
+        { PrintWriter out = new PrintWriter(
+                              new BufferedWriter(
+                                new FileWriter(file)));
+          model.generateJava8(out);
+          out.close();
+        }
+        catch (IOException ex)
+        { System.out.println("!! Error generating Java"); }
+      } 
+      else if ("generateCS".equals(cmd))
+      { File file = new File("output/Program.cs");  // Controller.cs
+        File file2 = new File("output/SystemTypes.cs");
+        try
+        { PrintWriter out = new PrintWriter(
+                              new BufferedWriter(
+                                new FileWriter(file)));
+          PrintWriter out2 = new PrintWriter(
+                              new BufferedWriter(
+                                new FileWriter(file2)));
+          model.generateCSharp(out,out2);
+          out.close();
+          out2.close(); 
+        }
+        catch (IOException ex)
+        { System.out.println("!! Error generating C#"); }
+      }
+      else if (cmd.equals("Generate CPP"))
+      { File file = new File("output/controller.h");
+        File file2 = new File("output/Controller.cpp");
+        try
+        { PrintWriter out = new PrintWriter(
+                              new BufferedWriter(
+                                new FileWriter(file)));
+          PrintWriter out2 = new PrintWriter(
+                              new BufferedWriter(
+                                new FileWriter(file2)));
+          model.generateCPP(out,out2);
+          out.close();
+          out2.close(); 
+        }
+        catch (IOException ex)
+        { System.out.println("!! Error generating C++"); }
+      }
+      else if (cmd.equals("generatePython"))
+      { model.saveModelToFileNoVisuals("output/model.txt"); 
+
+        // java.util.Date d1 = new java.util.Date(); 
+        // long t1 = d1.getDate(); 
+
+        RunApp rapp1 = new RunApp("uml2py3"); 
+        Thread appthread = null;
+ 
+        try
+        { rapp1.setFile("app.py"); 
+          appthread = new Thread(rapp1); 
+          appthread.start(); 
+        } 
+        catch (Exception ee2) 
+        { System.err.println("!! Unable to run uml2py3.jar"); } 
+
+        File pythonTests = new File("tester.py"); 
+        try
+        { PrintWriter out = new PrintWriter(
+                              new BufferedWriter(
+                                new FileWriter(pythonTests)));
+          Vector ucs = model.getGeneralUseCases(); 
+          Vector typs = model.getTypes(); 
+          Vector ents = model.getEntities(); 
+          String testcode = 
+             GUIBuilder.buildTestsGUIPython(
+                                ucs,"",typs,ents);    
+          out.println(testcode);
+          out.close();
+
+          model.generateMutationTesterPython(); 
+          if (appthread != null) 
+          { appthread.join(); } 
+        }
+        catch (Exception ex)
+        { System.out.println("!! Error generating Python tests"); }
+      }
+    } 
+  } 
 
 } 
 

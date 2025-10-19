@@ -1851,6 +1851,14 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
     return Expression.simplify(operator, pre); 
   } 
 
+  public void execute(ModelSpecification sigma, 
+                      ModelState beta)
+  { if ("->display".equals(operator))
+    { Expression val = argument.evaluate(sigma, beta); 
+      System.out.println("DISPLAY: " + val);  
+    }  
+  }  
+
   public String updateForm(java.util.Map env, boolean local)
   { String cont = "Controller.inst()"; 
     String pre = argument.queryForm(env,local);
@@ -1964,7 +1972,8 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
     { String aqf = argument.queryForm(env,local); 
       return "  System.out.println(\"\" + " + aqf + ");\n"; 
     } 
-    else if ("->oclIsNew".equals(operator) && (argument instanceof BasicExpression))
+    else if ("->oclIsNew".equals(operator) && 
+             (argument instanceof BasicExpression))
     { Type argt = argument.getType(); 
       if (argt != null && argt.isEntity())
       { Entity argent = argt.getEntity(); 

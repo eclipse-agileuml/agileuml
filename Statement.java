@@ -5935,7 +5935,8 @@ class ImplicitInvocationStatement extends Statement
     int syncomp = callExp.syntacticComplexity(); 
     if (syncomp > TestParameters.syntacticComplexityLimit)
     { System.err.println("!!! Code smell (MEL): too high expression complexity (" + syncomp + ") for " + callExp); 
-      System.err.println(">>> Recommend OCL refactoring"); 
+      System.err.println(">>> Recommend OCL refactoring");
+      System.err.println();  
     } 
 
     return uses; 
@@ -5960,6 +5961,11 @@ class ImplicitInvocationStatement extends Statement
     return res; 
   } 
 
+  public int execute(ModelSpecification sigma, ModelState beta)
+  { callExp.execute(sigma, beta); 
+    return Statement.NORMAL; 
+  }
+ 
   public Statement substituteEq(String oldE, Expression newE)
   { Expression newExp = callExp.substituteEq(oldE,newE); 
 

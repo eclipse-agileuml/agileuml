@@ -5779,6 +5779,30 @@ public class Entity extends ModelElement implements Comparable
     return sze; 
   } 
   
+
+  public void emulateOperation(String op)
+  { BehaviouralFeature bf = this.getOperation(op); 
+
+    if (bf != null) 
+    { ModelSpecification ms = new ModelSpecification(); 
+      ModelState beta = new ModelState();
+      Vector pvals = new Vector(); 
+      beta.addNewEnvironment();
+
+      // add self : cls object to the environment
+      // with attribute initialisations.
+      String oid = Identifier.newIdentifier("oid_");  
+      ObjectSpecification obj = this.initialisedObject(oid); 
+      ms.addObject(obj);
+      beta.addVariable("self", new BasicExpression(obj));   
+      System.out.println(">> Initial state = " + ms + "; " + beta); 
+  
+      bf.execute(ms, beta, pvals); 
+      System.out.println(); 
+      System.out.println(">> Resulting state = " + ms + "; " + beta); 
+    } 
+  } 
+
   public void simplifyOCL()
   { int n = operations.size(); 
 
@@ -5842,7 +5866,9 @@ public class Entity extends ModelElement implements Comparable
                            " amber flags!"); 
 
         for (int j = 0; j < amberDetails.size(); j++) 
-        { System.err.println(amberDetails.get(j)); } 
+        { System.err.println(amberDetails.get(j)); 
+          System.err.println(); 
+        } 
         System.err.println(); 
 
         int amberscore = (int) res.get("amber"); 
@@ -5892,7 +5918,9 @@ public class Entity extends ModelElement implements Comparable
                            " red flags!");
 
         for (int j = 0; j < redDetails.size(); j++) 
-        { System.err.println(redDetails.get(j)); } 
+        { System.err.println(redDetails.get(j)); 
+          System.err.println();
+        } 
         System.err.println(); 
  
         int redscore = (int) res.get("red"); 
@@ -5906,7 +5934,9 @@ public class Entity extends ModelElement implements Comparable
                            " amber flags!"); 
 
         for (int j = 0; j < amberDetails.size(); j++) 
-        { System.err.println(amberDetails.get(j)); } 
+        { System.err.println(amberDetails.get(j)); 
+          System.err.println();
+        } 
         System.err.println(); 
 
         int amberscore = (int) res.get("amber"); 
@@ -5917,6 +5947,8 @@ public class Entity extends ModelElement implements Comparable
 
     System.err.println(">> Collection operator uses in " + 
                        ename + " are: " + collOps + " " + collVars);
+    System.err.println();
+
     java.util.Set keys = collOps.keySet(); 
 
     for (Object k : keys)
@@ -5966,13 +5998,15 @@ public class Entity extends ModelElement implements Comparable
               if (Expression.isOclDistributedIteratorOperator(oper))
               { System.err.println("! Warning: " + maxop + " is a >= O(S) operation\n" + 
                   " in the sum S of sizes of the argument elements. \n"); 
+                System.err.println();
               }
               else if ("->max".equals(oper) || 
                        "->min".equals(oper))
               { if (arg.isSequence())
                 { System.err.println("! Warning: " + oper + 
                     " is an O(n) operation on Sequence " + arg + "\n" + 
-                    " SortedSet or SortedBag can be more efficient if no indexing is needed\n"); 
+                    " SortedSet or SortedBag can be more efficient if no indexing is needed\n");
+                  System.err.println(); 
                 }
               }
 
