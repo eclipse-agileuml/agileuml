@@ -6517,15 +6517,16 @@ class WhileStatement extends Statement
   } 
 
   public int execute(ModelSpecification sigma, 
-                      ModelState beta)
+                     ModelState beta)
   { int res = Statement.NORMAL; 
 
     if (loopKind == Statement.WHILE)
     { Expression testvalue = 
          loopTest.evaluate(sigma, beta); 
+
       while ("true".equals(testvalue + ""))
       { res = body.execute(sigma, beta);
-        System.out.println("---> iteration of while loop: " + sigma + ", " + beta + " " + res);
+        // System.out.println("---> iteration of while loop: " + sigma + ", " + beta + " " + res);
 
         if (res == Statement.BREAK)
         { return Statement.NORMAL; } 
@@ -6548,10 +6549,11 @@ class WhileStatement extends Statement
       { return res; }   
 
       Expression testvalue = 
-         loopTest.evaluate(sigma, beta); 
+         loopTest.evaluate(sigma, beta);
+ 
       while ("false".equals(testvalue + ""))
       { res = body.execute(sigma, beta);
-        System.out.println("---> iteration of repeat loop: " + sigma + ", " + beta + " " + res);
+        // System.out.println("---> iteration of repeat loop: " + sigma + ", " + beta + " " + res);
 
         if (res == Statement.BREAK)
         { return Statement.NORMAL; } 
@@ -6581,13 +6583,17 @@ class WhileStatement extends Statement
         { Expression val = serange.getElement(i); 
           beta.setVariableValue(lv, val); 
           res = body.execute(sigma, beta); 
-          System.out.println("---> iteration of for loop: " + sigma + ", " + beta + " " + res);
+          // System.out.println("---> iteration of for loop: " + sigma + ", " + beta + " " + res);
 
           if (res == Statement.BREAK)
-          { return Statement.NORMAL; } 
+          { beta.removeLastEnvironment();
+            return Statement.NORMAL; 
+          } 
 
           if (res == Statement.RETURN)
-          { return res; }   
+          { beta.removeLastEnvironment();
+            return res; 
+          }   
         } 
      
         beta.removeLastEnvironment();
@@ -15077,12 +15083,14 @@ class AssignStatement extends Statement
       { // object attribute
         Expression oid = obj.evaluate(sigma, beta); 
         ObjectSpecification ref = sigma.getObjectSpec("" + oid); 
+        // System.out.println(">>> Object spec: " + ref); 
+
         if (ref != null)
         { ref.setOCLValue(var, rhsValue); }   
       } 
     } 
 
-    System.out.println(">> Updated state: " + beta);
+    System.out.println(">> Updated state after assignment: " + beta);
     return Statement.NORMAL;  
   } 
 

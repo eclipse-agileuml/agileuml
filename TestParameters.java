@@ -94,6 +94,7 @@ public class TestParameters
     sequenceCC.put("->prepend", 2.0);
  
     sequenceCC.put("->union", 2.0); 
+    sequenceCC.put("<:", 2.0); 
     sequenceCC.put("->intersection", 4.0);  // O(n*n) 
     sequenceCC.put("-", 4.0); 
 
@@ -163,6 +164,7 @@ public class TestParameters
     sortedsequenceCC.put("->prepend", 2.0);
  
     sortedsequenceCC.put("->union", 4.0); 
+    sortedsequenceCC.put("<:", 4.0); 
     sortedsequenceCC.put("->intersection", 4.0);  // O(n*n) 
     sortedsequenceCC.put("-", 4.0); 
 
@@ -223,6 +225,7 @@ public class TestParameters
     setCC.put("->prd", 2.0); 
 
     setCC.put("->union", 2.0); 
+    setCC.put("<:", 2.0); 
     setCC.put("->intersection", 2.0);  
     setCC.put("-", 2.0); 
 
@@ -275,6 +278,7 @@ public class TestParameters
     sortedsetCC.put("->prd", 2.0); 
 
     sortedsetCC.put("->union", 3.0); 
+    sortedsetCC.put("<:", 3.0); 
     sortedsetCC.put("->intersection", 3.0);  
     sortedsetCC.put("-", 3.0); 
 
@@ -324,6 +328,7 @@ public class TestParameters
     mapCC.put("->values", 2.0);
 
     mapCC.put("->union", 2.0);
+    mapCC.put("<:", 2.0);
     mapCC.put("->intersection", 2.0);
     mapCC.put("-", 2.0);
     mapCC.put("->copy", 2.0); 
@@ -337,6 +342,13 @@ public class TestParameters
     mapCC.put("|", 3.0);
     mapCC.put("|R", 3.0);
     mapCC.put("|C", 2.0);
+
+    mapCC.put("->forAll", 3.0);
+    mapCC.put("->exists", 3.0);
+    mapCC.put("->exists1", 3.0);
+    mapCC.put("!", 3.0);
+    mapCC.put("#", 3.0);
+    mapCC.put("#1", 3.0);
    
     compComplexity.put("Map", mapCC); 
 
@@ -369,6 +381,13 @@ public class TestParameters
     sortedmapCC.put("|", 3.0);
     sortedmapCC.put("|R", 3.0);
     sortedmapCC.put("|C", 2.0);
+
+    sortedmapCC.put("->forAll", 3.0);
+    sortedmapCC.put("->exists", 3.0);
+    sortedmapCC.put("->exists1", 3.0);
+    sortedmapCC.put("!", 3.0);
+    sortedmapCC.put("#", 3.0);
+    sortedmapCC.put("#1", 3.0);
    
     compComplexity.put("SortedMap", sortedmapCC); 
   } 

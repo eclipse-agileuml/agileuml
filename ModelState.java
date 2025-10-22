@@ -85,6 +85,54 @@ public class ModelState
     return res; 
   }         
 
+  public void updateState(ModelSpecification sigma, 
+                          Expression lhs, 
+                          Expression rhsValue)
+  { // updates lhs with rhsValue
+
+    if (lhs instanceof BasicExpression)
+    { BasicExpression lbe = (BasicExpression) lhs;
+      Expression obj = lbe.getObjectRef(); 
+      Expression indx = lbe.getArrayIndex(); 
+      String var = lbe.getData(); 
+
+      // System.out.println("LHS: " + obj + "." + var + indx + " " + lhs.isAttribute() + " " + beta); 
+      
+      if (obj == null && 
+          indx == null)
+      { // simple variable or attribute
+
+        if (lhs.isAttribute()) // of "self"
+        { Expression oid = this.getVariableValue("self"); 
+          ObjectSpecification ref = 
+                sigma.getObjectSpec("" + oid); 
+          if (ref != null)
+          { ref.setOCLValue(var, rhsValue); }
+        }   
+        else 
+        { this.setVariableValue(var, rhsValue); } 
+      } 
+      else if (obj == null)
+      { // simple array variable 
+        Expression indv = indx.evaluate(sigma, this); 
+        Expression arr = this.getVariableValue(var); 
+
+        if (arr instanceof SetExpression)
+        { int indval = Integer.parseInt("" + indv); 
+          ((SetExpression) arr).setExpression(indval, rhsValue); 
+        } 
+      }  
+      else if (obj != null && 
+          indx == null)
+      { // object attribute
+        Expression oid = obj.evaluate(sigma, this); 
+        ObjectSpecification ref = sigma.getObjectSpec("" + oid); 
+        if (ref != null)
+        { ref.setOCLValue(var, rhsValue); }   
+      } 
+    } 
+  } 
+
   public static void main(String[] args)
   { ModelState ms = new ModelState(); 
     ms.addNewEnvironment(); 

@@ -14603,7 +14603,8 @@ public boolean conflictsWithIn(String op, Expression el,
       else 
       { res = "UmlRsdsLib<" + lcet + ">::excludesAll(" + lqf + ", " + rqf + ")"; }
     }        
-    else if (operator.equals("^") || operator.equals("->concatenate"))
+    else if (operator.equals("^") || 
+             operator.equals("->concatenate"))
     { res = "UmlRsdsLib<" + lcet + ">::concatenate(" + lqf + ", " + rqf + ")"; } 
     else if (operator.equals("->symmetricDifference"))
     { res = "UmlRsdsLib<" + lcet + ">::symmetricDifference(" + lqf + "," + rqf + ")"; } 
@@ -14614,6 +14615,95 @@ public boolean conflictsWithIn(String op, Expression el,
     return res; 
   } // what about comparitors? 
     
+  public void execute(ModelSpecification sigma, 
+                      ModelState beta)
+  { if ("->includes".equals(operator))
+    { Expression eval = left.evaluate(sigma, beta); 
+      Expression elem = right.evaluate(sigma, beta); 
+      if (eval instanceof SetExpression)
+      { SetExpression se = (SetExpression) eval; 
+        se.addElement(elem);
+        beta.updateState(sigma, left, se);  
+      } 
+    }
+    else if (":".equals(operator))
+    { Expression eval = right.evaluate(sigma, beta); 
+      Expression elem = left.evaluate(sigma, beta); 
+      if (eval instanceof SetExpression)
+      { SetExpression se = (SetExpression) eval; 
+        se.addElement(elem); 
+        beta.updateState(sigma, right, se);  
+      } 
+    }
+    else if ("->includesAll".equals(operator))
+    { Expression eval = left.evaluate(sigma, beta); 
+      Expression elems = right.evaluate(sigma, beta); 
+      if (eval instanceof SetExpression && 
+          elems instanceof SetExpression)
+      { SetExpression se = (SetExpression) eval; 
+        SetExpression ses = (SetExpression) elems;
+        Vector newelems = ses.getElements();  
+        se.addElements(newelems); 
+        beta.updateState(sigma, left, se);  
+      } 
+    }
+    else if ("<:".equals(operator))
+    { Expression eval = right.evaluate(sigma, beta); 
+      Expression elems = left.evaluate(sigma, beta); 
+      if (eval instanceof SetExpression && 
+          elems instanceof SetExpression)
+      { SetExpression se = (SetExpression) eval; 
+        SetExpression ses = (SetExpression) elems;
+        Vector newelems = ses.getElements();  
+        se.addElements(newelems); 
+        beta.updateState(sigma, right, se);  
+      } 
+    }
+    else if ("->excludes".equals(operator))
+    { Expression eval = left.evaluate(sigma, beta); 
+      Expression elem = right.evaluate(sigma, beta); 
+      if (eval instanceof SetExpression)
+      { SetExpression se = (SetExpression) eval; 
+        se.removeElement(elem); 
+        beta.updateState(sigma, left, se);  
+      } 
+    }
+    else if ("/:".equals(operator))
+    { Expression eval = right.evaluate(sigma, beta); 
+      Expression elem = left.evaluate(sigma, beta); 
+      if (eval instanceof SetExpression)
+      { SetExpression se = (SetExpression) eval; 
+        se.removeElement(elem); 
+        beta.updateState(sigma, right, se);  
+      } 
+    }
+    else if ("->excludesAll".equals(operator))
+    { Expression eval = left.evaluate(sigma, beta); 
+      Expression elems = right.evaluate(sigma, beta); 
+      if (eval instanceof SetExpression && 
+          elems instanceof SetExpression)
+      { SetExpression se = (SetExpression) eval; 
+        SetExpression ses = (SetExpression) elems;
+        Vector newelems = ses.getElements();  
+        se.removeElements(newelems);
+        beta.updateState(sigma, left, se);   
+      } 
+    }
+    else if ("/<:".equals(operator))
+    { Expression eval = right.evaluate(sigma, beta); 
+      Expression elems = left.evaluate(sigma, beta); 
+      if (eval instanceof SetExpression && 
+          elems instanceof SetExpression)
+      { SetExpression se = (SetExpression) eval; 
+        SetExpression ses = (SetExpression) elems;
+        Vector newelems = ses.getElements();  
+        se.removeElements(newelems); 
+        beta.updateState(sigma, right, se);  
+      } 
+    }
+    
+  } 
+  
   public String updateForm(java.util.Map env, boolean local)
   { String val2;
     if (operator.equals("#") || operator.equals("#1"))
@@ -19047,7 +19137,25 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
 
   public Expression evaluate(ModelSpecification sigma, 
                              ModelState beta)
-  { Expression lft = left.evaluate(sigma, beta); 
+  { if (operator.equals("#") || operator.equals("#1") || 
+        operator.equals("!") || operator.equals("|A") ||
+        operator.equals("#LC") || operator.equals("|") || 
+        operator.equals("|C") || operator.equals("|R"))
+    { Expression var = ((BinaryExpression) left).left; 
+      Expression col = ((BinaryExpression) left).right; 
+      String vbl = var + ""; 
+
+      Expression se = col.evaluate(sigma, beta); 
+      if (se instanceof SetExpression)
+      { Expression res = 
+          ((SetExpression) se).evaluateIterator(operator,
+                                                sigma, beta,
+                                                vbl, right); 
+        return res; 
+      } 
+    } 
+
+    Expression lft = left.evaluate(sigma, beta); 
     Expression rgt = right.evaluate(sigma, beta); 
     return simplify(operator, lft, rgt, false); 
   } 

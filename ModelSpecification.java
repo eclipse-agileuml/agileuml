@@ -40,6 +40,12 @@ public class ModelSpecification
   public ObjectSpecification getObjectSpec(String nme)
   { return (ObjectSpecification) objectmap.get(nme); } 
 
+  public void removeObject(Expression expr)
+  { objectmap.remove(expr + ""); } 
+
+  public void removeObject(String nme)
+  { objectmap.remove(nme); } 
+
   public void addObject(ObjectSpecification obj) 
   { if (objects.contains(obj)) { } 
     else 

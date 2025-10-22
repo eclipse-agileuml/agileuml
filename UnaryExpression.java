@@ -1857,6 +1857,18 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
     { Expression val = argument.evaluate(sigma, beta); 
       System.out.println("DISPLAY: " + val);  
     }  
+    else if ("->isDeleted".equals(operator))
+    { if (argument.umlkind == CLASSID && 
+          (argument instanceof BasicExpression) && 
+          ((BasicExpression) argument).arrayIndex == null) 
+      { // remove an object from its class
+        Expression obj = argument.evaluate(sigma, beta);
+        sigma.removeObject(obj); 
+        beta.updateState(sigma, argument, 
+                         new BasicExpression("null")); 
+        System.out.println("DELETED: " + obj);  
+      } 
+    } 
   }  
 
   public String updateForm(java.util.Map env, boolean local)

@@ -1115,6 +1115,15 @@ public class SetExpression extends Expression
     elements.add(maplet); 
   } 
 
+  public void removeElement(Expression e)
+  { Vector elems = new Vector(); 
+    elems.add(e); 
+    elements.removeAll(elems); 
+  }
+
+  public void removeElements(Vector es)
+  { elements.removeAll(es); }
+
   public boolean hasElement(Expression elem)
   { for (int i = 0; i < elements.size(); i++) 
     { Expression expr = (Expression) elements.get(i); 
@@ -2685,6 +2694,198 @@ public class SetExpression extends Expression
 
     res.setOrdered(isOrdered());
     return res;
+  } 
+
+  public Expression evaluateIterator(String op, 
+                             ModelSpecification sigma, 
+                             ModelState beta, 
+                             String var, 
+                             Expression expr)
+  { if ("|C".equals(op))
+    { return evaluateCollect(sigma, beta, var, expr); }
+
+    if ("|".equals(op))
+    { return evaluateSelect(sigma, beta, var, expr); }
+
+    if ("|R".equals(op))
+    { return evaluateReject(sigma, beta, var, expr); }
+
+    if ("!".equals(op))
+    { return evaluateForAll(sigma, beta, var, expr); }
+
+    if ("#".equals(op))
+    { return evaluateExists(sigma, beta, var, expr); }
+
+    if ("#1".equals(op))
+    { return evaluateExists1(sigma, beta, var, expr); }
+
+    return this;  
+  } 
+
+  public Expression evaluateCollect(ModelSpecification sigma, 
+                             ModelState beta, 
+                             String var, 
+                             Expression expr)
+  { // evaluate expr in each environment with var |-> elem
+
+    SetExpression res = new SetExpression(true); 
+        
+    beta.addNewEnvironment(); 
+    beta.addVariable(var, new BasicExpression("null")); 
+
+    for (int i = 0; i < elements.size(); i++) 
+    { Expression elem = (Expression) elements.get(i);
+      beta.setVariableValue(var, elem); 
+      Expression val = expr.evaluate(sigma, beta); 
+      res.addElement(val); 
+    } 
+
+    beta.removeLastEnvironment();
+
+    Type seqtype = new Type("Sequence", null); 
+    seqtype.setElementType(expr.getType()); 
+    res.setType(seqtype); 
+    res.setElementType(expr.getType()); 
+
+    return res;
+  } 
+
+  public Expression evaluateSelect(ModelSpecification sigma, 
+                             ModelState beta, 
+                             String var, 
+                             Expression expr)
+  { // evaluate expr in each environment with var |-> elem
+
+    SetExpression res = new SetExpression(); 
+        
+    beta.addNewEnvironment(); 
+    beta.addVariable(var, new BasicExpression("null")); 
+
+    for (int i = 0; i < elements.size(); i++) 
+    { Expression elem = (Expression) elements.get(i);
+      beta.setVariableValue(var, elem); 
+      Expression val = expr.evaluate(sigma, beta); 
+      if ("true".equals(val + ""))
+      { res.addElement(elem); }  
+    } 
+
+    beta.removeLastEnvironment();
+
+    res.setOrdered(isOrdered()); 
+    res.setType(type); 
+    res.setElementType(elementType); 
+
+    return res;
+  } 
+
+  public Expression evaluateReject(ModelSpecification sigma, 
+                             ModelState beta, 
+                             String var, 
+                             Expression expr)
+  { // evaluate expr in each environment with var |-> elem
+
+    SetExpression res = new SetExpression(); 
+        
+    beta.addNewEnvironment(); 
+    beta.addVariable(var, new BasicExpression("null")); 
+
+    for (int i = 0; i < elements.size(); i++) 
+    { Expression elem = (Expression) elements.get(i);
+      beta.setVariableValue(var, elem); 
+      Expression val = expr.evaluate(sigma, beta); 
+      if ("true".equals(val + "")) {} 
+      else 
+      { res.addElement(elem); }  
+    } 
+
+    beta.removeLastEnvironment();
+
+    res.setOrdered(isOrdered()); 
+    res.setType(type); 
+    res.setElementType(elementType); 
+
+    return res;
+  } 
+
+  public Expression evaluateForAll(ModelSpecification sigma, 
+                             ModelState beta, 
+                             String var, 
+                             Expression expr)
+  { // evaluate expr in each environment with var |-> elem
+        
+    beta.addNewEnvironment(); 
+    beta.addVariable(var, new BasicExpression("null")); 
+
+    for (int i = 0; i < elements.size(); i++) 
+    { Expression elem = (Expression) elements.get(i);
+      beta.setVariableValue(var, elem); 
+      Expression val = expr.evaluate(sigma, beta); 
+      if ("true".equals(val + "")) { }
+      else  
+      { beta.removeLastEnvironment();
+        return new BasicExpression(false); 
+      }  
+    } 
+
+    beta.removeLastEnvironment();
+
+    return new BasicExpression(true); 
+  } 
+
+  public Expression evaluateExists(ModelSpecification sigma, 
+                             ModelState beta, 
+                             String var, 
+                             Expression expr)
+  { // evaluate expr in each environment with var |-> elem
+        
+    beta.addNewEnvironment(); 
+    beta.addVariable(var, new BasicExpression("null")); 
+
+    for (int i = 0; i < elements.size(); i++) 
+    { Expression elem = (Expression) elements.get(i);
+      beta.setVariableValue(var, elem); 
+      Expression val = expr.evaluate(sigma, beta); 
+      if ("true".equals(val + "")) 
+      { beta.removeLastEnvironment();
+        return new BasicExpression(true); 
+      }  
+    } 
+
+    beta.removeLastEnvironment();
+
+    return new BasicExpression(false); 
+  } 
+
+  public Expression evaluateExists1(ModelSpecification sigma, 
+                             ModelState beta, 
+                             String var, 
+                             Expression expr)
+  { // evaluate expr in each environment with var |-> elem
+        
+    int count = 0; 
+
+    beta.addNewEnvironment(); 
+    beta.addVariable(var, new BasicExpression("null")); 
+
+    for (int i = 0; i < elements.size(); i++) 
+    { Expression elem = (Expression) elements.get(i);
+      beta.setVariableValue(var, elem);
+ 
+      Expression val = expr.evaluate(sigma, beta); 
+      if ("true".equals(val + "")) 
+      { count++; } 
+
+      if (count > 1)
+      { beta.removeLastEnvironment();
+        return new BasicExpression(false); 
+      }  
+    } 
+
+    beta.removeLastEnvironment();
+
+    if (count == 1)
+    { return new BasicExpression(true); } 
+    return new BasicExpression(false);  
   } 
 
   public static void main(String[] args)
