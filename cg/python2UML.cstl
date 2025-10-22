@@ -262,7 +262,7 @@ tuple _1 |-->_1
 range _1 |-->_1`rangeTrailer
 irange _1 |-->_1`rangeTrailer
 enumerate _1 |-->Integer.subrange(1, _1->size())->collect( _indx | Sequence{_indx-1, _1->at(_indx)} )
-zip _1 |-->Integer.subrange(1, _1`firstArg->size())->collect( _indx | Sequence{_1`firstArg->at(_indx), _1`secondArg->at(_indx)} )
+zip _1 |-->Integer.subrange(1, _1`firstArg->size())->collect( _indx | _1`zipTerms )
 
 open _1 |-->OclFile.newOclFile_Write(OclFile.newOclFile(_1`firstArg))<when> _1`lastArg matches .*[wWaA].*
 open _1 |-->OclFile.newOclFile_Read(OclFile.newOclFile(_1`firstArg))
@@ -1915,6 +1915,16 @@ sequenceArgumentsType::
 [ _1 ] |-->Sequence<when> _1`ocltype Sequence
 
 [ _1 ] |-->OclAny
+
+
+zipTerms::
+_1 |-->_1`zipTerms
+( _1 ) |-->Sequence{_1`zipArgs}
+
+zipArgs::
+_1 |-->_1->at(_indx)
+_1 , _2 |-->_1->at(_indx), _2->at(_indx)
+_1 , _* |-->_1->at(_indx), _*`recurse
 
 
 bagArgumentsQueryForm::
