@@ -8,7 +8,7 @@ public class AgileUMLPythonAnalysis
   
     area.loadFromPython("code.py");
     area.typeCheck();    
-    area.energyAnalysis();
+    area.energyAnalysisHTML();
   } 
 } 
  

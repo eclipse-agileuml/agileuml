@@ -6182,10 +6182,10 @@ String qual = "";
           new FileOutputStream(fileName));
       out.writeObject(atts); 
       out.close();
-      System.out.println("Written data");
+      System.out.println(">> Written data");
     }
     catch (IOException e)
-    { System.err.println("Error in writing " + getName()); }
+    { System.err.println("!! Error in writing " + getName()); }
   }
 
   public String getKillCode(String ex, String e1s)
@@ -6482,6 +6482,7 @@ String qual = "";
 
     String res = 
       "    Vector " + qrangename + " = new Vector();\n";
+
     if (role2 != null && role2.length() > 0 && card2 == ONE)
     { res = res + "    " + qrangename + ".add(" + qrange + ");\n"; } 
     else 

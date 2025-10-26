@@ -6754,7 +6754,7 @@ class WhileStatement extends Statement
         { int acount = (int) uses.get("amber"); 
           uses.set("amber", acount + 1); 
           aUses.add("! Code smell (MEL): too high expression complexity (" + rcomp + ") for " + loopRange + "\n" +  
-                    ">>> Recommend OCL refactoring"); 
+                    "! Recommend OCL refactoring"); 
         } 
       } 
     }
@@ -6764,7 +6764,7 @@ class WhileStatement extends Statement
       { int acount = (int) uses.get("amber"); 
         uses.set("amber", acount + 1); 
         aUses.add("! Code smell (MEL): too high expression complexity (" + syncomp + ") for " + loopTest + "\n" +  
-                  ">>> Recommend OCL refactoring"); 
+                  "! Recommend OCL refactoring"); 
       }
     }  
 
@@ -16670,8 +16670,8 @@ class ConditionalStatement extends Statement
       { // adds to testbeLeft only if not in there already
 
         if (testbeLeft.hasSequenceType())
-        { rUses.add("!! Possibly using sequence " + testbeLeft + " as set in: " + this + 
-               "\n>> Recommend declaring " + testbeLeft + " as a Set or SortedSet"); 
+        { rUses.add("!!! Possibly using sequence " + testbeLeft + " as set in: " + this); 
+          rUses.add("!!! Recommend declaring " + testbeLeft + " as a Set or SortedSet"); 
 
           int rscore = (int) uses.get("red"); 
           uses.set("red", rscore + 1); 
@@ -16691,11 +16691,11 @@ class ConditionalStatement extends Statement
       { // adds to testbeLeft only if not in there already
 
         if (testbeLeft.hasSequenceType())
-        { oUses.add("!! Possibly using sequence " + testbeLeft + " as set in: " + this + 
-               "\n>> Recommend declaring " + testbeLeft + " as a Set or SortedSet"); 
+        { rUses.add("!!! Possibly using sequence " + testbeLeft + " as set in: " + this);  
+          rUses.add("!!! Recommend declaring " + testbeLeft + " as a Set or SortedSet"); 
 
-          int ascore = (int) uses.get("amber"); 
-          uses.set("amber", ascore + 1); 
+          int rscore = (int) uses.get("red"); 
+          uses.set("red", rscore + 1); 
         } 
       } 
       else if ("->excludes".equals(testbe.getOperator()) &&
@@ -16707,11 +16707,11 @@ class ConditionalStatement extends Statement
       { // adds to testbeLeft only if not in there already
 
         if (testbeLeft.hasSequenceType())
-        { oUses.add("!! Possibly using sequence " + testbeLeft + " as set in: " + this + 
-             "\n>> Recommend declaring " + testbeLeft + " as a Set or SortedSet"); 
+        { rUses.add("!!! Possibly using sequence " + testbeLeft + " as set in: " + this); 
+          rUses.add("!!! Recommend declaring " + testbeLeft + " as a Set or SortedSet"); 
 
-          int ascore = (int) uses.get("amber"); 
-          uses.set("amber", ascore + 1); 
+          int rscore = (int) uses.get("red"); 
+          uses.set("red", rscore + 1); 
         } 
         else if (testbeLeft.hasSetType())
         { oUses.add("! Redundant test on set addition " + testbeLeft + " in: " + this); 

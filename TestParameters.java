@@ -394,9 +394,8 @@ public class TestParameters
 
 
   public static Vector 
-     getOperationsComplexityScore(Vector ops)
+     getOperationsComplexityScore(Vector ops, Vector messes)
   { // for the op : ops find best data structures
-    
 
     Vector res = new Vector(); 
     if (ops.size() == 0) 
@@ -434,9 +433,9 @@ public class TestParameters
       } 
     }
 
-    System.out.println(); 
-    System.out.println(">> The best data structures for operations " + ops + " are " + res); 
-    System.out.println(">> With overall " + 
+    messes.add("");  
+    messes.add(">> The best data structures for operations " + ops + " are " + res); 
+    messes.add(">> With overall " + 
        TestParameters.compExplanation.get("" + bestScore) + 
        " complexity"); 
  
@@ -448,7 +447,9 @@ public class TestParameters
     ops.add("->includes"); 
     ops.add("->including"); 
     ops.add("->at"); 
-    TestParameters.getOperationsComplexityScore(ops); 
+    Vector mess = new Vector(); 
+    TestParameters.getOperationsComplexityScore(ops, mess);
+    System.out.println(mess);  
   } 
 }
 

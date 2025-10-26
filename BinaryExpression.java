@@ -22277,7 +22277,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
 
       Vector vuses = variablesUsedIn(vars); 
       if (level > 1 && vuses.size() == 0)
-      { System.out.println("!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
+      { System.err.println("!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
           "Use Extract local variable to optimise."); 
         refactorELV = true; 
       }
@@ -22297,7 +22297,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
 
       Vector vuses = variablesUsedIn(vars); 
       if (level > 1 && vuses.size() == 0)
-      { System.out.println("!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
+      { System.err.println("!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
           "Use Extract local variable to optimise."); 
         refactorELV = true; 
       }
@@ -22326,7 +22326,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
 
       Vector vuses = variablesUsedIn(vars); 
       if (level > 1 && vuses.size() == 0)
-      { System.out.println("!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
+      { System.err.println("!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
           "Use Extract local variable to optimise.");
         refactorELV = true;  
       }
@@ -22381,12 +22381,12 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
   { int maxleft = left.maximumReferenceChain();
 
     if (maxleft > TestParameters.referenceChainLimit)
-    { System.out.println("!! (LRC) flaw: The expression " + left + " has too many (" + maxleft + ") chained references"); } 
+    { System.err.println("!! (LRC) flaw: The expression " + left + " has too many (" + maxleft + ") chained references"); } 
 
     int maxright = right.maximumReferenceChain();
 
     if (maxright > TestParameters.referenceChainLimit)
-    { System.out.println("!! (LRC) flaw: The expression " + right + " has too many (" + maxright + ") chained references"); } 
+    { System.err.println("!! (LRC) flaw: The expression " + right + " has too many (" + maxright + ") chained references"); } 
 
     return Math.max(maxleft, maxright); 
   } 

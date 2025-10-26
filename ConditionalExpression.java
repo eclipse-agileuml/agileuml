@@ -340,7 +340,8 @@ public class ConditionalExpression extends Expression
           (testbeRight + "").equals(elsebeRight + ""))
       { if (elsebe.getOperator().equals("->including") || 
             elsebe.getOperator().equals("->append"))
-        { rUses.add("!! Using sequence " + ifExp + " as set in " + this + "\n>> Recommend declaring " + ifExp + " as a Set or SortedSet"); 
+        { rUses.add("!!! Using sequence " + ifExp + " as set in " + this); 
+          rUses.add("!!! Recommend declaring " + ifExp + " as a Set or SortedSet"); 
 
           int oscore = (int) res.get("red"); 
           res.set("red", oscore + 1); 
@@ -375,14 +376,14 @@ public class ConditionalExpression extends Expression
           (testbeRight + "").equals(ifbeRight + ""))
       { if (ifbe.getOperator().equals("->including") || 
             ifbe.getOperator().equals("->append"))
-        { rUses.add("!! Using sequence " + elseExp + " as set in " + this + "\n>> Recommend declaring " + elseExp + " as a Set or SortedSet"); 
+        { rUses.add("!!! Using sequence " + elseExp + " as set in " + this); 
+          rUses.add("!!! Recommend declaring " + elseExp + " as a Set or SortedSet"); 
 
           int oscore = (int) res.get("red"); 
           res.set("red", oscore + 1); 
         } 
       } 
     } 
-
 
     return res; 
   } 

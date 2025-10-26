@@ -3634,10 +3634,17 @@ public class UCDOperations
 
   public void energyAnalysis()
   { java.util.Map clnes = new java.util.HashMap(); 
-    energyAnalysis(clnes); 
-  } 
+    Vector messages = new Vector(); 
+    energyAnalysis(clnes, messages); 
 
-  public Map energyAnalysis(java.util.Map clones)
+    for (int i = 0; i < messages.size(); i++) 
+    { String mess = (String) messages.get(i); 
+      System.err.println(mess); 
+    } 
+  } // with HTML output colour-code them 
+
+  public Map energyAnalysis(java.util.Map clones, 
+                            Vector messages)
   { Map res = new Map(); 
 
     int redFlags = 0; 
@@ -3650,7 +3657,8 @@ public class UCDOperations
       if (ent.isComponent() || ent.isExternal())
       { continue; } 
 
-      Map scores = ent.energyAnalysis(); 
+      Map scores = ent.energyAnalysis(messages);
+ 
       redFlags = redFlags + (int) scores.get("red"); 
       amberFlags = 
         amberFlags + (int) scores.get("amber"); 
@@ -3685,8 +3693,9 @@ public class UCDOperations
     int selfcallsn = selfcalls.size();  
  
     if (selfcallsn > 0) 
-    { System.err.println("!!! Red flag: " + selfcallsn + " recursive dependencies"); 
-      System.err.println("!!! Use Replace recursion by iteration (for tail recursions) to reduce energy cost\n    Or make operation <<cached>>"); 
+    { messages.add("!!! Red flag: " + selfcallsn + " recursive dependencies"); 
+      messages.add("!!! Use Replace recursion by iteration (for tail recursions) to reduce energy cost\n    Or make operation <<cached>>"); 
+
       redFlags = redFlags + selfcallsn; 
     }
 
@@ -3696,14 +3705,15 @@ public class UCDOperations
     // System.out.println(">> Operations in maximum chain are " + lastfound); 
 
     if (n >= 5) 
-    { System.out.println("!! Maximum call chain length is " + n); 
-      System.err.println("!! Amber warning: long sequence of calls"); 
-      System.err.println("!! Try inline expansion of the end operation(s): replace call by definition"); 
+    { messages.add("!! Maximum call chain length is " + n); 
+      messages.add("!! Amber warning: long sequence of calls"); 
+      messages.add("!! Try inline expansion of the end operation(s): replace call by definition"); 
+
       amberFlags = amberFlags + 1; 
     }
 
-    System.out.println(">> Red flag score: " + redFlags); 
-    System.out.println(">> Amber flag score: " + amberFlags); 
+    messages.add(">> Red flag score: " + redFlags); 
+    messages.add(">> Amber flag score: " + amberFlags); 
 
     return res;  
   }

@@ -21160,7 +21160,7 @@ public class ASTCompositeTerm extends ASTTerm
 
         expr.typeCheck(types, entities, new Vector(), new Vector());
 
-        JOptionPane.showInputDialog("Type of " + expr + " is " + expr.getType());  
+        // JOptionPane.showInputDialog("Type of " + expr + " is " + expr.getType());  
  
         return expr; 
       } 
@@ -41507,7 +41507,7 @@ public class ASTCompositeTerm extends ASTTerm
             { labelfunctions = 
                 ((ASTCompositeTerm) tt).javaLabelFunctions(bf);
 
-              JOptionPane.showInputDialog(">>> Operation " + bf + " has label functions " + labelfunctions);
+             // JOptionPane.showInputDialog(">>> Operation " + bf + " has label functions " + labelfunctions);
 
               modelElements.addAll(labelfunctions);
               ASTTerm.functionsInScope = new Vector(); 
@@ -41628,7 +41628,7 @@ public class ASTCompositeTerm extends ASTTerm
       modelElements.add(bfInit); 
       modelElements.add(constr); 
 
-      JOptionPane.showInputDialog("--- Constructor for " + cname + " " + mparams + " " + constr); 
+      // JOptionPane.showInputDialog("--- Constructor for " + cname + " " + mparams + " " + constr); 
 
       if (cent != null && cent.getSuperclass() != null) 
       { Entity supent = cent.getSuperclass(); 
@@ -41910,7 +41910,7 @@ public class ASTCompositeTerm extends ASTTerm
  
       String bdy = enumBody.toKM3(); 
 
-      JOptionPane.showInputDialog("Body elements: " + bdy + " " + enumBody.modelElements); 
+      // JOptionPane.showInputDialog("Body elements: " + bdy + " " + enumBody.modelElements); 
 
       etype.addModelElements(enumBody.modelElements); 
  
@@ -42139,7 +42139,7 @@ public class ASTCompositeTerm extends ASTTerm
       { // Generic class 
         typePar = contents.toKM3type();
  
-        JOptionPane.showInputDialog(">>> Generic class " + entName + ", parameters: " + typePar + " " + contents.modelElements);
+        // JOptionPane.showInputDialog(">>> Generic class " + entName + ", parameters: " + typePar + " " + contents.modelElements);
  
         if (contents.modelElements != null && newEnt != null) 
         { newEnt.addGenericTypeParameters(
@@ -44132,7 +44132,7 @@ public class ASTCompositeTerm extends ASTTerm
         Vector targs = 
           ((ASTCompositeTerm) typepars).getTypeParameterTypes(); 
 
-        JOptionPane.showInputDialog(":>> " + typepars + " " + targs); 
+        // JOptionPane.showInputDialog(":>> " + typepars + " " + targs); 
  
         String btype = baseType.toKM3type();
         String res = btype; 
@@ -44353,7 +44353,7 @@ public class ASTCompositeTerm extends ASTTerm
             res = btype + "<" + pars + ">"; 
             expression = new BasicExpression(
                                   (Type) modelElement); 
-            JOptionPane.showInputDialog("+++ Parameterised type: " + modelElement + " " + expression);
+            // JOptionPane.showInputDialog("+++ Parameterised type: " + modelElement + " " + expression);
           } 
 
         }  

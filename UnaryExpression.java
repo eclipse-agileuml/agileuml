@@ -797,8 +797,8 @@ public void findClones(java.util.Map clones,
           leftargop.equals("->reject") ||
           leftargop.equals("|") ||
           leftargop.equals("|R"))
-      { rUses.add("!! OCL efficiency smell (OES): Inefficient expression in: " + this + ",\n" + 
-                    ">>> instead use ->exists");
+      { rUses.add("!!! OCL efficiency smell (OES): Inefficient expression in: " + this + ",");  
+        rUses.add("!!! instead use ->exists");
         int rscore = (int) res.get("red"); 
         res.set("red", rscore+1); 
       }
@@ -815,8 +815,8 @@ public void findClones(java.util.Map clones,
           leftargop.equals("->reject") ||
           leftargop.equals("|") ||
           leftargop.equals("|R"))
-      { rUses.add("!! OCL efficiency smell (OES): Inefficient expression in: " + this + ",\n" + 
-                    ">>> instead use ->forAll");
+      { rUses.add("!!! OCL efficiency smell (OES): Inefficient expression in: " + this + ","); 
+        rUses.add("!!! instead use ->forAll");
         int rscore = (int) res.get("red"); 
         res.set("red", rscore+1); 
       }
@@ -828,21 +828,21 @@ public void findClones(java.util.Map clones,
 
         if (lbe.operator.equals("|") ||
             lbe.operator.equals("->select"))
-        { rUses.add("!! OCL efficiency smell (OES): Inefficient col->select(x | P)->any() expression in: " + this + ",\n" + 
-                    ">>> instead use:    col->any(x | P)");
+        { rUses.add("!!! OCL efficiency smell (OES): Inefficient col->select(x | P)->any() expression in: " + this + ",");  
+          rUses.add("!!! instead use:    col->any(x | P)");
           int rscore = (int) res.get("red"); 
           res.set("red", rscore+1); 
         }
         else if (lbe.operator.equals("|R") ||
             lbe.operator.equals("->reject"))
-        { rUses.add("!! OCL efficiency smell (OES): Inefficient col->reject(x | P)->any() expression in " + this + ", \n" + 
-            ">>> instead, use:   col->any(x | not(P))");
+        { rUses.add("!!! OCL efficiency smell (OES): Inefficient col->reject(x | P)->any() expression in " + this + ","); 
+          rUses.add("!!! instead, use:   col->any(x | not(P))");
           int rscore = (int) res.get("red"); 
           res.set("red", rscore+1); 
         }
         else if (lbe.operator.equals("|C"))
-        { rUses.add("!! OCL efficiency smell (OES): Inefficient col->collect(x | e)->any() expression in " + this + ", \n" + 
-            ">>> instead, use:  let x = col->any() in e");
+        { rUses.add("!!! OCL efficiency smell (OES): Inefficient col->collect(x | e)->any() expression in " + this + ","); 
+          rUses.add("!!! instead, use:  let x = col->any() in e");
           int rscore = (int) res.get("red"); 
           res.set("red", rscore+1); 
         }

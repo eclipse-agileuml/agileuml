@@ -5813,7 +5813,7 @@ public class Entity extends ModelElement implements Comparable
     } 
   } 
 
-  public Map energyAnalysis()
+  public Map energyAnalysis(Vector messages)
   { Map res = new Map(); 
     res.set("red", 0); 
     res.set("amber", 0); 
@@ -5823,9 +5823,10 @@ public class Entity extends ModelElement implements Comparable
     java.util.Map collOps = new java.util.HashMap(); 
     Vector collVars = new Vector(); // iterator vars in scope
 
-    System.err.println(); 
-    System.err.println("++++++++ Energy analysis of class " + ename + " ++++++++++++"); 
-    System.err.println(); 
+    // System.err.println();
+    messages.add("");  
+    messages.add("++++++++ Energy analysis of class " + ename + " ++++++++++++"); 
+    messages.add(""); 
 
     /* String cloneLimit = 
       JOptionPane.showInputDialog("Enter clone size limit (default 10): ");
@@ -5847,29 +5848,29 @@ public class Entity extends ModelElement implements Comparable
       int amberop = (int) resa.get("amber"); 
       
       if (redop > 0) 
-      { System.err.println("!!! Attribute " + attr + 
+      { messages.add("!!! Attribute " + attr + 
                            " has " + redop + " energy use " +
                            " red flags!");
 
         for (int j = 0; j < redDetails.size(); j++) 
-        { System.err.println(redDetails.get(j)); } 
-        System.err.println(); 
+        { messages.add(redDetails.get(j)); } 
+        messages.add(""); 
  
         int redscore = (int) res.get("red"); 
         res.set("red", redscore + redop); 
       } 
      
       if (amberop > 0) 
-      { System.err.println("!! Attribute " + attr + 
+      { messages.add("!! Attribute " + attr + 
                            " has " + amberop + 
                            " energy use " +
                            " amber flags!"); 
 
         for (int j = 0; j < amberDetails.size(); j++) 
-        { System.err.println(amberDetails.get(j)); 
-          System.err.println(); 
+        { messages.add(amberDetails.get(j)); 
+          messages.add(""); 
         } 
-        System.err.println(); 
+        messages.add(""); 
 
         int amberscore = (int) res.get("amber"); 
         res.set("amber", amberscore + amberop); 
@@ -5900,7 +5901,7 @@ public class Entity extends ModelElement implements Comparable
       } 
 
       if (actualClones.size() > 0)
-      { System.err.println("!! (DEV) flaw: Cloned expressions " + actualClones + " in " + op); 
+      { messages.add("!! (DEV) flaw: Cloned expressions " + actualClones + " in " + op); 
         int redcount = (int) res1.get("red");
         redcount = redcount + actualClones.size(); 
         res1.put("red", redcount); 
@@ -5913,31 +5914,31 @@ public class Entity extends ModelElement implements Comparable
       int amberop = (int) res1.get("amber"); 
       
       if (redop > 0) 
-      { System.err.println("!!! Operation " + opname + 
+      { messages.add("!!! Operation " + opname + 
                            " has " + redop + " energy use " +
                            " red flags!");
 
         for (int j = 0; j < redDetails.size(); j++) 
-        { System.err.println(redDetails.get(j)); 
-          System.err.println();
+        { messages.add(redDetails.get(j)); 
+          messages.add("");
         } 
-        System.err.println(); 
+        messages.add(""); 
  
         int redscore = (int) res.get("red"); 
         res.set("red", redscore + redop); 
       } 
      
       if (amberop > 0) 
-      { System.err.println("!! Operation " + opname + 
+      { messages.add("!! Operation " + opname + 
                            " has " + amberop + 
                            " energy use " +
                            " amber flags!"); 
 
         for (int j = 0; j < amberDetails.size(); j++) 
-        { System.err.println(amberDetails.get(j)); 
-          System.err.println();
+        { messages.add(amberDetails.get(j)); 
+          messages.add("");
         } 
-        System.err.println(); 
+        messages.add(""); 
 
         int amberscore = (int) res.get("amber"); 
         res.set("amber", amberscore + amberop); 
@@ -5945,9 +5946,9 @@ public class Entity extends ModelElement implements Comparable
 
     } 
 
-    System.err.println(">> Collection operator uses in " + 
-                       ename + " are: " + collOps + " " + collVars);
-    System.err.println();
+    messages.add(">> Collection operator uses in " + 
+                 ename + " are: " + collOps + " " + collVars);
+    messages.add("");
 
     java.util.Set keys = collOps.keySet(); 
 
@@ -5973,8 +5974,8 @@ public class Entity extends ModelElement implements Comparable
         } 
 
         TestParameters.getOperationsComplexityScore(
-                                              actualOps); 
-        System.err.println(); 
+                                  actualOps, messages); 
+        messages.add(""); 
  
         if (lev > 1) 
         { 
@@ -5996,17 +5997,17 @@ public class Entity extends ModelElement implements Comparable
               Expression arg = ue.getArgument(); 
 
               if (Expression.isOclDistributedIteratorOperator(oper))
-              { System.err.println("! Warning: " + maxop + " is a >= O(S) operation\n" + 
+              { messages.add("! Warning: " + maxop + " is a >= O(S) operation\n" + 
                   " in the sum S of sizes of the argument elements. \n"); 
                 System.err.println();
               }
               else if ("->max".equals(oper) || 
                        "->min".equals(oper))
               { if (arg.isSequence())
-                { System.err.println("! Warning: " + oper + 
+                { messages.add("! Warning: " + oper + 
                     " is an O(n) operation on Sequence " + arg + "\n" + 
                     " SortedSet or SortedBag can be more efficient if no indexing is needed\n");
-                  System.err.println(); 
+                  messages.add(""); 
                 }
               }
 
@@ -6018,7 +6019,7 @@ public class Entity extends ModelElement implements Comparable
               String oper = be.getOperator(); 
 
               if (Expression.isOclDistributedIteratorOperator(oper))
-              { System.err.println("! Warning: " + maxop + " is a >= O(S) operation\n" + 
+              { messages.add("! Warning: " + maxop + " is a >= O(S) operation\n" + 
                   " in the sum S of sizes of the argument elements. \n"); 
               }  
               else if (
@@ -6030,31 +6031,31 @@ public class Entity extends ModelElement implements Comparable
                   "<:".equals(oper) ||  
                   "->antirestrict".equals(oper) ||
                   "->iterate".equals(oper))
-              { System.err.println("! Warning: " + maxop + " is a >= O(n) operation in the size of the LHS collection/map. \n"); }  
+              { messages.add("! Warning: " + maxop + " is a >= O(n) operation in the size of the LHS collection/map. \n"); }  
 
               if ("->union".equals(oper) || 
                   "->symmetricDifference".equals(oper))
-              { System.err.println("! Warning: " + maxop + " is an O(n) operation in the sum of sizes of the arguments. \n"); }  
+              { messages.add("! Warning: " + maxop + " is an O(n) operation in the sum of sizes of the arguments. \n"); }  
 
               if ("->sortedBy".equals(oper) || 
                   "|sortedBy".equals(oper))
-              { System.err.println("! Warning: " + maxop + " is an O(n*log(n)) operation in the size of the LHS. \n"); }  
+              { messages.add("!! Warning: " + maxop + " is an O(n*log(n)) operation in the size of the LHS. \n"); }  
 
               if (be.getLeft().isSequence())
               { if ("->includes".equals(oper) ||
                     "->excludingFirst".equals(oper)) 
-                { System.err.println("! Warning: " + oper + 
+                { messages.add("! Warning: " + oper + 
                     " is an O(n) operation on Sequence " + be.getLeft() + "\n" + 
                     " Set, Bag, SortedSet or SortedBag can be more efficient if no indexing is needed\n"); 
                 } 
                 else if ("->including".equals(oper))
-                { System.err.println("! Warning: " + oper + 
+                { messages.add("! Warning: " + oper + 
                     " is an O(log n) operation on Sequence " + be.getLeft() + "\n" + 
                     " Set or Bag can be more efficient if no indexing is needed\n"); 
                 } 
                 else if ("->excluding".equals(oper) ||
                          "->count".equals(oper))
-                { System.err.println("! Warning: " + oper + 
+                { messages.add("! Warning: " + oper + 
                     " is an O(n) operation on Sequence " + be.getLeft() + "\n" + 
                     " Set or SortedSet can be more efficient if no indexing or duplicates are needed\n"); 
                 } 
@@ -6077,14 +6078,14 @@ public class Entity extends ModelElement implements Comparable
           attr.hasIndexingOperation(collOps); 
 
         if (indexUse == false)
-        { System.err.println("! No use of indexes with sequence-valued attribute " + attr + "\n! It may be more efficient to use a SortedSet or Bag\n"); } 
+        { messages.add("! No use of indexes with sequence-valued attribute " + attr + "\n! It may be more efficient to use a SortedSet or Bag\n"); } 
       } 
     }       
 
-    System.err.println(); 
+    messages.add(""); 
       
-System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++"); 
-    System.err.println(); 
+       messages.add("++++++++++++++++++++++++++++++++++++++++++++++++++++++++"); 
+    messages.add(""); 
 
     return res; 
   } 
@@ -14348,7 +14349,8 @@ System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
           midcode = midcode + e2del;
         } 
       }
-      else if (e1.getName().equals(ename) && role1 != null && role1.length() > 0)
+      else if (e1.getName().equals(ename) && role1 != null && 
+               role1.length() > 0)
       { String e2name = e2.getName();
         String e2s = e2name.toLowerCase() + "s";
 
