@@ -306,23 +306,31 @@ class OclDate:
     endDay = d2.day
     endMonth = d2.month
     endYear = d2.year
-    days = 0
+       
+    days = 0 
+      
+    if d1.month > d2.month : 
+      days = 365*((endYear - 1) - startYear)
+      startYear = endYear - 1
+    else : 
+      days = 365*(endYear - startYear)
+      startYear = endYear
 
-    while startYear < endYear or (startYear == endYear and startMonth < endMonth) :
+
+    while startYear < endYear or startMonth < endMonth :
       daysinmonth = OclDate.monthDays(startMonth, startYear)
       days = days + daysinmonth - startDay + 1
       startDay = 1
       startMonth = startMonth + 1
-      if startMonth > 12 :
+      if startMonth > 12 : 
         startMonth = 1
         startYear = startYear + 1
-
+    
     days = days + endDay - startDay
     return days
 
-
-# d1 = OclDate.newOclDate_YMD(2023, 8, 1)
-# d2 = OclDate.newOclDate_YMD(2023, 11, 1)
+# d1 = OclDate.newOclDate_YMD(2023, 12, 1)
+# d2 = OclDate.newOclDate_YMD(2024, 1, 1)
 # print(OclDate.daysBetweenDates(d1,d2))
 
 # print(OclDate.getSystemTime())
