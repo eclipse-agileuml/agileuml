@@ -5820,9 +5820,6 @@ public class Entity extends ModelElement implements Comparable
 
     String ename = getName(); 
 
-    java.util.Map collOps = new java.util.HashMap(); 
-    Vector collVars = new Vector(); // iterator vars in scope
-
     // System.err.println();
     messages.add("");  
     messages.add("++++++++ Energy analysis of class " + ename + " ++++++++++++"); 
@@ -5836,7 +5833,7 @@ public class Entity extends ModelElement implements Comparable
       { UCDArea.CLONE_LIMIT = 10; } 
     } */ 
 
-    UCDArea.CLONE_LIMIT = 10;
+    UCDArea.CLONE_LIMIT = TestParameters.cloneSizeLimit;
 
     for (int i = 0; i < attributes.size(); i++) 
     { Attribute attr = (Attribute) attributes.get(i); 
@@ -5877,6 +5874,8 @@ public class Entity extends ModelElement implements Comparable
       } 
     } 
 
+    java.util.Map collOps = new java.util.HashMap(); 
+      
     int n = operations.size(); 
 
     for (int i = 0; i < n; i++) 
@@ -5901,14 +5900,17 @@ public class Entity extends ModelElement implements Comparable
       } 
 
       if (actualClones.size() > 0)
-      { messages.add("!! (DEV) flaw: Cloned expressions " + actualClones + " in " + op); 
+      { messages.add("!!! (DEV) flaw: Cloned expressions " + actualClones + " in " + op); 
         int redcount = (int) res1.get("red");
         redcount = redcount + actualClones.size(); 
         res1.put("red", redcount); 
         redDetails.add("!!! Expression clones!: " + actualClones);
       }  
 
-      op.collectionOperatorUses(1, collOps, collVars); 
+      Vector collVars = new Vector(); 
+                        // iterator vars in scope
+      op.collectionOperatorUses(1, collOps, collVars, 
+                                res1, messages); 
  
       int redop = (int) res1.get("red"); 
       int amberop = (int) res1.get("amber"); 
@@ -5947,7 +5949,7 @@ public class Entity extends ModelElement implements Comparable
     } 
 
     messages.add(">> Collection operator uses in " + 
-                 ename + " are: " + collOps + " " + collVars);
+                 ename + " are: " + collOps);
     messages.add("");
 
     java.util.Set keys = collOps.keySet(); 
@@ -5998,7 +6000,7 @@ public class Entity extends ModelElement implements Comparable
 
               if (Expression.isOclDistributedIteratorOperator(oper))
               { messages.add("! Warning: " + maxop + " is a >= O(S) operation\n" + 
-                  " in the sum S of sizes of the argument elements. \n"); 
+                  "! in the sum S of sizes of the argument elements. \n"); 
                 System.err.println();
               }
               else if ("->max".equals(oper) || 
@@ -6006,7 +6008,7 @@ public class Entity extends ModelElement implements Comparable
               { if (arg.isSequence())
                 { messages.add("! Warning: " + oper + 
                     " is an O(n) operation on Sequence " + arg + "\n" + 
-                    " SortedSet or SortedBag can be more efficient if no indexing is needed\n");
+                    "! SortedSet or SortedBag can be more efficient if no indexing is needed\n");
                   messages.add(""); 
                 }
               }
@@ -6020,7 +6022,7 @@ public class Entity extends ModelElement implements Comparable
 
               if (Expression.isOclDistributedIteratorOperator(oper))
               { messages.add("! Warning: " + maxop + " is a >= O(S) operation\n" + 
-                  " in the sum S of sizes of the argument elements. \n"); 
+                  "! in the sum S of sizes of the argument elements. \n"); 
               }  
               else if (
                   Expression.isOclIteratorOperator(oper) ||
@@ -6046,18 +6048,18 @@ public class Entity extends ModelElement implements Comparable
                     "->excludingFirst".equals(oper)) 
                 { messages.add("! Warning: " + oper + 
                     " is an O(n) operation on Sequence " + be.getLeft() + "\n" + 
-                    " Set, Bag, SortedSet or SortedBag can be more efficient if no indexing is needed\n"); 
+                    "! Set, Bag, SortedSet or SortedBag can be more efficient if no indexing is needed\n"); 
                 } 
                 else if ("->including".equals(oper))
                 { messages.add("! Warning: " + oper + 
                     " is an O(log n) operation on Sequence " + be.getLeft() + "\n" + 
-                    " Set or Bag can be more efficient if no indexing is needed\n"); 
+                    "! Set or Bag can be more efficient if no indexing is needed\n"); 
                 } 
                 else if ("->excluding".equals(oper) ||
                          "->count".equals(oper))
-                { messages.add("! Warning: " + oper + 
+                { messages.add("!! Warning: " + oper + 
                     " is an O(n) operation on Sequence " + be.getLeft() + "\n" + 
-                    " Set or SortedSet can be more efficient if no indexing or duplicates are needed\n"); 
+                    "!! Set or SortedSet can be more efficient if no indexing or duplicates are needed\n"); 
                 } 
                  
               }
@@ -6078,7 +6080,7 @@ public class Entity extends ModelElement implements Comparable
           attr.hasIndexingOperation(collOps); 
 
         if (indexUse == false)
-        { messages.add("! No use of indexes with sequence-valued attribute " + attr + "\n! It may be more efficient to use a SortedSet or Bag\n"); } 
+        { messages.add("!! No use of indexes with sequence-valued attribute " + attr + "\n! It may be more efficient to use a SortedSet or Bag\n"); } 
       } 
     }       
 
@@ -6109,8 +6111,8 @@ public class Entity extends ModelElement implements Comparable
       Vector newopuses = VectorUtil.union(vuses,opuses); 
 
       if (newopuses.size() > 5) 
-      { System.err.println("*** Code smell (EFO): > 5 operations used in " + ename + "::" + opname); 
-        System.err.println(">>> Suggest refactoring by splitting operation"); 
+      { System.err.println("!! Code smell (EFO): > 5 operations used in " + ename + "::" + opname); 
+        System.err.println("!! Suggest refactoring by splitting operation"); 
       } 
 
       String entop = ename + "::" + opname; 

@@ -1483,6 +1483,11 @@ abstract class Statement implements Cloneable
   // collection operation uses at each nesting level
   // level |-> [expr1, expr2, ...] with iterators vars
 
+  public abstract java.util.Map collectionOperatorUses(
+                             int nestingLevel, 
+                             java.util.Map operatorsAtLevel, 
+                             Vector vars, Map uses,
+                             Vector messages);
 
   public static boolean isSemiTailRecursive(
             BehaviouralFeature bf, String nme, Statement st)
@@ -4013,8 +4018,8 @@ class ReturnStatement extends Statement
     int syncomp = value.syntacticComplexity(); 
 
     if (syncomp > TestParameters.syntacticComplexityLimit)
-    { System.err.println("!!! Code smell (MEL): too high expression complexity (" + syncomp + ") for " + value); 
-      System.err.println(">>> Recommend OCL refactoring"); 
+    { System.err.println("!! Code smell (MEL): too high expression complexity (" + syncomp + ") for " + value); 
+      System.err.println("!! Recommend OCL refactoring"); 
     } // amber flaw
 
     return uses; 
@@ -4035,6 +4040,19 @@ class ReturnStatement extends Statement
     { return operatorsAtLevel; } 
     value.collectionOperatorUses(nestingLevel, 
                                  operatorsAtLevel, vars); 
+    return operatorsAtLevel; 
+  }  
+
+  public java.util.Map collectionOperatorUses(
+                             int nestingLevel, 
+                             java.util.Map operatorsAtLevel,
+                             Vector vars, Map uses, 
+                             Vector messages)
+  { if (value == null) 
+    { return operatorsAtLevel; } 
+    value.collectionOperatorUses(nestingLevel, 
+                                 operatorsAtLevel, vars, 
+                                 uses, messages); 
     return operatorsAtLevel; 
   }  
 
@@ -4604,6 +4622,13 @@ class BreakStatement extends Statement
                              java.util.Map operatorsAtLevel, 
                              Vector vars)
   { return operatorsAtLevel; }  
+
+  public java.util.Map collectionOperatorUses(
+                             int nestingLevel, 
+                             java.util.Map operatorsAtLevel, 
+                             Vector vars, Map uses,
+                             Vector messages)
+  { return operatorsAtLevel; }  
 }
 
 class ContinueStatement extends Statement
@@ -4808,6 +4833,13 @@ class ContinueStatement extends Statement
                              int nestingLevel, 
                              java.util.Map operatorsAtLevel,
                              Vector vars)
+  { return operatorsAtLevel; }  
+
+  public java.util.Map collectionOperatorUses(
+                             int nestingLevel, 
+                             java.util.Map operatorsAtLevel, 
+                             Vector vars, Map uses,
+                             Vector messages)
   { return operatorsAtLevel; }  
 }
 
@@ -5155,8 +5187,8 @@ class InvocationStatement extends Statement
 
     int syncomp = callExp.syntacticComplexity(); 
     if (syncomp > TestParameters.syntacticComplexityLimit)
-    { System.err.println("!!! Code smell (MEL): too high expression complexity (" + syncomp + ") for " + callExp); 
-      System.err.println(">>> Recommend OCL refactoring"); 
+    { System.err.println("!! Code smell (MEL): too high expression complexity (" + syncomp + ") for " + callExp); 
+      System.err.println("!! Recommend OCL refactoring"); 
     } 
 
     return uses; 
@@ -5171,6 +5203,16 @@ class InvocationStatement extends Statement
     return operatorsAtLevel; 
   }  
 
+  public java.util.Map collectionOperatorUses(
+                             int nestingLevel, 
+                             java.util.Map operatorsAtLevel, 
+                             Vector vars, Map uses, 
+                             Vector messages)
+  { callExp.collectionOperatorUses(nestingLevel, 
+                                   operatorsAtLevel, vars, 
+                                   uses, messages); 
+    return operatorsAtLevel; 
+  }  
 
   public void findMagicNumbers(java.util.Map mgns, String rule, String op)
   { String val = callExp + ""; 
@@ -5934,8 +5976,8 @@ class ImplicitInvocationStatement extends Statement
 
     int syncomp = callExp.syntacticComplexity(); 
     if (syncomp > TestParameters.syntacticComplexityLimit)
-    { System.err.println("!!! Code smell (MEL): too high expression complexity (" + syncomp + ") for " + callExp); 
-      System.err.println(">>> Recommend OCL refactoring");
+    { System.err.println("!! Code smell (MEL): too high expression complexity (" + syncomp + ") for " + callExp); 
+      System.err.println("!! Recommend OCL refactoring");
       System.err.println();  
     } 
 
@@ -5948,6 +5990,17 @@ class ImplicitInvocationStatement extends Statement
                              Vector vars)
   { callExp.collectionOperatorUses(nestingLevel, 
                                    operatorsAtLevel, vars); 
+    return operatorsAtLevel; 
+  }  
+
+  public java.util.Map collectionOperatorUses(
+                             int nestingLevel, 
+                             java.util.Map operatorsAtLevel, 
+                             Vector vars, Map uses, 
+                             Vector messages)
+  { callExp.collectionOperatorUses(nestingLevel, 
+                                   operatorsAtLevel, vars, 
+                                   uses, messages); 
     return operatorsAtLevel; 
   }  
 
@@ -6784,9 +6837,9 @@ class WhileStatement extends Statement
       else 
       { int acount = (int) uses.get("amber"); 
         uses.set("amber", acount + 1); 
-        aUses.add("! Unbounded loops can be inefficient: " + 
+        aUses.add("!! Unbounded loops can be inefficient: " + 
                   this + 
-                  "\n>> Recommend replacing by a bounded loop");
+                  "\n!! Recommend replacing by a bounded loop");
       }  
     } 
 
@@ -6846,6 +6899,53 @@ class WhileStatement extends Statement
  
     body.collectionOperatorUses(nestingLevel + 1,
                                 operatorsAtLevel, newvars);
+
+    return operatorsAtLevel; 
+  }  
+
+  public java.util.Map collectionOperatorUses(
+                             int nestingLevel, 
+                             java.util.Map operatorsAtLevel, 
+                             Vector vars, Map uses, 
+                             Vector messages)
+  { if (loopRange != null) 
+    { loopRange.collectionOperatorUses(nestingLevel, 
+                                       operatorsAtLevel, 
+                                       vars, uses, messages); 
+    }
+    else if (loopTest != null)
+    { loopTest.collectionOperatorUses(nestingLevel, 
+                                      operatorsAtLevel, 
+                                      vars, uses, messages); 
+    }
+
+    Vector newvars = new Vector(); 
+    newvars.addAll(vars); 
+    
+    if (loopVar != null) 
+    { newvars.add("" + loopVar); }
+    else if (loopTest != null)
+    { Vector evuses = loopTest.getVariableUses(); 
+      Vector vuses = 
+                VectorUtil.getStrings(evuses); 
+      newvars.addAll(vuses); 
+    }  
+  
+    // Also add the write frame variables of body to newvars
+
+    Vector wrfr = body.writeFrame();
+    for (int i = 0; i < wrfr.size(); i++) 
+    { String wrv = (String) wrfr.get(i); 
+      int k = wrv.indexOf("::"); 
+      if (k >= 0) 
+      { newvars.add(wrv.substring(k+2)); } 
+      else 
+      { newvars.add(wrv); } 
+    }  
+ 
+    body.collectionOperatorUses(nestingLevel + 1,
+                                operatorsAtLevel, newvars, 
+                                uses, messages);
 
     return operatorsAtLevel; 
   }  
@@ -8789,8 +8889,8 @@ class CreationStatement extends Statement
       if (syncomp > TestParameters.syntacticComplexityLimit)
       { int acount = (int) uses.get("amber"); 
         uses.set("amber", acount + 1); 
-        aUses.add("! Code smell (MEL): too high expression complexity (" + syncomp + ") for " + initialExpression + "\n" +  
-                  ">>> Recommend OCL refactoring");  
+        aUses.add("!! Code smell (MEL): too high expression complexity (" + syncomp + ") for " + initialExpression + "\n" +  
+                  "!! Recommend OCL refactoring");  
       } 
     } 
 
@@ -8804,6 +8904,20 @@ class CreationStatement extends Statement
     if (initialExpression != null) 
     { initialExpression.collectionOperatorUses(lev, 
                                         uses, vars); 
+    } 
+
+    return uses; 
+  } 
+
+  public java.util.Map collectionOperatorUses(int lev, 
+                                 java.util.Map uses,
+                                 Vector vars, Map flaws,
+                                 Vector messages)
+  { 
+    if (initialExpression != null) 
+    { initialExpression.collectionOperatorUses(lev, 
+                                        uses, vars, flaws,
+                                        messages); 
     } 
 
     return uses; 
@@ -10304,9 +10418,28 @@ class SequenceStatement extends Statement
   public java.util.Map collectionOperatorUses(int lev, 
                               java.util.Map uses, 
                               Vector vars)
-  { for (int i = 0; i < statements.size(); i++) 
+  { Vector oldvars = new Vector(); 
+    oldvars.addAll(vars); 
+
+    for (int i = 0; i < statements.size(); i++) 
     { Statement stat = (Statement) statements.get(i); 
-      stat.collectionOperatorUses(lev, uses, vars); 
+      stat.collectionOperatorUses(lev, uses, oldvars); 
+    }
+
+    return uses; 
+  } 
+
+  public java.util.Map collectionOperatorUses(int lev, 
+                              java.util.Map uses, 
+                              Vector vars, Map flaws, 
+                              Vector messages)
+  { Vector oldvars = new Vector(); 
+    oldvars.addAll(vars); 
+
+    for (int i = 0; i < statements.size(); i++) 
+    { Statement stat = (Statement) statements.get(i); 
+      stat.collectionOperatorUses(lev, uses, oldvars, 
+                                  flaws, messages); 
     }
 
     return uses; 
@@ -11751,6 +11884,22 @@ class CaseStatement extends Statement
     return uses; 
   }
 
+  public java.util.Map collectionOperatorUses(int lev, 
+                              java.util.Map uses, Vector vars, 
+                              Map flaws, Vector messages) 
+  { 
+    int n = cases.elements.size();
+
+    for (int i = 0; i < n; i++)
+    { Maplet mm = (Maplet) cases.elements.elementAt(i);
+      Statement cse = (Statement) mm.dest;
+      cse.collectionOperatorUses(lev, uses, vars, 
+                                 flaws, messages); 
+    }
+
+    return uses; 
+  }
+
   public int epl() 
   { int res = 0; 
     int n = cases.elements.size();
@@ -11868,8 +12017,8 @@ class ErrorStatement extends Statement
       if (syncomp > TestParameters.syntacticComplexityLimit)
       { int acount = (int) uses.get("amber"); 
         uses.set("amber", acount + 1); 
-        aUses.add("! Code smell (MEL): too high expression complexity (" + syncomp + ") for " + thrownObject + "\n" +  
-                  ">>> Recommend OCL refactoring");  
+        aUses.add("!! Code smell (MEL): too high expression complexity (" + syncomp + ") for " + thrownObject + "\n" +  
+                  "!! Recommend OCL refactoring");  
       }
     }
  
@@ -11881,6 +12030,17 @@ class ErrorStatement extends Statement
                                  Vector vars)
   { if (thrownObject != null) 
     { thrownObject.collectionOperatorUses(lev, uses, vars); } 
+    return uses; 
+  } 
+
+  public java.util.Map collectionOperatorUses(int lev, 
+                                 java.util.Map uses, 
+                                 Vector vars, Map flaws, 
+                                 Vector messages)
+  { if (thrownObject != null) 
+    { thrownObject.collectionOperatorUses(lev, uses, vars, 
+                                          flaws, messages); 
+    } 
     return uses; 
   } 
 
@@ -12221,8 +12381,8 @@ class AssertStatement extends Statement
       if (res > TestParameters.syntacticComplexityLimit)
       { int acount = (int) uses.get("amber"); 
         uses.set("amber", acount + 1); 
-        aUses.add("! Code smell (MEL): too high expression complexity (" + res + ") for " + condition + "\n" +  
-                  ">>> Recommend OCL refactoring");  
+        aUses.add("!! Code smell (MEL): too high expression complexity (" + res + ") for " + condition + "\n" +  
+                  "!! Recommend OCL refactoring");  
       } 
     }
  
@@ -12238,6 +12398,23 @@ class AssertStatement extends Statement
     { condition.collectionOperatorUses(lev, uses, vars); } 
     if (message != null) 
     { message.collectionOperatorUses(lev, uses, vars); } 
+    return uses; 
+  } 
+
+  public java.util.Map collectionOperatorUses(int lev, 
+                                    java.util.Map uses, 
+                                    Vector vars, Map flaws,
+                                    Vector messages)
+  { if (condition != null) 
+    { condition.collectionOperatorUses(lev, uses, vars, 
+                                       flaws, messages); 
+    }
+ 
+    if (message != null) 
+    { message.collectionOperatorUses(lev, uses, vars, flaws,
+                                     messages); 
+    } 
+
     return uses; 
   } 
 
@@ -12726,6 +12903,17 @@ class CatchStatement extends Statement
                                     Vector vars)
   { if (action != null) 
     { action.collectionOperatorUses(lev, uses, vars); } 
+    return uses; 
+  } 
+
+  public java.util.Map collectionOperatorUses(int lev, 
+                                    java.util.Map uses, 
+                                    Vector vars, Map flaws,
+                                    Vector messages)
+  { if (action != null) 
+    { action.collectionOperatorUses(lev, uses, vars, 
+                                    flaws, messages); 
+    } 
     return uses; 
   } 
 
@@ -13221,6 +13409,29 @@ class TryStatement extends Statement
 
     if (endStatement != null)
     { endStatement.collectionOperatorUses(lev, uses, vars); } 
+
+    return uses; 
+  } 
+
+  public java.util.Map collectionOperatorUses(int lev, 
+                                    java.util.Map uses, 
+                                    Vector vars, Map flaws,
+                                    Vector messages)
+  { if (body != null) 
+    { body.collectionOperatorUses(lev, uses, vars, flaws,
+                                  messages); 
+    } 
+    
+    for (int i = 0; i < catchClauses.size(); i++) 
+    { Statement stat = (Statement) catchClauses.get(i); 
+      stat.collectionOperatorUses(lev, uses, vars, flaws,
+                                  messages); 
+    }
+
+    if (endStatement != null)
+    { endStatement.collectionOperatorUses(lev, uses, vars, flaws,
+                                          messages); 
+    } 
 
     return uses; 
   } 
@@ -14104,6 +14315,18 @@ class IfStatement extends Statement
   { for (int i = 0; i < cases.size(); i++) 
     { IfCase cse = (IfCase) cases.get(i); 
       cse.collectionOperatorUses(lev, uses, vars); 
+    } 
+
+    return uses; 
+  }
+
+  public java.util.Map collectionOperatorUses(int lev, 
+                          java.util.Map uses, Vector vars, 
+                          Map flaws, Vector messages)
+  { for (int i = 0; i < cases.size(); i++) 
+    { IfCase cse = (IfCase) cases.get(i); 
+      cse.collectionOperatorUses(lev, uses, vars, 
+                                 flaws, messages); 
     } 
 
     return uses; 
@@ -15283,8 +15506,8 @@ class AssignStatement extends Statement
     if (syncomp > TestParameters.syntacticComplexityLimit)
     { int acount = (int) uses.get("amber"); 
       uses.set("amber", acount + 1); 
-      oUses.add("! Code smell (MEL): too high expression complexity (" + syncomp + ") for " + rhs + "\n" + 
-                ">>> Recommend OCL refactoring");  
+      oUses.add("!! Code smell (MEL): too high expression complexity (" + syncomp + ") for " + rhs + "\n" + 
+                "!! Recommend OCL refactoring");  
     } 
 
     return uses; 
@@ -15295,6 +15518,17 @@ class AssignStatement extends Statement
                           Vector vars)
   { rhs.collectionOperatorUses(lev, uses, vars); 
     lhs.collectionOperatorUses(lev, uses, vars); 
+    return uses; 
+  } 
+
+  public java.util.Map collectionOperatorUses(int lev, 
+                          java.util.Map uses, 
+                          Vector vars, Map flaws, 
+                          Vector messages)
+  { rhs.collectionOperatorUses(lev, uses, vars, flaws,
+                               messages); 
+    lhs.collectionOperatorUses(lev, uses, vars, flaws,
+                               messages); 
     return uses; 
   } 
 
@@ -16024,6 +16258,17 @@ class IfCase
     return uses; 
   }
 
+  public java.util.Map collectionOperatorUses(int lev, 
+                          java.util.Map uses, 
+                          Vector vars, Map flaws, 
+                          Vector messages)
+  { test.collectionOperatorUses(lev, uses, vars, flaws, 
+                                messages); 
+    ifPart.collectionOperatorUses(lev, uses, vars, flaws, 
+                                  messages);
+    return uses; 
+  }
+
 
   public void findMagicNumbers(java.util.Map mgns, String rule, String op)
   { test.findMagicNumbers(mgns,this + "",op); 
@@ -16266,8 +16511,8 @@ class IfCase
   public int syntacticComplexity()
   { int res = test.syntacticComplexity();
     if (res > TestParameters.syntacticComplexityLimit)
-    { System.err.println("!!! Code smell (MEL): too high expression complexity (" + res + ") for " + test); 
-      System.err.println(">>> Recommend OCL refactoring");  
+    { System.err.println("!! Code smell (MEL): too high expression complexity (" + res + ") for " + test); 
+      System.err.println("!! Recommend OCL refactoring");  
     } 
  
     res = res + ifPart.syntacticComplexity();
@@ -16614,10 +16859,22 @@ class ConditionalStatement extends Statement
   public java.util.Map collectionOperatorUses(int lev, 
                           java.util.Map uses, 
                           Vector vars)
-
   { test.collectionOperatorUses(lev, uses, vars); 
     ifPart.collectionOperatorUses(lev, uses, vars);
     elsePart.collectionOperatorUses(lev, uses, vars);
+    return uses; 
+  } 
+
+  public java.util.Map collectionOperatorUses(int lev, 
+                          java.util.Map uses, 
+                          Vector vars, Map flaws, 
+                          Vector messages)
+  { test.collectionOperatorUses(lev, uses, vars, flaws, 
+                                messages); 
+    ifPart.collectionOperatorUses(lev, uses, vars, flaws,
+                                  messages);
+    elsePart.collectionOperatorUses(lev, uses, vars, flaws, 
+                                    messages);
     return uses; 
   } 
 
@@ -16632,8 +16889,8 @@ class ConditionalStatement extends Statement
     if (res > TestParameters.syntacticComplexityLimit)
     { int acount = (int) uses.get("amber"); 
       uses.set("amber", acount + 1); 
-      oUses.add("! Code smell (MEL): too high expression complexity (" + res + ") for " + test + "\n" +  
-                ">>> Recommend OCL refactoring");  
+      oUses.add("!! Code smell (MEL): too high expression complexity (" + res + ") for " + test + "\n" +  
+                "!! Recommend OCL refactoring");  
     } 
 
     if (elsePart != null) 
@@ -17395,6 +17652,15 @@ class FinalStatement extends Statement
                                     java.util.Map uses, 
                                     Vector vars)
   { body.collectionOperatorUses(lev, uses, vars); 
+    return uses; 
+  } 
+
+  public java.util.Map collectionOperatorUses(int lev, 
+                                    java.util.Map uses, 
+                                    Vector vars, Map flaws,
+                                    Vector messages)
+  { body.collectionOperatorUses(lev, uses, vars, 
+                                flaws, messages); 
     return uses; 
   } 
 

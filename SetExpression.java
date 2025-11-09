@@ -150,6 +150,16 @@ public class SetExpression extends Expression
     return res;
   }
 
+
+  public boolean isSideEffecting()
+  { for (int i = 0; i < elements.size(); i++) 
+    { Expression expr = (Expression) elements.get(i); 
+      if (expr.isSideEffecting())
+      { return true; } 
+    } 
+    return false; 
+  } 
+
   public static SetExpression asSet(
                                 SetExpression arg) 
   { // ->asSet 
@@ -2609,6 +2619,38 @@ public class SetExpression extends Expression
     { Expression elem = (Expression) elements.get(i);  
       elem.collectionOperatorUses(level, res, vars);
     } 
+
+    return res; 
+  }  
+
+  public java.util.Map collectionOperatorUses(int level, 
+                             java.util.Map res, 
+                             Vector vars, Map uses, 
+                             Vector messages)
+  { boolean sideeffect = isSideEffecting(); 
+    Vector vuses = variablesUsedIn(vars); 
+
+    if (elements.size() > 2 && 
+        level > 1 && vuses.size() == 0 && !sideeffect)
+    { messages.add("!!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
+          "!!! Use Extract local variable to optimise."); 
+      refactorELV = true;
+      int redScore = (int) uses.get("red"); 
+      uses.set("red", redScore+1);  
+
+      for (int i = 0; i < elements.size(); i++) 
+      { Expression elem = (Expression) elements.get(i);  
+        elem.collectionOperatorUses(level, res, vars);
+      }
+
+      return res; 
+    }  
+
+    for (int i = 0; i < elements.size(); i++) 
+    { Expression elem = (Expression) elements.get(i);  
+      elem.collectionOperatorUses(level, res, vars, uses, 
+                                  messages);
+    }
 
     return res; 
   }  

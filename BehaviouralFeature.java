@@ -3515,8 +3515,8 @@ public class BehaviouralFeature extends ModelElement
     } 
 
     if (UVA > 0) 
-    { System.out.println("!!! UVA (parameters) = " + UVA + " for operation " + name); 
-      System.out.println("!! Unused parameters: " + unusedVars); 
+    { System.err.println("!!! UVA (parameters) = " + UVA + " for operation " + name); 
+      System.err.println("!! Unused parameters (UVA): " + unusedVars); 
       System.out.println(); 
     } 
 
@@ -3569,9 +3569,9 @@ public class BehaviouralFeature extends ModelElement
         Vector actuses = sseg.getVariableUses(unused);
         actuses = ModelElement.removeExpressionByName("skip", actuses); 
 
-        System.out.println(">%%> Variables used in " + completeseg + " are: " + actuses); 
-        System.out.println(">%%> Variables written in " + completeseg + " are: " + wrs); 
-        System.out.println(">%%> Declared and unused variables of " + completeseg + " are " + unused);  
+        // System.out.println(">%%> Variables used in " + completeseg + " are: " + actuses); 
+        // System.out.println(">%%> Variables written in " + completeseg + " are: " + wrs); 
+        // System.out.println(">%%> Declared and unused variables of " + completeseg + " are " + unused);  
 
         // if wrs disjoint from actuses it is ok. Parameters
         // are actuses. 
@@ -3627,7 +3627,7 @@ public class BehaviouralFeature extends ModelElement
           }  
         }
         else 
-        { System.out.println(">%%> Invalid segment. Cannot split operation."); 
+        { // System.out.println(">%%> Invalid segment. Cannot split operation."); 
           Vector oldunprocessed = new Vector(); 
           oldunprocessed.addAll(completeseg); 
           unprocessed = oldunprocessed; 
@@ -3691,7 +3691,7 @@ public class BehaviouralFeature extends ModelElement
  
       if (unused.size() > 0) 
       { System.out.println("!! Parameters or non-local variables " + unused + " are declared but not used in " + getName() + " activity."); 
-        System.out.println("!!! UVA (local variables) = " + unused.size() + " for operation " + name); 
+        System.err.println("!!! UVA (local variables) = " + unused.size() + " for operation " + name); 
         return true; 
       } 
 
@@ -4515,7 +4515,7 @@ public class BehaviouralFeature extends ModelElement
         } 
 
         if (actualClones.size() > 0)
-        { amberUses.add("!! Cloned expressions could be repeated evaluations: " + actualClones + "\n" + 
+        { amberUses.add("!! Cloned expressions could be repeated evaluations (DEV): " + actualClones + "\n" + 
              "!! Use Extract Local Variable refactoring"); 
           int ascore = (int) res.get("amber");
           ascore = ascore + actualClones.size();
@@ -4526,7 +4526,7 @@ public class BehaviouralFeature extends ModelElement
 
     Vector unusedVars = checkParameterNames(); 
     if (unusedVars.size() > 0) 
-    { amberUses.add("!! Unused parameters in " + name + ": " + 
+    { amberUses.add("!! Unused parameters (UVA) in " + name + ": " + 
              unusedVars + "\n" + 
              "!! Use remove unused parameters refactoring"); 
       int ascore = (int) res.get("amber");
@@ -4546,7 +4546,7 @@ public class BehaviouralFeature extends ModelElement
       System.err.println(); 
 
       if (tailrec) 
-      { amberUses.add("!! Tail recursive operation! " + name);   
+      { amberUses.add("!! Tail recursive operation! (CBR2) " + name);   
         amberUses.add("!! Use 'Replace recursion by loop' refactoring"); 
         int ascore = (int) res.get("amber");
         ascore = ascore + 1;
@@ -4556,14 +4556,14 @@ public class BehaviouralFeature extends ModelElement
       { boolean semitail = 
           Statement.isSemiTailRecursive(this, name, activity); 
         if (semitail) 
-        { amberUses.add("!! Semi-tail-recursion in " + name);   
+        { amberUses.add("!! Semi-tail-recursion (CBR2) in " + name);   
           amberUses.add("!! Use 'Replace recursion by loop' refactoring");
           int ascore = (int) res.get("amber");
           ascore = ascore + 1;
           res.set("amber", ascore);
         }
         else 
-        { redUses.add("!!! Non-tail-recursion in " + name); 
+        { redUses.add("!!! Non-tail-recursion (CBR2) in " + name); 
           redUses.add("!!! Use 'Make operation cached' refactoring");
           int rscore = (int) res.get("red");
           rscore = rscore + 1;
@@ -4582,21 +4582,21 @@ public class BehaviouralFeature extends ModelElement
 
       System.err.println(); 
       if (istailrec)
-      { amberUses.add("!! Tail recursive operation! " + name);   
+      { amberUses.add("!! Tail recursive operation! (CBR2) " + name);   
         amberUses.add("!! Use 'Replace recursion by loop' refactoring"); 
         int ascore = (int) res.get("amber");
         ascore = ascore + 1;
         res.set("amber", ascore); 
       } 
       else if (isSemiTailRecursive(cases))
-      { amberUses.add("!! Semi-tail-recursion in " + name);   
+      { amberUses.add("!! Semi-tail-recursion (CBR2) in " + name);   
         amberUses.add("!! Use 'Replace recursion by loop' refactoring");
         int ascore = (int) res.get("amber");
         ascore = ascore + 1;
         res.set("amber", ascore); 
       } 
       else 
-      { redUses.add("!!! Non-tail-recursion in " + name); 
+      { redUses.add("!!! Non-tail-recursion (CBR2) in " + name); 
         redUses.add("!!! Use 'Make operation cached' refactoring");
         int rscore = (int) res.get("red");
         rscore = rscore + 1;
@@ -4621,6 +4621,26 @@ public class BehaviouralFeature extends ModelElement
 
     if (activity != null) 
     { activity.collectionOperatorUses(level, res, vars); } 
+
+  } // and activity
+
+  public void collectionOperatorUses(int level, 
+                                     java.util.Map res, 
+                                     Vector vars, 
+                                     Map flaws,
+                                     Vector messages)
+  { // Scan the postcondition/activity for energy expensive
+    // expressions/code
+
+    if (post != null) 
+    { post.collectionOperatorUses(level, res, vars, flaws,
+                                  messages); 
+    } 
+
+    if (activity != null) 
+    { activity.collectionOperatorUses(level, res, vars, 
+                                      flaws, messages); 
+    } 
 
   } // and activity
 

@@ -967,6 +967,11 @@ class BinaryExpression extends Expression
     return false;
   }
 
+  public boolean isSideEffecting()
+  { return left.isSideEffecting() || 
+           right.isSideEffecting(); 
+  } 
+
   private Vector caseConditions()
   { Vector res = new Vector();
     BinaryExpression beleft;
@@ -21988,7 +21993,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
           return res; 
         }
         else if (lbe.operator.equals("->reject"))
-        { System.out.println(">> OCL efficiency smell (OES): Inefficient nested select: " + this);
+        { System.err.println("!! OCL efficiency smell (OES): Inefficient nested select: " + this);
           Expression predicate1 = lbe.getRight();
           Expression pred2 = 
                Expression.negate(predicate1); 
@@ -22026,7 +22031,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
     int synRight = right.syntacticComplexity();
     int syn = synLeft + synRight + 1; 
     if (syn > TestParameters.syntacticComplexityLimit)
-    { aUses.add("! Excessive expression size (MEL) in " + this + " : try to simplify OCL expression");
+    { aUses.add("!! Excessive expression size (MEL) in " + this + " : try to simplify OCL expression");
       int ascore = (int) res.get("amber"); 
       res.set("amber", ascore+1);
     } 
@@ -22043,7 +22048,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
 
     if ("let".equals(operator))
     { if (accumulator == null) 
-      { aUses.add("! >> OCL efficiency smell (OES): Redundant let expression: " + this + "\n");
+      { aUses.add("!! OCL efficiency smell (OES): Redundant let expression: " + this + "\n");
         int ascore = (int) res.get("amber"); 
         res.set("amber", ascore+1);
       }
@@ -22053,7 +22058,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         Vector evars = right.variablesUsedIn(names); 
 
         if (evars.size() == 0) 
-        { aUses.add("! >> OCL efficiency smell (OES): Redundant let expression: " + this + "\n");
+        { aUses.add("!! OCL efficiency smell (OES): Redundant let expression: " + this + "\n");
           int ascore = (int) res.get("amber"); 
           res.set("amber", ascore+1);
         }
@@ -22063,7 +22068,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
        
     if (("&".equals(operator) || "or".equals(operator)) && 
         synLeft > synRight)
-    { aUses.add("! >> OCL efficiency smell (OES): Possibly inefficient execution order: " + this + "\n>> c(left) = " + synLeft + ", c(right) = " + synRight);
+    { aUses.add("!! OCL efficiency smell (OES): Possibly inefficient execution order: " + this + "\n!! c(left) = " + synLeft + ", c(right) = " + synRight);
       int ascore = (int) res.get("amber"); 
       res.set("amber", ascore+1);
     } 
@@ -22084,7 +22089,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
             leftargop.equals("|R"))
         { // s->select(P)->size() = 0
 
-          aUses.add("! >> OCL efficiency smell (OES): Inefficient comparison: " + this + "\n More efficient to use ->forAll");
+          aUses.add("!! OCL efficiency smell (OES): Inefficient comparison: " + this + "\n!! More efficient to use ->forAll");
           int ascore = (int) res.get("amber"); 
           res.set("amber", ascore+1);
         } 
@@ -22092,7 +22097,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       else if ("->size".equals(leftop))
       { // col->size() = 0 is col->isEmpty()
 
-        aUses.add("! >> OCL efficiency smell (OES): Inefficient comparison: " + this + "\n More efficient to use ->isEmpty");
+        aUses.add("!! OCL efficiency smell (OES): Inefficient comparison: " + this + "\n!! More efficient to use ->isEmpty");
         int ascore = (int) res.get("amber"); 
         res.set("amber", ascore+1);
       }
@@ -22104,7 +22109,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       if (leftop.equals("->count"))
       { // s->count(x) = 0
 
-        aUses.add("! >> OCL efficiency smell (OES): Inefficient comparison: " + this + "\n More efficient to use ->excludes");
+        aUses.add("!! OCL efficiency smell (OES): Inefficient comparison: " + this + "\n!! More efficient to use ->excludes");
         int ascore = (int) res.get("amber"); 
         res.set("amber", ascore+1);
       } 
@@ -22124,7 +22129,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
             leftargop.equals("|") ||
             leftargop.equals("|R"))
         { // s->select(P)->size() = 0
-          aUses.add("! >> OCL efficiency smell (OES): Inefficient comparison: " + this + "\n More efficient to use ->exists1");
+          aUses.add("!! OCL efficiency smell (OES): Inefficient comparison: " + this + "\n!! More efficient to use ->exists1");
           int ascore = (int) res.get("amber"); 
           res.set("amber", ascore+1);
         } 
@@ -22146,7 +22151,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
             leftargop.equals("|R"))
         { // s->select(P)->size() = 0
 
-          aUses.add("! >> OCL efficiency smell (OES): Inefficient comparison: " + this + "\n More efficient to use ->exists");
+          aUses.add("!! OCL efficiency smell (OES): Inefficient comparison: " + this + "\n!! More efficient to use ->exists");
           int ascore = (int) res.get("amber"); 
           res.set("amber", ascore+1);
         } 
@@ -22154,7 +22159,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       else if ("->size".equals(leftop)) 
       { // col->size() > 0
 
-        aUses.add("! >> OCL efficiency smell (OES): Inefficient comparison: " + this + "\n More efficient to use ->notEmpty");
+        aUses.add("!! OCL efficiency smell (OES): Inefficient comparison: " + this + "\n!! More efficient to use ->notEmpty");
         int ascore = (int) res.get("amber"); 
         res.set("amber", ascore+1);
       } 
@@ -22166,7 +22171,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       if (leftop.equals("->count"))
       { // s->count(x) > 0
 
-        aUses.add("! >> OCL efficiency smell (OES): Inefficient comparison: " + this + "\n More efficient to use ->includes");
+        aUses.add("!! OCL efficiency smell (OES): Inefficient comparison: " + this + "\n!! More efficient to use ->includes");
         int ascore = (int) res.get("amber"); 
         res.set("amber", ascore+1);
       } 
@@ -22182,7 +22187,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
             lbe.operator.equals("|R") ||
             lbe.operator.equals("->select") ||
             lbe.operator.equals("->reject"))
-        { aUses.add("! OCL efficiency smell (OES): Nested select/reject iterators (loops) in " + this + " : more efficient to combine conditions");
+        { aUses.add("!! OCL efficiency smell (OES): Nested select/reject iterators (loops) in " + this + " : more efficient to combine conditions");
           int ascore = (int) res.get("amber"); 
           res.set("amber", ascore+1); 
         }
@@ -22198,7 +22203,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
             lbe.operator.equals("|R") ||
             lbe.operator.equals("->select") ||
             lbe.operator.equals("->reject"))
-        { aUses.add("! OCL efficiency smell (OES): Nested select/reject iterators (loops) in " + this + " : more efficient to combine conditions");
+        { aUses.add("!! OCL efficiency smell (OES): Nested select/reject iterators (loops) in " + this + " : more efficient to combine conditions");
           int ascore = (int) res.get("amber"); 
           res.set("amber", ascore+1); 
         }
@@ -22206,7 +22211,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
     }
     else if ("->sortedBy".equals(operator) || 
              "|sortedBy".equals(operator))
-    { aUses.add("! OCL efficiency smell (OES): n*log(n) sorting algorithm used for " + this); 
+    { aUses.add("!! OCL efficiency smell (OES): n*log(n) sorting algorithm used for " + this); 
 
       int ascore = (int) res.get("amber"); 
       res.set("amber", ascore+1); 
@@ -22217,7 +22222,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
              "|concatenateAll".equals(operator) ||
              "->intersectAll".equals(operator) || 
              "|intersectAll".equals(operator))
-    { aUses.add("! OCL efficiency smell (OES): High-cost operator in: " + this);
+    { aUses.add("!! OCL efficiency smell (OES): High-cost operator in: " + this);
       int ascore = (int) res.get("amber"); 
       res.set("amber", ascore+1); 
     } 
@@ -22226,9 +22231,9 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
              ((BasicExpression) left).isOperationCall())
     { // redundant results computation
 
-      aUses.add("!! OCL efficiency smell (OES): Redundant results computation in: " + this);
-      int ascore = (int) res.get("amber"); 
-      res.set("amber", ascore+1); 
+      rUses.add("!!! Energy-use flaw (UOR): Redundant results computation in: " + this);
+      int rscore = (int) res.get("red"); 
+      res.set("red", rscore+1); 
     } 
     else if ("->at".equals(operator) && 
              left instanceof BinaryExpression && 
@@ -22236,9 +22241,9 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
                     ((BinaryExpression) left).getOperator()))
     { // redundant results computation
 
-      aUses.add("!! OCL efficiency smell (OES): Redundant results computation in: " + this);
-      int ascore = (int) res.get("amber"); 
-      res.set("amber", ascore+1); 
+      rUses.add("!!! Energy-use flaw (UOR): Redundant results computation in: " + this);
+      int rscore = (int) res.get("red"); 
+      res.set("red", rscore+1); 
     } 
 
     return res; 
@@ -22248,7 +22253,6 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
                                       java.util.Map res, 
                                       Vector vars)
   { //  level |-> [x.setAt(i,y), etc]
-
 
     if (operator.equals("->including") ||
         operator.equals("->prepend") ||
@@ -22275,10 +22279,11 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       opers.add(this); 
       res.put(level, opers); 
 
+      boolean sideeffect = isSideEffecting(); 
       Vector vuses = variablesUsedIn(vars); 
-      if (level > 1 && vuses.size() == 0)
-      { System.err.println("!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
-          "Use Extract local variable to optimise."); 
+      if (level > 1 && vuses.size() == 0 && !sideeffect)
+      { System.err.println("!!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
+          "!!! Use Extract local variable to optimise."); 
         refactorELV = true; 
       }
 
@@ -22295,10 +22300,11 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       opers.add(this); 
       res.put(level, opers); 
 
+      boolean sideeffect = isSideEffecting(); 
       Vector vuses = variablesUsedIn(vars); 
-      if (level > 1 && vuses.size() == 0)
-      { System.err.println("!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
-          "Use Extract local variable to optimise."); 
+      if (level > 1 && vuses.size() == 0 && !sideeffect)
+      { System.err.println("!!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
+          "!!! Use Extract local variable to optimise."); 
         refactorELV = true; 
       }
 
@@ -22324,10 +22330,11 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       opers.add(this); 
       res.put(level, opers); 
 
+      boolean sideeffect = isSideEffecting(); 
       Vector vuses = variablesUsedIn(vars); 
-      if (level > 1 && vuses.size() == 0)
-      { System.err.println("!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
-          "Use Extract local variable to optimise.");
+      if (level > 1 && vuses.size() == 0 && !sideeffect)
+      { System.err.println("!!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
+          "!!! Use Extract local variable to optimise.");
         refactorELV = true;  
       }
       
@@ -22361,6 +22368,15 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       opers.add(this); 
       res.put(level, opers); 
 
+      boolean sideeffect = isSideEffecting(); 
+      Vector vuses = variablesUsedIn(vars); 
+      if (level > 1 && vuses.size() == 0 && !sideeffect)
+      { System.err.println("!!! (LCE) flaw: The expression " + 
+               this + " is independent of the iterator variables " + vars + "\n" + 
+               "!!! Use Extract local variable to optimise.");
+        refactorELV = true;  
+      }
+
       String var = "" + iter.getLeft(); 
       
       Vector newvars = new Vector(); 
@@ -22373,6 +22389,180 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
 
     left.collectionOperatorUses(level,res,vars); 
     right.collectionOperatorUses(level,res,vars); 
+
+    return res; 
+  } // and the left and right. 
+
+  public java.util.Map collectionOperatorUses(int level, 
+                                      java.util.Map res, 
+                                      Vector vars, Map uses,
+                                      Vector messages)
+  { //  level |-> [x.setAt(i,y), etc]
+
+    if (operator.equals("->including") ||
+        operator.equals("->prepend") ||
+        operator.equals("->append") ||
+        operator.equals("->excluding") ||
+        operator.equals("->excludingFirst") ||
+        operator.equals("->excludingKey") || 
+        operator.equals("->excludingValue") ||
+        operator.equals("->includes") ||
+        operator.equals("->excludes") ||
+        operator.equals("->includesAll") ||
+        operator.equals("->excludesAll") ||
+        operator.equals("<:") ||
+        operator.equals(":") ||
+        operator.equals("/:") ||
+        operator.equals("->intersection") ||
+        operator.equals("->union") ||
+        operator.equals("->restrict") ||
+        operator.equals("->antirestrict"))
+    { Vector oldvars = new Vector();
+      oldvars.addAll(vars); 
+ 
+      left.collectionOperatorUses(level,res,vars,
+                                  uses,messages); 
+      Vector opers = (Vector) res.get(level); 
+      if (opers == null) 
+      { opers = new Vector(); } 
+      opers.add(this); 
+      res.put(level, opers); 
+
+      boolean sideeffect = isSideEffecting(); 
+      Vector vuses = variablesUsedIn(oldvars); 
+      if (level > 1 && vuses.size() == 0 && !sideeffect)
+      { messages.add("!!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + oldvars + "\n" + 
+          "!!! Use Extract local variable to optimise."); 
+        refactorELV = true;
+        int redScore = (int) uses.get("red"); 
+        uses.set("red", redScore+1);  
+      }
+
+      right.collectionOperatorUses(level,res,oldvars,
+                                   uses,messages); 
+      return res; 
+    } 
+
+    if (operator.equals("->count") ||
+        operator.equals("->at"))
+    { Vector oldvars = new Vector();
+      oldvars.addAll(vars); 
+      left.collectionOperatorUses(level,res,vars,uses,
+                                  messages); 
+      Vector opers = (Vector) res.get(level); 
+      if (opers == null) 
+      { opers = new Vector(); } 
+      opers.add(this); 
+      res.put(level, opers); 
+
+      boolean sideeffect = isSideEffecting(); 
+      Vector vuses = variablesUsedIn(oldvars); 
+      if (level > 1 && vuses.size() == 0 && !sideeffect)
+      { messages.add("!!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + oldvars + "\n" + 
+          "!!! Use Extract local variable to optimise."); 
+        refactorELV = true; 
+      }
+
+      right.collectionOperatorUses(level,res,oldvars,
+                                   uses,messages); 
+      return res; 
+    } 
+
+    if (operator.equals("->select") ||
+        operator.equals("->reject") ||
+        operator.equals("->collect") ||
+        operator.equals("->forall") ||
+        operator.equals("->exists") ||
+        operator.equals("->exists1") ||
+        operator.equals("->isUnique") ||
+        operator.equals("->iterate") ||  
+        operator.equals("->selectMinimals") ||
+        operator.equals("->selectMaximals") ||  
+        operator.equals("->sortedBy"))
+    { Vector oldvars = new Vector();
+      oldvars.addAll(vars); 
+ 
+      left.collectionOperatorUses(level,res,vars,uses,
+                                  messages); 
+      Vector opers = (Vector) res.get(level); 
+      if (opers == null) 
+      { opers = new Vector(); } 
+      opers.add(this); 
+      res.put(level, opers); 
+
+      boolean sideeffect = isSideEffecting(); 
+      Vector vuses = variablesUsedIn(oldvars); 
+      if (level > 1 && vuses.size() == 0 && !sideeffect)
+      { messages.add("!!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + oldvars + "\n" + 
+          "!!! Use Extract local variable to optimise.");
+        refactorELV = true;
+        int redScore = (int) uses.get("red"); 
+        uses.set("red", redScore+1);    
+      }
+      
+      Vector newvars = new Vector(); 
+      newvars.addAll(oldvars); 
+      newvars.add("self"); 
+
+      right.collectionOperatorUses(level+1, res, newvars, 
+                                   uses, messages); 
+      return res; 
+    } 
+
+    if (operator.equals("|") ||
+        operator.equals("|R") ||
+        operator.equals("|C") ||
+        operator.equals("!") ||
+        operator.equals("#") ||
+        operator.equals("#1") || 
+        operator.equals("|unionAll") || 
+        operator.equals("|intersectAll") || 
+        operator.equals("|concatenateAll") || 
+        operator.equals("|selectMinimals") || 
+        operator.equals("|selectMaximals") || 
+        operator.equals("|sortedBy"))
+    { Vector oldvars = new Vector();
+      oldvars.addAll(vars); 
+ 
+      BinaryExpression iter = (BinaryExpression) left; 
+      Expression col = iter.getRight(); 
+      col.collectionOperatorUses(level,res,vars,uses,
+                                 messages); 
+
+      Vector opers = (Vector) res.get(level); 
+      if (opers == null) 
+      { opers = new Vector(); } 
+      opers.add(this); 
+      res.put(level, opers); 
+
+      boolean sideeffect = isSideEffecting(); 
+      Vector vuses = variablesUsedIn(oldvars); 
+      if (level > 1 && vuses.size() == 0 && !sideeffect)
+      { messages.add("!!! (LCE) flaw: The expression " + 
+               this + " is independent of the iterator variables " + oldvars + "\n" + 
+               "!!! Use Extract local variable to optimise.");
+        refactorELV = true;
+        int redScore = (int) uses.get("red"); 
+        uses.set("red", redScore+1);    
+      }
+
+      String var = "" + iter.getLeft(); 
+      
+      Vector newvars = new Vector(); 
+      newvars.addAll(oldvars); 
+      newvars.add(var); 
+
+      right.collectionOperatorUses(level+1, res, newvars, 
+                                   uses, messages); 
+      return res; 
+    } 
+
+    Vector oldvars = new Vector();
+    oldvars.addAll(vars); 
+ 
+    left.collectionOperatorUses(level,res,vars,uses,messages); 
+    right.collectionOperatorUses(level,res,oldvars,
+                                 uses,messages); 
 
     return res; 
   } // and the left and right. 

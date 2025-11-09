@@ -419,6 +419,16 @@ public class UnaryExpression extends Expression
     return res;   
   }  
 
+  public boolean isSideEffecting()
+  { if ("->isDeleted".equals(operator))
+    { return true; } 
+    if ("->oclIsNew".equals(operator))
+    { return true; }
+
+    return argument.isSideEffecting(); 
+  }  
+
+
   public Expression transformPythonSelectExpressions()
   { Expression newarg = 
         argument.transformPythonSelectExpressions();
@@ -778,7 +788,7 @@ public void findClones(java.util.Map clones,
     { Type typ = accumulator.getType(); 
       if (typ != null && 
           typ.complexity() > TestParameters.nestedTypeLimit)
-      { aUses.add("! Warning (MNC) flaw: complex type with complexity " + typ.complexity() + ": " + typ);
+      { aUses.add("!! Warning (MNC) flaw: complex type with complexity " + typ.complexity() + ": " + typ);
         int ascore = (int) res.get("amber");
         ascore = ascore + 1;
         res.set("amber", ascore);
@@ -850,15 +860,15 @@ public void findClones(java.util.Map clones,
     }
     else if ("->sort".equals(operator))
     { if (argument.isSorted())
-      { aUses.add("! Redundant ->sort operation: " + this + 
-            "\n! Argument is already sorted.");
+      { aUses.add("!! Redundant ->sort operation: " + this + 
+            "\n!! Argument is already sorted.");
       }
       else if (argument.isSet()) 
-      { aUses.add("! n*log(n) sorting algorithm used for " + this + 
-            "\n>>> It may be more efficient to use a SortedSet type.");
+      { aUses.add("!! n*log(n) sorting algorithm used for " + this + 
+            "\n!! It may be more efficient to use a SortedSet type.");
       }
       else 
-      { aUses.add("! n*log(n) sorting algorithm used for " + this); } 
+      { aUses.add("!! n*log(n) sorting algorithm used for " + this); } 
 
       int ascore = (int) res.get("amber"); 
       res.set("amber", ascore+1); 
@@ -879,9 +889,9 @@ public void findClones(java.util.Map clones,
              ((BasicExpression) argument).isOperationCall())
     { // redundant results computation
 
-      aUses.add("! Possible redundant results computation in: " + this);
-      int ascore = (int) res.get("amber"); 
-      res.set("amber", ascore+1); 
+      rUses.add("!!! Possible redundant operation results (UOR) flaw in: " + this);
+      int rscore = (int) res.get("red"); 
+      res.set("red", rscore+1); 
     } 
     else if (("->last".equals(operator) || 
               "->first".equals(operator)) && 
@@ -890,9 +900,9 @@ public void findClones(java.util.Map clones,
                 ((BinaryExpression) argument).getOperator()))
     { // redundant results computation
 
-      aUses.add("! OCL efficiency smell (OES): Redundant results computation in: " + this);
-      int ascore = (int) res.get("amber"); 
-      res.set("amber", ascore+1); 
+      rUses.add("!!! OCL efficiency smell (UOR): Redundant results computation in: " + this);
+      int rscore = (int) res.get("red"); 
+      res.set("red", rscore+1); 
     } 
 
     return res; 
@@ -948,7 +958,7 @@ public void findClones(java.util.Map clones,
         
       if (leftargop.equals("->select"))
       { // s->select(P)->notEmpty()
-        System.out.println(">> OCL efficiency smell (OES): Inefficient comparison: " + this);
+        System.out.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
           
         BinaryExpression res = 
             new BinaryExpression("->exists", leftargleft,
@@ -957,7 +967,7 @@ public void findClones(java.util.Map clones,
       } 
       else if (leftargop.equals("->reject"))
       { // s->reject(P)->notEmpty()
-        System.out.println(">> OCL efficiency smell (OES): Inefficient comparison: " + this);
+        System.out.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
           
         UnaryExpression notpred = 
             new UnaryExpression("not", leftargpred); 
@@ -968,7 +978,7 @@ public void findClones(java.util.Map clones,
       } 
       else if (leftargop.equals("|"))
       { // s->select(x | P)->notEmpty()
-        System.out.println(">> OCL efficiency smell (OES): Inefficient comparison: " + this);
+        System.out.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
           
         BinaryExpression res = 
             new BinaryExpression("#", leftargleft,
@@ -977,7 +987,7 @@ public void findClones(java.util.Map clones,
       } 
       else if (leftargop.equals("|R"))
       { // s->reject(x | P)->notEmpty()
-        System.out.println(">> OCL efficiency smell (OES): Inefficient comparison: " + this);
+        System.out.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
           
         UnaryExpression notpred = 
              new UnaryExpression("not", leftargpred); 
@@ -997,7 +1007,7 @@ public void findClones(java.util.Map clones,
         
       if (leftargop.equals("->select"))
       { // s->select(P)->isEmpty()
-        System.out.println(">> OCL efficiency smell (OES): Inefficient comparison: " + this);
+        System.out.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
           
         UnaryExpression notpred = 
             new UnaryExpression("not", leftargpred); 
@@ -1008,7 +1018,7 @@ public void findClones(java.util.Map clones,
       } 
       else if (leftargop.equals("->reject"))
       { // s->reject(P)->isEmpty()
-        System.out.println(">> OCL efficiency smell (OES): Inefficient comparison: " + this);
+        System.out.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
           
         BinaryExpression res = 
             new BinaryExpression("->forAll", leftargleft,
@@ -1017,7 +1027,7 @@ public void findClones(java.util.Map clones,
       } 
       else if (leftargop.equals("|"))
       { // s->select(x | P)->isEmpty()
-        System.out.println(">> OCL efficiency smell (OES): Inefficient comparison: " + this);
+        System.out.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
 
         UnaryExpression notpred = 
             new UnaryExpression("not", leftargpred); 
@@ -1029,7 +1039,7 @@ public void findClones(java.util.Map clones,
       } 
       else if (leftargop.equals("|R"))
       { // s->reject(x | P)->isEmpty()
-        System.out.println(">> OCL efficiency smell (OES): Inefficient comparison: " + this);
+        System.out.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
           
         BinaryExpression res = 
             new BinaryExpression("!", leftargleft,
@@ -1053,7 +1063,7 @@ public void findClones(java.util.Map clones,
           BinaryExpression res = 
             new BinaryExpression("|A", lbe.left, lbe.right); 
 
-          System.out.println(">> OCL efficiency smell (OES): Inefficient " + operator + " expression: " + 
+          System.out.println("!! OCL efficiency smell (OES): Inefficient " + operator + " expression: " + 
             this + 
             "\n! Replaced by " + res);
 
@@ -1066,7 +1076,7 @@ public void findClones(java.util.Map clones,
           BinaryExpression res = 
             new BinaryExpression("->any", lbe.left, lbe.right); 
 
-          System.out.println(">> OCL efficiency smell (OES): Inefficient " + operator + " expression: " + 
+          System.out.println("!! OCL efficiency smell (OES): Inefficient " + operator + " expression: " + 
             this + 
             "\n! Replaced by " + res);
 
@@ -1078,7 +1088,7 @@ public void findClones(java.util.Map clones,
           BinaryExpression res = 
             new BinaryExpression("|A", lbe.left, notR); 
 
-          System.out.println(">> OCL efficiency smell (OES): Inefficient " + operator + " expression: " + 
+          System.out.println("!! OCL efficiency smell (OES): Inefficient " + operator + " expression: " + 
             this + 
             "\n! Replaced by " + res);
 
@@ -1090,7 +1100,7 @@ public void findClones(java.util.Map clones,
           BinaryExpression res = 
             new BinaryExpression("->any", lbe.left, notR); 
 
-          System.out.println(">> OCL efficiency smell (OES): Inefficient " + operator + " expression: " + 
+          System.out.println("!! OCL efficiency smell (OES): Inefficient " + operator + " expression: " + 
             this + 
             "\n! Replaced by " + res);
   
@@ -1100,7 +1110,7 @@ public void findClones(java.util.Map clones,
                  operator.equals("->first"))
         { Expression res = Expression.simplifyFirst(lbe); 
  
-          System.out.println(">> OCL efficiency smell (OES): Inefficient " + operator + " expression: " + 
+          System.out.println("!! OCL efficiency smell (OES): Inefficient " + operator + " expression: " + 
             this + 
             "\n! Replaced by " + res);
   
@@ -1110,7 +1120,7 @@ public void findClones(java.util.Map clones,
                  operator.equals("->any"))
         { Expression res = Expression.simplifyAny(lbe); 
  
-          System.out.println(">> OCL efficiency smell (OES): Inefficient " + operator + " expression: " + 
+          System.out.println("!! OCL efficiency smell (OES): Inefficient " + operator + " expression: " + 
             this + 
             "\n! Replaced by " + res);
   
@@ -1123,7 +1133,7 @@ public void findClones(java.util.Map clones,
       { // Redundant ->sort operation:  
         // Argument is already sorted.
 
-        System.out.println("! OES: Redundant ->sort operation: " + 
+        System.out.println("!! OES flaw: Redundant ->sort operation: " + 
             this + 
             "\n! Argument is already sorted.");
         return arg; 
@@ -1159,14 +1169,58 @@ public void findClones(java.util.Map clones,
       opers.add(this); 
       res.put(level, opers); 
 
-      Vector vuses = variablesUsedIn(vars); 
-      if (level > 1 && vuses.size() == 0)
+      Vector vuses = variablesUsedIn(vars);
+      boolean sideeffects = isSideEffecting(); 
+ 
+      if (level > 1 && vuses.size() == 0 && !sideeffects)
       { System.out.println(); 
         System.out.println("!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
           "Use Extract local variable to optimise.");
         System.out.println(); 
         refactorELV = true;  
       }
+          
+      return res; 
+    } 
+
+    return res; 
+  } // also any in the argument. 
+
+
+  public java.util.Map collectionOperatorUses(int level, 
+                                      java.util.Map res, 
+                                      Vector vars, Map uses,
+                                      Vector messages)
+  { //  level |-> [x.setAt(i,y), etc]
+
+    argument.collectionOperatorUses(level, res, vars, uses,
+                                    messages); 
+
+    Vector vuses = variablesUsedIn(vars);
+    boolean sideeffects = isSideEffecting(); 
+ 
+    if (level > 1 && vuses.size() == 0 && !sideeffects)
+    { messages.add("!!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
+          "!!! Use Extract local variable to optimise.");
+      refactorELV = true; 
+      int redScore = (int) uses.get("red"); 
+      uses.set("red", redScore + 1);  
+    }
+
+    if (operator.equals("->sort") || 
+        operator.equals("->unionAll") || 
+        operator.equals("->intersectAll") || 
+        operator.equals("->concatenateAll") ||
+        operator.equals("->any") ||
+        operator.equals("->first") ||
+        operator.equals("->last") ||
+        operator.equals("->max") ||
+        operator.equals("->min"))
+    { Vector opers = (Vector) res.get(level); 
+      if (opers == null) 
+      { opers = new Vector(); } 
+      opers.add(this); 
+      res.put(level, opers); 
           
       return res; 
     } 

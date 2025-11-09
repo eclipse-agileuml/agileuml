@@ -208,6 +208,7 @@ abstract class Expression
     return "" + umlkind; 
   }  
 
+  public abstract boolean isSideEffecting(); 
 
   public int arity()
   { return 0; } 
@@ -6029,6 +6030,10 @@ public static boolean conflictsReverseOp(String op1, String op2)
 
   public abstract java.util.Map collectionOperatorUses(int level, 
                              java.util.Map res, Vector vars); 
+
+  public abstract java.util.Map collectionOperatorUses(int level, 
+                             java.util.Map res, Vector vars, 
+                             Map uses, Vector messages); 
 
   public Expression isExistsForall(Vector foralls, Expression tracest)
   { return null; }
