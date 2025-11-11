@@ -727,6 +727,11 @@ _1 _2 |-->    _1`removeAtomBrackets := _1_2`trailerUpdateForm<when> _1 atom, _2 
 
 _1 _2 |-->    _1_2<when> _1 atom, _2 trailer
 
+_1 _2 _3 |-->    execute (_3`third : _1_2)<when> _1 atom, _3`second append
+_1 _2 _3 |-->    execute (_3`third : _1_2)<when> _1 atom, _3`second add
+
+_1 _2 _3 |-->    _1_2_3<when> _1 atom, _2 trailer, _3 trailer
+
 _1 , _* |-->    _1 ;\n_*`recurse
 _1 |-->
 
@@ -2369,7 +2374,7 @@ _1 _2 |-->    _1 _2<when> _2`equalAssign true, _1 matches .*\..*
 _1 _2 |-->    _1 _2<when> _2`equalAssign true, _1 matches .*\[.*
 _1 _2 |-->    _1 _2<when> _2`equalAssign true, _1`hasTrailer true
 
-_1 _2 |-->    var _1 : _2`indicator2OCL _2<when> _2`equalAssign true <action> _1`defined true, _1 _2`indicatorType
+_1 _2 |-->    var _1 : _2`ocltype _2<when> _2`equalAssign true <action> _1`defined true, _1 _2`ocltype
 
 _1 _2 |-->    _1 := _1_2<when> _2 assign_part
 
@@ -2645,11 +2650,14 @@ int |-->int
 float |-->double
 str |-->String
 dict |-->Map
+dict _1 |-->Map
 list |-->Sequence
+list _1 |-->Sequence
 deque |-->Sequence
 OrderedDict |-->Map
 Counter |-->Bag
 set |-->Set
+set _1 |-->Set
 tuple |-->Sequence
 bool |-->boolean
 name |-->String
