@@ -3679,14 +3679,17 @@ public class UCDArea extends JPanel
       String oid = Identifier.newIdentifier("oid_");  
       ObjectSpecification obj = cls.initialisedObject(oid); 
       ms.addObject(obj);
-      beta.addVariable("self", new BasicExpression(obj));   
-      System.out.println(">> Initial state = " + ms + "; " + beta); 
+      beta.addVariable("self", new BasicExpression(obj));
+                               // new BasicExpression(oid)   
+      System.out.println(">> Initial global state = " + ms); 
+      System.out.println(">> Initial local state = " + beta); 
   
       bf.execute(ms, beta, pvals); 
       System.out.println(); 
-      System.out.println(">> Resulting state = " + ms + "; " + beta); 
+      System.out.println(">> Resulting global state = " + ms); 
+      System.out.println(">> Resulting local state = " + beta); 
     } 
-  } 
+  } // update UCDOperations
 
   public void energyAnalysis()
   { java.util.Map clnes = new java.util.HashMap(); 

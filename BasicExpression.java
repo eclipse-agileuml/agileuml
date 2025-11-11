@@ -16955,7 +16955,7 @@ public Statement generateDesignSubtract(Expression rhs)
   public Expression evaluate(
                 ModelSpecification sigma, ModelState beta)
   { if (umlkind == VARIABLE)
-    { String nme = getData(); 
+    { String nme = getData();
       Expression expr = beta.getVariableValue(nme); 
 
       if (expr != null) 
@@ -16974,6 +16974,14 @@ public Statement generateDesignSubtract(Expression rhs)
 
     if (umlkind == ATTRIBUTE && objectRef != null)
     { String nme = getData(); 
+
+      if (this.isStatic() && entity != null)
+      { String ename = entity.getName(); 
+        Expression expr = 
+             sigma.getStaticAttributeValue(ename, nme); 
+        return expr; 
+      } 
+
       Expression obj = objectRef.evaluate(sigma,beta);
  
       if (obj != null) 
@@ -16983,6 +16991,14 @@ public Statement generateDesignSubtract(Expression rhs)
     if (umlkind == ATTRIBUTE && objectRef == null)
     { // attribute of self
       String nme = getData(); 
+
+      if (this.isStatic() && entity != null)
+      { String ename = entity.getName(); 
+        Expression expr = 
+             sigma.getStaticAttributeValue(ename, nme); 
+        return expr; 
+      } 
+
       Expression obj = beta.getVariableValue("self");
  
       if (obj != null) 
@@ -16997,30 +17013,36 @@ public Statement generateDesignSubtract(Expression rhs)
       String op = this.getData(); 
       Vector actualPars = this.getParameters(); 
       int npars = actualPars.size(); 
+      
+      BehaviouralFeature bf = null; 
+      Expression selfobject = null; 
 
-      Expression selfobject; 
-
-      if (obj != null) 
-      { selfobject = obj.evaluate(sigma, beta); } 
+      if (this.isStatic() && entity != null)
+      { bf = entity.getOperation(op, npars); 
+        selfobject = new BasicExpression("null"); 
+      } 
       else 
-      { selfobject = beta.getVariableValue("self"); } 
+      { if (obj != null) 
+        { selfobject = obj.evaluate(sigma, beta); } 
+        else 
+        { selfobject = beta.getVariableValue("self"); } 
 
-      if (selfobject == null) // error
-      { return this; } 
+        if (selfobject == null) // error
+        { return this; } 
 
-      ObjectSpecification ospec = 
+        ObjectSpecification ospec = 
                  sigma.getObjectSpec("" + selfobject);
 
-      if (ospec == null) // error
-      { return this; }
+        if (ospec == null) // static case
+        { return this; } 
  
-      Entity ent = ospec.getEntity(); 
+        Entity ent = ospec.getEntity(); 
 
-      if (ent == null) 
-      { return this; } 
+        if (ent == null) 
+        { return this; } 
 
-      BehaviouralFeature bf = ent.getOperation(op, npars);
-      // assume not static:  
+        bf = ent.getOperation(op, npars);
+      }
 
       if (bf == null) 
       { return this; } 
@@ -17037,7 +17059,8 @@ public Statement generateDesignSubtract(Expression rhs)
       } 
 
       Expression res = 
-         bf.execute(sigma, opstackframe, parValues);  
+         bf.execute(sigma, opstackframe, parValues);
+  
       return res; 
     } 
 

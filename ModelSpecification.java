@@ -24,6 +24,9 @@ public class ModelSpecification
                       // String -> ObjectSpecification 
   java.util.Map objectsOfClass = new java.util.HashMap(); 
                       // String -> Vector
+  java.util.Map staticAttributesOfClass = 
+                      new java.util.HashMap(); 
+                      // String -> Map(String, Expression)
 
   public static int maxSourcePath = 1; 
   public static int maxTargetPath = 1; 
@@ -41,10 +44,23 @@ public class ModelSpecification
   { return (ObjectSpecification) objectmap.get(nme); } 
 
   public void removeObject(Expression expr)
-  { objectmap.remove(expr + ""); } 
+  { this.removeObject(expr + ""); } 
 
   public void removeObject(String nme)
-  { objectmap.remove(nme); } 
+  { ObjectSpecification obj = 
+          (ObjectSpecification) objectmap.get(nme);
+    objectmap.remove(nme); 
+    if (obj != null)
+    { objects.remove(obj); 
+      Entity ent = obj.entity; 
+      if (ent != null) 
+      { String ename = ent.getName();  
+        Vector eobjs = (Vector) objectsOfClass.get(ename);
+        if (eobjs != null) 
+        { eobjs.remove(obj); }   
+      } 
+    } 
+  } 
 
   public void addObject(ObjectSpecification obj) 
   { if (objects.contains(obj)) { } 
@@ -62,6 +78,25 @@ public class ModelSpecification
       res.add(obj);
       objectsOfClass.put(ename, res);  
     } 
+  } 
+
+  public void setStaticAttributeValue(String cls, String att,
+                                      Expression val)
+  { java.util.Map cAtts = 
+            (java.util.Map) staticAttributesOfClass.get(cls);  
+    if (cAtts == null) 
+    { cAtts = new java.util.HashMap(); } 
+    cAtts.put(att, val); 
+    staticAttributesOfClass.put(cls, cAtts); 
+  } 
+
+  public Expression getStaticAttributeValue(String cls, 
+                                        String att)
+  { java.util.Map cAtts = 
+            (java.util.Map) staticAttributesOfClass.get(cls);  
+    if (cAtts == null) 
+    { return null; } 
+    return (Expression) cAtts.get(att); 
   } 
 
   public Vector getClassNames(Vector objs)
@@ -137,6 +172,8 @@ public class ModelSpecification
     { ObjectSpecification spec = (ObjectSpecification) objects.get(i); 
       res = res + spec.details() + "\n"; 
     } 
+
+    res = res + objectsOfClass + "\n"; 
 	
     for (int j = 0; j < correspondence.elements.size(); j++)
     { Maplet mm = (Maplet) correspondence.elements.get(j); 

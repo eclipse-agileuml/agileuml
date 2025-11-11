@@ -5000,7 +5000,7 @@ class InvocationStatement extends Statement
   } 
 
   public int execute(ModelSpecification sigma, 
-                      ModelState beta)
+                     ModelState beta)
   { int res = Statement.NORMAL; 
 
     if (callExp == null) 
@@ -5017,29 +5017,41 @@ class InvocationStatement extends Statement
       Vector actualPars = cexpr.getParameters(); 
       int npars = actualPars.size(); 
 
-      Expression selfobject; 
+      Expression selfobject = null;
+      BehaviouralFeature bf = null;
+ 
+      JOptionPane.showInputDialog(callExp.isStatic() + " " + 
+                                  callExp.getEntity()); 
 
-      if (obj != null) 
-      { selfobject = obj.evaluate(sigma, beta); } 
+      if (callExp.isStatic() && callExp.getEntity() != null)
+      { selfobject = new BasicExpression("null");  
+        Entity ent = callExp.getEntity(); 
+        bf = ent.getOperation(op, npars); 
+      } 
       else 
-      { selfobject = beta.getVariableValue("self"); } 
+      { if (obj != null) 
+        { selfobject = obj.evaluate(sigma, beta); } 
+        else 
+        { selfobject = beta.getVariableValue("self"); } 
 
-      if (selfobject == null) // error
-      { return res; } 
+      // JOptionPane.showInputDialog(selfobject); 
 
-      ObjectSpecification ospec = 
+        if (selfobject == null) // error 
+        { return res; } 
+
+        ObjectSpecification ospec = 
                  sigma.getObjectSpec("" + selfobject);
 
-      if (ospec == null) // error
-      { return res; }
- 
-      Entity ent = ospec.getEntity(); 
+        if (ospec == null) 
+        { return res; }
 
-      if (ent == null) 
-      { return res; } 
+        Entity ent = ospec.getEntity(); 
 
-      BehaviouralFeature bf = ent.getOperation(op, npars);
-      // assume not static:  
+        if (ent == null) 
+        { return res; } 
+
+        bf = ent.getOperation(op, npars);
+      } 
 
       if (bf == null) 
       { return res; } 

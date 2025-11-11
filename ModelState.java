@@ -123,7 +123,7 @@ public class ModelState
         } 
       }  
       else if (obj != null && 
-          indx == null)
+               indx == null)
       { // object attribute
         Expression oid = obj.evaluate(sigma, this); 
         ObjectSpecification ref = sigma.getObjectSpec("" + oid); 

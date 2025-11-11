@@ -1901,6 +1901,24 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
   { // Special cases for !e and ?x in sandboxed memory 
     // space in sigma. 
 
+    if (operator.equals("->allInstances"))
+    { Type resulttype = new Type("Sequence",null); 
+      Type reselementType = argument.getElementType(); 
+      resulttype.setElementType(elementType);
+      SetExpression res = new SetExpression(true); 
+      res.type = resulttype;  
+      res.multiplicity = ModelElement.MANY;
+      res.modality = argument.modality;
+      Vector objs = sigma.getObjectsOf(argument + ""); 
+      for (int i = 0; i < objs.size(); i++) 
+      { ObjectSpecification obj = 
+              (ObjectSpecification) objs.get(i); 
+        res.addElement(new BasicExpression(obj)); 
+      } 
+ 
+      return res; 
+    }
+
     Expression pre = argument.evaluate(sigma, beta);
     return Expression.simplify(operator, pre); 
   } 
@@ -1912,10 +1930,11 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
       System.out.println("DISPLAY: " + val);  
     }  
     else if ("->isDeleted".equals(operator))
-    { if (argument.umlkind == CLASSID && 
-          (argument instanceof BasicExpression) && 
+    { if (argument instanceof BasicExpression && 
           ((BasicExpression) argument).arrayIndex == null) 
-      { // remove an object from its class
+      { // remove the object from its class, and set the 
+        // object variable to null: 
+
         Expression obj = argument.evaluate(sigma, beta);
         sigma.removeObject(obj); 
         beta.updateState(sigma, argument, 
@@ -1923,6 +1942,22 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
         System.out.println("DELETED: " + obj);  
       } 
     } 
+    else if ("->oclIsNew".equals(operator) && 
+             (argument instanceof BasicExpression))
+    { Type argt = argument.getType(); 
+      if (argt != null && argt.isEntity())
+      { Entity argent = argt.getEntity(); 
+        String ename = argent.getName(); 
+        Expression obj = argument.evaluate(sigma, beta);
+        if ("null".equals(obj + ""))
+        { String oid = Identifier.newIdentifier("oid_");  
+          ObjectSpecification newobj = 
+                 argent.initialisedObject(oid);
+          sigma.addObject(newobj); 
+          beta.updateState(sigma, argument, new BasicExpression(oid));  
+        } 
+      } 
+    }
   }  
 
   public String updateForm(java.util.Map env, boolean local)

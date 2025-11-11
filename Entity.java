@@ -5795,6 +5795,7 @@ public class Entity extends ModelElement implements Comparable
       ObjectSpecification obj = this.initialisedObject(oid); 
       ms.addObject(obj);
       beta.addVariable("self", new BasicExpression(obj));   
+                               // new BasicExpression(oid)
       System.out.println(">> Initial state = " + ms + "; " + beta); 
   
       bf.execute(ms, beta, pvals); 
