@@ -92,6 +92,28 @@ abstract class Expression
     operators.add("&"); 
   }
 
+  public static Vector mathops = new Vector(); 
+  static 
+  { operators.add("->abs"); 
+    operators.add("->floor"); 
+    operators.add("->ceil"); 
+    operators.add("->sin"); 
+    operators.add("->cos"); 
+    operators.add("->tan"); 
+    operators.add("->srqt"); 
+    operators.add("->cbrt"); 
+    operators.add("->round"); 
+    operators.add("->asin"); 
+    operators.add("->acos"); 
+    operators.add("->atan"); 
+    operators.add("->exp"); 
+    operators.add("->log"); 
+    operators.add("->log10"); 
+    operators.add("->sinh"); 
+    operators.add("->cosh"); 
+    operators.add("->tanh"); 
+  }
+
   public static Vector alloperators = new Vector(); 
   static 
   { alloperators.add("=>"); 
@@ -221,6 +243,9 @@ abstract class Expression
 
   public static boolean isComparator(String opx)
   { return comparitors.contains(opx); } 
+
+  public static boolean isMathOperator(String opx)
+  { return mathops.contains(opx); } 
 
   public abstract boolean isTailRecursion(BehaviouralFeature bf);
 
@@ -3048,6 +3073,67 @@ abstract class Expression
     } 
 
     return arg; 
+  } 
+
+  public static Expression simplifyMathExpression(String op, 
+                                                  double val)
+  { Expression res = null; 
+
+    if (op.equals("->abs"))
+    { return new BasicExpression(Math.abs(val)); }
+  
+    if (op.equals("->floor"))
+    { return new BasicExpression((int) Math.floor(val)); }
+
+    if (op.equals("->ceil"))
+    { return new BasicExpression((int) Math.ceil(val)); }
+ 
+    if (op.equals("->sin"))
+    { return new BasicExpression(Math.sin(val)); }
+
+    if (op.equals("->cos"))
+    { return new BasicExpression(Math.cos(val)); }
+
+    if (op.equals("->tan"))
+    { return new BasicExpression(Math.tan(val)); }
+
+    if (op.equals("->sqrt"))
+    { return new BasicExpression(Math.sqrt(val)); }
+
+    if (op.equals("->cbrt"))
+    { return new BasicExpression(Math.cbrt(val)); }
+
+    if (op.equals("->round"))
+    { return new BasicExpression((int) Math.round(val)); }
+    
+    if (op.equals("->asin"))
+    { return new BasicExpression(Math.asin(val)); }
+
+    if (op.equals("->acos"))
+    { return new BasicExpression(Math.acos(val)); }
+
+    if (op.equals("->atan"))
+    { return new BasicExpression(Math.atan(val)); }
+
+    if (op.equals("->exp"))
+    { return new BasicExpression(Math.exp(val)); }
+
+    if (op.equals("->log"))
+    { return new BasicExpression(Math.log(val)); }
+
+    if (op.equals("->log10"))
+    { return new BasicExpression(Math.log10(val)); }
+
+    if (op.equals("->sinh"))
+    { return new BasicExpression(Math.sinh(val)); }
+
+    if (op.equals("->cosh"))
+    { return new BasicExpression(Math.cosh(val)); }
+
+    if (op.equals("->tanh"))
+    { return new BasicExpression(Math.tanh(val)); }
+ 
+    return res; 
   } 
 
   public static Expression simplifyUnaryMinus(Expression e1) 

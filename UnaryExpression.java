@@ -18,7 +18,7 @@ import javax.swing.JOptionPane;
 public class UnaryExpression extends Expression
 { String operator; 
   Expression argument; 
-  Attribute accumulator = null;      // lambda
+  Attribute accumulator = null;    // for the lambda variable
 
 
   // For expressions   e->size()  e->any()  s->isDeleted()  etc
@@ -1899,7 +1899,69 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
   public Expression evaluate(ModelSpecification sigma, 
                              ModelState beta)
   { // Special cases for !e and ?x in sandboxed memory 
-    // space in sigma. 
+    // space in sigma. Special case for lambda: partial 
+    // evaluation. 
+
+    if (operator.equals("?"))
+    { // find the address of the argument
+      return beta.getVariableValue("?" + argument); 
+    } // for simple variable name
+
+    if (operator.equals("!"))
+    { // dereference the argument 
+      Expression ptr = argument.evaluate(sigma, beta); 
+      // a pointer id
+      String pid = ptr + ""; 
+
+      ObjectSpecification obj = 
+                   sigma.getReferredVariable(pid);
+
+      if (obj != null) 
+      { // evaluate the name in the specific environment
+        String nme = (String) obj.getRawValue("name"); 
+        java.util.Map env = 
+               (java.util.Map) obj.getRawValue("environment"); 
+        
+        if (env != null && nme != null)
+        { Expression res = (Expression) env.get(nme); 
+          return res;
+        }  
+      } 
+
+      return new BasicExpression("invalid");  
+    } 
+
+    if (Expression.isMathOperator(operator))
+    { Expression arg = argument.evaluate(sigma, beta); 
+      
+      if (Expression.isNumber(arg + ""))
+      { double dd = Expression.convertNumber(arg + ""); 
+        return Expression.simplifyMathExpression(operator, dd); 
+      } 
+   
+      return new UnaryExpression(operator, arg); 
+    } 
+
+
+    if (operator.equals("lambda") && accumulator != null)
+    { // evaluate the argument, with accumulator set to itself:
+
+      /* String nme = accumulator.getName(); 
+      Expression var = new BasicExpression(accumulator); 
+      beta.addNewEnvironment(); 
+      beta.addVariable(nme, var); 
+
+      Expression body = argument.evaluate(sigma, beta); 
+
+      beta.removeLastEnvironment(); 
+
+      UnaryExpression res = 
+           new UnaryExpression("lambda", argument); 
+      res.accumulator = accumulator; 
+      res.type = type; 
+      res.elementType = elementType; */  
+      return this; 
+    } // simplify the body
 
     if (operator.equals("->allInstances"))
     { Type resulttype = new Type("Sequence",null); 
@@ -4514,7 +4576,7 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
 
       if (argument instanceof BasicExpression) 
       { BasicExpression bexpr = (BasicExpression) argument; 
-        System.out.println(">>> Reference for " + bexpr + " " + bexpr.variable); 
+        // System.out.println(">>> Reference for " + bexpr + " " + bexpr.variable); 
         res = "Set.newRef" + elemT + "(" + qf + ")"; 
       } // also bexpr->at(ind) is ok: ?bexpr + ind - 1
 
@@ -7535,9 +7597,13 @@ private BExpression subcollectionsBinvariantForm(BExpression bsimp)
   { System.out.println("->sub".substring(2,"->sub".length())); } 
 
   public String cg(CGSpec cgs)
-  { String etext = this + "";
+  { UnaryExpression clne = (UnaryExpression) this.clone(); 
+    clne.setBrackets(false); 
+    String etext = clne + "";
+
     Vector args = new Vector();
-    Vector eargs = new Vector(); 
+    Vector eargs = new Vector();
+ 
     if (operator.equals("lambda") && accumulator != null)
     { args.add(accumulator.getName()); 
       eargs.add(accumulator); 
@@ -7550,7 +7616,7 @@ private BExpression subcollectionsBinvariantForm(BExpression bsimp)
     CGRule r = cgs.matchedUnaryExpressionRule(this,etext);
     if (r != null)
     { String res = r.applyRule(args,eargs,cgs);
-      System.out.println(">>> matched unary expression rule " + r + " for " + this + " args: " + args + " eargs: " + eargs); 
+      // JOptionPane.showInputDialog(">>> matched unary expression rule " + r + " for " + this + " args: " + args + " eargs: " + eargs); 
       System.out.println(">>> " + r.variables); 
       System.out.println(); 
 	  
@@ -7559,6 +7625,7 @@ private BExpression subcollectionsBinvariantForm(BExpression bsimp)
       else 
       { return res; }
     }
+
     return etext;
   }
 

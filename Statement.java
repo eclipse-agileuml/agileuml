@@ -5020,8 +5020,8 @@ class InvocationStatement extends Statement
       Expression selfobject = null;
       BehaviouralFeature bf = null;
  
-      JOptionPane.showInputDialog(callExp.isStatic() + " " + 
-                                  callExp.getEntity()); 
+      /* JOptionPane.showInputDialog(callExp.isStatic() + " " + 
+                                  callExp.getEntity()); */ 
 
       if (callExp.isStatic() && callExp.getEntity() != null)
       { selfobject = new BasicExpression("null");  
@@ -5056,9 +5056,8 @@ class InvocationStatement extends Statement
       if (bf == null) 
       { return res; } 
 
-      ModelState opstackframe = (ModelState) beta.clone(); 
-      opstackframe.addNewEnvironment(); 
-      opstackframe.addVariable("self", selfobject); 
+      beta.addNewEnvironment(); 
+      beta.addVariable("self", selfobject); 
 
       Vector parValues = new Vector(); 
       for (int i = 0; i < actualPars.size(); i++) 
@@ -5067,7 +5066,8 @@ class InvocationStatement extends Statement
         parValues.add(parval); // could be null; 
       } 
 
-      bf.execute(sigma, opstackframe, parValues);  
+      bf.execute(sigma, beta, parValues);
+      beta.removeLastEnvironment();   
     }
 
     return res; 
@@ -8853,21 +8853,34 @@ class CreationStatement extends Statement
     return res; 
   } 
 
-  public int execute(ModelSpecification sigma, ModelState beta)
+  public int execute(ModelSpecification sigma, 
+                     ModelState beta)
   { // add assignsTo as new variable, set to initialExpression
+    // Also allocate a new reference for the variable
+
+    java.util.HashMap env = null; 
 
     if (initialExpression != null) 
     { Expression val = initialExpression.evaluate(sigma, beta); 
-      beta.addVariable(assignsTo, val);
+      env = beta.addVariable(assignsTo, val);
     } // else use default value 
     else if (instanceType != null)  
     { Expression defaultInit = 
         Type.defaultInitialValueExpression(instanceType);
       Expression val = defaultInit.evaluate(sigma, beta); 
-      beta.addVariable(assignsTo, val);
+      env = beta.addVariable(assignsTo, val);
     }
 
-    return Statement.NORMAL; 
+    if (env != null) // success
+    { String pid = Identifier.newIdentifier("&_");
+      sigma.addReferenceTo(pid, assignsTo, 
+                           createsInstanceOf, env);   
+      beta.addVariable("?" + assignsTo, 
+                       new BasicExpression(pid));     
+      return Statement.NORMAL;
+    } 
+
+    return Statement.EXCEPTION;  
   } 
 
   public Expression definedness()
@@ -15279,7 +15292,36 @@ class AssignStatement extends Statement
   } 
 
   public int execute(ModelSpecification sigma, ModelState beta)
-  { Expression rhsValue = rhs.evaluate(sigma, beta); 
+  { Expression rhsValue = rhs.evaluate(sigma, beta);
+ 
+    if ("invalid".equals("" + rhsValue))
+    { return Statement.EXCEPTION; } 
+
+    if (lhs instanceof UnaryExpression && 
+        "!".equals(((UnaryExpression) lhs).getOperator()))
+    { UnaryExpression uexpr = (UnaryExpression) lhs; 
+      Expression arg = uexpr.getArgument(); 
+      Expression ptr = arg.evaluate(sigma, beta);
+
+      String pid = ptr + ""; 
+
+      ObjectSpecification obj = 
+                   sigma.getReferredVariable(pid);
+      if (obj != null) 
+      { // evaluate the name in the specific environment
+        String nme = (String) obj.getRawValue("name"); 
+        java.util.Map env = 
+               (java.util.Map) obj.getRawValue("environment"); 
+        
+        if (env != null && nme != null)
+        { env.put(nme, rhsValue); 
+          System.out.println(">> Updated state after assignment: " + beta);
+          return Statement.NORMAL; 
+        }  
+      } 
+
+      return Statement.EXCEPTION; 
+    } 
 
     if (lhs instanceof BasicExpression)
     { BasicExpression lbe = (BasicExpression) lhs;
@@ -15287,16 +15329,25 @@ class AssignStatement extends Statement
       Expression indx = lbe.getArrayIndex(); 
       String var = lbe.getData(); 
 
-      // System.out.println("LHS: " + obj + "." + var + indx + " " + lhs.isAttribute() + " " + beta); 
+      /* JOptionPane.showInputDialog("LHS: " + obj + "." + var + indx + " " + lhs.isAttribute() + " " + lhs.getEntity()); */  
       
       if (obj == null && 
           indx == null)
       { // simple variable or attribute
 
         if (lhs.isAttribute()) // of "self"
-        { Expression oid = beta.getVariableValue("self"); 
+        { 
+          if (lhs.isStatic() && lhs.getEntity() != null)
+          { String ename = lhs.entity.getName(); 
+            sigma.setStaticAttributeValue(ename, 
+                                          lhs + "", rhsValue); 
+            return Statement.NORMAL;  
+          } 
+
+          Expression oid = beta.getVariableValue("self"); 
           ObjectSpecification ref = 
                 sigma.getObjectSpec("" + oid); 
+
           if (ref != null)
           { ref.setOCLValue(var, rhsValue); }
         }   
@@ -15304,7 +15355,8 @@ class AssignStatement extends Statement
         { beta.setVariableValue(var, rhsValue); } 
       } 
       else if (obj == null)
-      { // simple array variable 
+      { // simple array variable, or array-valued attribute
+ 
         Expression indv = indx.evaluate(sigma, beta); 
         Expression arr = beta.getVariableValue(var); 
 
@@ -15314,8 +15366,20 @@ class AssignStatement extends Statement
         } 
       }  
       else if (obj != null && 
-          indx == null)
+              indx == null)
       { // object attribute
+
+        if (lhs.isStatic() && 
+            lhs.getEntity() != null)
+        { String ename = lhs.entity.getName(); 
+          sigma.setStaticAttributeValue(ename, 
+                                        var, rhsValue); 
+
+          // JOptionPane.showInputDialog("<< state after assignment: " + sigma); 
+
+          return Statement.NORMAL;  
+        }
+
         Expression oid = obj.evaluate(sigma, beta); 
         ObjectSpecification ref = sigma.getObjectSpec("" + oid); 
         // System.out.println(">>> Object spec: " + ref); 

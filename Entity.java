@@ -365,7 +365,9 @@ public class Entity extends ModelElement implements Comparable
       new ObjectSpecification(nme, this);
  
     for (int i = 0; i < attributes.size(); i++) 
-    { Attribute attr = (Attribute) attributes.get(i); 
+    { Attribute attr = (Attribute) attributes.get(i);
+      if (attr.isStatic()) 
+      { continue; }  
       String aname = attr.getName(); 
       Expression aval = attr.getInitialisation(); 
       res.setOCLValue(aname, aval); 

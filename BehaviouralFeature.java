@@ -147,8 +147,6 @@ public class BehaviouralFeature extends ModelElement
 
     // return value is that computed by this operation,
     // if it returns a value. 
-
-    ModelState local = (ModelState) beta.clone();
  
     System.out.println(">> Executing operation " + this + 
                        " on parameters " + parValues + 
@@ -162,24 +160,27 @@ public class BehaviouralFeature extends ModelElement
       String pname = par.getName(); 
       if (i < parValues.size())
       { Expression pval = (Expression) parValues.get(i); 
-        local.addVariable(pname, pval); 
+        beta.addVariable(pname, pval); 
       } 
       else if (typ != null) 
       { Expression def = Type.defaultInitialValueExpression(typ); 
-        local.addVariable(pname, def); 
+        beta.addVariable(pname, def); 
       }    
     } 
 
     if (resultType != null) 
     { Expression res = 
          Type.defaultInitialValueExpression(resultType);
-      local.addVariable("result", res); 
+      beta.addVariable("result", res); 
     } 
 
-    int status = activity.execute(sigma,local); 
+    int status = activity.execute(sigma, beta); 
 
+    /* JOptionPane.showInputDialog(">> Operation result is " + 
+                      beta.getVariableValue("result")); */ 
+ 
     if (resultType != null) 
-    { return local.getVariableValue("result"); } 
+    { return beta.getVariableValue("result"); } 
 
     return null; 
   } 

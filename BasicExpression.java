@@ -17046,10 +17046,9 @@ public Statement generateDesignSubtract(Expression rhs)
 
       if (bf == null) 
       { return this; } 
-
-      ModelState opstackframe = (ModelState) beta.clone(); 
-      opstackframe.addNewEnvironment(); 
-      opstackframe.addVariable("self", selfobject); 
+ 
+      beta.addNewEnvironment(); 
+      beta.addVariable("self", selfobject); 
 
       Vector parValues = new Vector(); 
       for (int i = 0; i < actualPars.size(); i++) 
@@ -17059,7 +17058,9 @@ public Statement generateDesignSubtract(Expression rhs)
       } 
 
       Expression res = 
-         bf.execute(sigma, opstackframe, parValues);
+         bf.execute(sigma, beta, parValues);
+
+      beta.removeLastEnvironment(); 
   
       return res; 
     } 

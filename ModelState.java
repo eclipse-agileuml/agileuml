@@ -43,14 +43,17 @@ public class ModelState
     { variableValues.remove(n-1); } 
   } 
 
-  public void addVariable(String var, Expression expr)
+  public java.util.HashMap addVariable(String var, Expression expr)
   { int n = variableValues.size(); 
 
     if (n > 0)
     { java.util.HashMap env = 
            (java.util.HashMap) variableValues.get(n-1); 
       env.put(var,expr); 
+      return env; 
     } 
+
+    return null; 
   } // else - error
 
   public void 
@@ -80,6 +83,23 @@ public class ModelState
       Expression expr = (Expression) env.get(var); 
       if (expr != null) 
       { return expr; } 
+    } 
+
+    return res; 
+  }         
+
+  public java.util.HashMap 
+                   getEnvironment(String var)
+  { java.util.HashMap res = null; 
+    int n = variableValues.size(); 
+
+    for (int i = n-1; i >= 0; i--) 
+    { java.util.HashMap env = 
+          (java.util.HashMap) variableValues.get(i); 
+
+      Expression expr = (Expression) env.get(var); 
+      if (expr != null) 
+      { return env; } 
     } 
 
     return res; 

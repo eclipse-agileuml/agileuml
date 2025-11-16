@@ -19162,6 +19162,32 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
 
     Expression lft = left.evaluate(sigma, beta); 
     Expression rgt = right.evaluate(sigma, beta); 
+
+    if ("->apply".equals(operator) && 
+        lft instanceof UnaryExpression &&
+        ((UnaryExpression) lft).getOperator().equals("lambda"))
+    { UnaryExpression lam = (UnaryExpression) lft; 
+      // create a new local state binding lam.accumulator to rgt
+      // Evaluate lft in that state.
+
+      Expression arg = lam.getArgument(); 
+      Attribute acc = lam.getAccumulator(); 
+
+      if (acc != null) 
+      { String nme = acc.getName(); 
+        beta.addNewEnvironment(); 
+        beta.addVariable(nme, rgt); 
+
+        // JOptionPane.showInputDialog("Evaluating " + arg + " in environment " + beta); 
+
+        Expression res = arg.evaluate(sigma, beta); 
+        beta.removeLastEnvironment();
+        return res.simplify();
+      } 
+
+      return new BasicExpression("null"); 
+    } 
+
     return simplify(operator, lft, rgt, false); 
   } 
 
@@ -21645,7 +21671,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         synLeft > synRight)
     { BinaryExpression res = 
         new BinaryExpression(operator, rexpr, lexpr); 
-      System.out.println(">> OCL efficiency smell (OES): Inefficient logical combination: " + this);
+      System.err.println("! Possible OCL efficiency smell (OES): Inefficient logical combination: " + this);
       return res; 
     } 
 
@@ -21663,7 +21689,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
  
         if (leftargop.equals("->select"))
         { // s->select(P)->size() = 0
-          System.out.println(">> OCL efficiency smell (OES): Inefficient comparison: " + this);
+          System.err.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
           
           UnaryExpression notpred = 
             new UnaryExpression("not", leftargpred); 
@@ -21674,7 +21700,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         } 
         else if (leftargop.equals("->reject"))
         { // s->reject(P)->size() = 0
-          System.out.println(">> OCL efficiency smell (OES): Inefficient comparison: " + this);
+          System.err.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
           
           BinaryExpression res = 
             new BinaryExpression("->forAll", leftargleft,
@@ -21683,7 +21709,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         } 
         else if (leftargop.equals("|"))
         { // s->select(x | P)->size() = 0
-          System.out.println(">> OCL efficiency smell (OES): Inefficient comparison: " + this);
+          System.err.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
           
           UnaryExpression notpred = 
             new UnaryExpression("not", leftargpred); 
@@ -21694,7 +21720,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         } 
         else if (leftargop.equals("|R"))
         { // s->reject(x | P)->size() = 0
-          System.out.println(">> OCL efficiency smell (OES): Inefficient comparison: " + this);
+          System.err.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
           
           BinaryExpression res = 
             new BinaryExpression("!", leftargleft,
@@ -21704,7 +21730,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       }
       else if ("->size".equals(leftop))
       { // col->size() = 0 is col->isEmpty()
-        System.out.println(">> OCL efficiency smell (OES): Inefficient comparison: " + this);
+        System.err.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
           
         Expression col = arg.getArgument(); 
         UnaryExpression res = 
@@ -21720,7 +21746,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       if (leftop.equals("->count"))
       { // s->count(x) = 0
 
-        System.out.println(">> OCL efficiency smell (OES): Inefficient comparison: " + this);
+        System.err.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
 
         BinaryExpression res = 
            new BinaryExpression("->excludes", be.getLeft(),
@@ -21743,7 +21769,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
  
         if (leftargop.equals("->select"))
         { // s->select(P)->size() = 1
-          System.out.println(">> OCL efficiency smell (OES): Inefficient comparison: " + this);
+          System.err.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
           
           BinaryExpression res = 
             new BinaryExpression("->exists1", leftargleft,
@@ -21752,7 +21778,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         } 
         else if (leftargop.equals("->reject"))
         { // s->reject(P)->size() = 1
-          System.out.println(">> OCL efficiency smell (OES): Inefficient comparison: " + this);
+          System.err.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
           
           UnaryExpression notpred = 
             new UnaryExpression("not", leftargpred); 
@@ -21763,7 +21789,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         } 
         else if (leftargop.equals("|"))
         { // s->select(x | P)->size() = 1
-          System.out.println(">> OCL efficiency smell (OES): Inefficient comparison: " + this);
+          System.err.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
           
           BinaryExpression res = 
             new BinaryExpression("#1", leftargleft,
@@ -21772,7 +21798,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         } 
         else if (leftargop.equals("|R"))
         { // s->reject(x | P)->size() = 1
-          System.out.println(">> OCL efficiency smell (OES): Inefficient comparison: " + this);
+          System.err.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
           
           UnaryExpression notpred = 
             new UnaryExpression("not", leftargpred); 
@@ -21799,7 +21825,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
  
         if (leftargop.equals("->select"))
         { // s->select(P)->size() > 0
-          System.out.println(">> OCL efficiency smell (OES): Inefficient comparison: " + this);
+          System.err.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
           
           BinaryExpression res = 
             new BinaryExpression("->exists", leftargleft,
@@ -21808,7 +21834,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         } 
         else if (leftargop.equals("->reject"))
         { // s->reject(P)->size() > 0
-          System.out.println(">> OCL efficiency smell (OES): Inefficient comparison: " + this);
+          System.err.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
           
           UnaryExpression notpred = 
             new UnaryExpression("not", leftargpred); 
@@ -21820,7 +21846,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         else if (leftargop.equals("|"))
         { // s->select(x | P)->size() > 0
 
-          System.out.println(">> OCL efficiency smell (OES): Inefficient comparison: " + this);
+          System.err.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
           
           BinaryExpression res = 
             new BinaryExpression("#", leftargleft,
@@ -21830,7 +21856,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         else if (leftargop.equals("|R"))
         { // s->reject(x | P)->size() > 0
 
-          System.out.println(">> OCL efficiency smell (OES): Inefficient comparison: " + this);
+          System.err.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
           
           UnaryExpression notpred = 
              new UnaryExpression("not", leftargpred); 
@@ -21843,7 +21869,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       else if ("->size".equals(leftop)) 
       { // col->size() > 0
 
-        System.out.println(">> OCL efficiency smell (OES): Inefficient comparison: " + this);
+        System.err.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
         Expression col = arg.getArgument(); 
         UnaryExpression res = 
           new UnaryExpression("->notEmpty", col); 
@@ -21857,7 +21883,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       String leftop = be.getOperator(); 
       if (leftop.equals("->count"))
       { // s->count(x) > 0
-        System.out.println(">> OCL efficiency smell (OES): Inefficient comparison: " + this);
+        System.err.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
 
         BinaryExpression res = 
            new BinaryExpression("->includes", be.getLeft(),
@@ -21873,7 +21899,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       { BinaryExpression lbe = (BinaryExpression) domain; 
 
         if (lbe.operator.equals("->select"))
-        { System.out.println(">> OCL efficiency smell (OES): Inefficient nested select: " + this);
+        { System.err.println("!! OCL efficiency smell (OES): Inefficient nested select: " + this);
           Expression newleft = lbe.getLeft();
           Expression newright = lbe.getRight();
           BasicExpression ref = 
@@ -21887,7 +21913,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
           return new BinaryExpression("|", newdomain, newpred); 
         }  
         else if (lbe.operator.equals("->reject"))
-        { System.out.println(">> OCL efficiency smell (OES): Inefficient nested select: " + this);
+        { System.err.println("!! OCL efficiency smell (OES): Inefficient nested select: " + this);
           Expression newleft = lbe.getLeft(); 
           Expression newright = lbe.getRight();
           BasicExpression ref = 
@@ -21911,7 +21937,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       { BinaryExpression lbe = (BinaryExpression) domain; 
 
         if (lbe.operator.equals("->select"))
-        { System.out.println(">> OCL efficiency smell (OES): Inefficient nested select/reject: " + this);
+        { System.err.println("!! OCL efficiency smell (OES): Inefficient nested select/reject: " + this);
           Expression newleft = lbe.getLeft();
           Expression newright = lbe.getRight();
           BasicExpression ref = 
@@ -21926,7 +21952,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
           return new BinaryExpression("|", newdomain, newpred); 
         }  
         else if (lbe.operator.equals("->reject"))
-        { System.out.println(">> OCL efficiency smell (OES): Inefficient nested reject: " + this);
+        { System.err.println("!! OCL efficiency smell (OES): Inefficient nested reject: " + this);
           Expression newleft = lbe.getLeft(); 
           Expression newright = lbe.getRight();
           BasicExpression ref = 
@@ -21948,7 +21974,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       if (left instanceof BinaryExpression) 
       { BinaryExpression lbe = (BinaryExpression) left; 
         if (lbe.operator.equals("->select"))
-        { System.out.println(">> OCL efficiency smell (OES): Inefficient nested select: " + this);
+        { System.err.println("!! OCL efficiency smell (OES): Inefficient nested select: " + this);
           Expression predicate1 = lbe.getRight(); 
           Expression combinedPred = 
               new BinaryExpression("&", predicate1, right); 
@@ -21956,11 +21982,11 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
           res.left = lbe.getLeft(); 
           res.operator = "->select"; 
           res.right = combinedPred; 
-          System.out.println(">> Replacing with: " + res); 
+          System.out.println("!! Replacing with: " + res); 
           return res; 
         }
         else if (lbe.operator.equals("->reject"))
-        { System.out.println(">> OCL efficiency smell (OES): Inefficient nested select: " + this);
+        { System.err.println("!! OCL efficiency smell (OES): Inefficient nested select: " + this);
           Expression predicate1 = lbe.getRight();
           Expression pred2 = 
                Expression.negate(predicate1);  
@@ -21970,7 +21996,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
           res.left = lbe.getLeft(); 
           res.operator = "->select"; 
           res.right = combinedPred; 
-          System.out.println(">> Replacing with: " + res); 
+          System.out.println("!! Replacing with: " + res); 
           return res; 
         }
       }
@@ -21980,7 +22006,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       if (left instanceof BinaryExpression) 
       { BinaryExpression lbe = (BinaryExpression) left; 
         if (lbe.operator.equals("->select"))
-        { System.out.println(">> OCL efficiency smell (OES): Inefficient nested select: " + this);
+        { System.err.println("!! OCL efficiency smell (OES): Inefficient nested select: " + this);
           Expression predicate1 = lbe.getRight(); 
           Expression combinedPred = 
               new BinaryExpression("&", 
@@ -21989,7 +22015,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
           res.left = lbe.getLeft(); 
           res.operator = "->select"; 
           res.right = combinedPred; 
-          System.out.println(">> Replacing with: " + res); 
+          System.out.println("!! Replacing with: " + res); 
           return res; 
         }
         else if (lbe.operator.equals("->reject"))

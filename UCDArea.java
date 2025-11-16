@@ -3684,6 +3684,19 @@ public class UCDArea extends JPanel
       System.out.println(">> Initial global state = " + ms); 
       System.out.println(">> Initial local state = " + beta); 
   
+      Vector pars = bf.getParameters(); 
+      if (pars.size() > 0)
+      { String ps = 
+           JOptionPane.showInputDialog("Enter parameter values for: " + pars);
+        String[] pstrings = ps.split(" "); 
+        for (int i = 0; i < pstrings.length; i++) 
+        { Compiler2 cc = new Compiler2(); 
+          cc.nospacelexicalanalysis(pstrings[i]); 
+          Expression expr = cc.parseExpression(); 
+          pvals.add(expr); 
+        } 
+      } 
+ 
       bf.execute(ms, beta, pvals); 
       System.out.println(); 
       System.out.println(">> Resulting global state = " + ms); 
