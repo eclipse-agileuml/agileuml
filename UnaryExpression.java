@@ -948,6 +948,16 @@ public void findClones(java.util.Map clones,
     if (operator.equals("->prd"))
     { return Expression.simplifyPrd(arg); } 
 
+    if (Expression.isMathOperator(operator))
+    { 
+      if (Expression.isNumber(arg + ""))
+      { double dd = Expression.convertNumber(arg + ""); 
+        return Expression.simplifyMathExpression(operator, dd); 
+      } 
+   
+      return new UnaryExpression(operator, arg); 
+    } 
+
     if (operator.equals("->notEmpty") && 
         argument instanceof BinaryExpression)
     { // ->select(P)->notEmpty()  is  ->exists(P)

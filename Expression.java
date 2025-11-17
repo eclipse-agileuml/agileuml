@@ -94,24 +94,48 @@ abstract class Expression
 
   public static Vector mathops = new Vector(); 
   static 
-  { operators.add("->abs"); 
-    operators.add("->floor"); 
-    operators.add("->ceil"); 
-    operators.add("->sin"); 
-    operators.add("->cos"); 
-    operators.add("->tan"); 
-    operators.add("->srqt"); 
-    operators.add("->cbrt"); 
-    operators.add("->round"); 
-    operators.add("->asin"); 
-    operators.add("->acos"); 
-    operators.add("->atan"); 
-    operators.add("->exp"); 
-    operators.add("->log"); 
-    operators.add("->log10"); 
-    operators.add("->sinh"); 
-    operators.add("->cosh"); 
-    operators.add("->tanh"); 
+  { mathops.add("->abs"); 
+    mathops.add("->floor"); 
+    mathops.add("->ceil"); 
+    mathops.add("->sin"); 
+    mathops.add("->cos"); 
+    mathops.add("->tan"); 
+    mathops.add("->srqt"); 
+    mathops.add("->sqr"); 
+    mathops.add("->cbrt"); 
+    mathops.add("->round"); 
+    mathops.add("->asin"); 
+    mathops.add("->acos"); 
+    mathops.add("->atan"); 
+    mathops.add("->exp"); 
+    mathops.add("->log"); 
+    mathops.add("->log10"); 
+    mathops.add("->sinh"); 
+    mathops.add("->cosh"); 
+    mathops.add("->tanh"); 
+  }
+
+  public static Vector math2operators = new Vector(); 
+  static 
+  { math2operators.add("->pow"); 
+    math2operators.add("->gcd"); 
+    math2operators.add("->roundTo"); 
+    math2operators.add("->truncateTo"); 
+  }
+
+  public static Vector stringoperators = new Vector(); 
+  static 
+  { stringoperators.add("->characters"); 
+    stringoperators.add("->char2byte"); 
+    stringoperators.add("->byte2char"); 
+    stringoperators.add("->toLowerCase"); 
+    stringoperators.add("->toUpperCase"); 
+    stringoperators.add("->trim"); 
+    stringoperators.add("->reverse");
+    stringoperators.add("->front"); 
+    stringoperators.add("->tail"); 
+    stringoperators.add("->first"); 
+    stringoperators.add("->last"); 
   }
 
   public static Vector alloperators = new Vector(); 
@@ -246,6 +270,12 @@ abstract class Expression
 
   public static boolean isMathOperator(String opx)
   { return mathops.contains(opx); } 
+
+  public static boolean isMath2Operator(String opx)
+  { return math2operators.contains(opx); } 
+
+  public static boolean isStringOperator(String opx)
+  { return stringoperators.contains(opx); } 
 
   public abstract boolean isTailRecursion(BehaviouralFeature bf);
 
@@ -3072,6 +3102,16 @@ abstract class Expression
       return new BasicExpression(emp);  
     } 
 
+    if (Expression.isMathOperator(op))
+    { 
+      if (Expression.isNumber(arg + ""))
+      { double dd = Expression.convertNumber(arg + ""); 
+        return Expression.simplifyMathExpression(op, dd); 
+      } 
+   
+      return new UnaryExpression(op, arg); 
+    } 
+
     return arg; 
   } 
 
@@ -3099,6 +3139,9 @@ abstract class Expression
 
     if (op.equals("->sqrt"))
     { return new BasicExpression(Math.sqrt(val)); }
+
+    if (op.equals("->sqr"))
+    { return new BasicExpression(val*val); } 
 
     if (op.equals("->cbrt"))
     { return new BasicExpression(Math.cbrt(val)); }
