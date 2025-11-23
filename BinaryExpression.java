@@ -744,7 +744,8 @@ class BinaryExpression extends Expression
     { return caseDisjointness(); }
     else // if ("&".equals(operator))
     { Expression dand = 
-        new BinaryExpression("&",left.determinate(),right.determinate());
+        new BinaryExpression("&", left.determinate(), 
+                             right.determinate());
       return dand.simplify();
     }
     // union, intersection, etc? 
@@ -19188,13 +19189,14 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       return new BasicExpression("null"); 
     } 
 
-    return simplify(operator, lft, rgt, false); 
+    return Expression.simplify(operator, lft, rgt, false); 
   } 
 
   public Expression simplify() 
   { Expression lsimp = left.simplify();
     Expression rsimp = right.simplify();
-    return simplify(operator,lsimp,rsimp,needsBracket); 
+    return Expression.simplify(
+                  operator,lsimp,rsimp,needsBracket); 
   }
 
   public Expression substitute(final Expression oldE,

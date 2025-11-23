@@ -138,6 +138,23 @@ abstract class Expression
     stringoperators.add("->last"); 
   }
 
+  public static Vector string2operators = new Vector(); 
+  static 
+  { string2operators.add("->split"); 
+    string2operators.add("->after"); 
+    string2operators.add("->before"); 
+    string2operators.add("->hasSuffix"); 
+    string2operators.add("->hasPrefix"); 
+    string2operators.add("->indexOf"); 
+    string2operators.add("->lastIndexOf");
+    string2operators.add("->isMatch"); 
+    string2operators.add("->hasMatch"); 
+    string2operators.add("->at"); 
+    string2operators.add("->equalsIgnoreCase"); 
+    string2operators.add("->allMatches"); 
+    string2operators.add("->firstMatch"); 
+  }
+
   public static Vector alloperators = new Vector(); 
   static 
   { alloperators.add("=>"); 
@@ -168,12 +185,12 @@ abstract class Expression
   }  // and? 
 
   public static java.util.Map oppriority = new java.util.HashMap(); 
-  { oppriority.put("<=>",new Integer(0)); 
-    oppriority.put("=>",new Integer(1)); 
-    oppriority.put("#",new Integer(2)); 
-    oppriority.put("or",new Integer(3)); 
-    oppriority.put("xor",new Integer(3)); 
-    oppriority.put("&",new Integer(4)); 
+  { oppriority.put("<=>", 0); 
+    oppriority.put("=>", 1); 
+    oppriority.put("#", 2); 
+    oppriority.put("or", 3); 
+    oppriority.put("xor", 3); 
+    oppriority.put("&", 4); 
   }  // and? 
 
   // For extensions:        
@@ -276,6 +293,9 @@ abstract class Expression
 
   public static boolean isStringOperator(String opx)
   { return stringoperators.contains(opx); } 
+
+  public static boolean isString2Operator(String opx)
+  { return string2operators.contains(opx); } 
 
   public abstract boolean isTailRecursion(BehaviouralFeature bf);
 
@@ -3074,7 +3094,6 @@ abstract class Expression
     } 
     // or a string: length - 2
 
-
     if (op.equals("->keys") && arg instanceof SetExpression)
     { SetExpression se = (SetExpression) arg; 
       return SetExpression.keys(se); 
@@ -3112,13 +3131,123 @@ abstract class Expression
       return new UnaryExpression(op, arg); 
     } 
 
+    if (Expression.isStringOperator(op))
+    { 
+      return Expression.simplifyStringExpression(op, arg);  
+    } 
+
     return arg; 
+  } 
+
+  public static Expression simplifyStringExpression(String op,
+                                               Expression str)
+  { String ds = "" + str; 
+
+    if (ds.startsWith("\"") && ds.endsWith("\"") && 
+        ds.length() > 1)
+    { String sval = ds.substring(1, ds.length()-1); 
+
+      if (op.equals("->characters"))
+      { Vector res = new Vector(); 
+        for (int i = 0; i < sval.length(); i++) 
+        { String si = "\"" + sval.charAt(i) + "\""; 
+          res.add(new BasicExpression(si)); 
+        } 
+        return new SetExpression(res, true); 
+      } 
+ 
+      if (op.equals("->char2byte")) 
+      { return new BasicExpression(Expression.char2byte(sval)); } 
+
+      if (op.equals("->toLowerCase"))
+      { String nval = sval.toLowerCase(); 
+        return new BasicExpression("\"" + nval + "\""); 
+      } 
+ 
+      if (op.equals("->toUpperCase")) 
+      { String nval = sval.toUpperCase(); 
+        return new BasicExpression("\"" + nval + "\""); 
+      } 
+
+      if (op.equals("->trim"))
+      { String nval = sval.trim(); 
+        return new BasicExpression("\"" + nval + "\""); 
+      } 
+ 
+      if (op.equals("->reverse"))
+      { return new BasicExpression(
+                        Expression.stringReverse(str + "")); 
+      } 
+
+      if (op.equals("->front"))
+      { String nval = sval.substring(0, sval.length()-1); 
+        return new BasicExpression("\"" + nval + "\""); 
+      } 
+ 
+      if (op.equals("->tail")) 
+      { String nval = sval.substring(1); 
+        return new BasicExpression("\"" + nval + "\""); 
+      } 
+
+      if (op.equals("->first"))
+      { if (sval.length() > 0)
+        { return new BasicExpression("\"" + sval.charAt(0) + "\""); } 
+        else 
+        { return new BasicExpression("Invalid"); } 
+      } 
+
+      if (op.equals("->last"))
+      { int n = sval.length(); 
+        if (n > 0)
+        { return new BasicExpression("\"" + sval.charAt(n-1) + "\""); } 
+        else 
+        { return new BasicExpression("Invalid"); } 
+      } 
+    } 
+    else if (Expression.isIntegerValue(str + "") &&
+             op.equals("->byte2char"))
+    { int code = Expression.convertInteger(str + ""); 
+      String chrs = Expression.byte2char(code); 
+      return new BasicExpression("\"" + chrs + "\""); 
+    } 
+
+    return new UnaryExpression(op, str); 
+  } 
+
+  public static Expression simplifyMath2Expression(String op, 
+                                               double val1, 
+                                               double val2)
+  { 
+    if ("->pow".equals(op))
+    { return new BasicExpression(Math.pow(val1, val2)); } 
+
+    if ("->gcd".equals(op))
+    { Expression res = new BasicExpression(
+                      Expression.gcd((long) val1, 
+                                     (long) val2)); 
+      return res; 
+    }
+
+    if ("->roundTo".equals(op))
+    { return new BasicExpression(
+                      Expression.roundTo(val1, 
+                                         (int) val2)); 
+    }
+
+    if ("->truncateTo".equals(op))
+    { return new BasicExpression(
+                      Expression.truncateTo(val1, 
+                                            (int) val2)); 
+    }
+
+    return new BinaryExpression(op, 
+                                new BasicExpression(val1), 
+                                new BasicExpression(val2)); 
   } 
 
   public static Expression simplifyMathExpression(String op, 
                                                   double val)
-  { Expression res = null; 
-
+  { 
     if (op.equals("->abs"))
     { return new BasicExpression(Math.abs(val)); }
   
@@ -3176,7 +3305,7 @@ abstract class Expression
     if (op.equals("->tanh"))
     { return new BasicExpression(Math.tanh(val)); }
  
-    return res; 
+    return new UnaryExpression(op, new BasicExpression(val)); 
   } 
 
   public static Expression simplifyUnaryMinus(Expression e1) 
@@ -3379,9 +3508,10 @@ abstract class Expression
     } // not for sorted collections, maps 
 
     if ("->at".equals(op) && 
-        e1 instanceof SetExpression)
+        e1 instanceof SetExpression && 
+        Expression.isIntegerValue(e2 + ""))
     { SetExpression s1 = (SetExpression) e1;
-      int indx = Integer.parseInt("" + e2);  
+      int indx = Integer.parseInt(e2 + "");  
       return s1.atExpression(indx); 
     } // not for sorted collections, maps 
 
@@ -3400,6 +3530,21 @@ abstract class Expression
       SetExpression s2 = (SetExpression) e2; 
       return SetExpression.antirestrict(s1, s2); 
     }  
+
+    if (Expression.isMath2Operator(op))
+    { 
+      if (Expression.isNumber(e1 + "") && 
+          Expression.isNumber(e2 + ""))
+      { double d1 = Expression.convertNumber(e1 + ""); 
+        double d2 = Expression.convertNumber(e2 + ""); 
+        return Expression.simplifyMath2Expression(op, d1, d2); 
+      } 
+    } 
+
+    if (Expression.isStringOperator(op))
+    { 
+      return Expression.simplifyStringExpression(op, e1);  
+    } 
 
     return new BinaryExpression(op,e1,e2);
   }
@@ -3558,19 +3703,30 @@ abstract class Expression
       res = SetExpression.intersectionSetExpressions(s1, s2); 
     } // not for sorted collections, maps 
     else if ("->at".equals(op) && 
-        e1 instanceof SetExpression)
+        e1 instanceof SetExpression && 
+        Expression.isIntegerValue(e2 + ""))
     { SetExpression s1 = (SetExpression) e1;
-      int indx = Integer.parseInt("" + e2);  
+      int indx = Integer.parseInt(e2 + "");  
       res = s1.atExpression(indx); 
     } // not for sorted collections, maps 
-    else 
+    else if (Expression.isMath2Operator(op) &&
+             Expression.isNumberValue(e1 + "") && 
+             Expression.isNumberValue(e2 + ""))
+    { double d1 = Expression.convertNumber(e1 + ""); 
+      double d2 = Expression.convertNumber(e2 + ""); 
+      res = Expression.simplifyMath2Expression(op, d1, d2); 
+    }    
+    else if (Expression.isStringOperator(op))
+    { 
+      res = Expression.simplifyStringExpression(op, e1);  
+    } 
+    else
     { res = new BinaryExpression(op,e1,e2); } 
 
     res.setBrackets(needsBrackets); 
 
     return res; 
   }
-
 
   public static Expression simplifyPlus(
                               Expression e1, Expression e2) 
@@ -6200,6 +6356,61 @@ public static boolean conflictsReverseOp(String op1, String op2)
     }
     return cg(cgs);
   } // but omit initialisations for parameters
+
+    public static long gcd(long xx, long yy)
+    { long x = Math.abs(xx); 
+      long y = Math.abs(yy); 
+      while (x != 0 && y != 0)
+      { long z = y; 
+        y = x % y; 
+        x = z; 
+      } 
+
+      if (y == 0)
+      { return x; } 
+
+      if (x == 0)
+      { return y; } 
+
+      return 0; 
+    } 
+
+    public static double roundTo(double x, int n)
+    { if (n < 0) 
+      { return Math.round(x); }
+      double y = x*Math.pow(10,n); 
+      return Math.round(y)/Math.pow(10,n);
+    }
+
+    public static double truncateTo(double x, int n)
+    { if (n < 0) 
+      { return (int) x; }
+      double y = x*Math.pow(10,n); 
+      return ((int) y)/Math.pow(10,n);
+    }
+
+  public static int char2byte(String s)
+  { if (s == null || s.length() == 0)
+    { return -1; } 
+    return (int) s.charAt(0);  
+  }
+
+  public static String byte2char(int b) 
+  { try { 
+      byte[] bb = {(byte) b}; 
+      return new String(bb); 
+    } 
+    catch (Exception _e) 
+    { return ""; }
+  } 
+
+  public static String stringReverse(String a)
+  { String res = ""; 
+    for (int i = a.length() - 1; i >= 0; i--)
+    { res = res + a.charAt(i); } 
+    return res; 
+  }
+
 
   public static void main(String[] args) 
   { /* if (Expression.isLong("10000000000000L"))

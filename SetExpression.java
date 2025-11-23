@@ -952,13 +952,13 @@ public class SetExpression extends Expression
     res = (Expression) elements.get(0);  
     String resv = "" + res; 
 
-    for (int i = 1; i < elements.size(); i++) 
-    { Expression elem = (Expression) elements.get(i); 
-      String es = "" + elem; 
+    if (Expression.isStringValue(resv))
+    { 
+      for (int i = 1; i < elements.size(); i++) 
+      { Expression elem = (Expression) elements.get(i); 
+        String es = "" + elem; 
 
-      if (Expression.isStringValue(resv) && 
-          Expression.isStringValue(es))
-      { String s1 = resv.substring(0, resv.length()-1); 
+        String s1 = resv.substring(0, resv.length()-1); 
         String s2 = es.substring(0, es.length()-1); 
 
         if (s1.compareTo(s2) < 0)
@@ -966,9 +966,12 @@ public class SetExpression extends Expression
           resv = es; 
         } 
       } 
-      else if (Expression.isNumber(resv) && 
-               Expression.isNumber(es))
-      { double dr = Expression.convertNumber(resv); 
+    }
+    else if (Expression.isNumber(resv)) 
+    { for (int i = 1; i < elements.size(); i++) 
+      { Expression elem = (Expression) elements.get(i); 
+        String es = "" + elem; 
+        double dr = Expression.convertNumber(resv); 
         double de = Expression.convertNumber(es);
  
         if (dr < de)
@@ -976,10 +979,10 @@ public class SetExpression extends Expression
           resv = es; 
         }
       }
-      else 
-      { return new UnaryExpression("->max", this); }  
     }
-
+    else 
+    { return new UnaryExpression("->max", this); }  
+ 
     return res;  
   } 
 
