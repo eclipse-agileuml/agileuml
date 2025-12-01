@@ -133,7 +133,7 @@ using System.Collections.Generic;
             { if (col.Contains(x)) { } 
               else 
               { rset.Add(x);
-                rseq.Add(x); 
+                rseq.add(x); 
               }
             }
 
@@ -142,7 +142,7 @@ using System.Collections.Generic;
               else 
               { 
                  rset.Add(x); 
-                 rseq.Add(x); 
+                 rseq.add(x); 
               }
             }
 
@@ -157,7 +157,7 @@ using System.Collections.Generic;
                 bool added = elementSet.Add(obj);
                 if (added)
                 {
-                    elementSeq.Add((T)obj);
+                    elementSeq.add((T)obj);
                 }
             }
         }
@@ -171,7 +171,7 @@ using System.Collections.Generic;
                 if (added)
                 {
                     changed = true;
-                    elementSeq.Add((T)obj);
+                    elementSeq.add((T)obj);
                 }
             }
             return changed;
@@ -340,3 +340,4 @@ using System.Collections.Generic;
         public bool SetEquals(IEnumerable<T> col)
         { return elementSet.SetEquals(col); }
     }
+
