@@ -685,11 +685,11 @@ public class BSystemTypes extends BComponent
       res1 = res1 + ")\n"; 
       res1 = res1 + "  { // implements: " + left + "->select( " + var + " | " + pred + " )\n" + 
                   "    " + restype1 + "* _results_" + oldindex + " = new " + restype1 + "();\n" + 
-                  "    for (" + restype1 + "::iterator _iselect = _l->begin(); _iselect != _l->end(); ++_iselect)\n" + 
+                  "    for (auto _iselect = _l->begin(); _iselect != _l->end(); ++_iselect)\n" + 
                   "    { " + tname + " " + var + " = *_iselect;\n"; 
       res2 = res2 + ")\n"; 
       res2 = res2 + "  { " + restype2 + "* _results_" + oldindex + " = new " + restype2 + "();\n" + 
-                  "    for (" + restype2 + "::iterator _iselect = _l->begin(); _iselect != _l->end(); ++_iselect)\n" + 
+                  "    for (auto _iselect = _l->begin(); _iselect != _l->end(); ++_iselect)\n" + 
                   "    { " + tname + " " + var + " = *_iselect;\n"; 
 
       String test = pred.queryFormCPP(newenv,false); 
@@ -1217,7 +1217,7 @@ public class BSystemTypes extends BComponent
       res2 = res2 + ")\n"; 
       res2 = res2 + "  { vector<" + restype + ">* _results_" + oldindex + 
                          " = new vector<" + restype + ">();\n" + 
-            "    for (" + argtype2 + "::iterator _icollect = _l->begin(); _icollect != _l->end(); ++_icollect)\n" + 
+            "    for (auto _icollect = _l->begin(); _icollect != _l->end(); ++_icollect)\n" + 
             "    { " + tname + " " + var + " = *_icollect;\n"; 
 
       java.util.Map newenv = (java.util.Map) ((java.util.HashMap) env).clone(); 
@@ -1356,7 +1356,7 @@ public class BSystemTypes extends BComponent
       res2 = res2 + ")\n"; 
       res2 = res2 + "  { " + restype + " _result_" + oldindex + 
                          " = NULL;\n" + 
-            "    for (" + argtype2 + "::iterator _iany = _l->begin(); _iany != _l->end(); ++_iany)\n" + 
+            "    for (auto _iany = _l->begin(); _iany != _l->end(); ++_iany)\n" + 
             "    { " + tname + " " + var + " = *_iany;\n"; 
 
 
@@ -1994,11 +1994,11 @@ public class BSystemTypes extends BComponent
       res1 = res1 + ")\n"; 
       res1 = res1 + "  { // implements: " + left + "->reject( " +  var + " | " + pred + " )\n" +
                   "    " + restype1 + "* _results_" + oldindex + " = new " + restype1 + "();\n" + 
-                  "    for (" + restype1 + "::iterator _ireject = _l->begin(); _ireject != _l->end(); ++_ireject)\n" + 
+                  "    for (auto _ireject = _l->begin(); _ireject != _l->end(); ++_ireject)\n" + 
                   "    { " + tname + " " + var + " = *_ireject;\n"; 
       res2 = res2 + ")\n"; 
       res2 = res2 + "  { " + restype2 + "* _results_" + oldindex + " = new " + restype2 + "();\n" + 
-                  "    for (" + restype2 + "::iterator _ireject = _l->begin(); _ireject != _l->end(); ++_ireject)\n" + 
+                  "    for (auto _ireject = _l->begin(); _ireject != _l->end(); ++_ireject)\n" + 
                   "    { " + tname + " " + var + " = *_ireject;\n"; 
 
       String test = pred.queryFormCPP(newenv,false); 
@@ -3236,7 +3236,7 @@ public class BSystemTypes extends BComponent
 
       res1 = res1 + 
          "  { // Implements: " + left + "->exists(" + var + "|" + pred + ")\n" + 
-         "    for (" + argtype1 + "::iterator _iexists = _l->begin(); _iexists != _l->end(); ++_iexists)\n" + 
+         "    for (auto _iexists = _l->begin(); _iexists != _l->end(); ++_iexists)\n" + 
          "    { " + cet + " " + var + " = *_iexists;\n";
       String test = pred.queryFormCPP(newenv,false); 
       res1 = res1 + "      if (" + test + ") { return true; }\n"; 
@@ -3244,7 +3244,7 @@ public class BSystemTypes extends BComponent
       res1 = res1 + "    return false;\n  }"; 
 
       res2 = res2 + "  { // Implements: " + left + "->exists(" + var + "|" + pred + ")\n" + 
-            "    for (" + argtype2 + "::iterator _iexists = _l->begin(); _iexists != _l->end(); ++_iexists)\n" + 
+            "    for (auto _iexists = _l->begin(); _iexists != _l->end(); ++_iexists)\n" + 
             "    { " + cet + " " + var + " = *_iexists;\n";
       res2 = res2 + "      if (" + test + ") { return true; }\n"; 
       res2 = res2 + "    }\n"; 
@@ -3915,7 +3915,7 @@ public class BSystemTypes extends BComponent
 
 
       res = res + "  { bool _alreadyfound = false;\n" + 
-                  "    for (" + argtype + "::iterator _iexists1 = _l->begin(); _iexists1 != _l->end(); ++_iexists1)\n" + 
+                  "    for (auto _iexists1 = _l->begin(); _iexists1 != _l->end(); ++_iexists1)\n" + 
                   "    { " + cet + " " + var + " = *_iexists1;\n";
       String test = pred.queryFormCPP(newenv,false); 
       res = res + "      if (" + test + ")\n" + 
@@ -4540,7 +4540,7 @@ public class BSystemTypes extends BComponent
       } 
 
       res = res + "  { // implements " + left + "->forAll( " + var + " | " + pred + " )\n" + 
-                  "    for (" + argtype + "::iterator _iforall = _l->begin(); _iforall != _l->end(); ++_iforall)\n" + 
+                  "    for (auto _iforall = _l->begin(); _iforall != _l->end(); ++_iforall)\n" + 
                   "    { " + cet + " " + var + " = *_iforall;\n";
       
       String test = pred.queryFormCPP(newenv,false); 
@@ -5023,8 +5023,8 @@ public class BSystemTypes extends BComponent
       "  }\n\n" +
       "  static map<string,_T>* copyMap(map<string,_T>* m)\n" +  
       "  { map<string,_T>* res = new map<string,_T>();\n" + 
-      "    map<string,_T>::iterator iter; \n" +
-      "    for (iter = m->begin(); iter != m->end(); ++iter)\n" + 
+      "    auto iter = m->begin(); \n" +
+      "    for ( ; iter != m->end(); ++iter)\n" + 
       "    { string key = iter->first;\n" + 
       "      (*res)[key] = iter->second;  \n" +
       "    }     \n" +
@@ -5108,7 +5108,7 @@ public class BSystemTypes extends BComponent
       "  template<class S>\n" + 
       "  static T iterate(vector<S>* _s, T initialValue, std::function<std::function<T(T)>(S)> _f)\n" +
       "  { T acc = initialValue; \n" +
-      "    for (vector<S>::iterator _pos = _s->begin(); _pos != _s->end(); ++_pos) \n" +
+      "    for (auto _pos = _s->begin(); _pos != _s->end(); ++_pos) \n" +
       "    { S _x = *_pos;\n" +  
       "      acc = (_f(_x))(acc); \n" + 
       "    }\n" +
@@ -5126,7 +5126,7 @@ public class BSystemTypes extends BComponent
 
       "  static T iterate(vector<S>* _s, T initialValue, std::function<T(S,T)> _f)\n" +
       "  { T acc = initialValue; \n" +
-      "    for (vector<S>::iterator _pos = _s->begin(); _pos != _s->end(); ++_pos) \n" +
+      "    for (auto _pos = _s->begin(); _pos != _s->end(); ++_pos) \n" +
       "    { S _x = *_pos;\n" +  
       "      acc = _f(_x,acc); \n" + 
       "    }\n" +
@@ -5136,8 +5136,8 @@ public class BSystemTypes extends BComponent
     res = res +   
      "  static map<S,T>* includingMap(map<S,T>* m, S src, T trg)\n" + 
      "  { map<S,T>* copy = new map<S,T>();\n" + 
-     "    map<S,T>::iterator iter; \n" +
-     "    for (iter = m->begin(); iter != m->end(); ++iter)\n" + 
+     "    auto iter = m->begin(); \n" +
+     "    for ( ; iter != m->end(); ++iter)\n" + 
      "    { S key = iter->first;\n" + 
      "      (*copy)[key] = iter->second;\n" + 
      "    }     \n" +
@@ -5148,8 +5148,8 @@ public class BSystemTypes extends BComponent
    res = res + 
      "  static map<S,T>* unionMap(map<S,T>* m1, map<S,T>* m2)\n" +  
      "  { map<S,T>* res = new map<S,T>();\n" + 
-     "    map<S,T>::iterator iter; \n" +
-     "    for (iter = m1->begin(); iter != m1->end(); ++iter)\n" + 
+     "    auto iter = m1->begin(); \n" +
+     "    for ( ; iter != m1->end(); ++iter)\n" + 
      "    { S key = iter->first;\n" + 
      "      if (m2->count(key) == 0) \n" +
      "      { (*res)[key] = iter->second; }\n" + 
@@ -5594,10 +5594,10 @@ public class BSystemTypes extends BComponent
 
   public static String generateIncludesAllMapOpCPP()
   { String res = "  static bool includesAllMap(map<string,_T>* sup, map<string,_T>* sub) \n" + 
-      "  { map<string,_T>::iterator iter; \n" +
-      "    for (iter = sub->begin(); iter != sub->end(); ++iter) \n" +
+      "  { auto iter = sub->begin(); \n" +
+      "    for ( ; iter != sub->end(); ++iter) \n" +
       "    { string key = iter->first; \n" +
-      "      map<string,_T>::iterator f = sup->find(key); \n" +
+      "      auto f = sup->find(key); \n" +
       "      if (f != sup->end())  \n" +
       "      { if (iter->second == f->second) {} \n" +
       "        else \n" +
@@ -5614,10 +5614,10 @@ public class BSystemTypes extends BComponent
   public static String generateExcludesAllMapOpCPP()
   { String res =       
       "  static bool excludesAllMap(map<string,_T>*  sup, map<string,_T>* sub) \n" + 
-      "  { map<string,_T>::iterator iter; \n" +
-      "    for (iter = sub->begin(); iter != sub->end(); ++iter) \n" +
+      "  { auto iter = sub->begin();  \n" +
+      "    for ( ; iter != sub->end(); ++iter) \n" +
       "    { string key = iter->first; \n" +
-      "      map<string,_T>::iterator f = sup->find(key); \n" +
+      "      auto f = sup->find(key); \n" +
       "      if (f != sup->end())  \n" +
       "      { if (iter->second == f->second) \n" +
       "        { return false; } \n" +
@@ -5655,8 +5655,8 @@ public class BSystemTypes extends BComponent
   { String res = 
       "   static map<string,_T>* includingMap(map<string,_T>* m, string src, _T trg) \n" + 
       "   { map<string,_T>* copy = new map<string,_T>(); \n" +
-      "     map<string,_T>::iterator iter; \n" +
-      "     for (iter = m->begin(); iter != m->end(); ++iter) \n" +
+      "     auto iter = m->begin(); \n" +
+      "     for ( ; iter != m->end(); ++iter) \n" +
       "     { string key = iter->first; \n" +
       "       (*copy)[key] = iter->second; \n" + 
       "     }     \n" +
@@ -5670,10 +5670,10 @@ public class BSystemTypes extends BComponent
   { String res = 
       "   static map<string,_T>* excludeAllMap(map<string,_T>* m1, map<string,_T>* m2) \n" + 
       "   { map<string,_T>* res = new map<string,_T>(); \n" + 
-      "     map<string,_T>::iterator iter; \n" +
-      "     for (iter = m1->begin(); iter != m1->end(); ++iter) \n" +
+      "     auto iter = m1->begin(); \n" +
+      "     for ( ; iter != m1->end(); ++iter) \n" +
       "     { string key = iter->first; \n" +
-      "       map<string,_T>::iterator f = m2->find(key); \n" +
+      "       auto f = m2->find(key); \n" +
       "       if (f != m2->end())  \n" +
       "       { if (iter->second == f->second)  {  } \n" +
       "         else  \n" +
@@ -5692,8 +5692,8 @@ public class BSystemTypes extends BComponent
       "  static map<string,_T>* excludingMapKey(map<string,_T>* m, string k) \n" + 
       "  { // m - { k |-> m(k) }  \n" +
       "    map<string,_T>* res = new map<string,_T>(); \n" +
-      "    map<string,_T>::iterator iter; \n" +
-      "    for (iter = m->begin(); iter != m->end(); ++iter) \n" +
+      "    auto iter = m->begin(); \n" +
+      "    for ( ; iter != m->end(); ++iter) \n" +
       "    { string key = iter->first; \n" +
       "      if (key == k) {} \n" +
       "      else       \n" +
@@ -5710,8 +5710,8 @@ public class BSystemTypes extends BComponent
       "  static map<string,_T>* excludingMapValue(map<string,_T>* m, _T v) \n" + 
       "  { // m - { k |-> v }  \n" +
       "    map<string,_T>* res = new map<string,_T>(); \n" +
-      "    map<string,_T>::iterator iter; \n" +
-      "    for (iter = m->begin(); iter != m->end(); ++iter) \n" +
+      "    auto iter = m->begin(); \n" +
+      "    for ( ; iter != m->end(); ++iter) \n" +
       "    { string key = iter->first; \n" +
       "      if (iter->second == v) {} \n" +
       "      else       \n" +
@@ -5728,8 +5728,8 @@ public class BSystemTypes extends BComponent
   { String res = 
       "  static map<string,_T>* unionMap(map<string,_T>* m1, map<string,_T>* m2)  \n" +
       "  { map<string,_T>* res = new map<string,_T>(); \n" +
-      "    map<string,_T>::iterator iter; \n" +  
-      "    for (iter = m1->begin(); iter != m1->end(); ++iter) \n" +
+      "    auto iter = m1->begin(); \n" +  
+      "    for ( ; iter != m1->end(); ++iter) \n" +
       "    { string key = iter->first; \n" +
       "      if (m2->count(key) == 0) \n" +
       "      { (*res)[key] = iter->second; } \n" +
@@ -5747,8 +5747,8 @@ public class BSystemTypes extends BComponent
   { String res = 
       "  static map<string,_T>* intersectionMap(map<string,_T>* m1, map<string,_T>* m2) \n" + 
       "  { map<string,_T>* res = new map<string,_T>(); \n" +
-      "    map<string,_T>::iterator iter; \n" +
-      "    for (iter = m1->begin(); iter != m1->end(); ++iter) \n" +
+      "    auto iter = m1->begin(); \n" +
+      "    for ( ; iter != m1->end(); ++iter) \n" +
       "    { string key = iter->first; \n" +
       "      if (m2->count(key) > 0) \n" +
       "      { if (m2->at(key) == iter->second) \n" +
@@ -5820,10 +5820,10 @@ public class BSystemTypes extends BComponent
   public static String generateKeysMapOpCPP()
   { String res = 
       "  static std::set<string>* keys(map<string,_T>* s)\n" +  
-      "  { map<string,_T>::iterator iter;\n" + 
+      "  { auto iter = s->begin();\n" + 
       "    std::set<string>* res = new std::set<string>();\n" + 
       "  \n" + 
-      "    for (iter = s->begin(); iter != s->end(); ++iter)\n" + 
+      "    for ( ; iter != s->end(); ++iter)\n" + 
       "    { string key = iter->first;\n" + 
       "      res->insert(key);\n" + 
       "    }    \n" + 
@@ -5835,10 +5835,10 @@ public class BSystemTypes extends BComponent
   public static String generateValuesMapOpCPP()
   { String res = 
       "  static vector<_T>* values(map<string,_T>* s)\n" +  
-      "  { map<string,_T>::iterator iter;\n" + 
+      "  { auto iter = s->begin();\n" + 
       "    vector<_T>* res = new vector<_T>();\n" + 
       "  \n" + 
-      "    for (iter = s->begin(); iter != s->end(); ++iter)\n" + 
+      "    for ( ; iter != s->end(); ++iter)\n" + 
       "    { _T value = iter->second;\n" + 
       "      res->push_back(value);\n" + 
       "    }    \n" + 
@@ -5851,8 +5851,8 @@ public class BSystemTypes extends BComponent
   { String res = 
       "  static map<string,_T>* restrict(map<string,_T>* m1, std::set<string>* ks)\n" +  
       "  { map<string,_T>* res = new map<string,_T>();\n" + 
-      "    map<string,_T>::iterator iter;\n" + 
-      "    for (iter = m1->begin(); iter != m1->end(); ++iter)\n" + 
+      "    auto iter = m1->begin();\n" + 
+      "    for ( ; iter != m1->end(); ++iter)\n" + 
       "    { string key = iter->first;\n" + 
       "      if (ks->find(key) != ks->end())\n" + 
       "      { (*res)[key] = iter->second; }\n" + 
@@ -5862,8 +5862,8 @@ public class BSystemTypes extends BComponent
     res = res +  
       "  static map<string,_T>* antirestrict(map<string,_T>* m1, std::set<string>* ks)\n" +  
       "  { map<string,_T>* res = new map<string,_T>();\n" + 
-      "    map<string,_T>::iterator iter;\n" + 
-      "    for (iter = m1->begin(); iter != m1->end(); ++iter)\n" + 
+      "    auto iter = m1->begin();\n" + 
+      "    for ( ; iter != m1->end(); ++iter)\n" + 
       "    { string key = iter->first;\n" + 
       "      if (ks->find(key) == ks->end())\n" + 
       "      { (*res)[key] = iter->second; }\n" + 
@@ -6095,7 +6095,7 @@ public class BSystemTypes extends BComponent
     "    }\n\n" +
     "  static _T any(std::set<_T>* v)\n" +
     "    { if (v->size() == 0) { return 0; }\n" +
-    "      std::set<_T>::iterator _pos = v->begin();\n" + 
+    "      auto _pos = v->begin();\n" + 
     "      return *_pos;\n" +
     "    }\n\n";
     return res;
@@ -7434,7 +7434,7 @@ public class BSystemTypes extends BComponent
       "  }\n\n" +
       "  static std::set<_T>* subtract(std::set<_T>* a, std::set<_T>* b)\n" +
       "  { std::set<_T>* res = new std::set<_T>(); \n" +
-      "    for (std::set<_T>::iterator _pos = a->begin(); _pos != a->end(); ++_pos)\n" +
+      "    for (auto _pos = a->begin(); _pos != a->end(); ++_pos)\n" +
       "    { if (UmlRsdsLib<_T>::isIn(*_pos,b)) { }\n" +
       "      else\n" + 
       "      { res->insert(*_pos); }\n" +
@@ -7443,7 +7443,7 @@ public class BSystemTypes extends BComponent
       "  }\n\n" +  
       "  static std::set<_T>* subtract(std::set<_T>* a, vector<_T>* b)\n" +
       "  { std::set<_T>* res = new std::set<_T>(); \n" +
-      "    for (std::set<_T>::iterator _pos = a->begin(); _pos != a->end(); ++_pos)\n" +
+      "    for (auto _pos = a->begin(); _pos != a->end(); ++_pos)\n" +
       "    { if (UmlRsdsLib<_T>::isIn(*_pos,b)) { }\n" +
       "      else\n" + 
       "      { res->insert(*_pos); }\n" +
@@ -7538,7 +7538,7 @@ public class BSystemTypes extends BComponent
   public static String generateIntersectionOpCPP()
   { String res = "  static std::set<_T>* intersection(std::set<_T>* a, std::set<_T>* b)\n" +
       "  { std::set<_T>* res = new std::set<_T>(); \n" +
-      "    for (std::set<_T>::iterator _pos = a->begin(); _pos != a->end(); ++_pos)\n" +
+      "    for (auto _pos = a->begin(); _pos != a->end(); ++_pos)\n" +
       "    { if (UmlRsdsLib<_T>::isIn(*_pos, b))\n" + 
       "      { res->insert(*_pos); }\n" + 
       "    }\n" +
@@ -7546,7 +7546,7 @@ public class BSystemTypes extends BComponent
       "  }\n\n" +
       "  static std::set<_T>* intersection(std::set<_T>* a, vector<_T>* b)\n" +
       "  { std::set<_T>* res = new std::set<_T>(); \n" +
-      "    for (std::set<_T>::iterator _pos = a->begin(); _pos != a->end(); ++_pos)\n" +
+      "    for (auto _pos = a->begin(); _pos != a->end(); ++_pos)\n" +
       "    { if (UmlRsdsLib<_T>::isIn(*_pos, b))\n" + 
       "      { res->insert(*_pos); }\n" + 
       "    }\n" +
@@ -7646,7 +7646,7 @@ public class BSystemTypes extends BComponent
   { String res = "  static std::set<_T>* intersectAll(std::set<std::set<_T>*>* se)\n" +
       "  { std::set<_T>* res = new std::set<_T>(); \n" +
       "    if (se->size() == 0) { return res; }\n" + 
-      "    std::set<set<_T>*>::iterator _pos = se->begin();\n" + 
+      "    auto _pos = se->begin();\n" + 
       "    std::set<_T>* frst = *_pos;\n" + 
       "    res->insert(frst->begin(), frst->end());\n" + 
       "    ++_pos; \n" + 
@@ -7657,7 +7657,7 @@ public class BSystemTypes extends BComponent
       "  static std::set<_T>* intersectAll(std::set<vector<_T>*>* se)\n" +
       "  { std::set<_T>* res = new std::set<_T>(); \n" +
       "    if (se->size() == 0) { return res; }\n" + 
-      "    std::set<vector<_T>*>::iterator _pos = se->begin();\n" + 
+      "    auto _pos = se->begin();\n" + 
       "    vector<_T>* frst = *_pos;\n" + 
       "    res->insert(frst->begin(), frst->end());\n" + 
       "    ++_pos; \n" + 
@@ -7807,8 +7807,8 @@ public class BSystemTypes extends BComponent
   { String res = "  static std::set<_T>* unionAll(std::set<set<_T>*>* se)\n" +
       "  { std::set<_T>* res = new std::set<_T>(); \n" +
       "    if (se->size() == 0) { return res; }\n" + 
-      "    std::set<set<_T>*>::iterator _pos;\n" + 
-      "    for (_pos = se->begin(); _pos != se->end(); ++_pos)\n" +  
+      "    auto _pos = se->begin();\n" + 
+      "    for ( ; _pos != se->end(); ++_pos)\n" +  
       "    { res = UmlRsdsLib<_T>::unionSet(res, *_pos); }\n" +
       "    return res;\n" + 
       "  }\n\n";
@@ -7816,8 +7816,8 @@ public class BSystemTypes extends BComponent
     res = res + "  static std::set<_T>* unionAll(std::set<vector<_T>*>* se)\n" +
       "  { std::set<_T>* res = new std::set<_T>(); \n" +
       "    if (se->size() == 0) { return res; }\n" + 
-      "    std::set<vector<_T>*>::iterator _pos;\n" + 
-      "    for (_pos = se->begin(); _pos != se->end(); ++_pos)\n" +  
+      "    auto _pos = se->begin();\n" + 
+      "    for ( ; _pos != se->end(); ++_pos)\n" +  
       "    { res = UmlRsdsLib<_T>::unionSet(res, *_pos); }\n" +
       "    return res;\n" + 
       "  }\n\n";
@@ -8533,8 +8533,8 @@ public class BSystemTypes extends BComponent
       "    return _sum; }\n\n";
     res = res + "  static string sumString(std::set<string>* a)\n" +
       "  { string _sum(\"\"); \n" +
-      "    std::set<string>::iterator _pos;\n" + 
-      "    for (_pos = a->begin(); _pos != a->end(); ++_pos)\n" +
+      "    auto _pos = a->begin();\n" + 
+      "    for ( ; _pos != a->end(); ++_pos)\n" +
       "    { _sum.append( *_pos ); }\n" +  
       "    return _sum; }\n\n"; 
     res = res + "  static _T sum(vector<_T>* a)\n" +
@@ -8544,8 +8544,8 @@ public class BSystemTypes extends BComponent
       "    return _sum; }\n\n";
     res = res + "  static _T sum(std::set<_T>* a)\n" +
       "  { _T _sum(0); \n" +
-      "    std::set<_T>::iterator _pos;\n" + 
-      "    for (_pos = a->begin(); _pos != a->end(); ++_pos)\n" +
+      "    auto _pos = a->begin();\n" + 
+      "    for ( ; _pos != a->end(); ++_pos)\n" +
       "    { _sum += *_pos; }\n" +  
       "    return _sum; }\n\n";
     return res;
@@ -8559,8 +8559,8 @@ public class BSystemTypes extends BComponent
       "    return _prd; }\n\n";
     res = res + "  static _T prd(std::set<_T>* a)\n" +
       "  { _T _prd(1); \n" +
-      "    std::set<_T>::iterator _pos;\n" + 
-      "    for (_pos = a->begin(); _pos != a->end(); ++_pos)\n" +
+      "    auto _pos = a->begin();\n" + 
+      "    for ( ; _pos != a->end(); ++_pos)\n" +
       "    { _prd *= *_pos; }\n" +  
       "    return _prd; }\n\n";
     return res;
@@ -11315,14 +11315,14 @@ public class BSystemTypes extends BComponent
     "        res->insert(v);\n" + 
     "        return res;\n " +
     "      }\n" +
-    "      std::set<_T>::iterator _pos = v->begin();\n" +
+    "      auto _pos = v->begin();\n" +
     "      _T x = *_pos;\n" +
     "      _pos++; \n" +
     "      for (; _pos != v->end(); _pos++)\n" +
     "      { r->insert(*_pos); }\n" +  
     "      std::set<set<_T>*>* scs = UmlRsdsLib<_T>::subcollections(r);\n" +
     "      res->insert(scs->begin(), scs->end());\n" +
-    "      for (std::set<set<_T>*>::iterator _obj = scs->begin(); _obj != scs->end(); _obj++)\n" +
+    "      for (auto _obj = scs->begin(); _obj != scs->end(); _obj++)\n" +
     "      { std::set<_T>* sc = *_obj;\n" +
     "        std::set<_T>* scc = new std::set<_T>();\n" +
     "        scc->insert(x); \n" +
@@ -11491,7 +11491,7 @@ public class BSystemTypes extends BComponent
 
     res = res + "    static vector<_T>* asOrderedSet(vector<_T>* c)\n" + 
     "    { vector<_T>* res = new vector<_T>();\n" + 
-    "      for (vector<_T>::iterator _pos = c->begin(); _pos != c->end(); ++_pos)\n" + 
+    "      for (auto _pos = c->begin(); _pos != c->end(); ++_pos)\n" + 
     "      { if (isIn(*_pos, res)) { }\n" +  
     "        else \n" + 
     "        { res->push_back(*_pos); }\n" +  
@@ -11501,14 +11501,14 @@ public class BSystemTypes extends BComponent
 
     res = res + "    static vector<_T>* asOrderedSet(set<_T>* c)\n" + 
     "    { vector<_T>* res = new vector<_T>();\n" + 
-    "      for (set<_T>::iterator _pos = c->begin(); _pos != c->end(); ++_pos)\n" + 
+    "      for (auto _pos = c->begin(); _pos != c->end(); ++_pos)\n" + 
     "      { res->push_back(*_pos); }\n" +  
     "      return res;\n" +  
     "    }\n\n"; 
 
     res = res + "    static vector<_T>* randomiseSequence(vector<_T>* sq)\n" + 
     "    { vector<_T>* res = new vector<_T>();\n" + 
-    "      for (vector<_T>::iterator _pos = sq->begin(); _pos != sq->end(); ++_pos)\n" + 
+    "      for (auto _pos = sq->begin(); _pos != sq->end(); ++_pos)\n" + 
     "      { res->push_back(*_pos); }\n" +  
     "      std::random_shuffle(res->begin(), res->end());\n" + 
     "      return res; \n" + 
@@ -11579,7 +11579,7 @@ public class BSystemTypes extends BComponent
     "    }\n\n" +
     "    static std::set<_T>* symmetricDifference(std::set<_T>* a, vector<_T>* b)\n" +
     "    { std::set<_T>* res = new std::set<_T>();\n" +
-    "      for (std::set<_T>::iterator _pos = a->begin(); _pos != a->end(); _pos++)\n" +
+    "      for (auto _pos = a->begin(); _pos != a->end(); _pos++)\n" +
     "      { if (UmlRsdsLib<_T>::isIn(*_pos, b)) { }\n" +
     "        else { res->insert(*_pos); }\n" +
     "      }\n" +
@@ -11595,7 +11595,7 @@ public class BSystemTypes extends BComponent
     "      { if (UmlRsdsLib<_T>::isIn((*a)[i], b)) { }\n" +
     "        else { res->insert((*a)[i]); }\n" +
     "      }\n" +
-    "      for (std::set<_T>::iterator _pos = b->begin(); _pos != b->end(); _pos++)\n" +
+    "      for (auto _pos = b->begin(); _pos != b->end(); _pos++)\n" +
     "      { if (UmlRsdsLib<_T>::isIn(*_pos, a)) { }\n" +
     "        else { res->insert(*_pos); }\n" +
     "      }\n" +
@@ -11603,11 +11603,11 @@ public class BSystemTypes extends BComponent
     "    }\n\n" +
     "    static std::set<_T>* symmetricDifference(std::set<_T>* a, std::set<_T>* b)\n" +
     "    { std::set<_T>* res = new std::set<_T>();\n" +
-    "      for (std::set<_T>::iterator _pos = a->begin(); _pos != a->end(); _pos++)\n" +
+    "      for (auto _pos = a->begin(); _pos != a->end(); _pos++)\n" +
     "      { if (UmlRsdsLib<_T>::isIn(*_pos, b)) { }\n" +
     "        else { res->insert(*_pos); }\n" +
     "      }\n" +
-    "      for (std::set<_T>::iterator _pos = b->begin(); _pos != b->end(); _pos++)\n" +
+    "      for (auto _pos = b->begin(); _pos != b->end(); _pos++)\n" +
     "      { if (UmlRsdsLib<_T>::isIn(*_pos, a)) { }\n" +
     "        else { res->insert(*_pos); }\n" +
     "      }\n" +

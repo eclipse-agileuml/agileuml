@@ -12616,7 +12616,7 @@ public void produceCUI(PrintWriter out)
 
     out.println("    static bool isSubset(std::set<_T>* s1, set<_T>* s2)"); 
     out.println("    { bool res = true; "); 
-    out.println("      for (std::set<_T>::iterator _pos = s1->begin(); _pos != s1->end(); ++_pos)"); 
+    out.println("      for (auto _pos = s1->begin(); _pos != s1->end(); ++_pos)"); 
     out.println("      { if (isIn(*_pos, s2)) { } "); 
     out.println("        else { return false; } "); 
     out.println("      }"); 
@@ -12624,7 +12624,7 @@ public void produceCUI(PrintWriter out)
     out.println("    }\n"); 
     out.println("    static bool isSubset(std::set<_T>* s1, vector<_T>* s2)"); 
     out.println("    { bool res = true; "); 
-    out.println("      for (std::set<_T>::iterator _pos = s1->begin(); _pos != s1->end(); ++_pos)"); 
+    out.println("      for (auto _pos = s1->begin(); _pos != s1->end(); ++_pos)"); 
     out.println("      { if (isIn(*_pos, s2)) { }"); 
     out.println("        else { return false; } "); 
     out.println("      }"); 
@@ -12632,7 +12632,7 @@ public void produceCUI(PrintWriter out)
     out.println("    }\n"); 
     out.println("    static bool isSubset(std::vector<_T>* s1, vector<_T>* s2)"); 
     out.println("    { bool res = true; "); 
-    out.println("      for (std::vector<_T>::iterator _pos = s1->begin(); _pos != s1->end(); ++_pos)"); 
+    out.println("      for (auto _pos = s1->begin(); _pos != s1->end(); ++_pos)"); 
     out.println("      { if (isIn(*_pos, s2)) { }"); 
     out.println("        else { return false; } "); 
     out.println("      }"); 
@@ -12640,7 +12640,7 @@ public void produceCUI(PrintWriter out)
     out.println("    }\n"); 
     out.println("    static bool isSubset(std::vector<_T>* s1, set<_T>* s2)"); 
     out.println("    { bool res = true; "); 
-    out.println("      for (std::vector<_T>::iterator _pos = s1->begin(); _pos != s1->end(); ++_pos)"); 
+    out.println("      for (auto _pos = s1->begin(); _pos != s1->end(); ++_pos)"); 
     out.println("      { if (isIn(*_pos, s2)) { }"); 
     out.println("        else { return false; } "); 
     out.println("      }"); 
@@ -12671,7 +12671,7 @@ public void produceCUI(PrintWriter out)
 
     out.println("    static vector<_T>* asSequence(std::set<_T>* c)"); 
     out.println("    { vector<_T>* res = new vector<_T>();");
-    out.println("      for (std::set<_T>::iterator _pos = c->begin(); _pos != c->end(); ++_pos)"); 
+    out.println("      for (auto _pos = c->begin(); _pos != c->end(); ++_pos)"); 
     out.println("      { res->push_back(*_pos); } "); 
     out.println("      return res;"); 
     out.println("   }\n");
@@ -12681,7 +12681,7 @@ public void produceCUI(PrintWriter out)
  
  /*   out.println("    static std::set<_T>* asSet(vector<_T>* c)"); 
     out.println("    { std::set<_T>* res = new std::set<_T>(); "); 
-    out.println("      for (vector<_T>::iterator _pos = c->begin(); _pos != c->end(); ++_pos)"); 
+    out.println("      for (auto _pos = c->begin(); _pos != c->end(); ++_pos)"); 
     out.println("      { res->insert(*_pos); } "); 
     out.println("      return res; \n"); 
     out.println("    }\n"); */ 
