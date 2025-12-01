@@ -258,7 +258,7 @@ repr _1 |-->("" + (_1))
 reversed _1 |-->_1->reverse()
 sorted _1 |-->_1`sortedTrailer
 
-tuple _1 |-->_1
+tuple _1 |-->_1`tupleTrailer
 range _1 |-->_1`rangeTrailer
 irange _1 |-->_1`rangeTrailer
 enumerate _1 |-->Integer.subrange(1, _1->size())->collect( _indx | Sequence{_indx-1, _1->at(_indx)} )
@@ -1904,6 +1904,10 @@ isUpdating::
 _1 |-->false
 
 
+tupleTrailer::
+_1 |-->_1`tupleArguments
+
+
 rangeTrailer::
 _1 |-->_1`rangeArguments
 
@@ -2116,6 +2120,22 @@ _1 |-->Integer.subrange(0, _1-1)
 _1 , _2 |-->Integer.subrange(_1, _2-1)
 _1 , _2 , -1 |-->Integer.subrange(_2 + 1, _1)->reverse()
 _1 , _2 , _3 |-->Integer.subrange(_1, _2-1)->select( $x | ($x - _1) mod _3 = 0 )
+
+
+tupleArguments::
+( ) |-->Sequence{}
+( _1 ) |-->_1`tupleArguments
+_1 ,  |-->Sequence{_1}
+_1 , _* |-->Sequence{_1, _*}
+
+_1 _2 |-->_2`domainPart->select(_2`variablePart | _2`selectPart)->collect(_2`variablePart | _2`collectPart(_1))<when> _2 comp_for
+
+_1 |-->_1`tupleArguments<when> _1 arglist
+_1 |-->_1`tupleArguments<when> _1 argument
+_1 |-->_1`tupleArguments<when> _1 test
+_1 |-->_1`tupleArguments<when> _1 logical_test
+
+_1 |-->_1
 
 
 irangeArgs::
