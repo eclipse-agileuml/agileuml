@@ -166,6 +166,19 @@ class MatrixLib {
                 return m;
             }
         }
+        static double sumMatrix(vector<T> m) {
+            if (m.size() == 0) {
+                return 0.0;
+            }
+
+            if (string(typeid(m[0]).name()).find("vector") != string::npos) {
+                vector<T> sq = m[0];
+                return sumMatrix(sq) + sumMatrix(UmlRsdsLib<T>::tail(m));
+            }
+
+            vector<double> dmat = UmlRsdsLib<T>::concatenate({0, 0}, m);
+            return UmlRsdsLib<double>::sum(&dmat);
+        }
 };
 
 int main() {
