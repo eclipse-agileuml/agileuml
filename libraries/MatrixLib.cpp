@@ -176,7 +176,7 @@ class MatrixLib {
                 return sumMatrix(sq) + sumMatrix(UmlRsdsLib<T>::tail(m));
             }
 
-            vector<double> dmat = UmlRsdsLib<T>::concatenate({0, 0}, m);
+            vector<double> dmat = UmlRsdsLib<T>::concatenate({0.0}, m);
             return UmlRsdsLib<double>::sum(&dmat);
         }
 };
