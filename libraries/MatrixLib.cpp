@@ -179,6 +179,19 @@ class MatrixLib {
             vector<double> dmat = UmlRsdsLib<T>::concatenate({0.0}, m);
             return UmlRsdsLib<double>::sum(&dmat);
         }
+        static double prdMatrix(vector<T> m) {
+            if (m.size() == 0) {
+                return 1.0;
+            }
+
+            if (string(typeid(m[0]).name()).find("vector") != string::npos) {
+                vector<T> sq = m[0];
+                return prdMatrix(sq) * prdMatrix(UmlRsdsLib<T>::tail(m));
+            }
+
+            vector<double> dmat = UmlRsdsLib<T>::concatenate({1.0}, m);
+            return UmlRsdsLib<double>::sum(&dmat);
+        }
 };
 
 int main() {
