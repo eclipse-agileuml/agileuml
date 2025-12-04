@@ -153,6 +153,18 @@ class MatrixLib {
             }
             return result;
         }
+        static vector<T> flattenMatrix(vector<T> m) {
+            if (m.size() == 0) {
+                return {};
+            }
+            if (string(typeid(m[0]).name()).find("vector") != string::npos) {
+                vector<T> sq = m[0];
+                return UmlRsdsLib<T>::concatenate(flattenMatrix(sq), &UmlRsdsLib<T>::tail(m));
+            }
+            else {
+                return m;
+            }
+        }
 };
 
 int main() {
