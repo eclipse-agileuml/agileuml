@@ -1,0 +1,234 @@
+/* Convert Mamba3 code/expressions to OCL */
+
+program::
+_1 |-->_1
+_* |-->_*
+
+
+function_declaration::
+static function _1 _2 ( ) { } |-->static operation _2() : _1\n  pre: true post: true;\n\n
+function _1 _2 ( ) { } |-->operation _2() : _1\n  pre: true post: true;\n\n
+
+static function _1 _2 ( _3 ) { } |-->static operation _2(_3) : _1\n  pre: true post: true;\n\n
+function _1 _2 ( _3 ) { } |-->operation _2(_3) : _1\n  pre: true post: true;\n\n
+
+static function _1 _2 ( ) { _3 } |-->static operation _2() : _1\n  pre: true post: true\n  activity: _3`statementList;\n\n
+function _1 _2 ( ) { _3 } |-->operation _2() : _1\n  pre: true post: true\n  activity: _3`statementList;\n\n
+
+static function _1 _2 ( _3 ) { _4 } |-->static operation _2(_3) : _1\n  pre: true post: true\n  activity: _4`statementList;\n\n
+function _1 _2 ( _3 ) { _4 } |-->operation _2(_3) : _1\n  pre: true post: true\n  activity: _4`statementList;\n\n
+
+
+statementList::
+_1 |-->    _1
+_1 _2 |-->    _1; _2`statementList
+
+
+stmt::
+_1 = _2 ; |-->_1 := _2
+return ; |-->return
+return _1 ; |-->return _1
+break ; |-->break
+continue ; |-->continue
+throw _1 ; |-->error _1
+_1 ; |-->_1<when> _1 expr
+
+var _1 _2 ; |-->var _1 : OclAny _2
+_1 _2 ; |-->var _2 : _1<when> _1 datatype
+_1 _2 _3 ; |-->var _2 : _1 _3<when> _1 datatype
+
+if _1 { } _* |-->if _1 then skip else _*
+if _1 { _2 } _* |-->if _1 then _2`statementList else _*
+
+foreach ( _1 : _2 in _3 ) { } |-->for _2 : _3 do skip
+foreach ( _1 : _2 in _3 ) { _4 } |-->for _2 : _3 do _4`statementList
+foreach ( _2 in _3 ) { } |-->for _2 : _3 do skip
+foreach ( _2 in _3 ) { _4 } |-->for _2 : _3 do _4`statementList
+
+foreach _1 : _2 in _3 { } |-->for _2 : _3 do skip
+foreach _1 : _2 in _3 { _4 } |-->for _2 : _3 do _4`statementList
+foreach _2 in _3 { } |-->for _2 : _3 do skip
+foreach _2 in _3 { _4 } |-->for _2 : _3 do _4`statementList
+
+while _1 { } |-->while _1 do skip
+while _1 { _2 } |-->while _1 do ( _2`statementList )
+
+for ( _1 _2 = _3 ; _4 ; _5 ) { _6 } |-->(var _2 : _1 := _3;\n    while _4 do (_6`statementList; _5))
+for _1 _2 = _3 ; _4 ; _5 { _6 } |-->(var _2 : _1 := _3;\n    while _4 do (_6`statementList; _2 := _5))
+
+try { _1 } _* |-->try _1`statementList _*
+
+
+
+variable_decl_assigment::
+= _1 |--> := _1
+
+
+catch_statement::
+catch _1 _2 { _3 } |-->catch _2 : _1 do _3`statementList
+catch _1 _2 { } |-->catch _2 : _1 do skip
+
+
+finally_statement:: 
+finally { _1 } |--> finally _1`statementList
+finally { } |-->finally skip
+
+
+elseif:: 
+elseif _1 { _2 } |-->else if _1 then _2`statementList
+elseif _1 { } |-->else if _1 then skip
+
+elsestat:: 
+else { _1 } |-->else _1
+else { } |-->else skip
+
+
+lamda_parameter_with_datatype:: 
+_1 _2 |-->_2 : _1 
+_1 _2 , _3 |-->_2 : _1 in lambda _3
+		
+lamda_parameter_without_datatype:: 
+_1 , _2 |-->_1 : OclAny in lambda _2 : OclAny<when> _2 identifier
+_1 , _2 |-->_1 : OclAny in lambda _2 
+		
+lamda_parameters:: 
+_1 |-->_1 : OclAny 
+( _1 ) |-->_1 
+
+
+expr::
+_1 |-->_1
+_1 => _2 |-->lambda _1 in (_2)
+_1 => { _2 }  |-->lambda _1 in (_2`statementList)
+
+
+factor_level6::
+_1 |-->_1
+_1 ? _2 : _3 |-->if _1 then _2 else _3 endif
+_1 || _2 |-->_1 or _2
+
+
+factor_level5::
+_1 |-->_1
+_1 && _2 |-->_1 & _2
+
+
+factor_level4::
+_1 |-->_1
+_1 != _2 |-->_1 /= _2
+_1 == _2 |-->_1 = _2
+
+
+factor_level3::
+_1 |-->_1
+_1 <= _3  |-->_1 <= _3 
+_1 < _3  |-->_1 < _3 
+_1 >= _3  |-->_1 >= _3 
+_1 > _3  |-->_1 > _3 
+
+
+factor_level2::
+_1 |-->_1
+_1 + _3  |-->_1 + _3 
+_1 - _3  |-->_1 - _3 
+
+
+factor_level1::
+_1 |-->_1
+_1 * _3  |-->_1 * _3 
+_1 / _3  |-->_1 / _3 
+_1 % _3  |-->_1 mod _3 
+_1 ^ _3  |-->MathLib.intPower(_1, _3) 
+_1 as _3  |-->_1->oclAsType(_3) 
+
+
+factor_level0::
+_1 |-->_1
+not _1 |-->not(_1)
+
+
+operand::
+_1 |-->_1
+
+
+member_with_expression::
+_1 . _2 |-->_1._2
+
+
+member::
+_1 . _2 |-->_1._2
+
+
+parenthesis_expression::
+( _1 ) |-->(_1)
+
+
+id_or_function_call::
+_1 |-->_1
+
+
+function_call::
+_1 ( _2 ) |-->_1(_2)
+_1 ( ) |-->_1()
+
+
+param_list::
+out _1 _2 , _3 |-->_2 : _1, _3
+_1 _2 , _3 |-->_2 : _1, _3
+out _1 _2 |-->_2 : _1
+_1 _2 |-->_2 : _1
+
+
+argument_list::
+_1 |-->_1
+_1 , _2 |-->_1, _2
+
+logic_operand::
+_1 |-->_1
+
+
+identifier_or_member::
+_1 |-->_1
+
+
+datatype::
+decimal |-->double
+bool |-->boolean
+string  |-->String
+Collection |-->Sequence
+Array |-->Sequence
+Dictionary |-->Map
+
+_1 |-->_1
+
+Collection [ _1 ] |-->Sequence(_1)
+Array [ _1 ] |-->Sequence(_1)
+
+_1 [ _2 ] |-->_1(_2)
+
+
+generic_parameters::
+_1 |-->_1
+_1 , _2 |-->_1, _2
+
+
+inner_datatype::
+_1 |-->_1
+_1 . _2 |-->_2
+
+identifier::
+_1 |-->_1
+
+integer::
+_1 |-->_1
+
+decimal::
+_1 |-->_1
+
+string_literal::
+_1 |-->_1
+
+character_literal::
+_1 |-->_1
+ 
+
