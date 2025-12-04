@@ -7,8 +7,9 @@ public class AgileUMLPythonAnalysis
     UCDArea area = window.getArea(); 
   
     area.loadFromPython("code.py");
-    area.typeCheck();    
-    area.energyAnalysis();
+    area.typeCheck(); 
+    area.simplifyOCL();    
+    area.energyAnalysisHTML();
   } 
 } 
  

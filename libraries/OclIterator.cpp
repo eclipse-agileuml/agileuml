@@ -205,7 +205,7 @@ OclIterator<T> OclIterator<T>::trySplit()
 template<class T>
 T OclIterator<T>::getCurrent()
 {
-    T result;
+    T result = NULL;
     if (position < 1 || position > elements->size())
     {
         return result;

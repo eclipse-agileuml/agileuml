@@ -365,7 +365,9 @@ public class Entity extends ModelElement implements Comparable
       new ObjectSpecification(nme, this);
  
     for (int i = 0; i < attributes.size(); i++) 
-    { Attribute attr = (Attribute) attributes.get(i); 
+    { Attribute attr = (Attribute) attributes.get(i);
+      if (attr.isStatic()) 
+      { continue; }  
       String aname = attr.getName(); 
       Expression aval = attr.getInitialisation(); 
       res.setOCLValue(aname, aval); 
@@ -5779,6 +5781,31 @@ public class Entity extends ModelElement implements Comparable
     return sze; 
   } 
   
+
+  public void emulateOperation(String op)
+  { BehaviouralFeature bf = this.getOperation(op); 
+
+    if (bf != null) 
+    { ModelSpecification ms = new ModelSpecification(); 
+      ModelState beta = new ModelState();
+      Vector pvals = new Vector(); 
+      beta.addNewEnvironment();
+
+      // add self : cls object to the environment
+      // with attribute initialisations.
+      String oid = Identifier.newIdentifier("oid_");  
+      ObjectSpecification obj = this.initialisedObject(oid); 
+      ms.addObject(obj);
+      beta.addVariable("self", new BasicExpression(obj));   
+                               // new BasicExpression(oid)
+      System.out.println(">> Initial state = " + ms + "; " + beta); 
+  
+      bf.execute(ms, beta, pvals); 
+      System.out.println(); 
+      System.out.println(">> Resulting state = " + ms + "; " + beta); 
+    } 
+  } 
+
   public void simplifyOCL()
   { int n = operations.size(); 
 
@@ -5789,19 +5816,17 @@ public class Entity extends ModelElement implements Comparable
     } 
   } 
 
-  public Map energyAnalysis()
+  public Map energyAnalysis(Vector messages)
   { Map res = new Map(); 
     res.set("red", 0); 
     res.set("amber", 0); 
 
     String ename = getName(); 
 
-    java.util.Map collOps = new java.util.HashMap(); 
-    Vector collVars = new Vector(); // iterator vars in scope
-
-    System.err.println(); 
-    System.err.println("++++++++ Energy analysis of class " + ename + " ++++++++++++"); 
-    System.err.println(); 
+    // System.err.println();
+    messages.add("");  
+    messages.add("++++++++ Energy analysis of class " + ename + " ++++++++++++"); 
+    messages.add(""); 
 
     /* String cloneLimit = 
       JOptionPane.showInputDialog("Enter clone size limit (default 10): ");
@@ -5811,7 +5836,7 @@ public class Entity extends ModelElement implements Comparable
       { UCDArea.CLONE_LIMIT = 10; } 
     } */ 
 
-    UCDArea.CLONE_LIMIT = 10;
+    UCDArea.CLONE_LIMIT = TestParameters.cloneSizeLimit;
 
     for (int i = 0; i < attributes.size(); i++) 
     { Attribute attr = (Attribute) attributes.get(i); 
@@ -5823,33 +5848,37 @@ public class Entity extends ModelElement implements Comparable
       int amberop = (int) resa.get("amber"); 
       
       if (redop > 0) 
-      { System.err.println("!!! Attribute " + attr + 
+      { messages.add("!!! Attribute " + attr + 
                            " has " + redop + " energy use " +
                            " red flags!");
 
         for (int j = 0; j < redDetails.size(); j++) 
-        { System.err.println(redDetails.get(j)); } 
-        System.err.println(); 
+        { messages.add(redDetails.get(j)); } 
+        messages.add(""); 
  
         int redscore = (int) res.get("red"); 
         res.set("red", redscore + redop); 
       } 
      
       if (amberop > 0) 
-      { System.err.println("!! Attribute " + attr + 
+      { messages.add("!! Attribute " + attr + 
                            " has " + amberop + 
                            " energy use " +
                            " amber flags!"); 
 
         for (int j = 0; j < amberDetails.size(); j++) 
-        { System.err.println(amberDetails.get(j)); } 
-        System.err.println(); 
+        { messages.add(amberDetails.get(j)); 
+          messages.add(""); 
+        } 
+        messages.add(""); 
 
         int amberscore = (int) res.get("amber"); 
         res.set("amber", amberscore + amberop); 
       } 
     } 
 
+    java.util.Map collOps = new java.util.HashMap(); 
+      
     int n = operations.size(); 
 
     for (int i = 0; i < n; i++) 
@@ -5874,40 +5903,47 @@ public class Entity extends ModelElement implements Comparable
       } 
 
       if (actualClones.size() > 0)
-      { System.err.println("!! (DEV) flaw: Cloned expressions " + actualClones + " in " + op); 
+      { messages.add("!!! (DEV) flaw: Cloned expressions " + actualClones + " in " + op); 
         int redcount = (int) res1.get("red");
         redcount = redcount + actualClones.size(); 
         res1.put("red", redcount); 
         redDetails.add("!!! Expression clones!: " + actualClones);
       }  
 
-      op.collectionOperatorUses(1, collOps, collVars); 
+      Vector collVars = new Vector(); 
+                        // iterator vars in scope
+      op.collectionOperatorUses(1, collOps, collVars, 
+                                res1, messages); 
  
       int redop = (int) res1.get("red"); 
       int amberop = (int) res1.get("amber"); 
       
       if (redop > 0) 
-      { System.err.println("!!! Operation " + opname + 
+      { messages.add("!!! Operation " + opname + 
                            " has " + redop + " energy use " +
                            " red flags!");
 
         for (int j = 0; j < redDetails.size(); j++) 
-        { System.err.println(redDetails.get(j)); } 
-        System.err.println(); 
+        { messages.add(redDetails.get(j)); 
+          messages.add("");
+        } 
+        messages.add(""); 
  
         int redscore = (int) res.get("red"); 
         res.set("red", redscore + redop); 
       } 
      
       if (amberop > 0) 
-      { System.err.println("!! Operation " + opname + 
+      { messages.add("!! Operation " + opname + 
                            " has " + amberop + 
                            " energy use " +
                            " amber flags!"); 
 
         for (int j = 0; j < amberDetails.size(); j++) 
-        { System.err.println(amberDetails.get(j)); } 
-        System.err.println(); 
+        { messages.add(amberDetails.get(j)); 
+          messages.add("");
+        } 
+        messages.add(""); 
 
         int amberscore = (int) res.get("amber"); 
         res.set("amber", amberscore + amberop); 
@@ -5915,8 +5951,10 @@ public class Entity extends ModelElement implements Comparable
 
     } 
 
-    System.err.println(">> Collection operator uses in " + 
-                       ename + " are: " + collOps + " " + collVars);
+    messages.add(">> Collection operator uses in " + 
+                 ename + " are: " + collOps);
+    messages.add("");
+
     java.util.Set keys = collOps.keySet(); 
 
     for (Object k : keys)
@@ -5941,8 +5979,8 @@ public class Entity extends ModelElement implements Comparable
         } 
 
         TestParameters.getOperationsComplexityScore(
-                                              actualOps); 
-        System.err.println(); 
+                                  actualOps, messages); 
+        messages.add(""); 
  
         if (lev > 1) 
         { 
@@ -5964,15 +6002,17 @@ public class Entity extends ModelElement implements Comparable
               Expression arg = ue.getArgument(); 
 
               if (Expression.isOclDistributedIteratorOperator(oper))
-              { System.err.println("! Warning: " + maxop + " is a >= O(S) operation\n" + 
-                  " in the sum S of sizes of the argument elements. \n"); 
+              { messages.add("! Warning: " + maxop + " is a >= O(S) operation\n" + 
+                  "! in the sum S of sizes of the argument elements. \n"); 
+                System.err.println();
               }
               else if ("->max".equals(oper) || 
                        "->min".equals(oper))
               { if (arg.isSequence())
-                { System.err.println("! Warning: " + oper + 
+                { messages.add("! Warning: " + oper + 
                     " is an O(n) operation on Sequence " + arg + "\n" + 
-                    " SortedSet or SortedBag can be more efficient if no indexing is needed\n"); 
+                    "! SortedSet or SortedBag can be more efficient if no indexing is needed\n");
+                  messages.add(""); 
                 }
               }
 
@@ -5984,8 +6024,8 @@ public class Entity extends ModelElement implements Comparable
               String oper = be.getOperator(); 
 
               if (Expression.isOclDistributedIteratorOperator(oper))
-              { System.err.println("! Warning: " + maxop + " is a >= O(S) operation\n" + 
-                  " in the sum S of sizes of the argument elements. \n"); 
+              { messages.add("! Warning: " + maxop + " is a >= O(S) operation\n" + 
+                  "! in the sum S of sizes of the argument elements. \n"); 
               }  
               else if (
                   Expression.isOclIteratorOperator(oper) ||
@@ -5996,33 +6036,33 @@ public class Entity extends ModelElement implements Comparable
                   "<:".equals(oper) ||  
                   "->antirestrict".equals(oper) ||
                   "->iterate".equals(oper))
-              { System.err.println("! Warning: " + maxop + " is a >= O(n) operation in the size of the LHS collection/map. \n"); }  
+              { messages.add("! Warning: " + maxop + " is a >= O(n) operation in the size of the LHS collection/map. \n"); }  
 
               if ("->union".equals(oper) || 
                   "->symmetricDifference".equals(oper))
-              { System.err.println("! Warning: " + maxop + " is an O(n) operation in the sum of sizes of the arguments. \n"); }  
+              { messages.add("! Warning: " + maxop + " is an O(n) operation in the sum of sizes of the arguments. \n"); }  
 
               if ("->sortedBy".equals(oper) || 
                   "|sortedBy".equals(oper))
-              { System.err.println("! Warning: " + maxop + " is an O(n*log(n)) operation in the size of the LHS. \n"); }  
+              { messages.add("!! Warning: " + maxop + " is an O(n*log(n)) operation in the size of the LHS. \n"); }  
 
               if (be.getLeft().isSequence())
               { if ("->includes".equals(oper) ||
                     "->excludingFirst".equals(oper)) 
-                { System.err.println("! Warning: " + oper + 
+                { messages.add("! Warning: " + oper + 
                     " is an O(n) operation on Sequence " + be.getLeft() + "\n" + 
-                    " Set, Bag, SortedSet or SortedBag can be more efficient if no indexing is needed\n"); 
+                    "! Set, Bag, SortedSet or SortedBag can be more efficient if no indexing is needed\n"); 
                 } 
                 else if ("->including".equals(oper))
-                { System.err.println("! Warning: " + oper + 
+                { messages.add("! Warning: " + oper + 
                     " is an O(log n) operation on Sequence " + be.getLeft() + "\n" + 
-                    " Set or Bag can be more efficient if no indexing is needed\n"); 
+                    "! Set or Bag can be more efficient if no indexing is needed\n"); 
                 } 
                 else if ("->excluding".equals(oper) ||
                          "->count".equals(oper))
-                { System.err.println("! Warning: " + oper + 
+                { messages.add("!! Warning: " + oper + 
                     " is an O(n) operation on Sequence " + be.getLeft() + "\n" + 
-                    " Set or SortedSet can be more efficient if no indexing or duplicates are needed\n"); 
+                    "!! Set or SortedSet can be more efficient if no indexing or duplicates are needed\n"); 
                 } 
                  
               }
@@ -6043,14 +6083,14 @@ public class Entity extends ModelElement implements Comparable
           attr.hasIndexingOperation(collOps); 
 
         if (indexUse == false)
-        { System.err.println("! No use of indexes with sequence-valued attribute " + attr + "\n! It may be more efficient to use a SortedSet or Bag\n"); } 
+        { messages.add("!! No use of indexes with sequence-valued attribute " + attr + "\n! It may be more efficient to use a SortedSet or Bag\n"); } 
       } 
     }       
 
-    System.err.println(); 
+    messages.add(""); 
       
-System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++"); 
-    System.err.println(); 
+       messages.add("++++++++++++++++++++++++++++++++++++++++++++++++++++++++"); 
+    messages.add(""); 
 
     return res; 
   } 
@@ -6074,8 +6114,8 @@ System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
       Vector newopuses = VectorUtil.union(vuses,opuses); 
 
       if (newopuses.size() > 5) 
-      { System.err.println("*** Code smell (EFO): > 5 operations used in " + ename + "::" + opname); 
-        System.err.println(">>> Suggest refactoring by splitting operation"); 
+      { System.err.println("!! Code smell (EFO): > 5 operations used in " + ename + "::" + opname); 
+        System.err.println("!! Suggest refactoring by splitting operation"); 
       } 
 
       String entop = ename + "::" + opname; 
@@ -11596,6 +11636,11 @@ System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
           if (par != null) 
           { out.println("  " + par + "\n"); }
         } 
+        else if (att.isSet())
+        { par = att.addremOperationCSharp(this); 
+          if (par != null) 
+          { out.println("  " + par + "\n"); }
+        } 
         else if (att.isMap())
         { String par1 = 
             att.setMapIndexOperationCSharp(this, invariants, entities, types);
@@ -11655,6 +11700,7 @@ System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
           else
           { out.println("  " + pp + "\n"); }
         } 
+
         pp = ast.removeAllOperationCSharp(getName());
         if (pp != null)
         { if (isInterface()) 
@@ -11662,6 +11708,7 @@ System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
           else
           { out.println("  " + pp + "\n"); }
         }
+
         pp = ast.unionAllOperationCSharp(getName());
         if (pp != null)
         { if (isInterface()) 
@@ -11669,6 +11716,7 @@ System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
           else
           { out.println("  " + pp + "\n"); }
         }
+
         pp = ast.subtractAllOperationCSharp(getName());
         if (pp != null)
         { if (isInterface()) 
@@ -11700,6 +11748,7 @@ System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         else
         { out.println("  " + par + "\n"); }
       }
+
       par = att.getAllOrderedOperationCSharp(this,getName()); 
       if (par != null)
       { if (isInterface()) 
@@ -11729,6 +11778,7 @@ System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         else
         { out.println("  " + par + "\n"); }
       }
+
       par = ast.getAllOrderedOperationCSharp(getName()); 
       if (par != null)
       { if (isInterface()) 
@@ -14304,7 +14354,8 @@ System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
           midcode = midcode + e2del;
         } 
       }
-      else if (e1.getName().equals(ename) && role1 != null && role1.length() > 0)
+      else if (e1.getName().equals(ename) && role1 != null && 
+               role1.length() > 0)
       { String e2name = e2.getName();
         String e2s = e2name.toLowerCase() + "s";
 
@@ -19140,6 +19191,7 @@ public void iosDbiOperations(PrintWriter out)
 
     for (int i = 0; i < assts.size(); i++)
     { Association ast = (Association) assts.get(i);
+
       if (ast.isQualified()) { } 
       else if (ast.getCard2() != ONE) 
       { String ent2 = ast.getEntity2() + "";
@@ -19199,15 +19251,25 @@ public void iosDbiOperations(PrintWriter out)
 
     for (int j = 0; j < atts.size(); j++)
     { Attribute att = (Attribute) atts.get(j);
+
       if (att.isStatic()) { continue; } 
+
       String aname = att.getName();
       Type t = att.getType();
+      if (t == null) { continue; } 
+
       String tname = t.getName();
+
       String valc = "val";
+
       if ("Ref".equals(tname))
       { continue; } 
-      if ("Sequence".equals(tname) || "Set".equals(tname))
-      { valc = "new ArrayList()"; } 
+      if ("Sequence".equals(tname))
+      { valc = "new ArrayList()"; }
+      else if ("Set".equals(tname))
+      { String etype = Type.getCSharptype(t.getElementType()); 
+        valc = "new HashSet<" + etype + ">()"; 
+      }  
       else if ("Map".equals(tname))
       { valc = "new Hashtable()"; } 
       else if ("String".equals(tname))

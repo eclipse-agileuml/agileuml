@@ -84,6 +84,9 @@ public class ObjectSpecification extends ModelElement
     { atts.add(att); } 
   } // What about numbers, etc? 
 
+  public void setRawValue(String att, Object val) 
+  { attvalues.put(att, val); } 
+
   public Object getRawValue(String att) 
   { return attvalues.get(att); } 
 

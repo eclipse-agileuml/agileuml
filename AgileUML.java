@@ -13,11 +13,11 @@ public class AgileUML
     { area.loadKM3FromFile(sourcefile); }
     else 
     { System.err.println("!! ERROR: no file mm.km3"); 
-	  return; 
+      return; 
     } 
   
     area.typeCheck(); 
-    area.energyAnalysis();
+    area.energyAnalysisHTML();
   } 
 } 
  

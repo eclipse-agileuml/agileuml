@@ -12,7 +12,8 @@ import javax.swing.JOptionPane;
 * *****************************/
 
 public class ModelSpecification 
-{ Vector objects = new Vector(); 
+{ Vector objects = new Vector(); // all objects
+  Vector allocated = new Vector(); // all references
 
   Map correspondence = new Map();
 
@@ -24,6 +25,12 @@ public class ModelSpecification
                       // String -> ObjectSpecification 
   java.util.Map objectsOfClass = new java.util.HashMap(); 
                       // String -> Vector
+  java.util.Map staticAttributesOfClass = 
+                      new java.util.HashMap(); 
+                      // String -> Map(String, Expression)
+
+  java.util.Map refersTo = new java.util.HashMap(); 
+                      // pointer id -> ObjectSpecification
 
   public static int maxSourcePath = 1; 
   public static int maxTargetPath = 1; 
@@ -39,6 +46,25 @@ public class ModelSpecification
 
   public ObjectSpecification getObjectSpec(String nme)
   { return (ObjectSpecification) objectmap.get(nme); } 
+
+  public void removeObject(Expression expr)
+  { this.removeObject(expr + ""); } 
+
+  public void removeObject(String nme)
+  { ObjectSpecification obj = 
+          (ObjectSpecification) objectmap.get(nme);
+    objectmap.remove(nme); 
+    if (obj != null)
+    { objects.remove(obj); 
+      Entity ent = obj.entity; 
+      if (ent != null) 
+      { String ename = ent.getName();  
+        Vector eobjs = (Vector) objectsOfClass.get(ename);
+        if (eobjs != null) 
+        { eobjs.remove(obj); }   
+      } 
+    } 
+  } 
 
   public void addObject(ObjectSpecification obj) 
   { if (objects.contains(obj)) { } 
@@ -57,6 +83,41 @@ public class ModelSpecification
       objectsOfClass.put(ename, res);  
     } 
   } 
+
+  public void setStaticAttributeValue(String cls, String att,
+                                      Expression val)
+  { java.util.Map cAtts = 
+            (java.util.Map) staticAttributesOfClass.get(cls);  
+    if (cAtts == null) 
+    { cAtts = new java.util.HashMap(); } 
+    cAtts.put(att, val); 
+    staticAttributesOfClass.put(cls, cAtts); 
+  } 
+
+  public Expression getStaticAttributeValue(String cls, 
+                                        String att)
+  { java.util.Map cAtts = 
+            (java.util.Map) staticAttributesOfClass.get(cls);  
+    if (cAtts == null) 
+    { return null; } 
+    return (Expression) cAtts.get(att); 
+  } 
+
+  public void addReferenceTo(String pid, String var,
+                             String typ, java.util.Map env)
+  { // links pid to the variable and environment it refers to:
+
+    ObjectSpecification obj = new ObjectSpecification(pid, typ); 
+    obj.setRawValue("name", var); 
+    obj.setRawValue("environment", env); 
+    refersTo.put(pid, obj); 
+    allocated.add(pid); 
+
+    System.out.println(">>> Allocated reference " + pid + " to variable " + var + " in environment " + env); 
+  } 
+
+  public ObjectSpecification getReferredVariable(String pid)
+  { return (ObjectSpecification) refersTo.get(pid); } 
 
   public Vector getClassNames(Vector objs)
   { Vector res = new Vector(); 
@@ -131,6 +192,10 @@ public class ModelSpecification
     { ObjectSpecification spec = (ObjectSpecification) objects.get(i); 
       res = res + spec.details() + "\n"; 
     } 
+
+    res = res + objectsOfClass + "\n"; 
+
+    res = res + staticAttributesOfClass + "\n"; 
 	
     for (int j = 0; j < correspondence.elements.size(); j++)
     { Maplet mm = (Maplet) correspondence.elements.get(j); 

@@ -47,7 +47,7 @@ public class CGRule
     
     if (lvars.containsAll(rvars)) {}
     else
-    { System.err.println("! Warning: some extra metavariables on RHS of " + lexp + " |--> " + rexp); }
+    { System.out.println("! Warning: some extra metavariables on RHS of " + lexp + " |--> " + rexp); }
     lhs = lexp + "";
     rhs = rexp + "";
     variables = lvars;
@@ -64,7 +64,7 @@ public class CGRule
     Vector rvariables = metavariables(rgt); 
     if (variables.containsAll(rvariables)) { } 
     else 
-    { System.err.println("! Warning: some extra metavariables on RHS of " + this); }
+    { System.out.println("! Warning: some extra metavariables on RHS of " + this); }
 
     conditions = whens;
     metafeatures = metafeatures(rhs); 
@@ -79,7 +79,7 @@ public class CGRule
     Vector rvariables = metavariables(rgt); 
     if (variables.containsAll(rvariables)) { } 
     else 
-    { System.err.println("! Warning: some extra metavariables on RHS of " + this); }
+    { System.out.println("! Warning: some extra metavariables on RHS of " + this); }
 
     conditions = new Vector();
     metafeatures = metafeatures(rhs); 
@@ -93,7 +93,7 @@ public class CGRule
     Vector rvariables = metavariables(rgt); 
     if (variables.containsAll(rvariables)) { } 
     else 
-    { System.err.println("! Warning: some extra metavariables on RHS of " + this); }
+    { System.out.println("! Warning: some extra metavariables on RHS of " + this); }
 
     conditions = whens;
     metafeatures = metafeatures(rhs); 
@@ -107,7 +107,7 @@ public class CGRule
     Vector rvariables = metavariables(rgt); 
     if (variables.containsAll(rvariables)) { } 
     else 
-    { System.err.println("! Warning: some extra metavariables on RHS of " + this); }
+    { System.out.println("! Warning: some extra metavariables on RHS of " + this); }
 
     conditions = new Vector();
     metafeatures = metafeatures(rhs); 
@@ -121,7 +121,7 @@ public class CGRule
     Vector rvariables = metavariables(rgt); 
     if (variables.containsAll(rvariables)) { } 
     else 
-    { System.err.println("! Warning: some extra metavariables on RHS of " + this); }
+    { System.out.println("! Warning: some extra metavariables on RHS of " + this); }
 
     conditions = whens;
     metafeatures = metafeatures(rhs); 
@@ -136,7 +136,7 @@ public class CGRule
     Vector rvariables = metavariables(rgt); 
     if (variables.containsAll(rvariables)) { } 
     else 
-    { System.err.println("! Warning: some extra metavariables on RHS of " + this); }
+    { System.out.println("! Warning: some extra metavariables on RHS of " + this); }
 
     conditions = new Vector();
     metafeatures = metafeatures(rhs); 
@@ -156,9 +156,9 @@ public class CGRule
  
     if (variables.containsAll(rvariables)) { } 
     else 
-    { System.err.println("! Warning: some extra metavariables on RHS of " + this);
+    { System.out.println("! Warning: some extra metavariables on RHS of " + this);
       
-      System.err.println(">> These will be treated as global variables: " + rhsVariables); 
+      System.out.println(">> These will be treated as global variables: " + rhsVariables); 
     }
 
     conditions = whens;
@@ -178,9 +178,9 @@ public class CGRule
 
     if (variables.containsAll(rvariables)) { } 
     else 
-    { System.err.println("! Warning: some extra metavariables on RHS of " + this); 
+    { System.out.println("! Warning: some extra metavariables on RHS of " + this); 
       
-      System.err.println(">> These will be treated as global variables: " + rhsVariables); 
+      System.out.println(">> These will be treated as global variables: " + rhsVariables); 
     }
 
     conditions = new Vector();
@@ -632,7 +632,7 @@ public class CGRule
     { CGSpec template = CSTL.getTemplate(mffeat + ".cstl"); 
           
       if (template != null) 
-      { System.err.println("!>> Applying CSTL script " + mffeat + ".cstl to " + term); 
+      { System.out.println("!>> Applying CSTL script " + mffeat + ".cstl to " + term); 
 
         String repl = null; 
         repl = term.cg(template);
@@ -967,7 +967,7 @@ public class CGRule
        if (repl != null) 
        { return repl; } 
        else 
-       { System.err.println(">!!!> cannot apply ruleset: " + mffeat + " to " + term); 
+       { System.out.println(">!!!> cannot apply ruleset: " + mffeat + " to " + term); 
  
          // Should this be an alternative at a higher level?
          if (term.hasMetafeature(mffeat))
@@ -975,7 +975,7 @@ public class CGRule
            if (replx != null) 
            { return replx; }
            else 
-           { System.err.println(">!!!> no metafeature: " + mffeat + " of " + term); 
+           { System.out.println(">!!!> no metafeature: " + mffeat + " of " + term); 
            } 
         }
         else if (ASTTerm.hasTaggedValue(term,mffeat))
@@ -983,7 +983,7 @@ public class CGRule
           if (replx != null) 
           { return replx; }
           else 
-          { System.err.println(">!!!> no tagged value: " + mffeat + " of " + term); 
+          { System.out.println(">!!!> no tagged value: " + mffeat + " of " + term); 
           } 
         }       
         else if (term instanceof ASTSymbolTerm)
@@ -1002,8 +1002,8 @@ public class CGRule
           { return replx; } 
         } 
         else 
-        { System.err.println("!! No template " + mffeat + ".cstl exists"); 
-          System.err.println(">>> Trying to load template ./cg/" + mffeat + ".cstl"); 
+        { System.out.println("!! No template " + mffeat + ".cstl exists"); 
+          System.out.println(">>> Trying to load template ./cg/" + mffeat + ".cstl"); 
            // System.out.println(); 
 
           File sub = new File("./cg/" + mffeat + ".cstl");
@@ -1370,7 +1370,7 @@ public class CGRule
         else if (CSTL.hasTemplate(mffeat + ".cstl")) 
         { CGSpec template = CSTL.getTemplate(mffeat + ".cstl"); 
           if (template != null) 
-          { System.err.println(">**> Applying CSTL template " + mffeat + ".cstl to " + obj); 
+          { System.out.println(">**> Applying CSTL template " + mffeat + ".cstl to " + obj); 
 
             String repl = null; 
             if (obj instanceof ModelElement)
@@ -1692,7 +1692,7 @@ public class CGRule
             res = replaceByMetafeatureValue(res,mf,repl);
           }   
           else if (cgs.hasRuleset(mffeat))
-          { System.err.println(">***> Valid internal ruleset " + mffeat);  
+          { System.out.println(">***> Valid internal ruleset " + mffeat);  
             // System.out.println(); 
             String repl = cgs.applyRuleset(mffeat,(ASTTerm) obj);
             // System.err.println(">***> Applying ruleset " + mffeat + " to ASTTerm " + obj); 
@@ -1704,7 +1704,7 @@ public class CGRule
             } 
           } 
           else 
-          { System.err.println(">!!!> no ruleset: " + mffeat); 
+          { System.out.println(">!!!> no ruleset: " + mffeat); 
             if (term.hasMetafeature(mffeat))
             { String repl = term.getMetafeatureValue(mffeat); 
               if (repl != null) 
@@ -1712,7 +1712,7 @@ public class CGRule
                   replaceByMetafeatureValue(res,mf,repl); 
               }
               else 
-              { System.err.println(">!!!> no metafeature: " + mffeat + " of " + term); 
+              { System.out.println(">!!!> no metafeature: " + mffeat + " of " + term); 
               } 
             }
             else if (ASTTerm.hasTaggedValue(term,mffeat))
@@ -1722,7 +1722,7 @@ public class CGRule
                   replaceByMetafeatureValue(res,mf,repl); 
               }
               else 
-              { System.err.println(">!!!> no tagged value: " + mffeat + " of " + term); 
+              { System.out.println(">!!!> no tagged value: " + mffeat + " of " + term); 
               } 
             }
             else if (term instanceof ASTSymbolTerm)
@@ -1732,7 +1732,7 @@ public class CGRule
                   replaceByMetafeatureValue(res,mf,repl); 
             }
             else if (CSTL.hasTemplate(mffeat + ".cstl")) 
-            { System.err.println(">>> Template exists: " + 
+            { System.out.println(">>> Template exists: " + 
                                  mffeat + ".cstl"); 
               CGSpec newcgs = CSTL.getTemplate(mffeat + ".cstl"); 
               // System.out.println(); 
@@ -1744,8 +1744,8 @@ public class CGRule
               } 
             } 
             else 
-            { System.err.println("!! No template " + mffeat + ".cstl exists"); 
-              System.err.println(">>> Trying to load template ./cg/" + mffeat + ".cstl"); 
+            { System.out.println("!! No template " + mffeat + ".cstl exists"); 
+              System.out.println(">>> Trying to load template ./cg/" + mffeat + ".cstl"); 
               // System.out.println(); 
 
               File sub = new File("./cg/" + mffeat + ".cstl");
@@ -1763,12 +1763,12 @@ public class CGRule
         }
         else if (obj instanceof String && 
                  cgs.hasRuleset(mffeat))
-        { System.err.println(">***> Valid internal ruleset " + mffeat);  
-          System.err.println();
+        { System.out.println(">***> Valid internal ruleset " + mffeat);  
+          System.out.println();
           ASTSymbolTerm asymbol = new ASTSymbolTerm(obj + "");  
           String repl = cgs.applyRuleset(mffeat, asymbol);
           // System.err.println(">***> Applying ruleset " + mffeat + " to ASTSymbolTerm " + obj); 
-          System.err.println(); 
+          System.out.println(); 
 
           if (repl != null) 
           { res = replaceByMetafeatureValue(res,mf,repl); } 
@@ -1776,13 +1776,13 @@ public class CGRule
         else if (obj instanceof Vector) // Of ASTTerm
         { Vector v = (Vector) obj;
           // System.err.println(">***> Applying " + mffeat + " to vector of terms " + v);
-          System.err.println(); 
+          System.out.println(); 
   
           String repl = "";
           
           if (cgs.hasRuleset(mffeat))
-          { System.err.println(">***> Valid internal ruleset " + mffeat);  
-            System.err.println(); 
+          { System.out.println(">***> Valid internal ruleset " + mffeat);  
+            System.out.println(); 
             String replv = ""; 
             for (int p = 0; p < v.size(); p++)
             { if (v.get(p) instanceof ASTTerm)
@@ -1886,10 +1886,10 @@ public class CGRule
             res = replaceByMetafeatureValue(res,mf,replv); 
           }          
           else if (CSTL.hasTemplate(mffeat + ".cstl")) 
-          { System.err.println(">>> Template exists: " + 
+          { System.out.println(">>> Template exists: " + 
                                  mffeat + ".cstl"); 
             CGSpec newcgs = CSTL.getTemplate(mffeat + ".cstl"); 
-            System.err.println(); 
+            System.out.println(); 
             String replv = ""; 
             for (int p = 0; p < v.size(); p++)
             { if (v.get(p) instanceof ASTTerm)
@@ -1902,9 +1902,9 @@ public class CGRule
                   replaceByMetafeatureValue(res,mf,replv); 
           } 
           else 
-          { System.err.println("!! No template " + mffeat + ".cstl exists"); 
-            System.err.println(">>> Trying to load template ./cg/" + mffeat + ".cstl"); 
-            System.err.println(); 
+          { System.out.println("!! No template " + mffeat + ".cstl exists"); 
+            System.out.println(">>> Trying to load template ./cg/" + mffeat + ".cstl"); 
+            System.out.println(); 
 
             File sub = new File("./cg/" + mffeat + ".cstl");
       
@@ -1929,7 +1929,7 @@ public class CGRule
           // System.out.println(">> Applied vector rule: " + res); 
         }   
         else 
-        { System.err.println("!! Warning: cannot find ruleset or definition to apply metafeature " + mffeat + " to " + obj); } 
+        { System.out.println("!! Warning: cannot find ruleset or definition to apply metafeature " + mffeat + " to " + obj); } 
       } 
     }
 
@@ -1958,7 +1958,7 @@ public class CGRule
         // String mffeat = mf.substring(3,mf.length());
         if (rhs.startsWith("_0"))
         { String metaop = rhs.substring(3); 
-          System.err.println(">--> External call " + metaop);
+          System.out.println(">--> External call " + metaop);
           res = ASTTerm.cgtlOperation(metaop,eargs); 
         }  
         continue; 

@@ -57,6 +57,18 @@ public class ConditionalExpression extends Expression
   public Expression getInnerObjectRef()
   { return this; } 
 
+  public boolean isSideEffecting()
+  { if (test.isSideEffecting())
+    { return true; } 
+
+    if (ifExp.isSideEffecting())
+    { return true; } 
+
+    if (elseExp.isSideEffecting())
+    { return true; }
+
+    return false; 
+  }  
 
   public Expression transformPythonSelectExpressions()
   { Expression tqf = test.transformPythonSelectExpressions();
@@ -340,7 +352,8 @@ public class ConditionalExpression extends Expression
           (testbeRight + "").equals(elsebeRight + ""))
       { if (elsebe.getOperator().equals("->including") || 
             elsebe.getOperator().equals("->append"))
-        { rUses.add("!! Using sequence " + ifExp + " as set in " + this + "\n>> Recommend declaring " + ifExp + " as a Set or SortedSet"); 
+        { rUses.add("!!! Using sequence " + ifExp + " as set in " + this); 
+          rUses.add("!!! Recommend declaring " + ifExp + " as a Set or SortedSet"); 
 
           int oscore = (int) res.get("red"); 
           res.set("red", oscore + 1); 
@@ -375,14 +388,14 @@ public class ConditionalExpression extends Expression
           (testbeRight + "").equals(ifbeRight + ""))
       { if (ifbe.getOperator().equals("->including") || 
             ifbe.getOperator().equals("->append"))
-        { rUses.add("!! Using sequence " + elseExp + " as set in " + this + "\n>> Recommend declaring " + elseExp + " as a Set or SortedSet"); 
+        { rUses.add("!!! Using sequence " + elseExp + " as set in " + this); 
+          rUses.add("!!! Recommend declaring " + elseExp + " as a Set or SortedSet"); 
 
           int oscore = (int) res.get("red"); 
           res.set("red", oscore + 1); 
         } 
       } 
     } 
-
 
     return res; 
   } 
@@ -394,6 +407,36 @@ public class ConditionalExpression extends Expression
     ifExp.collectionOperatorUses(level,res,vars); 
     java.util.Map result = 
             elseExp.collectionOperatorUses(level,res,vars); 
+    return result; 
+  } 
+
+  public java.util.Map collectionOperatorUses(int level, 
+                             java.util.Map res, 
+                             Vector vars, Map uses,
+                             Vector messages)
+  { boolean sideeffect = isSideEffecting(); 
+    Vector vuses = variablesUsedIn(vars); 
+    if (level > 1 && vuses.size() == 0 && !sideeffect)
+    { messages.add("!!! Energy-use flaw: (LCE): The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
+          "    Use Extract local variable to optimise.");
+      refactorELV = true;  
+      int redScore = (int) uses.get("red"); 
+      uses.set("red", redScore+1); 
+      test.collectionOperatorUses(level,res,vars); 
+      ifExp.collectionOperatorUses(level,res,vars);  
+      java.util.Map nres = 
+         elseExp.collectionOperatorUses(level,res,vars);
+      return nres;  
+    }
+
+    test.collectionOperatorUses(level,res,vars,
+                                  uses,messages); 
+    ifExp.collectionOperatorUses(level,res,vars,
+                                           uses,messages); 
+    java.util.Map result = 
+        elseExp.collectionOperatorUses(level,res,vars, 
+                                       uses,messages);
+    
     return result; 
   } 
 

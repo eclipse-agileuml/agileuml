@@ -783,35 +783,37 @@ class FinanceLib :
     aif = 0.0
     d1 = st[0]
     d2 = st[1]
-    # print(issue)
-    # print(settle)
-    # print(d1)
-    # print(d2)
     ys = d1.year
     ye = settle.year
-    ysEnd = OclDate.newOclDate_String(str(ys) + "/12/31")
-    yeStart = OclDate.newOclDate_String(str(ye) + "/01/01")
-        
-    if (dayCount == "Actual/365F") :
-      aif = (OclDate.daysBetweenDates(d1,settle)/365)*coup
-    elif (dayCount == "Actual/ActualISDA") :
-      if (d1.isLeapYear() and settle.isLeapYear()):
-        aif = (OclDate.daysBetweenDates(d1,settle)/366)*coup
-      elif (not(d1.isLeapYear()) and not(settle.isLeapYear())) :
-        aif = (OclDate.daysBetweenDates(d1,settle)/365)*coup
-      elif (d1.isLeapYear() and not(settle.isLeapYear())) :
-        aif = (OclDate.daysBetweenDates(d1,ysEnd)/366) * coup +\
-           (OclDate.daysBetweenDates(yeStart,settle)/365)*coup
-      else:
-        aif = (OclDate.daysBetweenDates(d1,ysEnd)/365)*coup +\
-           (OclDate.daysBetweenDates(yeStart,settle)/366)*coup
+    ysEnd = OclDate.newOclDate_YMD(ys, 12, 31)
+    yeStart = OclDate.newOclDate_YMD(ye, 1, 1)
+
+    daysbetween = OclDate.daysBetweenDates(d1,settle)
+    daystoend = OclDate.daysBetweenDates(d1,ysEnd)
+    daysfromstart = OclDate.daysBetweenDates(yeStart,settle)
     
+    settleIsLeap = settle.isLeapYear()
+    dayIsLeap = d1.isLeapYear()
+
+    if (dayCount == "Actual/365F") :
+      aif = (daysbetween/365)*coup
+    elif (dayCount == "Actual/ActualISDA") :
+      if (dayIsLeap and settleIsLeap):
+        aif = (daysbetween/366)*coup
+      elif (not(dayIsLeap) and not(settleIsLeap)) :
+        aif = (daysbetween/365)*coup
+      elif (dayIsLeap and not(settleIsLeap)) :
+        aif = (daystoend/366) * coup +\
+              (daysfromstart/365)*coup
+      else:
+        aif = (daystoend/365)*coup +\
+           (daysfromstart/366)*coup
     elif (dayCount == "Actual/364") :
-      aif = (OclDate.daysBetweenDates(d1,settle)/364)*coup
+      aif = (daysbetween/364)*coup
     elif (dayCount == "Actual/360") :
-      aif = (OclDate.daysBetweenDates(d1,settle)/360)*coup
+      aif = (daysbetween/360)*coup
     elif (dayCount == "Actual/ActualICMA") :
-      aif = (OclDate.daysBetweenDates(d1,settle)/(freq*OclDate.daysBetweenDates(d1,d2)))*coup
+      aif = (daysbetween/(freq*OclDate.daysBetweenDates(d1,d2)))*coup
     else :
       aif = (FinanceLib.days360(d1,settle,dayCount,matur)/360)*coup
     return aif
@@ -927,3 +929,30 @@ class FinanceLib :
 
 # sq = ['a', 'b', 'c', 'a', 'r', 'a', 'd', 'b', 'r', 'a']
 # print(MathLib.frequencyCount(sq))
+
+# sq = [18.4, 18.4, 30.2, 50.3]
+# print(MathLib.standardDeviation(sq))
+
+# sq = [334.4, 382.4, 900.8, 1553.6]
+# print(MathLib.standardDeviation(sq))
+
+# d1 = OclDate.newOclDate_String("2020/07/31")
+# d2 = OclDate.newOclDate_String("2020/08/31")
+
+# print(OclDate.daysBetweenDates(d1, d2))
+
+# print(FinanceLib.accumulatedInterest(d1, d2, 2, 0.02, "Actual/360", "31/07/2024"))
+
+# t1 = time.time()
+
+# for yr in range(1800,2024) : 
+#   for mnt in range(10,13) : 
+#     for dd in range(10,31) :
+#       dd1 = OclDate.newOclDate_YMD(yr - 1, mnt, 1)
+#       dd2 = OclDate.newOclDate_YMD(yr, mnt, dd)
+#       FinanceLib.accumulatedInterest(dd1, dd2, 
+#            2 , 0.02, "Actual/ActualISDA", "31/07/2024")
+
+# t2 = time.time()
+# print(1000*(t2 - t1))
+

@@ -1193,7 +1193,7 @@ def values(m) :
 # print(pp)
 
 # ss = [1, 4, 6, 7, 2]
-# print(listSubrange(ss, 2, -1))
+# print(sequenceSubrange(ss, 2, -1))
 
 # mp = dict({"a": 1, "b": 2})
 

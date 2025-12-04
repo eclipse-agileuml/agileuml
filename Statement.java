@@ -1483,6 +1483,11 @@ abstract class Statement implements Cloneable
   // collection operation uses at each nesting level
   // level |-> [expr1, expr2, ...] with iterators vars
 
+  public abstract java.util.Map collectionOperatorUses(
+                             int nestingLevel, 
+                             java.util.Map operatorsAtLevel, 
+                             Vector vars, Map uses,
+                             Vector messages);
 
   public static boolean isSemiTailRecursive(
             BehaviouralFeature bf, String nme, Statement st)
@@ -4013,8 +4018,8 @@ class ReturnStatement extends Statement
     int syncomp = value.syntacticComplexity(); 
 
     if (syncomp > TestParameters.syntacticComplexityLimit)
-    { System.err.println("!!! Code smell (MEL): too high expression complexity (" + syncomp + ") for " + value); 
-      System.err.println(">>> Recommend OCL refactoring"); 
+    { System.err.println("!! Code smell (MEL): too high expression complexity (" + syncomp + ") for " + value); 
+      System.err.println("!! Recommend OCL refactoring"); 
     } // amber flaw
 
     return uses; 
@@ -4035,6 +4040,19 @@ class ReturnStatement extends Statement
     { return operatorsAtLevel; } 
     value.collectionOperatorUses(nestingLevel, 
                                  operatorsAtLevel, vars); 
+    return operatorsAtLevel; 
+  }  
+
+  public java.util.Map collectionOperatorUses(
+                             int nestingLevel, 
+                             java.util.Map operatorsAtLevel,
+                             Vector vars, Map uses, 
+                             Vector messages)
+  { if (value == null) 
+    { return operatorsAtLevel; } 
+    value.collectionOperatorUses(nestingLevel, 
+                                 operatorsAtLevel, vars, 
+                                 uses, messages); 
     return operatorsAtLevel; 
   }  
 
@@ -4604,6 +4622,13 @@ class BreakStatement extends Statement
                              java.util.Map operatorsAtLevel, 
                              Vector vars)
   { return operatorsAtLevel; }  
+
+  public java.util.Map collectionOperatorUses(
+                             int nestingLevel, 
+                             java.util.Map operatorsAtLevel, 
+                             Vector vars, Map uses,
+                             Vector messages)
+  { return operatorsAtLevel; }  
 }
 
 class ContinueStatement extends Statement
@@ -4809,6 +4834,13 @@ class ContinueStatement extends Statement
                              java.util.Map operatorsAtLevel,
                              Vector vars)
   { return operatorsAtLevel; }  
+
+  public java.util.Map collectionOperatorUses(
+                             int nestingLevel, 
+                             java.util.Map operatorsAtLevel, 
+                             Vector vars, Map uses,
+                             Vector messages)
+  { return operatorsAtLevel; }  
 }
 
 
@@ -4968,7 +5000,7 @@ class InvocationStatement extends Statement
   } 
 
   public int execute(ModelSpecification sigma, 
-                      ModelState beta)
+                     ModelState beta)
   { int res = Statement.NORMAL; 
 
     if (callExp == null) 
@@ -4985,36 +5017,47 @@ class InvocationStatement extends Statement
       Vector actualPars = cexpr.getParameters(); 
       int npars = actualPars.size(); 
 
-      Expression selfobject; 
+      Expression selfobject = null;
+      BehaviouralFeature bf = null;
+ 
+      /* JOptionPane.showInputDialog(callExp.isStatic() + " " + 
+                                  callExp.getEntity()); */ 
 
-      if (obj != null) 
-      { selfobject = obj.evaluate(sigma, beta); } 
+      if (callExp.isStatic() && callExp.getEntity() != null)
+      { selfobject = new BasicExpression("null");  
+        Entity ent = callExp.getEntity(); 
+        bf = ent.getOperation(op, npars); 
+      } 
       else 
-      { selfobject = beta.getVariableValue("self"); } 
+      { if (obj != null) 
+        { selfobject = obj.evaluate(sigma, beta); } 
+        else 
+        { selfobject = beta.getVariableValue("self"); } 
 
-      if (selfobject == null) // error
-      { return res; } 
+      // JOptionPane.showInputDialog(selfobject); 
 
-      ObjectSpecification ospec = 
+        if (selfobject == null) // error 
+        { return res; } 
+
+        ObjectSpecification ospec = 
                  sigma.getObjectSpec("" + selfobject);
 
-      if (ospec == null) // error
-      { return res; }
- 
-      Entity ent = ospec.getEntity(); 
+        if (ospec == null) 
+        { return res; }
 
-      if (ent == null) 
-      { return res; } 
+        Entity ent = ospec.getEntity(); 
 
-      BehaviouralFeature bf = ent.getOperation(op, npars);
-      // assume not static:  
+        if (ent == null) 
+        { return res; } 
+
+        bf = ent.getOperation(op, npars);
+      } 
 
       if (bf == null) 
       { return res; } 
 
-      ModelState opstackframe = (ModelState) beta.clone(); 
-      opstackframe.addNewEnvironment(); 
-      opstackframe.addVariable("self", selfobject); 
+      beta.addNewEnvironment(); 
+      beta.addVariable("self", selfobject); 
 
       Vector parValues = new Vector(); 
       for (int i = 0; i < actualPars.size(); i++) 
@@ -5023,7 +5066,8 @@ class InvocationStatement extends Statement
         parValues.add(parval); // could be null; 
       } 
 
-      bf.execute(sigma, opstackframe, parValues);  
+      bf.execute(sigma, beta, parValues);
+      beta.removeLastEnvironment();   
     }
 
     return res; 
@@ -5155,8 +5199,8 @@ class InvocationStatement extends Statement
 
     int syncomp = callExp.syntacticComplexity(); 
     if (syncomp > TestParameters.syntacticComplexityLimit)
-    { System.err.println("!!! Code smell (MEL): too high expression complexity (" + syncomp + ") for " + callExp); 
-      System.err.println(">>> Recommend OCL refactoring"); 
+    { System.err.println("!! Code smell (MEL): too high expression complexity (" + syncomp + ") for " + callExp); 
+      System.err.println("!! Recommend OCL refactoring"); 
     } 
 
     return uses; 
@@ -5171,6 +5215,16 @@ class InvocationStatement extends Statement
     return operatorsAtLevel; 
   }  
 
+  public java.util.Map collectionOperatorUses(
+                             int nestingLevel, 
+                             java.util.Map operatorsAtLevel, 
+                             Vector vars, Map uses, 
+                             Vector messages)
+  { callExp.collectionOperatorUses(nestingLevel, 
+                                   operatorsAtLevel, vars, 
+                                   uses, messages); 
+    return operatorsAtLevel; 
+  }  
 
   public void findMagicNumbers(java.util.Map mgns, String rule, String op)
   { String val = callExp + ""; 
@@ -5934,8 +5988,9 @@ class ImplicitInvocationStatement extends Statement
 
     int syncomp = callExp.syntacticComplexity(); 
     if (syncomp > TestParameters.syntacticComplexityLimit)
-    { System.err.println("!!! Code smell (MEL): too high expression complexity (" + syncomp + ") for " + callExp); 
-      System.err.println(">>> Recommend OCL refactoring"); 
+    { System.err.println("!! Code smell (MEL): too high expression complexity (" + syncomp + ") for " + callExp); 
+      System.err.println("!! Recommend OCL refactoring");
+      System.err.println();  
     } 
 
     return uses; 
@@ -5950,6 +6005,17 @@ class ImplicitInvocationStatement extends Statement
     return operatorsAtLevel; 
   }  
 
+  public java.util.Map collectionOperatorUses(
+                             int nestingLevel, 
+                             java.util.Map operatorsAtLevel, 
+                             Vector vars, Map uses, 
+                             Vector messages)
+  { callExp.collectionOperatorUses(nestingLevel, 
+                                   operatorsAtLevel, vars, 
+                                   uses, messages); 
+    return operatorsAtLevel; 
+  }  
+
   public void findMagicNumbers(java.util.Map mgns, String rule, String op)
   { callExp.findMagicNumbers(mgns, this + "", op); } 
 
@@ -5960,6 +6026,11 @@ class ImplicitInvocationStatement extends Statement
     return res; 
   } 
 
+  public int execute(ModelSpecification sigma, ModelState beta)
+  { callExp.execute(sigma, beta); 
+    return Statement.NORMAL; 
+  }
+ 
   public Statement substituteEq(String oldE, Expression newE)
   { Expression newExp = callExp.substituteEq(oldE,newE); 
 
@@ -6511,15 +6582,16 @@ class WhileStatement extends Statement
   } 
 
   public int execute(ModelSpecification sigma, 
-                      ModelState beta)
+                     ModelState beta)
   { int res = Statement.NORMAL; 
 
     if (loopKind == Statement.WHILE)
     { Expression testvalue = 
          loopTest.evaluate(sigma, beta); 
+
       while ("true".equals(testvalue + ""))
       { res = body.execute(sigma, beta);
-        System.out.println("---> iteration of while loop: " + sigma + ", " + beta + " " + res);
+        // System.out.println("---> iteration of while loop: " + sigma + ", " + beta + " " + res);
 
         if (res == Statement.BREAK)
         { return Statement.NORMAL; } 
@@ -6542,10 +6614,11 @@ class WhileStatement extends Statement
       { return res; }   
 
       Expression testvalue = 
-         loopTest.evaluate(sigma, beta); 
+         loopTest.evaluate(sigma, beta);
+ 
       while ("false".equals(testvalue + ""))
       { res = body.execute(sigma, beta);
-        System.out.println("---> iteration of repeat loop: " + sigma + ", " + beta + " " + res);
+        // System.out.println("---> iteration of repeat loop: " + sigma + ", " + beta + " " + res);
 
         if (res == Statement.BREAK)
         { return Statement.NORMAL; } 
@@ -6575,13 +6648,17 @@ class WhileStatement extends Statement
         { Expression val = serange.getElement(i); 
           beta.setVariableValue(lv, val); 
           res = body.execute(sigma, beta); 
-          System.out.println("---> iteration of for loop: " + sigma + ", " + beta + " " + res);
+          // System.out.println("---> iteration of for loop: " + sigma + ", " + beta + " " + res);
 
           if (res == Statement.BREAK)
-          { return Statement.NORMAL; } 
+          { beta.removeLastEnvironment();
+            return Statement.NORMAL; 
+          } 
 
           if (res == Statement.RETURN)
-          { return res; }   
+          { beta.removeLastEnvironment();
+            return res; 
+          }   
         } 
      
         beta.removeLastEnvironment();
@@ -6742,7 +6819,7 @@ class WhileStatement extends Statement
         { int acount = (int) uses.get("amber"); 
           uses.set("amber", acount + 1); 
           aUses.add("! Code smell (MEL): too high expression complexity (" + rcomp + ") for " + loopRange + "\n" +  
-                    ">>> Recommend OCL refactoring"); 
+                    "! Recommend OCL refactoring"); 
         } 
       } 
     }
@@ -6752,7 +6829,7 @@ class WhileStatement extends Statement
       { int acount = (int) uses.get("amber"); 
         uses.set("amber", acount + 1); 
         aUses.add("! Code smell (MEL): too high expression complexity (" + syncomp + ") for " + loopTest + "\n" +  
-                  ">>> Recommend OCL refactoring"); 
+                  "! Recommend OCL refactoring"); 
       }
     }  
 
@@ -6772,9 +6849,9 @@ class WhileStatement extends Statement
       else 
       { int acount = (int) uses.get("amber"); 
         uses.set("amber", acount + 1); 
-        aUses.add("! Unbounded loops can be inefficient: " + 
+        aUses.add("!! Unbounded loops can be inefficient: " + 
                   this + 
-                  "\n>> Recommend replacing by a bounded loop");
+                  "\n!! Recommend replacing by a bounded loop");
       }  
     } 
 
@@ -6834,6 +6911,53 @@ class WhileStatement extends Statement
  
     body.collectionOperatorUses(nestingLevel + 1,
                                 operatorsAtLevel, newvars);
+
+    return operatorsAtLevel; 
+  }  
+
+  public java.util.Map collectionOperatorUses(
+                             int nestingLevel, 
+                             java.util.Map operatorsAtLevel, 
+                             Vector vars, Map uses, 
+                             Vector messages)
+  { if (loopRange != null) 
+    { loopRange.collectionOperatorUses(nestingLevel, 
+                                       operatorsAtLevel, 
+                                       vars, uses, messages); 
+    }
+    else if (loopTest != null)
+    { loopTest.collectionOperatorUses(nestingLevel, 
+                                      operatorsAtLevel, 
+                                      vars, uses, messages); 
+    }
+
+    Vector newvars = new Vector(); 
+    newvars.addAll(vars); 
+    
+    if (loopVar != null) 
+    { newvars.add("" + loopVar); }
+    else if (loopTest != null)
+    { Vector evuses = loopTest.getVariableUses(); 
+      Vector vuses = 
+                VectorUtil.getStrings(evuses); 
+      newvars.addAll(vuses); 
+    }  
+  
+    // Also add the write frame variables of body to newvars
+
+    Vector wrfr = body.writeFrame();
+    for (int i = 0; i < wrfr.size(); i++) 
+    { String wrv = (String) wrfr.get(i); 
+      int k = wrv.indexOf("::"); 
+      if (k >= 0) 
+      { newvars.add(wrv.substring(k+2)); } 
+      else 
+      { newvars.add(wrv); } 
+    }  
+ 
+    body.collectionOperatorUses(nestingLevel + 1,
+                                operatorsAtLevel, newvars, 
+                                uses, messages);
 
     return operatorsAtLevel; 
   }  
@@ -8729,21 +8853,34 @@ class CreationStatement extends Statement
     return res; 
   } 
 
-  public int execute(ModelSpecification sigma, ModelState beta)
+  public int execute(ModelSpecification sigma, 
+                     ModelState beta)
   { // add assignsTo as new variable, set to initialExpression
+    // Also allocate a new reference for the variable
+
+    java.util.HashMap env = null; 
 
     if (initialExpression != null) 
     { Expression val = initialExpression.evaluate(sigma, beta); 
-      beta.addVariable(assignsTo, val);
+      env = beta.addVariable(assignsTo, val);
     } // else use default value 
     else if (instanceType != null)  
     { Expression defaultInit = 
         Type.defaultInitialValueExpression(instanceType);
       Expression val = defaultInit.evaluate(sigma, beta); 
-      beta.addVariable(assignsTo, val);
+      env = beta.addVariable(assignsTo, val);
     }
 
-    return Statement.NORMAL; 
+    if (env != null) // success
+    { String pid = Identifier.newIdentifier("&_");
+      sigma.addReferenceTo(pid, assignsTo, 
+                           createsInstanceOf, env);   
+      beta.addVariable("?" + assignsTo, 
+                       new BasicExpression(pid));     
+      return Statement.NORMAL;
+    } 
+
+    return Statement.EXCEPTION;  
   } 
 
   public Expression definedness()
@@ -8777,8 +8914,8 @@ class CreationStatement extends Statement
       if (syncomp > TestParameters.syntacticComplexityLimit)
       { int acount = (int) uses.get("amber"); 
         uses.set("amber", acount + 1); 
-        aUses.add("! Code smell (MEL): too high expression complexity (" + syncomp + ") for " + initialExpression + "\n" +  
-                  ">>> Recommend OCL refactoring");  
+        aUses.add("!! Code smell (MEL): too high expression complexity (" + syncomp + ") for " + initialExpression + "\n" +  
+                  "!! Recommend OCL refactoring");  
       } 
     } 
 
@@ -8792,6 +8929,20 @@ class CreationStatement extends Statement
     if (initialExpression != null) 
     { initialExpression.collectionOperatorUses(lev, 
                                         uses, vars); 
+    } 
+
+    return uses; 
+  } 
+
+  public java.util.Map collectionOperatorUses(int lev, 
+                                 java.util.Map uses,
+                                 Vector vars, Map flaws,
+                                 Vector messages)
+  { 
+    if (initialExpression != null) 
+    { initialExpression.collectionOperatorUses(lev, 
+                                        uses, vars, flaws,
+                                        messages); 
     } 
 
     return uses; 
@@ -10292,9 +10443,28 @@ class SequenceStatement extends Statement
   public java.util.Map collectionOperatorUses(int lev, 
                               java.util.Map uses, 
                               Vector vars)
-  { for (int i = 0; i < statements.size(); i++) 
+  { Vector oldvars = new Vector(); 
+    oldvars.addAll(vars); 
+
+    for (int i = 0; i < statements.size(); i++) 
     { Statement stat = (Statement) statements.get(i); 
-      stat.collectionOperatorUses(lev, uses, vars); 
+      stat.collectionOperatorUses(lev, uses, oldvars); 
+    }
+
+    return uses; 
+  } 
+
+  public java.util.Map collectionOperatorUses(int lev, 
+                              java.util.Map uses, 
+                              Vector vars, Map flaws, 
+                              Vector messages)
+  { Vector oldvars = new Vector(); 
+    oldvars.addAll(vars); 
+
+    for (int i = 0; i < statements.size(); i++) 
+    { Statement stat = (Statement) statements.get(i); 
+      stat.collectionOperatorUses(lev, uses, oldvars, 
+                                  flaws, messages); 
     }
 
     return uses; 
@@ -11739,6 +11909,22 @@ class CaseStatement extends Statement
     return uses; 
   }
 
+  public java.util.Map collectionOperatorUses(int lev, 
+                              java.util.Map uses, Vector vars, 
+                              Map flaws, Vector messages) 
+  { 
+    int n = cases.elements.size();
+
+    for (int i = 0; i < n; i++)
+    { Maplet mm = (Maplet) cases.elements.elementAt(i);
+      Statement cse = (Statement) mm.dest;
+      cse.collectionOperatorUses(lev, uses, vars, 
+                                 flaws, messages); 
+    }
+
+    return uses; 
+  }
+
   public int epl() 
   { int res = 0; 
     int n = cases.elements.size();
@@ -11856,8 +12042,8 @@ class ErrorStatement extends Statement
       if (syncomp > TestParameters.syntacticComplexityLimit)
       { int acount = (int) uses.get("amber"); 
         uses.set("amber", acount + 1); 
-        aUses.add("! Code smell (MEL): too high expression complexity (" + syncomp + ") for " + thrownObject + "\n" +  
-                  ">>> Recommend OCL refactoring");  
+        aUses.add("!! Code smell (MEL): too high expression complexity (" + syncomp + ") for " + thrownObject + "\n" +  
+                  "!! Recommend OCL refactoring");  
       }
     }
  
@@ -11869,6 +12055,17 @@ class ErrorStatement extends Statement
                                  Vector vars)
   { if (thrownObject != null) 
     { thrownObject.collectionOperatorUses(lev, uses, vars); } 
+    return uses; 
+  } 
+
+  public java.util.Map collectionOperatorUses(int lev, 
+                                 java.util.Map uses, 
+                                 Vector vars, Map flaws, 
+                                 Vector messages)
+  { if (thrownObject != null) 
+    { thrownObject.collectionOperatorUses(lev, uses, vars, 
+                                          flaws, messages); 
+    } 
     return uses; 
   } 
 
@@ -12209,8 +12406,8 @@ class AssertStatement extends Statement
       if (res > TestParameters.syntacticComplexityLimit)
       { int acount = (int) uses.get("amber"); 
         uses.set("amber", acount + 1); 
-        aUses.add("! Code smell (MEL): too high expression complexity (" + res + ") for " + condition + "\n" +  
-                  ">>> Recommend OCL refactoring");  
+        aUses.add("!! Code smell (MEL): too high expression complexity (" + res + ") for " + condition + "\n" +  
+                  "!! Recommend OCL refactoring");  
       } 
     }
  
@@ -12226,6 +12423,23 @@ class AssertStatement extends Statement
     { condition.collectionOperatorUses(lev, uses, vars); } 
     if (message != null) 
     { message.collectionOperatorUses(lev, uses, vars); } 
+    return uses; 
+  } 
+
+  public java.util.Map collectionOperatorUses(int lev, 
+                                    java.util.Map uses, 
+                                    Vector vars, Map flaws,
+                                    Vector messages)
+  { if (condition != null) 
+    { condition.collectionOperatorUses(lev, uses, vars, 
+                                       flaws, messages); 
+    }
+ 
+    if (message != null) 
+    { message.collectionOperatorUses(lev, uses, vars, flaws,
+                                     messages); 
+    } 
+
     return uses; 
   } 
 
@@ -12714,6 +12928,17 @@ class CatchStatement extends Statement
                                     Vector vars)
   { if (action != null) 
     { action.collectionOperatorUses(lev, uses, vars); } 
+    return uses; 
+  } 
+
+  public java.util.Map collectionOperatorUses(int lev, 
+                                    java.util.Map uses, 
+                                    Vector vars, Map flaws,
+                                    Vector messages)
+  { if (action != null) 
+    { action.collectionOperatorUses(lev, uses, vars, 
+                                    flaws, messages); 
+    } 
     return uses; 
   } 
 
@@ -13209,6 +13434,29 @@ class TryStatement extends Statement
 
     if (endStatement != null)
     { endStatement.collectionOperatorUses(lev, uses, vars); } 
+
+    return uses; 
+  } 
+
+  public java.util.Map collectionOperatorUses(int lev, 
+                                    java.util.Map uses, 
+                                    Vector vars, Map flaws,
+                                    Vector messages)
+  { if (body != null) 
+    { body.collectionOperatorUses(lev, uses, vars, flaws,
+                                  messages); 
+    } 
+    
+    for (int i = 0; i < catchClauses.size(); i++) 
+    { Statement stat = (Statement) catchClauses.get(i); 
+      stat.collectionOperatorUses(lev, uses, vars, flaws,
+                                  messages); 
+    }
+
+    if (endStatement != null)
+    { endStatement.collectionOperatorUses(lev, uses, vars, flaws,
+                                          messages); 
+    } 
 
     return uses; 
   } 
@@ -14092,6 +14340,18 @@ class IfStatement extends Statement
   { for (int i = 0; i < cases.size(); i++) 
     { IfCase cse = (IfCase) cases.get(i); 
       cse.collectionOperatorUses(lev, uses, vars); 
+    } 
+
+    return uses; 
+  }
+
+  public java.util.Map collectionOperatorUses(int lev, 
+                          java.util.Map uses, Vector vars, 
+                          Map flaws, Vector messages)
+  { for (int i = 0; i < cases.size(); i++) 
+    { IfCase cse = (IfCase) cases.get(i); 
+      cse.collectionOperatorUses(lev, uses, vars, 
+                                 flaws, messages); 
     } 
 
     return uses; 
@@ -15032,7 +15292,36 @@ class AssignStatement extends Statement
   } 
 
   public int execute(ModelSpecification sigma, ModelState beta)
-  { Expression rhsValue = rhs.evaluate(sigma, beta); 
+  { Expression rhsValue = rhs.evaluate(sigma, beta);
+ 
+    if ("invalid".equals("" + rhsValue))
+    { return Statement.EXCEPTION; } 
+
+    if (lhs instanceof UnaryExpression && 
+        "!".equals(((UnaryExpression) lhs).getOperator()))
+    { UnaryExpression uexpr = (UnaryExpression) lhs; 
+      Expression arg = uexpr.getArgument(); 
+      Expression ptr = arg.evaluate(sigma, beta);
+
+      String pid = ptr + ""; 
+
+      ObjectSpecification obj = 
+                   sigma.getReferredVariable(pid);
+      if (obj != null) 
+      { // evaluate the name in the specific environment
+        String nme = (String) obj.getRawValue("name"); 
+        java.util.Map env = 
+               (java.util.Map) obj.getRawValue("environment"); 
+        
+        if (env != null && nme != null)
+        { env.put(nme, rhsValue); 
+          System.out.println(">> Updated state after assignment: " + beta);
+          return Statement.NORMAL; 
+        }  
+      } 
+
+      return Statement.EXCEPTION; 
+    } 
 
     if (lhs instanceof BasicExpression)
     { BasicExpression lbe = (BasicExpression) lhs;
@@ -15040,16 +15329,25 @@ class AssignStatement extends Statement
       Expression indx = lbe.getArrayIndex(); 
       String var = lbe.getData(); 
 
-      // System.out.println("LHS: " + obj + "." + var + indx + " " + lhs.isAttribute() + " " + beta); 
+      /* JOptionPane.showInputDialog("LHS: " + obj + "." + var + indx + " " + lhs.isAttribute() + " " + lhs.getEntity()); */  
       
       if (obj == null && 
           indx == null)
       { // simple variable or attribute
 
         if (lhs.isAttribute()) // of "self"
-        { Expression oid = beta.getVariableValue("self"); 
+        { 
+          if (lhs.isStatic() && lhs.getEntity() != null)
+          { String ename = lhs.entity.getName(); 
+            sigma.setStaticAttributeValue(ename, 
+                                          lhs + "", rhsValue); 
+            return Statement.NORMAL;  
+          } 
+
+          Expression oid = beta.getVariableValue("self"); 
           ObjectSpecification ref = 
                 sigma.getObjectSpec("" + oid); 
+
           if (ref != null)
           { ref.setOCLValue(var, rhsValue); }
         }   
@@ -15057,7 +15355,8 @@ class AssignStatement extends Statement
         { beta.setVariableValue(var, rhsValue); } 
       } 
       else if (obj == null)
-      { // simple array variable 
+      { // simple array variable, or array-valued attribute
+ 
         Expression indv = indx.evaluate(sigma, beta); 
         Expression arr = beta.getVariableValue(var); 
 
@@ -15067,16 +15366,30 @@ class AssignStatement extends Statement
         } 
       }  
       else if (obj != null && 
-          indx == null)
+              indx == null)
       { // object attribute
+
+        if (lhs.isStatic() && 
+            lhs.getEntity() != null)
+        { String ename = lhs.entity.getName(); 
+          sigma.setStaticAttributeValue(ename, 
+                                        var, rhsValue); 
+
+          // JOptionPane.showInputDialog("<< state after assignment: " + sigma); 
+
+          return Statement.NORMAL;  
+        }
+
         Expression oid = obj.evaluate(sigma, beta); 
         ObjectSpecification ref = sigma.getObjectSpec("" + oid); 
+        // System.out.println(">>> Object spec: " + ref); 
+
         if (ref != null)
         { ref.setOCLValue(var, rhsValue); }   
       } 
     } 
 
-    System.out.println(">> Updated state: " + beta);
+    System.out.println(">> Updated state after assignment: " + beta);
     return Statement.NORMAL;  
   } 
 
@@ -15269,8 +15582,8 @@ class AssignStatement extends Statement
     if (syncomp > TestParameters.syntacticComplexityLimit)
     { int acount = (int) uses.get("amber"); 
       uses.set("amber", acount + 1); 
-      oUses.add("! Code smell (MEL): too high expression complexity (" + syncomp + ") for " + rhs + "\n" + 
-                ">>> Recommend OCL refactoring");  
+      oUses.add("!! Code smell (MEL): too high expression complexity (" + syncomp + ") for " + rhs + "\n" + 
+                "!! Recommend OCL refactoring");  
     } 
 
     return uses; 
@@ -15281,6 +15594,17 @@ class AssignStatement extends Statement
                           Vector vars)
   { rhs.collectionOperatorUses(lev, uses, vars); 
     lhs.collectionOperatorUses(lev, uses, vars); 
+    return uses; 
+  } 
+
+  public java.util.Map collectionOperatorUses(int lev, 
+                          java.util.Map uses, 
+                          Vector vars, Map flaws, 
+                          Vector messages)
+  { rhs.collectionOperatorUses(lev, uses, vars, flaws,
+                               messages); 
+    lhs.collectionOperatorUses(lev, uses, vars, flaws,
+                               messages); 
     return uses; 
   } 
 
@@ -16010,6 +16334,17 @@ class IfCase
     return uses; 
   }
 
+  public java.util.Map collectionOperatorUses(int lev, 
+                          java.util.Map uses, 
+                          Vector vars, Map flaws, 
+                          Vector messages)
+  { test.collectionOperatorUses(lev, uses, vars, flaws, 
+                                messages); 
+    ifPart.collectionOperatorUses(lev, uses, vars, flaws, 
+                                  messages);
+    return uses; 
+  }
+
 
   public void findMagicNumbers(java.util.Map mgns, String rule, String op)
   { test.findMagicNumbers(mgns,this + "",op); 
@@ -16252,8 +16587,8 @@ class IfCase
   public int syntacticComplexity()
   { int res = test.syntacticComplexity();
     if (res > TestParameters.syntacticComplexityLimit)
-    { System.err.println("!!! Code smell (MEL): too high expression complexity (" + res + ") for " + test); 
-      System.err.println(">>> Recommend OCL refactoring");  
+    { System.err.println("!! Code smell (MEL): too high expression complexity (" + res + ") for " + test); 
+      System.err.println("!! Recommend OCL refactoring");  
     } 
  
     res = res + ifPart.syntacticComplexity();
@@ -16600,10 +16935,22 @@ class ConditionalStatement extends Statement
   public java.util.Map collectionOperatorUses(int lev, 
                           java.util.Map uses, 
                           Vector vars)
-
   { test.collectionOperatorUses(lev, uses, vars); 
     ifPart.collectionOperatorUses(lev, uses, vars);
     elsePart.collectionOperatorUses(lev, uses, vars);
+    return uses; 
+  } 
+
+  public java.util.Map collectionOperatorUses(int lev, 
+                          java.util.Map uses, 
+                          Vector vars, Map flaws, 
+                          Vector messages)
+  { test.collectionOperatorUses(lev, uses, vars, flaws, 
+                                messages); 
+    ifPart.collectionOperatorUses(lev, uses, vars, flaws,
+                                  messages);
+    elsePart.collectionOperatorUses(lev, uses, vars, flaws, 
+                                    messages);
     return uses; 
   } 
 
@@ -16618,8 +16965,8 @@ class ConditionalStatement extends Statement
     if (res > TestParameters.syntacticComplexityLimit)
     { int acount = (int) uses.get("amber"); 
       uses.set("amber", acount + 1); 
-      oUses.add("! Code smell (MEL): too high expression complexity (" + res + ") for " + test + "\n" +  
-                ">>> Recommend OCL refactoring");  
+      oUses.add("!! Code smell (MEL): too high expression complexity (" + res + ") for " + test + "\n" +  
+                "!! Recommend OCL refactoring");  
     } 
 
     if (elsePart != null) 
@@ -16656,8 +17003,8 @@ class ConditionalStatement extends Statement
       { // adds to testbeLeft only if not in there already
 
         if (testbeLeft.hasSequenceType())
-        { rUses.add("!! Possibly using sequence " + testbeLeft + " as set in: " + this + 
-               "\n>> Recommend declaring " + testbeLeft + " as a Set or SortedSet"); 
+        { rUses.add("!!! Possibly using sequence " + testbeLeft + " as set in: " + this); 
+          rUses.add("!!! Recommend declaring " + testbeLeft + " as a Set or SortedSet"); 
 
           int rscore = (int) uses.get("red"); 
           uses.set("red", rscore + 1); 
@@ -16677,11 +17024,11 @@ class ConditionalStatement extends Statement
       { // adds to testbeLeft only if not in there already
 
         if (testbeLeft.hasSequenceType())
-        { oUses.add("!! Possibly using sequence " + testbeLeft + " as set in: " + this + 
-               "\n>> Recommend declaring " + testbeLeft + " as a Set or SortedSet"); 
+        { rUses.add("!!! Possibly using sequence " + testbeLeft + " as set in: " + this);  
+          rUses.add("!!! Recommend declaring " + testbeLeft + " as a Set or SortedSet"); 
 
-          int ascore = (int) uses.get("amber"); 
-          uses.set("amber", ascore + 1); 
+          int rscore = (int) uses.get("red"); 
+          uses.set("red", rscore + 1); 
         } 
       } 
       else if ("->excludes".equals(testbe.getOperator()) &&
@@ -16693,11 +17040,11 @@ class ConditionalStatement extends Statement
       { // adds to testbeLeft only if not in there already
 
         if (testbeLeft.hasSequenceType())
-        { oUses.add("!! Possibly using sequence " + testbeLeft + " as set in: " + this + 
-             "\n>> Recommend declaring " + testbeLeft + " as a Set or SortedSet"); 
+        { rUses.add("!!! Possibly using sequence " + testbeLeft + " as set in: " + this); 
+          rUses.add("!!! Recommend declaring " + testbeLeft + " as a Set or SortedSet"); 
 
-          int ascore = (int) uses.get("amber"); 
-          uses.set("amber", ascore + 1); 
+          int rscore = (int) uses.get("red"); 
+          uses.set("red", rscore + 1); 
         } 
         else if (testbeLeft.hasSetType())
         { oUses.add("! Redundant test on set addition " + testbeLeft + " in: " + this); 
@@ -17381,6 +17728,15 @@ class FinalStatement extends Statement
                                     java.util.Map uses, 
                                     Vector vars)
   { body.collectionOperatorUses(lev, uses, vars); 
+    return uses; 
+  } 
+
+  public java.util.Map collectionOperatorUses(int lev, 
+                                    java.util.Map uses, 
+                                    Vector vars, Map flaws,
+                                    Vector messages)
+  { body.collectionOperatorUses(lev, uses, vars, 
+                                flaws, messages); 
     return uses; 
   } 
 

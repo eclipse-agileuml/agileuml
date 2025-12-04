@@ -10,7 +10,7 @@ public class AgileUMLJavaAnalysis
 
     area.loadFromJavaAST("code.java");
     area.typeCheck();    
-    area.energyAnalysis();
+    area.energyAnalysisHTML();
   } 
 } 
  

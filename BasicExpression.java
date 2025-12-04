@@ -409,6 +409,29 @@ class BasicExpression extends Expression
     return false; 
   } 
 
+  public boolean isSideEffecting()
+  { return isConstructorCall() || 
+           isUpdateOperationCall(); 
+  } 
+
+  public boolean isConstructorCall()
+  { if (type != null && type.isEntity())
+    { String tname = type.getName();
+      if (data.endsWith(".new" + tname))
+      { return true; }   
+      if (data.equals("create" + tname))
+      { return true; } 
+    } 
+
+    return false;  
+  } 
+
+  public boolean isUpdateOperationCall()
+  { if (umlkind == Expression.UPDATEOP)
+    { return true; } 
+    return false; 
+  } 
+
   public static BasicExpression newASTBasicExpression(ASTTerm t)
   { BasicExpression res = new BasicExpression(""); 
     if (t instanceof ASTBasicTerm)
@@ -16932,7 +16955,7 @@ public Statement generateDesignSubtract(Expression rhs)
   public Expression evaluate(
                 ModelSpecification sigma, ModelState beta)
   { if (umlkind == VARIABLE)
-    { String nme = getData(); 
+    { String nme = getData();
       Expression expr = beta.getVariableValue(nme); 
 
       if (expr != null) 
@@ -16951,6 +16974,14 @@ public Statement generateDesignSubtract(Expression rhs)
 
     if (umlkind == ATTRIBUTE && objectRef != null)
     { String nme = getData(); 
+
+      if (this.isStatic() && entity != null)
+      { String ename = entity.getName(); 
+        Expression expr = 
+             sigma.getStaticAttributeValue(ename, nme); 
+        return expr; 
+      } 
+
       Expression obj = objectRef.evaluate(sigma,beta);
  
       if (obj != null) 
@@ -16960,6 +16991,14 @@ public Statement generateDesignSubtract(Expression rhs)
     if (umlkind == ATTRIBUTE && objectRef == null)
     { // attribute of self
       String nme = getData(); 
+
+      if (this.isStatic() && entity != null)
+      { String ename = entity.getName(); 
+        Expression expr = 
+             sigma.getStaticAttributeValue(ename, nme); 
+        return expr; 
+      } 
+
       Expression obj = beta.getVariableValue("self");
  
       if (obj != null) 
@@ -16974,37 +17013,42 @@ public Statement generateDesignSubtract(Expression rhs)
       String op = this.getData(); 
       Vector actualPars = this.getParameters(); 
       int npars = actualPars.size(); 
+      
+      BehaviouralFeature bf = null; 
+      Expression selfobject = null; 
 
-      Expression selfobject; 
-
-      if (obj != null) 
-      { selfobject = obj.evaluate(sigma, beta); } 
+      if (this.isStatic() && entity != null)
+      { bf = entity.getOperation(op, npars); 
+        selfobject = new BasicExpression("null"); 
+      } 
       else 
-      { selfobject = beta.getVariableValue("self"); } 
+      { if (obj != null) 
+        { selfobject = obj.evaluate(sigma, beta); } 
+        else 
+        { selfobject = beta.getVariableValue("self"); } 
 
-      if (selfobject == null) // error
-      { return this; } 
+        if (selfobject == null) // error
+        { return this; } 
 
-      ObjectSpecification ospec = 
+        ObjectSpecification ospec = 
                  sigma.getObjectSpec("" + selfobject);
 
-      if (ospec == null) // error
-      { return this; }
+        if (ospec == null) // static case
+        { return this; } 
  
-      Entity ent = ospec.getEntity(); 
+        Entity ent = ospec.getEntity(); 
 
-      if (ent == null) 
-      { return this; } 
+        if (ent == null) 
+        { return this; } 
 
-      BehaviouralFeature bf = ent.getOperation(op, npars);
-      // assume not static:  
+        bf = ent.getOperation(op, npars);
+      }
 
       if (bf == null) 
       { return this; } 
-
-      ModelState opstackframe = (ModelState) beta.clone(); 
-      opstackframe.addNewEnvironment(); 
-      opstackframe.addVariable("self", selfobject); 
+ 
+      beta.addNewEnvironment(); 
+      beta.addVariable("self", selfobject); 
 
       Vector parValues = new Vector(); 
       for (int i = 0; i < actualPars.size(); i++) 
@@ -17014,7 +17058,10 @@ public Statement generateDesignSubtract(Expression rhs)
       } 
 
       Expression res = 
-         bf.execute(sigma, opstackframe, parValues);  
+         bf.execute(sigma, beta, parValues);
+
+      beta.removeLastEnvironment(); 
+  
       return res; 
     } 
 
@@ -18508,9 +18555,9 @@ public Statement generateDesignSubtract(Expression rhs)
       if (arrayIndex != null && this.isOperationCall())
       { // redundant results computation
 
-        oUses.add("!! OCL efficiency smell (OES): Redundant results computation in: " + this);
-        int ascore = (int) res.get("amber"); 
-        res.set("amber", ascore+1); 
+        rUses.add("!!! Energy-use flaw (UOR): Redundant results computation in: " + this);
+        int rscore = (int) res.get("red"); 
+        res.set("red", rscore+1); 
       } 
     } 
 
@@ -18527,30 +18574,30 @@ public Statement generateDesignSubtract(Expression rhs)
              umlkind == QUERY) 
     { if ("OclProcess".equals(objectRef + "") &&
           "newOclProcess".equals(data))
-      { rUses.add("!!! Expensive operation: Call of process/task creation: " + this);
-        int rscore = (int) res.get("red"); 
-        res.set("red", rscore+1); 
+      { oUses.add("!! Expensive operation (OES): Call of process/task creation: " + this);
+        int ascore = (int) res.get("amber"); 
+        res.set("amber", ascore+1); 
       }
       else if ("OclType".equals(objectRef + "") && 
                "loadExecutableObject".equals(data))
-      { rUses.add("!!! Expensive operation: Runtime library loading: " + this);
-        int rscore = (int) res.get("red"); 
-        res.set("red", rscore+1); 
+      { oUses.add("!! Expensive operation (OES): Runtime library loading: " + this);
+        int ascore = (int) res.get("amber"); 
+        res.set("amber", ascore+1); 
       } 
       else if ("OclDatasource".equals(objectRef + "") && 
                "getConnection".equals(data))
-      { rUses.add("!!! Expensive operation: Database/internet connection: " + this);
-        int rscore = (int) res.get("red"); 
-        res.set("red", rscore+1); 
+      { oUses.add("!! Expensive operation (OES): Database/internet connection: " + this);
+        int ascore = (int) res.get("amber"); 
+        res.set("amber", ascore+1); 
       } 
       else if ("OclType".equals(objectRef + "") && 
                ("getAttributeValue".equals(data) || 
                 "setAttributeValue".equals(data) || 
                 "hasAttribute".equals(data) || 
                 "removeAttribute".equals(data)))
-      { rUses.add("!!! Reflection is energy-expensive: " + this);
-        int rscore = (int) res.get("red"); 
-        res.set("red", rscore+1); 
+      { oUses.add("!! Reflection is energy-expensive (OES): " + this);
+        int ascore = (int) res.get("amber"); 
+        res.set("amber", ascore+1); 
       } 
     }     
 
@@ -18573,15 +18620,71 @@ public Statement generateDesignSubtract(Expression rhs)
       opers.add(this); 
       res.put(level, opers);
 
+      boolean sideeffect = isSideEffecting(); 
       Vector vuses = variablesUsedIn(vars); 
-      if (level > 1 && vuses.size() == 0)
-      { System.out.println(">> The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
-          "    Use Extract local variable to optimise.");
+      if (level > 1 && vuses.size() == 0 && !sideeffect)
+      { System.err.println("!!! Energy-use flaw: (LCE): The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
+          "!!!  Use Extract local variable to optimise.");
         refactorELV = true;  
       }
  
       return res; 
     } 
+   
+    // Also check operation calls for being LCE
+
+    if (arrayIndex != null) 
+    { BasicExpression be = (BasicExpression) clone(); 
+      be.arrayIndex = null; 
+      BinaryExpression newbe = 
+        new BinaryExpression("->at", be, arrayIndex); 
+      Vector opers = (Vector) res.get(level); 
+      if (opers == null) 
+      { opers = new Vector(); } 
+      opers.add(newbe); 
+      res.put(level, opers); 
+      return res; 
+    } 
+
+    return res; 
+  } // and in the parameters and object ref
+
+
+  public java.util.Map collectionOperatorUses(int level, 
+                            java.util.Map res, Vector vars, 
+                            Map uses, Vector messages)
+  { //  level |-> [x.setAt(i,y), etc]
+
+    if (objectRef != null || parameters != null ||
+        arrayIndex != null)
+    { boolean sideeffect = isSideEffecting(); 
+      Vector vuses = variablesUsedIn(vars);
+ 
+      if (level > 1 && vuses.size() == 0 && !sideeffect)
+      { messages.add("!!! Energy-use flaw: (LCE): The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
+          "!!!  Use Extract local variable to optimise.");
+        refactorELV = true;  
+        int redScore = (int) uses.get("red"); 
+        uses.set("red", redScore+1); 
+      }
+    } // Any non-trivial basic expression
+
+    if (data.equals("insertAt") || 
+        data.equals("insertInto") ||
+        data.equals("subrange") ||
+        data.equals("setAt") ||
+        data.equals("excludingSubrange") ||
+        data.equals("setSubrange"))
+    { Vector opers = (Vector) res.get(level); 
+      if (opers == null) 
+      { opers = new Vector(); } 
+      opers.add(this); 
+      res.put(level, opers);
+
+      return res; 
+    } 
+   
+    // Also check operation calls for being LCE
 
     if (arrayIndex != null) 
     { BasicExpression be = (BasicExpression) clone(); 

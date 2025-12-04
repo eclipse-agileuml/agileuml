@@ -11,7 +11,9 @@
 import java.util.Vector; 
 import java.io.*;
 import java.util.regex.Matcher; 
-import java.util.regex.Pattern; 
+import java.util.regex.Pattern;
+
+import javax.swing.JOptionPane;  
 
 
 public class CGSpec
@@ -802,12 +804,18 @@ public class CGSpec
       { selected = r; }
       else if (trimmedlhs.startsWith(op))
       { selected = r; }
+      else if (op.equals("lambda") && 
+               trimmedlhs.startsWith("(" + op))
+      { selected = r; }
+
+      // JOptionPane.showInputDialog(">>> unary expression rule " + r + " for " + e + " selected: " + selected + " " + args); 
 
       if (selected != null && 
           selected.satisfiesConditions(args,
                                        entities,this))
       { return selected; } 
    }
+
    return null;
   } // _1 binds to argument
 

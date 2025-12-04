@@ -147,8 +147,6 @@ public class BehaviouralFeature extends ModelElement
 
     // return value is that computed by this operation,
     // if it returns a value. 
-
-    ModelState local = (ModelState) beta.clone();
  
     System.out.println(">> Executing operation " + this + 
                        " on parameters " + parValues + 
@@ -162,24 +160,27 @@ public class BehaviouralFeature extends ModelElement
       String pname = par.getName(); 
       if (i < parValues.size())
       { Expression pval = (Expression) parValues.get(i); 
-        local.addVariable(pname, pval); 
+        beta.addVariable(pname, pval); 
       } 
       else if (typ != null) 
       { Expression def = Type.defaultInitialValueExpression(typ); 
-        local.addVariable(pname, def); 
+        beta.addVariable(pname, def); 
       }    
     } 
 
     if (resultType != null) 
     { Expression res = 
          Type.defaultInitialValueExpression(resultType);
-      local.addVariable("result", res); 
+      beta.addVariable("result", res); 
     } 
 
-    int status = activity.execute(sigma,local); 
+    int status = activity.execute(sigma, beta); 
 
+    /* JOptionPane.showInputDialog(">> Operation result is " + 
+                      beta.getVariableValue("result")); */ 
+ 
     if (resultType != null) 
-    { return local.getVariableValue("result"); } 
+    { return beta.getVariableValue("result"); } 
 
     return null; 
   } 
@@ -3515,8 +3516,8 @@ public class BehaviouralFeature extends ModelElement
     } 
 
     if (UVA > 0) 
-    { System.out.println("!!! UVA (parameters) = " + UVA + " for operation " + name); 
-      System.out.println("!! Unused parameters: " + unusedVars); 
+    { System.err.println("!!! UVA (parameters) = " + UVA + " for operation " + name); 
+      System.err.println("!! Unused parameters (UVA): " + unusedVars); 
       System.out.println(); 
     } 
 
@@ -3569,9 +3570,9 @@ public class BehaviouralFeature extends ModelElement
         Vector actuses = sseg.getVariableUses(unused);
         actuses = ModelElement.removeExpressionByName("skip", actuses); 
 
-        System.out.println(">%%> Variables used in " + completeseg + " are: " + actuses); 
-        System.out.println(">%%> Variables written in " + completeseg + " are: " + wrs); 
-        System.out.println(">%%> Declared and unused variables of " + completeseg + " are " + unused);  
+        // System.out.println(">%%> Variables used in " + completeseg + " are: " + actuses); 
+        // System.out.println(">%%> Variables written in " + completeseg + " are: " + wrs); 
+        // System.out.println(">%%> Declared and unused variables of " + completeseg + " are " + unused);  
 
         // if wrs disjoint from actuses it is ok. Parameters
         // are actuses. 
@@ -3627,7 +3628,7 @@ public class BehaviouralFeature extends ModelElement
           }  
         }
         else 
-        { System.out.println(">%%> Invalid segment. Cannot split operation."); 
+        { // System.out.println(">%%> Invalid segment. Cannot split operation."); 
           Vector oldunprocessed = new Vector(); 
           oldunprocessed.addAll(completeseg); 
           unprocessed = oldunprocessed; 
@@ -3691,7 +3692,7 @@ public class BehaviouralFeature extends ModelElement
  
       if (unused.size() > 0) 
       { System.out.println("!! Parameters or non-local variables " + unused + " are declared but not used in " + getName() + " activity."); 
-        System.out.println("!!! UVA (local variables) = " + unused.size() + " for operation " + name); 
+        System.err.println("!!! UVA (local variables) = " + unused.size() + " for operation " + name); 
         return true; 
       } 
 
@@ -4485,7 +4486,7 @@ public class BehaviouralFeature extends ModelElement
 
         if (actualClones.size() > 0)
         { redUses.add("!!! Cloned expressions could be repeated evaluations: " + actualClones + "\n" + 
-             ">>> Use Extract Local Variable refactoring"); 
+             "!!! Use Extract Local Variable refactoring"); 
           int rscore = (int) res.get("red");
           rscore = rscore + actualClones.size();
           res.set("red", rscore);
@@ -4515,8 +4516,8 @@ public class BehaviouralFeature extends ModelElement
         } 
 
         if (actualClones.size() > 0)
-        { amberUses.add("!! Cloned expressions could be repeated evaluations: " + actualClones + "\n" + 
-             ">>> Use Extract Local Variable refactoring"); 
+        { amberUses.add("!! Cloned expressions could be repeated evaluations (DEV): " + actualClones + "\n" + 
+             "!! Use Extract Local Variable refactoring"); 
           int ascore = (int) res.get("amber");
           ascore = ascore + actualClones.size();
           res.set("amber", ascore);
@@ -4526,9 +4527,9 @@ public class BehaviouralFeature extends ModelElement
 
     Vector unusedVars = checkParameterNames(); 
     if (unusedVars.size() > 0) 
-    { amberUses.add("!! Unused parameters in " + name + ": " + 
+    { amberUses.add("!! Unused parameters (UVA) in " + name + ": " + 
              unusedVars + "\n" + 
-             ">>> Use remove unused parameters refactoring"); 
+             "!! Use remove unused parameters refactoring"); 
       int ascore = (int) res.get("amber");
       ascore = ascore + unusedVars.size();
       res.set("amber", ascore);
@@ -4546,27 +4547,33 @@ public class BehaviouralFeature extends ModelElement
       System.err.println(); 
 
       if (tailrec) 
-      { System.err.println("!! Tail recursive operation! " + 
-            name + "\n" +  
-            "!! Use 'Replace recursion by loop' refactoring"); 
+      { amberUses.add("!! Tail recursive operation! (CBR2) " + name);   
+        amberUses.add("!! Use 'Replace recursion by loop' refactoring"); 
+        int ascore = (int) res.get("amber");
+        ascore = ascore + 1;
+        res.set("amber", ascore);
       } 
       else 
       { boolean semitail = 
           Statement.isSemiTailRecursive(this, name, activity); 
         if (semitail) 
-        { System.err.println("!! Semi-tail-recursion in " + 
-            name + "\n" +  
-            "!! Use 'Replace recursion by loop' refactoring");
+        { amberUses.add("!! Semi-tail-recursion (CBR2) in " + name);   
+          amberUses.add("!! Use 'Replace recursion by loop' refactoring");
+          int ascore = (int) res.get("amber");
+          ascore = ascore + 1;
+          res.set("amber", ascore);
         }
         else 
-        { System.err.println("!!! Non-tail-recursion in " + 
-            name + "\n" +  
-            "!!! Use 'Make operation cached' refactoring");
+        { redUses.add("!!! Non-tail-recursion (CBR2) in " + name); 
+          redUses.add("!!! Use 'Make operation cached' refactoring");
+          int rscore = (int) res.get("red");
+          rscore = rscore + 1;
+          res.set("red", rscore);
         }  
       } 
 
-      System.err.println(); 
-      System.err.println(); 
+      // System.err.println(); 
+      // System.err.println(); 
     }
     else if (opuses.contains(entity + "::" + name) && 
              activity == null && post != null)  
@@ -4576,23 +4583,29 @@ public class BehaviouralFeature extends ModelElement
 
       System.err.println(); 
       if (istailrec)
-      { System.err.println("!! Tail recursive operation! " + 
-            name + "\n" +  
-            "!! Use 'Replace recursion by loop' refactoring"); 
+      { amberUses.add("!! Tail recursive operation! (CBR2) " + name);   
+        amberUses.add("!! Use 'Replace recursion by loop' refactoring"); 
+        int ascore = (int) res.get("amber");
+        ascore = ascore + 1;
+        res.set("amber", ascore); 
       } 
       else if (isSemiTailRecursive(cases))
-      { System.err.println("!! Semi-tail-recursion in " + 
-            name + "\n" +  
-            "!! Use 'Make operation cached' refactoring"); 
+      { amberUses.add("!! Semi-tail-recursion (CBR2) in " + name);   
+        amberUses.add("!! Use 'Replace recursion by loop' refactoring");
+        int ascore = (int) res.get("amber");
+        ascore = ascore + 1;
+        res.set("amber", ascore); 
       } 
       else 
-      { System.err.println("!!! Non-tail-recursion in " + 
-            name + "\n" +  
-            "!!! Use 'Make operation cached' refactoring"); 
+      { redUses.add("!!! Non-tail-recursion (CBR2) in " + name); 
+        redUses.add("!!! Use 'Make operation cached' refactoring");
+        int rscore = (int) res.get("red");
+        rscore = rscore + 1;
+        res.set("red", rscore); 
       } 
 
-      System.err.println(); 
-      System.err.println(); 
+      // System.err.println(); 
+      // System.err.println(); 
     }	 
 
     return res; 
@@ -4609,6 +4622,26 @@ public class BehaviouralFeature extends ModelElement
 
     if (activity != null) 
     { activity.collectionOperatorUses(level, res, vars); } 
+
+  } // and activity
+
+  public void collectionOperatorUses(int level, 
+                                     java.util.Map res, 
+                                     Vector vars, 
+                                     Map flaws,
+                                     Vector messages)
+  { // Scan the postcondition/activity for energy expensive
+    // expressions/code
+
+    if (post != null) 
+    { post.collectionOperatorUses(level, res, vars, flaws,
+                                  messages); 
+    } 
+
+    if (activity != null) 
+    { activity.collectionOperatorUses(level, res, vars, 
+                                      flaws, messages); 
+    } 
 
   } // and activity
 

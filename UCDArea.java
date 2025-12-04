@@ -3679,21 +3679,63 @@ public class UCDArea extends JPanel
       String oid = Identifier.newIdentifier("oid_");  
       ObjectSpecification obj = cls.initialisedObject(oid); 
       ms.addObject(obj);
-      beta.addVariable("self", new BasicExpression(obj));   
-      System.out.println(">> Initial state = " + ms + "; " + beta); 
+      beta.addVariable("self", new BasicExpression(obj));
+                               // new BasicExpression(oid)   
+      System.out.println(">> Initial global state = " + ms); 
+      System.out.println(">> Initial local state = " + beta); 
   
+      Vector pars = bf.getParameters(); 
+      if (pars.size() > 0)
+      { String ps = 
+           JOptionPane.showInputDialog("Enter parameter values for: " + pars);
+        String[] pstrings = ps.split(" "); 
+        for (int i = 0; i < pstrings.length; i++) 
+        { Compiler2 cc = new Compiler2(); 
+          cc.nospacelexicalanalysis(pstrings[i]); 
+          Expression expr = cc.parseExpression(); 
+          pvals.add(expr); 
+        } 
+      } 
+ 
       bf.execute(ms, beta, pvals); 
       System.out.println(); 
-      System.out.println(">> Resulting state = " + ms + "; " + beta); 
+      System.out.println(">> Resulting global state = " + ms); 
+      System.out.println(">> Resulting local state = " + beta); 
     } 
-  } 
+  } // update UCDOperations
 
   public void energyAnalysis()
   { java.util.Map clnes = new java.util.HashMap(); 
-    energyAnalysis(clnes); 
+    Vector messages = new Vector(); 
+    energyAnalysis(clnes, messages);
+
+
+    for (int i = 0; i < messages.size(); i++) 
+    { String mess = (String) messages.get(i); 
+      System.err.println(mess); 
+    }  
   } 
 
-  public Map energyAnalysis(java.util.Map clones)
+  public void energyAnalysisHTML()
+  { java.util.Map clnes = new java.util.HashMap(); 
+    Vector messages = new Vector(); 
+    energyAnalysis(clnes, messages);
+
+    for (int i = 0; i < messages.size(); i++) 
+    { String mess = (String) messages.get(i);
+      if (mess.startsWith("!!!"))
+      { System.err.println("<p style=\"color: red;\">" + mess + "</p>"); } 
+      else if (mess.startsWith("!!"))
+      { System.err.println("<p style=\"color: orange;\">" + mess + "</p>"); }  
+      else if (mess.startsWith("!"))
+      { System.err.println("<p style=\"color: orange;\">" + mess + "</p>"); }  
+      else 
+      { System.err.println("<p style=\"color: green;\">" + mess + "</p>"); }  
+    }  
+  } 
+
+  public Map energyAnalysis(java.util.Map clones, 
+                            Vector messages)
   { Map res = new Map(); 
 
     int redFlags = 0; 
@@ -3706,7 +3748,7 @@ public class UCDArea extends JPanel
       if (ent.isComponent() || ent.isExternal())
       { continue; } 
 
-      Map scores = ent.energyAnalysis(); 
+      Map scores = ent.energyAnalysis(messages); 
       redFlags = redFlags + (int) scores.get("red"); 
       amberFlags = 
         amberFlags + (int) scores.get("amber"); 
@@ -3741,8 +3783,9 @@ public class UCDArea extends JPanel
     int selfcallsn = selfcalls.size();  
  
     if (selfcallsn > 0) 
-    { System.err.println("!!! Red flag: " + selfcallsn + " recursive dependencies"); 
-      System.err.println("!!! Use Replace recursion by iteration (for tail recursions) to reduce energy cost\n    Or make operation <<cached>>"); 
+    { messages.add("!!! Red flag: " + selfcallsn + " recursive dependencies"); 
+      messages.add("!!! Use Replace recursion by iteration (for tail recursions) to reduce energy cost\n    Or make operation <<cached>>"); 
+
       redFlags = redFlags + selfcallsn; 
     }
 
@@ -3752,14 +3795,15 @@ public class UCDArea extends JPanel
     // System.out.println(">> Operations in maximum chain are " + lastfound); 
 
     if (n >= 5) 
-    { System.out.println("!! Maximum call chain length is " + n); 
-      System.err.println("!! Amber warning: long sequence of calls"); 
-      System.err.println("!! Try inline expansion of the end operation(s): replace call by definition"); 
+    { messages.add("!! Maximum call chain length is " + n); 
+      messages.add("!! Amber warning: long sequence of calls"); 
+      messages.add("!! Try inline expansion of the end operation(s): replace call by definition"); 
+
       amberFlags = amberFlags + 1; 
     }
 
-    System.out.println(">> Red flag score: " + redFlags); 
-    System.out.println(">> Amber flag score: " + amberFlags); 
+    messages.add(">> Red flag score: " + redFlags); 
+    messages.add(">> Amber flag score: " + amberFlags); 
 
     return res;  
   }
@@ -12504,7 +12548,7 @@ public void produceCUI(PrintWriter out)
 
     out.println("    static bool isSubset(std::set<_T>* s1, set<_T>* s2)"); 
     out.println("    { bool res = true; "); 
-    out.println("      for (std::set<_T>::iterator _pos = s1->begin(); _pos != s1->end(); ++_pos)"); 
+    out.println("      for (auto _pos = s1->begin(); _pos != s1->end(); ++_pos)"); 
     out.println("      { if (isIn(*_pos, s2)) { } "); 
     out.println("        else { return false; } "); 
     out.println("      }"); 
@@ -12512,7 +12556,7 @@ public void produceCUI(PrintWriter out)
     out.println("    }\n"); 
     out.println("    static bool isSubset(std::set<_T>* s1, vector<_T>* s2)"); 
     out.println("    { bool res = true; "); 
-    out.println("      for (std::set<_T>::iterator _pos = s1->begin(); _pos != s1->end(); ++_pos)"); 
+    out.println("      for (auto _pos = s1->begin(); _pos != s1->end(); ++_pos)"); 
     out.println("      { if (isIn(*_pos, s2)) { }"); 
     out.println("        else { return false; } "); 
     out.println("      }"); 
@@ -12520,7 +12564,7 @@ public void produceCUI(PrintWriter out)
     out.println("    }\n"); 
     out.println("    static bool isSubset(std::vector<_T>* s1, vector<_T>* s2)"); 
     out.println("    { bool res = true; "); 
-    out.println("      for (std::vector<_T>::iterator _pos = s1->begin(); _pos != s1->end(); ++_pos)"); 
+    out.println("      for (auto _pos = s1->begin(); _pos != s1->end(); ++_pos)"); 
     out.println("      { if (isIn(*_pos, s2)) { }"); 
     out.println("        else { return false; } "); 
     out.println("      }"); 
@@ -12528,7 +12572,7 @@ public void produceCUI(PrintWriter out)
     out.println("    }\n"); 
     out.println("    static bool isSubset(std::vector<_T>* s1, set<_T>* s2)"); 
     out.println("    { bool res = true; "); 
-    out.println("      for (std::vector<_T>::iterator _pos = s1->begin(); _pos != s1->end(); ++_pos)"); 
+    out.println("      for (auto _pos = s1->begin(); _pos != s1->end(); ++_pos)"); 
     out.println("      { if (isIn(*_pos, s2)) { }"); 
     out.println("        else { return false; } "); 
     out.println("      }"); 
@@ -12559,7 +12603,7 @@ public void produceCUI(PrintWriter out)
 
     out.println("    static vector<_T>* asSequence(std::set<_T>* c)"); 
     out.println("    { vector<_T>* res = new vector<_T>();");
-    out.println("      for (std::set<_T>::iterator _pos = c->begin(); _pos != c->end(); ++_pos)"); 
+    out.println("      for (auto _pos = c->begin(); _pos != c->end(); ++_pos)"); 
     out.println("      { res->push_back(*_pos); } "); 
     out.println("      return res;"); 
     out.println("   }\n");
@@ -13279,8 +13323,9 @@ public void produceCUI(PrintWriter out)
     }
     res = res + " }\n\n";
 
-    res = res + "  public void setObjectFeatureValue(string a, string f, string val)\n" +
-                "  {";
+    res = res + 
+        "  public void setObjectFeatureValue(string a, string f, string val)\n" +
+        "  {";
 
     for (int i = 0; i < entities.size(); i++)
     { Entity e = (Entity) entities.get(i);

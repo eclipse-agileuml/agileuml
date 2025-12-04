@@ -10,7 +10,7 @@
 /* 
  * Classname : UmlTool
  * 
- * Version information : 2.4
+ * Version information : 2.5
  *
  * Date : February 2025
  * 
@@ -4750,7 +4750,7 @@ public void findPlugins()
       return; 
     } 
 
-    window.setTitle("AgileUML Toolset, Eclipse Incubation Project Version 2.4");
+    window.setTitle("AgileUML Toolset, Eclipse Incubation Project Version 2.5");
     window.setControllerName("Controller"); 
     window.setSize(500, 400);
     window.setVisible(true);   
