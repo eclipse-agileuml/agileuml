@@ -192,6 +192,27 @@ class MatrixLib {
             vector<double> dmat = UmlRsdsLib<T>::concatenate({1.0}, m);
             return UmlRsdsLib<double>::sum(&dmat);
         }
+        static vector<T> elementwiseApply(vector<T> m, T (*f)(double)) {
+            if (m.size() == 0) {
+                return {};
+            }
+
+            if (string(typeid(m[0]).name()).find("vector") != string::npos) {
+                vector<T> n(m.size());
+                for (auto _r : m) {
+                    n.push_back(elementwiseApply({_r}, f));
+                }
+                return n;
+            }
+
+            vector<double> dmat(m.size());
+
+            for (auto x: m) {
+                double y = (double) x;
+                dmat.push_back(&f(y));
+            }
+            return dmat;
+        }
 };
 
 int main() {
