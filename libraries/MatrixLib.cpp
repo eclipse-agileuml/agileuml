@@ -78,7 +78,7 @@ class MatrixLib {
                 result = {(int) sq.size()};
                 if (sq.size() > 0) {
                     vector<int>* resultptr = &result;
-                    result = (vector<int>) UmlRsdsLib<int>::unionSet(resultptr, shape(*x[0]));
+                    result = UmlRsdsLib<int>::concatenate(resultptr, shape(*x[0]));
                 }
             }
             return result;
