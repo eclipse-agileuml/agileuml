@@ -213,6 +213,29 @@ class MatrixLib {
             }
             return dmat;
         }
+        static vector<T> selectElements(vector<T> m, T (*f)(double)) {
+            if (m.size() == 0) {
+                return {};
+            }
+
+            if (string(typeid(m[0]).name()).find("vector") != string::npos) {
+                vector<T> n(m.size());
+                for (auto _r : m) {
+                    n.push_back(selectElements({_r}, f));
+                }
+                return n;
+            }
+
+            vector<double> dmat(m.size());
+
+            for (auto x: m) {
+                double y = (double) x;
+                if (&f(y)) {
+                    dmat.push_back(y);
+                }
+            }
+            return dmat;
+        }
 };
 
 int main() {
