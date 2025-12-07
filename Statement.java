@@ -93,12 +93,12 @@ abstract class Statement implements Cloneable
       int k = wrv.indexOf("::"); 
       if (k >= 0) 
       { // newvars.add(wrv.substring(k+2));
-        System.err.println("! " + bf + 
+        System.out.println("! " + bf + 
                            " updates attribute " + wrv); 
         return false; 
       } 
       else if (parnames.contains(wrv))
-      { System.err.println("! " + bf + 
+      { System.out.println("! " + bf + 
                            " updates parameter " + wrv); 
         return false; 
       } 
@@ -198,7 +198,7 @@ abstract class Statement implements Cloneable
       { nontail++; } 
     } 
 
-    System.err.println(">> " + bf + " has " + 
+    System.out.println(">> " + bf + " has " + 
          nonrecursive + " non-recursive returns, " + 
          tailrecursive + " tail recursive decrement returns,\n>>" + 
          " and " + 
@@ -298,12 +298,12 @@ abstract class Statement implements Cloneable
       int k = wrv.indexOf("::"); 
       if (k >= 0) 
       { // newvars.add(wrv.substring(k+2));
-        System.err.println("! " + bf + 
+        System.out.println("! " + bf + 
                            " updates attribute " + wrv); 
         return stat; 
       } 
       else if (parnames.contains(wrv))
-      { System.err.println("! " + bf + 
+      { System.out.println("! " + bf + 
                            " updates parameter " + wrv); 
         return stat; 
       } 
@@ -501,6 +501,7 @@ abstract class Statement implements Cloneable
     { // patterns are s := s + var, s := s + var*var,
       // s := s * var, s := s - var, s := s / var
       // s := s & var, s := s or var
+      // s := s->including(var), s := s->excluding(var)
       // Also same with expr instead of var,
       // not involving var or s. 
 
@@ -724,6 +725,66 @@ abstract class Statement implements Cloneable
               new BinaryExpression(":", var, rng), expr); 
         Expression newrhs = 
             new BinaryExpression("or", lhs, coll); 
+        return new AssignStatement(lhs, newrhs);
+      }
+      else if ((lhs + "->including(" + var + ")").equals("" + rhs))
+      { // lhs := lhs->union(loopRange)
+
+        Type elemt = rng.getElementType(); 
+        BasicExpression selfvar = 
+          BasicExpression.newVariableBasicExpression(
+                                             "self",elemt); 
+        Expression newrhs = 
+            new BinaryExpression("->union", lhs, rng); 
+        return new AssignStatement(lhs, newrhs); 
+      }   
+      else if (rhs instanceof BinaryExpression && 
+        ((BinaryExpression) rhs).getOperator().equals("->including") &&
+        (((BinaryExpression) rhs).getLeft() + "").equals(lhs + ""))
+      { // lhs := lhs->including(expr)
+        Expression expr = ((BinaryExpression) rhs).getRight(); 
+        Vector vuses = expr.getVariableUses();
+
+        if (VectorUtil.containsEqualString(lhs+"", vuses))
+        { return null; } 
+
+        // lhs := lhs->union(rng->collect(var|expr))
+
+        Expression coll = 
+            new BinaryExpression("|C", 
+              new BinaryExpression(":", var, rng), expr); 
+        Expression newrhs = 
+            new BinaryExpression("->union", lhs, coll); 
+        return new AssignStatement(lhs, newrhs);
+      }         
+      else if ((lhs + "->excluding(" + var + ")").equals("" + rhs))
+      { // lhs := lhs - loopRange
+
+        Type elemt = rng.getElementType(); 
+        BasicExpression selfvar = 
+          BasicExpression.newVariableBasicExpression(
+                                             "self",elemt); 
+        Expression newrhs = 
+            new BinaryExpression("-", lhs, rng); 
+        return new AssignStatement(lhs, newrhs); 
+      }   
+      else if (rhs instanceof BinaryExpression && 
+        ((BinaryExpression) rhs).getOperator().equals("->excluding") &&
+        (((BinaryExpression) rhs).getLeft() + "").equals(lhs + ""))
+      { // lhs := lhs->excluding(expr)
+        Expression expr = ((BinaryExpression) rhs).getRight(); 
+        Vector vuses = expr.getVariableUses();
+
+        if (VectorUtil.containsEqualString(lhs+"", vuses))
+        { return null; } 
+
+        // lhs := lhs - rng->collect(var|expr)
+
+        Expression coll = 
+            new BinaryExpression("|C", 
+              new BinaryExpression(":", var, rng), expr); 
+        Expression newrhs = 
+            new BinaryExpression("-", lhs, coll); 
         return new AssignStatement(lhs, newrhs);
       }         
     /*  else if (rhs instanceof BinaryExpression && 
@@ -1158,6 +1219,14 @@ abstract class Statement implements Cloneable
       { // lhs := lhs or loopRange->exists(self)
         return true; 
       } 
+      else if ((lhs + "->including(" + var + ")").equals("" + rhs))
+      { // lhs := lhs->union(loopRange)
+        return true; 
+      } 
+      else if ((lhs + "->excluding(" + var + ")").equals("" + rhs))
+      { // lhs := lhs - loopRange
+        return true; 
+      } 
       else if (rhs instanceof BinaryExpression && 
         (((BinaryExpression) rhs).getLeft() + "").equals(
                                                     lhs + ""))
@@ -1173,7 +1242,9 @@ abstract class Statement implements Cloneable
 
         if ("+".equals(oper) || "-".equals(oper) || 
             "*".equals(oper) || "/".equals(oper) ||
-            "&".equals(oper) || "or".equals(oper))
+            "&".equals(oper) || "or".equals(oper) || 
+            "->including".equals(oper) || 
+            "->excluding".equals(oper))
         { return true; }
  
         return false;
@@ -17010,7 +17081,7 @@ class ConditionalStatement extends Statement
           uses.set("red", rscore + 1); 
         } 
         else if (testbeLeft.hasSetType())
-        { oUses.add("! Redundant test on set addition " + testbeLeft + " in: " + this); 
+        { oUses.add("!! Redundant test on additions to the set " + testbeLeft + " in: " + this); 
 
           int oscore = (int) uses.get("amber"); 
           uses.set("amber", oscore + 1); 
@@ -17047,7 +17118,7 @@ class ConditionalStatement extends Statement
           uses.set("red", rscore + 1); 
         } 
         else if (testbeLeft.hasSetType())
-        { oUses.add("! Redundant test on set addition " + testbeLeft + " in: " + this); 
+        { oUses.add("!! Redundant test on additions to the set " + testbeLeft + " in: " + this); 
 
           int oscore = (int) uses.get("amber"); 
           uses.set("amber", oscore + 1); 
