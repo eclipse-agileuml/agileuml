@@ -396,8 +396,21 @@ class SortedSequence<T extends Comparable<T>> implements List<T>
   public boolean equals(Object col)
   { if (col instanceof SortedSequence)
     { SortedSequence ss = (SortedSequence) col; 
-      return elements.equals(ss.elements); 
-    } // can be optimised for two sorted sequences
+      int n = elements.size(); 
+      int m = ss.elements.size(); 
+      if (n != m) 
+      { return false; } 
+
+      for (int i = 0; i < n; i++) 
+      { Object x = elements.get(i); 
+        Object y = ss.elements.get(i); 
+        if (x == y || x.equals(y)) { } 
+        else 
+        { return false; } 
+      } 
+
+      return true; 
+    } 
 
     return false; 
   }    
@@ -408,6 +421,7 @@ class SortedSequence<T extends Comparable<T>> implements List<T>
     return splt; 
   } 
 
+/* 
   public static void main(String[] args)
   { SortedSequence<String> ss = new SortedSequence<String>(); 
      
@@ -429,7 +443,7 @@ class SortedSequence<T extends Comparable<T>> implements List<T>
     SortedSequence<String> qq = ss.intersection(tt); 
     System.out.println(qq); 
 	
-	/* SortedSequence<Person> pers = new SortedSequence<Person>(); 
+     SortedSequence<Person> pers = new SortedSequence<Person>(); 
 	Person p1 = new Person(); 
 	p1.name = "Tom"; p1.age = 55; 
 	Person p2 = new Person(); 
@@ -439,8 +453,8 @@ class SortedSequence<T extends Comparable<T>> implements List<T>
 	
 	SortedSequence<Person> pers1 = new SortedSequence<Person>(); 
 	pers1.add(p2); pers1.add(p1); 
-	System.out.println(pers1); */   
-  }  
+	System.out.println(pers1);    
+  } */   
 }
 
 /* class Person implements Comparable<Person>
