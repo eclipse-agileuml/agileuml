@@ -20,7 +20,9 @@ function _1 _2 ( _3 ) { _4 } |-->operation _2(_3) : _1\n  pre: true post: true\n
 
 
 statementList::
+; |-->
 _1 |-->    _1
+_1 ; |-->    _1
 _1 _2 |-->    _1; _2`statementList
 
 
@@ -37,49 +39,56 @@ var _1 _2 ; |-->var _1 : _2`ocltype _2
 _1 _2 ; |-->var _2 : _1<when> _1 datatype<action> _2 _1`typeAsOcl
 _1 _2 _3 ; |-->var _2 : _1 _3<when> _1 datatype<action> _2 _1`typeAsOcl
 
-if _1 { _2 } |-->if _1 then _2`statementList else skip
+if _1 { _2 } |-->if _1 then (_2`statementList) else skip
 
 if _1 { } _* |-->if _1 then skip _*
-if _1 { _2 } _* |-->if _1 then _2`statementList _*
+if _1 { _2 } _* |-->if _1 then (_2`statementList) _*
+
+switch _1 { _* } |-->(var _case : _1`ocltype := _1;\n    var _found : boolean := false;\n_*    skip)
 
 foreach ( _1 : _2 in _3 ) { } |-->for _2 : _3 do skip
-foreach ( _1 : _2 in _3 ) { _4 } |-->for _2 : _3 do _4`statementList
+foreach ( _1 : _2 in _3 ) { _4 } |-->for _2 : _3 do (_4`statementList)
 foreach ( _2 in _3 ) { } |-->for _2 : _3 do skip
-foreach ( _2 in _3 ) { _4 } |-->for _2 : _3 do _4`statementList
+foreach ( _2 in _3 ) { _4 } |-->for _2 : _3 do (_4`statementList)
 
 foreach _1 : _2 in _3 { } |-->for _2 : _3 do skip
-foreach _1 : _2 in _3 { _4 } |-->for _2 : _3 do _4`statementList
+foreach _1 : _2 in _3 { _4 } |-->for _2 : _3 do (_4`statementList)
 foreach _2 in _3 { } |-->for _2 : _3 do skip
-foreach _2 in _3 { _4 } |-->for _2 : _3 do _4`statementList
+foreach _2 in _3 { _4 } |-->for _2 : _3 do (_4`statementList)
 
 while _1 { } |-->while _1 do skip
-while _1 { _2 } |-->while _1 do ( _2`statementList )
+while _1 { _2 } |-->while _1 do ( _2`statementList)
 
 for ( _1 _2 = _3 ; _4 ; _5 ) { _6 } |-->(var _2 : _1 := _3;\n    while _4 do (_6`statementList; _5))
 for _1 _2 = _3 ; _4 ; _5 { _6 } |-->(var _2 : _1 := _3;\n    while _4 do (_6`statementList; _2 := _5))
 
-try { _1 } _* |-->try _1`statementList _*
+try { _1 } _* |-->try (_1`statementList) _*
 
 
 catch_statement::
-catch _1 _2 { _3 } |-->catch _2 : _1 do _3`statementList
+catch _1 _2 { _3 } |-->catch _2 : _1 do (_3`statementList)
 catch _1 _2 { } |-->catch _2 : _1 do skip
 
 
 finally_statement:: 
-finally { _1 } |--> finally _1`statementList
+finally { _1 } |--> finally (_1`statementList)
 finally { } |-->finally skip
 
 
 elseif:: 
-elseif _1 { _2 } |-->else if _1 then _2`statementList
+elseif _1 { _2 } |-->else if _1 then (_2`statementList)
 elseif _1 { } |-->else if _1 then skip
 
 
 elsestat:: 
-else { _1 } |-->else _1`statementList
+else { _1 } |-->else (_1`statementList)
 else { } |-->else skip
 
+
+case_statement::
+case _1 : _2 |-->    if _case = _1 & not(_found) then\n  (_2`statementList; _found := true) else skip;\n
+
+default : _1 |-->    if not(_found) then\n  (_1`statementList) else skip;\n
 
 
 variable_decl_assigment::
@@ -170,6 +179,13 @@ Intersect ( _1 ) |-->Sequence
 Concat ( _1 ) |-->Sequence
 SelectMany ( _1 ) |-->Sequence
 Select ( _1 ) |-->Sequence
+
+_1 |-->String<when> _1 String
+_1 |-->int<when> _1 int
+_1 |-->double<when> _1 double
+_1 |-->long<when> _1 long
+_1 |-->Sequence<when> _1 Sequence
+
 
 
 _1 |-->_1`ocltype<when> _1 factor_level6
@@ -288,7 +304,13 @@ _1 . Length |-->_1->size()
 _1 . _2 |-->_2`functionArguments<when> _1 Function, _2 id_or_function_call, _2`functionName Create
 
 _1 . _2 |-->_1_2`mapQueryForm<when> _1 Map, _2 id_or_function_call
-_1 . _2 |-->_1_2`queryForm<when> _2 id_or_function_call
+_1 . _2 |-->_1_2`mapQueryForm<when> _1 Map, _2 function_call
+_1 . _2 |-->_1._2`mapQueryForm<when> _1 Map, _2 member
+
+_1 . _2 |-->_1`queryForm_2`queryForm<when> _2 id_or_function_call
+_1 . _2 |-->_1`queryForm_2`queryForm<when> _2 function_call
+_1 . _2 |-->_1._2`queryForm<when> _2 member
+
 _1 . _2 |-->_1._2
 
 
@@ -315,6 +337,7 @@ _1 _2 |-->_2 : _1
 argument_list::
 _1 |-->_1
 _1 , _2 |-->_1, _2
+
 
 logic_operand::
 _1 |-->_1
@@ -418,8 +441,12 @@ _1 |-->_1`updateForm<when> _1 factor_level0
 _1 |-->_1`updateForm<when> _1 operand
 _1 |-->_1`updateForm<when> _1 member
 
+_1 . _2 |-->_1 := lambda _x : OclAny in (_1->apply(_x) & (_2`functionArguments)->apply(_x))<when> _1 Function, _2 id_or_function_call, _2`functionName And
+_1 . _2 |-->_1 := lambda _x : OclAny in (_1->apply(_x) or (_2`functionArguments)->apply(_x))<when> _1 Function, _2 id_or_function_call, _2`functionName Or
+
 _1 . _2 |-->_1 := _1_2`mapUpdateFunctionCall<when> _1 Map, _2 id_or_function_call
 _1 . _2 |-->_1 := _1_2`updateFunctionCall<when> _2 id_or_function_call
+_1 . _2 |-->_1 := _1_2`updateFunctionCall<when> _2 function_call
 
 _1 . _2 |-->_1._2
 
@@ -443,6 +470,9 @@ Invoke ( _1 ) |-->->apply(_1)
 OrderByKey ( ) |-->->sort()
 OrderByValue ( ) |-->->sortedBy(_x | _x)
 
+_1 ( ) |-->._1()
+_1 ( _2 ) |-->._1(_2)
+
 
 mapUpdateFunctionCall::
 _1 |-->_1`mapUpdateFunctionCall<when> _1 function_call
@@ -459,9 +489,17 @@ Remove ( _1 ) |-->->excludingKey(_1)
 OrderByKey ( ) |-->->sort()
 OrderByValue ( ) |-->->sortedBy(_x | _x)
 
+_1 ( ) |-->._1()
+_1 ( _2) |-->._1(_2)
+
  
 queryForm::
+_1 |-->_1`queryForm<when> _1 id_or_function_call
 _1 |-->_1`queryForm<when> _1 function_call
+_1 |-->_1`queryForm<when> _1 member
+_1 |-->_1`queryForm<when> _1 operand
+
+Create ( ) |-->.newInstance()
 
 Get ( _1 ) |-->->at(_1 + 1)
 
@@ -511,9 +549,20 @@ HasKey ( _1 ) |-->->includesKey(_1)
 GetKeys ( ) |-->->keys()
 GetValues ( ) |-->->values()
 
+_1 . _2 |-->_2`functionArguments<when> _1 Function, _2 id_or_function_call, _2`functionName Create
+
+_1 . _2 |-->_1_2`mapQueryForm<when> _1 Map, _2 id_or_function_call
+_1 . _2 |-->_1_2`mapQueryForm<when> _1 Map, _2 function_call
+_1 . _2 |-->_1._2`mapQueryForm<when> _1 Map, _2 member
+
+_1 . _2 |-->_1`queryForm_2`queryForm<when> _2 id_or_function_call
+_1 . _2 |-->_1_2`queryForm<when> _2 function_call
+_1 . _2 |-->_1_2`queryForm<when> _2 member
+_1 . _2 |-->_1._2`queryForm<when> _2 operand
  
 _1 ( _2 ) |-->._1(_2)
-_1 |-->._1
+_1 ( ) |-->._1()
+_1 |-->_1
 
 
 mapQueryForm::
