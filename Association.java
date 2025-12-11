@@ -48,10 +48,12 @@ public class Association extends ModelElement
     card2 = c2;
     role1 = r1;
     role2 = r2;
+
     if (e1 == null) 
     { System.err.println("!!! FATAL ERROR: null class at association end 1"); 
       return; 
     } 
+
     if (e2 == null) 
     { System.err.println("!!! FATAL ERROR: null class at association end 2"); 
       return; 
@@ -138,6 +140,14 @@ public class Association extends ModelElement
     role1 = r1;
     role2 = r2;
   }
+
+  public static int zAppDevMultiplicity(String mult)
+  { if (mult.equals("ZeroOrOne"))
+    { return ZEROONE; } 
+    if (mult.equals("One"))
+    { return ONE; } 
+    return MANY; 
+  } 
 
   public void setInitialExpression(Expression init)
   { initialExpression = init; } 

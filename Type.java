@@ -2726,6 +2726,42 @@ public class Type extends ModelElement
     return t;  
   } 
 
+  public static Type typeFromMamba(String etype, 
+                                   Vector entities, Vector types)   
+  { if (etype == null) 
+    { return null; } 
+
+    if (etype.endsWith("string"))
+    { return new Type("String",null); } 
+    if (etype.endsWith("int") || etype.endsWith("byte"))
+    { return new Type("int",null); } 
+    if (etype.endsWith("long"))
+    { return new Type("long",null); } 
+    if (etype.endsWith("double"))
+    { return new Type("double",null); } 
+    if (etype.endsWith("bool"))
+    { return new Type("boolean",null); }
+
+
+    String et = "";
+
+    int xind = etype.lastIndexOf("#//");
+    if (etype.startsWith("#/"))
+    { int x = etype.lastIndexOf("/"); 
+      et = etype.substring(x,etype.length()); 
+    }
+    else if (xind >= 0 && xind < etype.length())
+    { et = etype.substring(xind+3, etype.length()); } 
+
+    Type t =
+       (Type) ModelElement.lookupByName(et,types);
+
+    if (t == null) 
+    { return new Type("String",null); } 
+
+    return t;  
+  } 
+
   public String getKM3()
   { String res = ""; 
     if (values == null)  // for basic types only

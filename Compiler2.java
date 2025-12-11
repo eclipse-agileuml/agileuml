@@ -689,13 +689,27 @@ public class Compiler2
   { return (c == '<' || c == '>' || c == '=' || c == '*' || c == '/' || c == '\\' ||
             c == '-' || c == ',' || c == '\'' || c == '?' ||
             c == '+' || c == '&' || c == '^' || c == '|' ||
-            c == '(' || c == ')' || c == '{' || c == '}' || c == '[' ||
+            c == '(' || c == ')' || c == '{' || c == '}' || 
+            c == '[' ||
             c == ']' || c == '#'); 
   } 
   // { return (c == '<' || c == '>' || c == '='); } 
 
+  private static boolean isXMLSymbolCharacter2(char c)
+  { return (c == '<' || c == '>' || c == '=' || c == '*' || 
+            c == '/' || c == '\\' || c == '!' ||
+            c == '-' || c == ',' || c == '\'' || c == '?' ||
+            c == '+' || c == '&' || c == '^' || c == '|' ||
+            c == '(' || c == ')' || c == '{' || c == '}' || 
+            c == '[' || c == ';' ||
+            c == ']' || c == '#'); 
+  } 
+
   private static boolean isXMLBasicExpCharacter(char c)
-  { return (Character.isLetterOrDigit(c) || c == '.' || c == '$' || c == '@' || c == ':'); } 
+  { return (Character.isLetterOrDigit(c) || c == '.' || 
+            c == '$' || c == '@' || c == ':' ||
+            c == '_'); 
+  } // permitted _ for zAppDev 
         
   private static boolean isSymbolCharacterText(char c)
   { return (c == '(' || c == ')' || 
@@ -976,6 +990,112 @@ public class Compiler2
         }
         else if (isXMLSymbolCharacter(c))
         { if (validFollowingCharacterXML(previous,c))
+          { sb.append(c); } 
+          else 
+          { sb = new StringBuffer();     // start new buffer for the new symbol
+            lexicals.addElement(sb);  
+            in = INSYMBOL; 
+            sb.append(c); 
+          }
+          previous = c; 
+        } 
+        else if (c == ' ' || c == '\n' || c == '\t' || c == '\r')
+        { in = INUNKNOWN; } 
+      }
+      else if (in == INSTRING) 
+      { if (c == '"')  /* end of string */ 
+        { sb.append(c); 
+          in = INUNKNOWN; 
+        } 
+        else 
+        { sb.append(c); } 
+      }    
+      previous = c; 
+    }
+  }
+
+  public void lexicalanalysisxml(String str) 
+  { int in = INUNKNOWN; 
+    char previous = ' '; 
+
+    int explen = str.length(); 
+    lexicals = new Vector(explen);  /* Sequence of lexicals */ 
+    StringBuffer sb = null;    /* Holds current lexical item */ 
+
+    for (int i = 0; i < explen; i++)
+    { char c = str.charAt(i);
+ 
+      if (in == INUNKNOWN) 
+      { if (isXMLSymbolCharacter2(c))
+        { sb = new StringBuffer();  // start new buffer for the symbol
+          lexicals.addElement(sb);  
+          in = INSYMBOL; 
+          sb.append(c); 
+          previous = c; 
+        }
+        else if (isXMLBasicExpCharacter(c))
+        { sb = new StringBuffer();     // start new buffer for the expression
+          lexicals.addElement(sb);  
+          in = INBASICEXP; 
+          sb.append(c); 
+        }           
+        else if (c == '"')
+        { sb = new StringBuffer();     // start new buffer for the string
+          lexicals.addElement(sb);  
+          in = INSTRING; 
+          sb.append(c); 
+        }
+        else if (c == ' ' || c == '\n' || c == '\t' || c == '\r') 
+        { } 
+        else
+        { sb = new StringBuffer();     // unrecognised lexical
+          lexicals.addElement(sb);  
+          System.out.println("!! Unrecognised literal: " + c); 
+          sb.append(c); 
+        }
+      } 
+      else if (in == INBASICEXP)
+      { if (isXMLBasicExpCharacter(c) || c == '"')
+        { sb.append(c); }              // carry on adding to current basic exp
+        else if (isXMLSymbolCharacter2(c))
+        { sb = new StringBuffer();   // start new buffer for the symbol
+          lexicals.addElement(sb);  
+          in = INSYMBOL; 
+          sb.append(c); 
+          previous = c; 
+        }
+        else if (c == ' ' || c == '\n' || c == '\t' || c == '\r')
+        { in = INUNKNOWN; } 
+        else
+        { sb = new StringBuffer();     // unrecognised lexical
+          lexicals.addElement(sb);  
+          in = INUNKNOWN; 
+          System.out.println("!! Unrecognised literal in expression: " + c); 
+          sb.append(c); 
+        }
+      }
+      else if (in == INSYMBOL)
+      { if (c == '"')
+        { sb = new StringBuffer();     // start new buffer for the string
+          lexicals.addElement(sb);  
+          in = INSTRING; 
+          sb.append(c); 
+        }
+        else if (c == '(' || c == ')')
+        { sb = new StringBuffer();     // start new buffer for the new symbol
+          lexicals.addElement(sb);  
+          in = INSYMBOL; 
+          previous = c; 
+          sb.append(c); 
+        }
+        else if (isXMLBasicExpCharacter(c))
+        { sb = new StringBuffer();     // start new buffer for basic exp
+          lexicals.addElement(sb);  
+          in = INBASICEXP; 
+          sb.append(c); 
+        }
+        else if (isXMLSymbolCharacter2(c))
+        { if (validFollowingCharacterXML2(previous,c))
           { sb.append(c); } 
           else 
           { sb = new StringBuffer();     // start new buffer for the new symbol
@@ -1322,30 +1442,89 @@ public class Compiler2
       { return true; }   
       return false; 
     }
+
     if (c1 == '>')
     { if (c2 == '=') { return true; } 
       return false; 
     }
+
     if (c1 == '/') 
     { if (c2 == '=' || c2 == ':' || c2 == '\\' || c2 == '>') { return true; } 
       return false; 
     }
+
     if (c1 == '\\')
     { if (c2 == '/') { return true; } 
       return false; 
     }
+
+    if (c1 == '!')
+    { if (c2 == '=') { return true; } 
+      return false; 
+    }
+
     if (c1 == '=')
     { if (c2 == '>') { return true; } 
       return false; 
     }
+
     if (c1 == '-')
     { if (c2 == '>') { return true; } 
       return false; 
     }
+
     if (c1 == ':')
     { if (c2 == '=') { return true; } 
       return false; 
     }
+
+    return false; 
+  } 
+
+  private static boolean validFollowingCharacterXML2(char c1, char c2)
+  { if (c1 == '<') 
+    { if (c2 == '=' || c2 == ':' || c2 == '/') 
+      { return true; }   
+      return false; 
+    }
+
+    if (c1 == '>')
+    { if (c2 == '=') { return true; } 
+      return false; 
+    }
+
+    if (c1 == '/') 
+    { if (c2 == '=' || c2 == ':' || c2 == '\\' || c2 == '>') { return true; } 
+      return false; 
+    }
+
+    if (c1 == '\\')
+    { if (c2 == '/') { return true; } 
+      return false; 
+    }
+
+    if (c1 == '!')
+    { if (c2 == '=') { return true; } 
+      return false; 
+    }
+
+    if (c1 == '=')
+    { if (c2 == '>' || 
+          c2 == '=') 
+      { return true; } 
+      return false; 
+    }
+
+    if (c1 == '-')
+    { if (c2 == '>') { return true; } 
+      return false; 
+    }
+
+    if (c1 == ':')
+    { if (c2 == '=') { return true; } 
+      return false; 
+    }
+
     return false; 
   } 
 
@@ -10758,7 +10937,8 @@ private Vector parseUsingClause(int st, int en, Vector entities, Vector types)
           ">".equals(lexicals.get(i+1) + ""))
       { return parsexmlnode(i+2,lexicals.size() - 1); } 
     } 
-    return null; 
+
+    return parsexmlnode(0, lexicals.size() - 1);
   } 
 
   public XMLNode parseXMLNode()
@@ -10773,7 +10953,6 @@ private Vector parseUsingClause(int st, int en, Vector entities, Vector types)
       XMLNode xnode = new XMLNode(tag);
       for (int i = st + 2; i <= en && i < lexicals.size(); i++)
       { String str = lexicals.get(i) + "";
-
 
         if (i + 1 <= en)
         { if ("=".equals(lexicals.get(i+1) + ""))
@@ -10808,14 +10987,14 @@ private Vector parseUsingClause(int st, int en, Vector entities, Vector types)
 
     for (int i = st; i <= en; i++)
     { String str = lexicals.get(i) + "";
+
       if ("</".equals(str) && i + 2 <= en &&
            tag.equals(lexicals.get(i+1) + "") &&
            ">".equals(lexicals.get(i+2) + ""))
       { if (i > st && xnode != null) 
         { xnode.setContent(content); }  
         return res;
-      } 
- 
+      }  
 
       if (">".equals(str)) 
       { String tag1 = lexicals.get(st + 1) + ""; 
@@ -10852,9 +11031,34 @@ private Vector parseUsingClause(int st, int en, Vector entities, Vector types)
         res.addAll(parsesubnodes(null,tag,i+1,en));
         return res;
       }
-      else 
-      { content = content + str; } 
+
+      if ("&".equals(str) && i + 2 <= en &&
+          "amp".equals(lexicals.get(i+1) + "") && 
+          ";".equals(lexicals.get(i+2) + ""))
+      { content = content + "&"; 
+        i = i + 2; 
+        continue;  
+      } 
+
+      if ("&".equals(str) && i + 2 <= en &&
+          "lt".equals(lexicals.get(i+1) + "") && 
+          ";".equals(lexicals.get(i+2) + ""))
+      { content = content + "<"; 
+        i = i + 2; 
+        continue;  
+      } 
+
+      if ("&".equals(str) && i + 2 <= en &&
+          "gt".equals(lexicals.get(i+1) + "") && 
+          ";".equals(lexicals.get(i+2) + ""))
+      { content = content + ">"; 
+        i = i + 2;
+        continue;  
+      } 
+
+      content = content + " " + str;  // " " 10.12.2025 
     }
+
     return res;
   } 
 

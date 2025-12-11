@@ -3728,7 +3728,7 @@ public class UCDArea extends JPanel
       else if (mess.startsWith("!!"))
       { System.err.println("<p style=\"color: orange;\">" + mess + "</p>"); }  
       else if (mess.startsWith("!"))
-      { System.err.println("<p style=\"color: orange;\">" + mess + "</p>"); }  
+      { System.err.println("<p style=\"color: blue;\">" + mess + "</p>"); }  
       else 
       { System.err.println("<p style=\"color: green;\">" + mess + "</p>"); }  
     }  
@@ -16160,6 +16160,52 @@ public void produceCUI(PrintWriter out)
     { System.err.println("!! Error generating C++"); } 
   } 
 
+  public String parseMambaOperation(String sourceCode)
+  { Vector auxcstls = new Vector(); 
+    ASTTerm xx = null; 
+
+    String[] args = {"Mamba3", "function_declaration"}; 
+
+    try { 
+      org.antlr.v4.gui.AntlrGUI antlr = 
+          new org.antlr.v4.gui.AntlrGUI(args); 
+
+      antlr.setText(sourceCode); 
+
+      antlr.process(); 
+
+      String asttext = antlr.getResultText(); 
+        // messageArea.setText("" + asttext);
+        // System.out.println(asttext); 
+ 
+      Compiler2 cc = new Compiler2(); 
+      xx = cc.parseGeneralAST(asttext); 
+    } 
+    catch (Exception _expt) 
+    { _expt.printStackTrace(); } 
+
+    if (xx == null) 
+    { System.out.println("!! Invalid Mamba source text !!"); 
+      System.out.println(sourceCode); 
+      return null; 
+    } 
+
+    ASTTerm.metafeatures = new java.util.HashMap(); 
+
+    File mamba2uml = new File("cg/mamba2OCL.cstl"); 
+    Vector vbs = new Vector(); 
+    CGSpec spec = loadCSTL(mamba2uml,vbs); 
+
+    if (spec == null) 
+    { System.err.println("!! ERROR: No file " + mamba2uml.getName()); 
+      return null; 
+    } 
+    
+    String reskm3 = xx.cg(spec); 
+    String arg1 = CGRule.correctNewlines(reskm3); 
+    return arg1; 
+  } 
+
   public void loadFromJavaAST(String sourcefile)
   { BufferedReader br = null; 
 
@@ -18577,6 +18623,306 @@ public void produceCUI(PrintWriter out)
             }
           }
         } 
+      }
+    }
+
+    repaint(); 
+  }
+
+  public void loadZAppDevFromFile()
+  { BufferedReader br = null;
+    Vector res = new Vector();
+    String s;
+    boolean eof = false;
+
+    File file = new File("output/mm.bo.xml");  /* default */ 
+
+    File startingpoint = new File("output");
+    JFileChooser fc = new JFileChooser();
+    fc.setCurrentDirectory(startingpoint);
+    fc.setDialogTitle("Load .bo.xml file");
+    fc.addChoosableFileFilter(new BusinessObjectFilter()); 
+    int returnVal = fc.showOpenDialog(this);
+    if (returnVal == JFileChooser.APPROVE_OPTION)
+    { file = fc.getSelectedFile(); }
+    else
+    { System.err.println("Load aborted");
+      return; 
+    }
+    String componentName = file.getName();  
+
+    try
+    { br = new BufferedReader(new FileReader(file)); }
+    catch (FileNotFoundException e)
+    { System.err.println("!! File not found: " + file);
+      return; 
+    }
+
+    Vector preentities = new Vector(); 
+    Vector preassociations = new Vector(); 
+    Vector pregeneralisations = new Vector();
+    Vector preconstraints = new Vector(); 
+    Vector preassertions = new Vector(); 
+    Vector preops = new Vector(); 
+    Vector pucs = new Vector(); 
+    Vector preactivities = new Vector(); 
+    Vector preucinvs = new Vector(); 
+
+    String xmlstring = ""; 
+
+    while (!eof)
+    { try { s = br.readLine(); }
+      catch (IOException e)
+      { System.out.println("!! Reading business object file failed.");
+        return; 
+      }
+
+      if (s == null) 
+      { eof = true; 
+        break; 
+      }
+      else 
+      { xmlstring = xmlstring + s + " "; } 
+    }
+
+    System.out.println(">> Input: " + xmlstring); 
+
+    Compiler2 comp = new Compiler2();  
+    comp.lexicalanalysisxml(xmlstring); 
+    XMLNode xml = comp.parseXML(); 
+    System.out.println(">>> Parsed business object data: " + xml); 
+
+    if (xml == null) 
+    { return; } 
+
+    Vector enodes = xml.getSubnodes(); 
+      // main elements: associations, entities
+
+    int delta = 200; // visual displacement 
+    int ecount = 0; 
+	
+    Vector allnodes = new Vector(); 
+
+    for (int i = 0; i < enodes.size(); i++) 
+    { XMLNode enode = (XMLNode) enodes.get(i); 
+	  
+      if ("Classes".equals(enode.getTag()))
+      { System.out.println(">>>> Classes subnode"); 
+        allnodes.addAll(enode.getSubnodes()); 
+      }  
+      else if ("Associations".equals(enode.getTag()))
+      { System.out.println(">>>> Associations subnode"); 
+        allnodes.addAll(enode.getSubnodes()); 
+      }  
+      // else 
+      // { allnodes.add(enode); }
+    } 
+
+    for (int i = 0; i < allnodes.size(); i++) 
+    { XMLNode enode = (XMLNode) allnodes.get(i); 
+	  
+      if ("Class".equals(enode.getTag()))
+      { String xsitype = enode.getAttributeValue("Stereotype"); 
+        String ename = enode.getAttributeValue("Name");
+        System.out.println(">>>> Class/type subnode: " + ename); 
+		 
+        if ("Class".equals(xsitype) && ename != null)  
+        { Entity ent = 
+            reconstructEntity(ename, 
+              40 + (ecount/3)*delta + ((ecount % 3)*delta)/2, 
+              100 + (ecount % 7)*delta, "", "*", 
+              new Vector());
+          ecount++; 
+        } 
+   /*     else if ("ecore:EDataType".equals(xsitype) && 
+                 ename != null) 
+        { Type dt = new Type(ename, null); 
+          dt.setAlias(new Type("String", null)); 
+          types.add(dt); 
+          RectData rdt = 
+            new RectData(100 + 120*types.size(),
+                         20,getForeground(),
+                                 componentMode,
+                                 rectcount);
+          rectcount++;
+          rdt.setLabel(ename);
+          rdt.setModelElement(dt); 
+          visuals.add(rdt);
+        } 
+        else if ("ecore:EEnum".equals(xsitype) && ename != null)
+        { Vector eliterals = new Vector(); 
+          Vector esubs = enode.getSubnodes(); 
+          for (int k = 0; k < esubs.size(); k++) 
+          { XMLNode esb = (XMLNode) esubs.get(k); 
+            if ("eLiterals".equals(esb.getTag()))
+            { eliterals.add(esb.getAttributeValue("name")); } 
+          } 
+          Type tt = new Type(ename,eliterals); 
+          types.add(tt); 
+          RectData rd = new RectData(
+            100 + 120*types.size(),20,getForeground(),
+                                 componentMode,
+                                 rectcount);
+          rectcount++;
+          rd.setLabel(ename);
+          rd.setModelElement(tt); 
+          visuals.add(rd); 
+        } */  
+      } 
+    } 
+
+    for (int i = 0; i < allnodes.size(); i++) 
+    { XMLNode enode = (XMLNode) allnodes.get(i);
+ 
+      if ("Class".equals(enode.getTag()))
+      { String xsitype = enode.getAttributeValue("Stereotype"); 
+        String ename = enode.getAttributeValue("Name"); 
+        if ("Class".equals(xsitype) && ename != null)  
+        { Entity ent = 
+            (Entity) ModelElement.lookupByName(ename,entities);
+          /* String esupers = enode.getAttributeValue("eSuperTypes"); 
+          if (esupers != null && 
+              (esupers.startsWith("#//") || 
+               esupers.startsWith("#/1")))
+          { String[] allsupers = esupers.split(" ");
+            for (int p = 0; p < allsupers.length; p++) 
+            { String supr = (String) allsupers[p];
+              String suprname = supr.substring(3,supr.length());   
+              if (suprname.startsWith("/"))
+              { suprname = suprname.substring(1,suprname.length()); }
+              Entity supent = (Entity) ModelElement.lookupByName(suprname,entities);
+            
+            // String supername = esupers.substring(3,esupers.length()); 
+            // Entity supent = (Entity) ModelElement.lookupByName(supername,entities);
+              if (supent != null) 
+              { Entity[] subents = new Entity[1]; 
+                subents[0] = ent; 
+                addInheritances(supent,subents); 
+                System.out.println(">>> Added inheritance: " + ename + " --|> " + suprname); 
+                supent.setAbstract(true);
+              } 
+            } 
+          } */ 
+
+          Vector edata = enode.getSubnodes(); 
+          for (int j = 0; j < edata.size(); j++) 
+          { XMLNode ed = (XMLNode) edata.get(j);
+            if ("Operations".equals(ed.getTag()))
+            { Vector ops = ed.getSubnodes(); 
+              for (int k = 0; k < ops.size(); k++) 
+              { XMLNode opnode = (XMLNode) ops.get(k); 
+                String opname = 
+                    opnode.getAttributeValue("Name"); 
+                String opcode = 
+                    opnode.getContent(); 
+                String km3code = parseMambaOperation(opcode);
+                JOptionPane.showInputDialog("Code of " + opname + " is " + km3code); 
+                Compiler2 cc = new Compiler2(); 
+                cc.nospacelexicalanalysis(km3code); 
+                BehaviouralFeature bf = 
+                  cc.operationDefinition(entities, types); 
+                ent.addOperation(bf); 
+                bf.setEntity(ent); 
+              }  
+            } 
+            else if ("Attributes".equals(ed.getTag()))
+            { Vector attrs = ed.getSubnodes(); 
+              for (int k = 0; k < attrs.size(); k++)
+              { XMLNode anode = (XMLNode) attrs.get(k); 
+                String dataname = 
+                     anode.getAttributeValue("Name"); 
+                String atttype = 
+                     anode.getAttributeValue("DataType"); 
+     
+                Type typ = Type.typeFromMamba(atttype, entities, types); 
+                Attribute att = 
+                  new Attribute(dataname,typ,
+                                ModelElement.INTERNAL); 
+                ent.addAttribute(att); 
+                att.setEntity(ent);
+                String init = 
+                     anode.getAttributeValue("InitValue");
+                String isStatic = 
+                     anode.getAttributeValue("IsStatic");
+
+                if (init != null) 
+                { att.setInitialValue(init);
+                  System.out.println(">-> Initial value for " + dataname + " = " + init); 
+
+                  if (typ != null && 
+                      "String".equals(typ.getName()))
+                  { Expression expr = 
+                      BasicExpression.newValueBasicExpression(
+                                         "\"" + init + "\"");
+                    expr.setType(typ); 
+                    expr.setElementType(typ);  
+                    att.setInitialExpression(expr); 
+                  }
+                }
+
+                if ("true".equals(isStatic))
+                { att.setStatic(true); }    
+              }
+            }
+          }
+        }  
+      }  
+      else if ("Association".equals(enode.getTag()))
+      { String e1name = enode.getAttributeValue("Class1"); 
+        String e2name = enode.getAttributeValue("Class2"); 
+        String role1 = enode.getAttributeValue("Role1"); 
+        String role2 = enode.getAttributeValue("Role2"); 
+        String mult1 = enode.getAttributeValue("Multiplicity1"); 
+        String mult2 = enode.getAttributeValue("Multiplicity2"); 
+        int card1 = Association.zAppDevMultiplicity(mult1); 
+        int card2 = Association.zAppDevMultiplicity(mult2); 
+
+        Entity ent1 = 
+          (Entity) ModelElement.lookupByName(e1name,entities);
+        if (ent1 == null)
+        { ent1 = 
+            reconstructEntity(e1name, 
+              40 + (ecount/3)*delta + ((ecount % 3)*delta)/2, 
+              100 + (ecount % 7)*delta, "", "*", 
+              new Vector());
+          ecount++; 
+        }
+
+        Entity ent2 = 
+          (Entity) ModelElement.lookupByName(e2name,entities);
+        if (ent2 == null)
+        { ent2 = 
+            reconstructEntity(e2name, 
+              40 + (ecount/3)*delta + ((ecount % 3)*delta)/2, 
+              100 + (ecount % 7)*delta, "", "*", 
+              new Vector());
+          ecount++; 
+        }
+ 
+        System.out.println(">> Association: " + role2 + " from " + e1name + " to " + e2name); 
+      
+        Association ast = 
+           new Association(ent1,ent2,card1,card2,role1,role2); 
+        associations.add(ast);  
+        ent1.addAssociation(ast); 
+        ast.setName("r" + associations.size());
+        int xs = 0, ys = 0, xe = 100, ye = 100;  
+        for (int m = 0; m < visuals.size(); m++)
+        { VisualData vd = (VisualData) visuals.get(m); 
+          ModelElement me = (ModelElement) vd.getModelElement(); 
+          if (me == ent1) // Entity1
+          { xs = vd.getx(); ys = vd.gety(); } 
+          else if (me == ent2) // Entity2
+          { xe = vd.getx(); ye = vd.gety(); }  
+        }
+
+        int featuresize = ent1.featureCount(); 
+        int efeaturesize = ent2.featureCount(); 
+
+        LineData sline = 
+            new LineData(xs + featuresize*4, ys+50, xe + efeaturesize*4,ye,linecount,SOLID);
+        sline.setModelElement(ast); 
+        visuals.add(sline); 
       }
     }
 
@@ -29933,4 +30279,18 @@ class EcoreFileFilter extends javax.swing.filechooser.FileFilter
 
   public String getDescription()
   { return "Select a .ecore file"; } 
+}
+
+class BusinessObjectFilter extends javax.swing.filechooser.FileFilter
+{ public boolean accept(File f) 
+  { if (f.isDirectory()) { return true; } 
+
+    if (f.getName().endsWith(".bo.xml")) 
+    { return true; } 
+
+    return false; 
+  } 
+
+  public String getDescription()
+  { return "Select a .bo.xml file"; } 
 }

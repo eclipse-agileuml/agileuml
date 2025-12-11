@@ -501,7 +501,8 @@ abstract class Statement implements Cloneable
     { // patterns are s := s + var, s := s + var*var,
       // s := s * var, s := s - var, s := s / var
       // s := s & var, s := s or var
-      // s := s->including(var), s := s->excluding(var)
+      // s := s->including(var), s := s->excluding(var),
+      // s := s->append(var)
       // Also same with expr instead of var,
       // not involving var or s. 
 
@@ -741,6 +742,36 @@ abstract class Statement implements Cloneable
       else if (rhs instanceof BinaryExpression && 
         ((BinaryExpression) rhs).getOperator().equals("->including") &&
         (((BinaryExpression) rhs).getLeft() + "").equals(lhs + ""))
+      { // lhs := lhs->append(expr)
+        Expression expr = ((BinaryExpression) rhs).getRight(); 
+        Vector vuses = expr.getVariableUses();
+
+        if (VectorUtil.containsEqualString(lhs+"", vuses))
+        { return null; } 
+
+        // lhs := lhs->concatenate(rng->collect(var|expr))
+
+        Expression coll = 
+            new BinaryExpression("|C", 
+              new BinaryExpression(":", var, rng), expr); 
+        Expression newrhs = 
+            new BinaryExpression("->union", lhs, coll); 
+        return new AssignStatement(lhs, newrhs);
+      }         
+      else if ((lhs + "->append(" + var + ")").equals("" + rhs))
+      { // lhs := lhs->union(loopRange)
+
+        Type elemt = rng.getElementType(); 
+        BasicExpression selfvar = 
+          BasicExpression.newVariableBasicExpression(
+                                             "self",elemt); 
+        Expression newrhs = 
+            new BinaryExpression("->concatenate", lhs, rng); 
+        return new AssignStatement(lhs, newrhs); 
+      }   
+      else if (rhs instanceof BinaryExpression && 
+        ((BinaryExpression) rhs).getOperator().equals("->append") &&
+        (((BinaryExpression) rhs).getLeft() + "").equals(lhs + ""))
       { // lhs := lhs->including(expr)
         Expression expr = ((BinaryExpression) rhs).getRight(); 
         Vector vuses = expr.getVariableUses();
@@ -754,7 +785,7 @@ abstract class Statement implements Cloneable
             new BinaryExpression("|C", 
               new BinaryExpression(":", var, rng), expr); 
         Expression newrhs = 
-            new BinaryExpression("->union", lhs, coll); 
+            new BinaryExpression("->concatenate", lhs, coll); 
         return new AssignStatement(lhs, newrhs);
       }         
       else if ((lhs + "->excluding(" + var + ")").equals("" + rhs))
@@ -1227,6 +1258,10 @@ abstract class Statement implements Cloneable
       { // lhs := lhs - loopRange
         return true; 
       } 
+      else if ((lhs + "->append(" + var + ")").equals("" + rhs))
+      { // lhs := lhs->union(loopRange)
+        return true; 
+      } 
       else if (rhs instanceof BinaryExpression && 
         (((BinaryExpression) rhs).getLeft() + "").equals(
                                                     lhs + ""))
@@ -1244,6 +1279,7 @@ abstract class Statement implements Cloneable
             "*".equals(oper) || "/".equals(oper) ||
             "&".equals(oper) || "or".equals(oper) || 
             "->including".equals(oper) || 
+            "->append".equals(oper) || 
             "->excluding".equals(oper))
         { return true; }
  
