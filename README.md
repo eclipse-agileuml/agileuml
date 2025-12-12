@@ -11,7 +11,9 @@ This can be executed as java -jar umlrsds.jar on the command line
 The toolset expects a directory called 'output' to exist in its execution directory, 
 'output' is used to hold all input and output files, such as metamodels and models.
 
-To build the executable, run the following from the command line:
+A build script is provided in build.bat, which can be run directly as a command on Windows. 
+
+To build the executable on Linux, run the following from the command line:
 
 ```bash
 jar cvfm umlrsds.jar UMLRSDSManifest.txt *.class
