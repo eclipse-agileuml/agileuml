@@ -1451,6 +1451,48 @@ abstract class Statement implements Cloneable
     return st; 
   } 
 
+  public static Statement getLastStatement(Statement st)
+  { if (st == null) 
+    { return null; }
+ 
+    if (st instanceof SequenceStatement) 
+    { SequenceStatement sq = (SequenceStatement) st; 
+
+      if (sq.size() >= 1) 
+      { Statement stat = sq.getStatement(sq.size() - 1); 
+        return Statement.getLastStatement(stat); 
+      } 
+
+      return null;
+    } 
+
+    return st; 
+  } 
+
+  public static Statement removeLastStatement(Statement st)
+  { if (st == null) 
+    { return null; }
+ 
+    if (st instanceof SequenceStatement) 
+    { SequenceStatement sq = (SequenceStatement) st; 
+      int n = sq.size(); 
+
+      if (n >= 1) 
+      { Statement stat = sq.getStatement(n - 1); 
+        Statement rem = Statement.removeLastStatement(stat);
+        SequenceStatement newsq = new SequenceStatement(); 
+        for (int i = 0; i < n-1; i++) 
+        { newsq.addStatement(sq.getStatement(i)); } 
+        newsq.addStatement(rem);  
+        return newsq; 
+      } 
+
+      return new InvocationStatement("skip");
+    } 
+
+    return new InvocationStatement("skip"); 
+  } 
+
   public static boolean hasSingleStatement(Statement st)
   { if (st == null) 
     { return false; }
@@ -10385,6 +10427,9 @@ class SequenceStatement extends Statement
     return true; 
   } 
 
+  /* public Statement getStatement(int i)
+  { return (Statement) statements.get(i); } */ 
+
   public String cg(CGSpec cgs)
   { String etext = this + "";
     Vector args = new Vector();
@@ -16872,7 +16917,8 @@ class ConditionalStatement extends Statement
   } 
 
   public int execute(ModelSpecification sigma, ModelState beta)
-  { Expression tval = test.evaluate(sigma, beta); 
+  { Expression tval = test.evaluate(sigma, beta);
+ 
     if ("true".equals(tval + ""))
     { int res = ifPart.execute(sigma, beta); 
       return res; 
@@ -17036,6 +17082,32 @@ class ConditionalStatement extends Statement
       return ss; 
     } 
 
+    // if duplicate code at end of each branch, put after
+    // the statement: 
+
+    if (elsec.isSkip()) { } 
+    else 
+    { Statement lastIfStat = Statement.getLastStatement(ifc);
+      Statement lastElseStat = 
+                    Statement.getLastStatement(elsec); 
+      if (("" + lastIfStat).equals("" + lastElseStat))
+      { System.out.println(">> Refactoring duplicated final statement " + lastIfStat + " from conditional statement"); 
+        Statement newifpart = 
+             Statement.removeLastStatement(ifc); 
+        Statement newelsepart = 
+             Statement.removeLastStatement(elsec);
+        Statement newif =  
+             new ConditionalStatement(testc, 
+                                      newifpart, newelsepart);
+        SequenceStatement res = 
+          new SequenceStatement(); 
+        res.addStatement(newif); 
+        res.addStatement(lastIfStat); 
+        return res; 
+      } 
+    }   
+
+
     return new ConditionalStatement(testc, ifc, elsec); 
   }  
 
@@ -17160,6 +17232,20 @@ class ConditionalStatement extends Statement
           uses.set("amber", oscore + 1); 
         } 
       } 
+    } 
+
+    if (elsePart.isSkip()) { } 
+    else 
+    { Statement lastIfStat = 
+                    Statement.getLastStatement(ifPart);
+      Statement lastElseStat = 
+                    Statement.getLastStatement(elsePart); 
+
+      if (("" + lastIfStat).equals("" + lastElseStat))
+      { oUses.add("!! Duplicated code (DC): duplicated final statement " + lastIfStat + " in conditional");
+        int oscore = (int) uses.get("amber"); 
+        uses.set("amber", oscore + 1);
+      }  
     } 
 
     return uses; 

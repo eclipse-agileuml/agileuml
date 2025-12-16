@@ -4049,6 +4049,7 @@ abstract class Expression
     { BinaryExpression fapp = (BinaryExpression) be; 
       return Expression.simplifyApply(fapp.getLeft(), fapp.getRight()); 
     } 
+
     return be; 
   } 
 
@@ -4058,6 +4059,7 @@ abstract class Expression
 
     if (func instanceof UnaryExpression) 
     { UnaryExpression f = (UnaryExpression) func; 
+
       if (f.getOperator().equals("lambda") && 
           f.getAccumulator() != null) 
       { Attribute var = f.getAccumulator(); 

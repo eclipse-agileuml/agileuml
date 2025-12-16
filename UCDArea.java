@@ -18649,6 +18649,7 @@ public void produceCUI(PrintWriter out)
     { System.err.println("Load aborted");
       return; 
     }
+
     String componentName = file.getName();  
 
     try
@@ -18734,10 +18735,9 @@ public void produceCUI(PrintWriter out)
               new Vector());
           ecount++; 
         } 
-   /*     else if ("ecore:EDataType".equals(xsitype) && 
+        else if ("Enumeration".equals(xsitype) && 
                  ename != null) 
         { Type dt = new Type(ename, null); 
-          dt.setAlias(new Type("String", null)); 
           types.add(dt); 
           RectData rdt = 
             new RectData(100 + 120*types.size(),
@@ -18749,25 +18749,6 @@ public void produceCUI(PrintWriter out)
           rdt.setModelElement(dt); 
           visuals.add(rdt);
         } 
-        else if ("ecore:EEnum".equals(xsitype) && ename != null)
-        { Vector eliterals = new Vector(); 
-          Vector esubs = enode.getSubnodes(); 
-          for (int k = 0; k < esubs.size(); k++) 
-          { XMLNode esb = (XMLNode) esubs.get(k); 
-            if ("eLiterals".equals(esb.getTag()))
-            { eliterals.add(esb.getAttributeValue("name")); } 
-          } 
-          Type tt = new Type(ename,eliterals); 
-          types.add(tt); 
-          RectData rd = new RectData(
-            100 + 120*types.size(),20,getForeground(),
-                                 componentMode,
-                                 rectcount);
-          rectcount++;
-          rd.setLabel(ename);
-          rd.setModelElement(tt); 
-          visuals.add(rd); 
-        } */  
       } 
     } 
 
@@ -18777,32 +18758,46 @@ public void produceCUI(PrintWriter out)
       if ("Class".equals(enode.getTag()))
       { String xsitype = enode.getAttributeValue("Stereotype"); 
         String ename = enode.getAttributeValue("Name"); 
-        if ("Class".equals(xsitype) && ename != null)  
+        String idAttr = enode.getAttributeValue("PK"); 
+        String baseClass = enode.getAttributeValue("BaseClass"); 
+
+        if ("Enumeration".equals(xsitype) && ename != null)  
+        { Type typ = 
+            (Type) ModelElement.lookupByName(ename, types);
+
+          Vector edata = enode.getSubnodes(); 
+          for (int j = 0; j < edata.size(); j++) 
+          { XMLNode ed = (XMLNode) edata.get(j);
+            if ("Literals".equals(ed.getTag()))
+            { Vector ops = ed.getSubnodes();
+ 
+              for (int k = 0; k < ops.size(); k++) 
+              { XMLNode opnode = (XMLNode) ops.get(k); 
+                String opname = 
+                    opnode.getAttributeValue("Name"); 
+                typ.addValue(opname); 
+              } 
+            }
+          }
+        } 
+        else if ("Class".equals(xsitype) && ename != null)  
         { Entity ent = 
             (Entity) ModelElement.lookupByName(ename,entities);
-          /* String esupers = enode.getAttributeValue("eSuperTypes"); 
-          if (esupers != null && 
-              (esupers.startsWith("#//") || 
-               esupers.startsWith("#/1")))
-          { String[] allsupers = esupers.split(" ");
-            for (int p = 0; p < allsupers.length; p++) 
-            { String supr = (String) allsupers[p];
-              String suprname = supr.substring(3,supr.length());   
-              if (suprname.startsWith("/"))
-              { suprname = suprname.substring(1,suprname.length()); }
-              Entity supent = (Entity) ModelElement.lookupByName(suprname,entities);
+          
+          if (baseClass != null && 
+              baseClass.length() > 0)
+          { Entity supent = 
+              (Entity) ModelElement.lookupByName(baseClass,entities);
             
-            // String supername = esupers.substring(3,esupers.length()); 
-            // Entity supent = (Entity) ModelElement.lookupByName(supername,entities);
-              if (supent != null) 
-              { Entity[] subents = new Entity[1]; 
-                subents[0] = ent; 
-                addInheritances(supent,subents); 
-                System.out.println(">>> Added inheritance: " + ename + " --|> " + suprname); 
-                supent.setAbstract(true);
-              } 
+            if (supent != null) 
+            { Entity[] subents = new Entity[1]; 
+              subents[0] = ent; 
+              addInheritances(supent,subents); 
+              System.out.println(">>> Added inheritance: " + 
+                         ename + " --|> " + supent.getName()); 
+              supent.setAbstract(true);
             } 
-          } */ 
+          }  
 
           Vector edata = enode.getSubnodes(); 
           for (int j = 0; j < edata.size(); j++) 
@@ -18820,7 +18815,7 @@ public void produceCUI(PrintWriter out)
                 Compiler2 cc = new Compiler2(); 
                 cc.nospacelexicalanalysis(km3code); 
                 BehaviouralFeature bf = 
-                  cc.operationDefinition(entities, types); 
+                  cc.parseOperationNoSemicolon(entities, types); 
                 ent.addOperation(bf); 
                 bf.setEntity(ent); 
               }  
@@ -18862,6 +18857,9 @@ public void produceCUI(PrintWriter out)
 
                 if ("true".equals(isStatic))
                 { att.setStatic(true); }    
+
+                if (idAttr.equals(dataname))
+                { att.setIdentity(true); } 
               }
             }
           }
@@ -18876,6 +18874,9 @@ public void produceCUI(PrintWriter out)
         String mult2 = enode.getAttributeValue("Multiplicity2"); 
         int card1 = Association.zAppDevMultiplicity(mult1); 
         int card2 = Association.zAppDevMultiplicity(mult2); 
+
+        String delete1 = enode.getAttributeValue("OnDelete1"); 
+        String delete2 = enode.getAttributeValue("OnDelete2"); 
 
         Entity ent1 = 
           (Entity) ModelElement.lookupByName(e1name,entities);
@@ -18906,6 +18907,10 @@ public void produceCUI(PrintWriter out)
         associations.add(ast);  
         ent1.addAssociation(ast); 
         ast.setName("r" + associations.size());
+    
+        if ("CascadeDelete".equals(delete1))
+        { ast.setComposition(true); } 
+
         int xs = 0, ys = 0, xe = 100, ye = 100;  
         for (int m = 0; m < visuals.size(); m++)
         { VisualData vd = (VisualData) visuals.get(m); 

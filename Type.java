@@ -1934,6 +1934,12 @@ public class Type extends ModelElement
     values.addAll(vals);
   }
 
+  public void addValue(String s)
+  { if (values == null) 
+    { values = new Vector(); } 
+    values.add(s); 
+  } 
+
   public String getValuesAsString()
   { if (values == null) { return ""; } 
     String res = ""; 

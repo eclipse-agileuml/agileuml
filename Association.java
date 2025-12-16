@@ -31,7 +31,8 @@ public class Association extends ModelElement
   // also ADDONLY, FROZEN options
   private boolean addOnly = false; // also represented as stereotypes 
   private boolean frozen = false; 
-  private boolean aggregation = false; 
+  private boolean aggregation = false; // composition at E1 
+ 
   private Vector constraints = new Vector(); // those that involve this association
   private Attribute qualifier = null; // non-null for qualified associations
   private boolean instanceScope = true; 
@@ -234,7 +235,21 @@ public class Association extends ModelElement
   public boolean getAggregation()
   { return aggregation; } 
 
+  public boolean isComposition()
+  { return aggregation; } 
+
   public void setAggregation(boolean a)
+  { aggregation = a; 
+    if (a) 
+    { if (hasStereotype("aggregation")) { } 
+      else 
+      { addStereotype("aggregation"); } 
+    }
+    else 
+    { removeStereotype("aggregation"); } 
+  }  
+
+  public void setComposition(boolean a)
   { aggregation = a; 
     if (a) 
     { if (hasStereotype("aggregation")) { } 

@@ -4670,6 +4670,43 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
   }  
 
 
+  public BehaviouralFeature parseOperationNoSemicolon(Vector entities, Vector types)
+  { int n = lexicals.size(); 
+    if (n == 0) 
+    { return null; } 
+
+    int i = n-1; 
+    while (" ".equals("" + lexicals.get(i)) || 
+           ";".equals("" + lexicals.get(i)))
+    { i = i - 1; } 
+
+    BehaviouralFeature bf;
+
+    String modality = "" + lexicals.get(0);
+
+    if ("static".equals(modality)) 
+    { bf = operationDefinition(2,i,entities,types); 
+      if (bf != null) 
+      { bf.setStatic(true); }
+    } 
+    else if ("abstract".equals(modality)) 
+    { bf = operationDefinition(2,i,entities,types); 
+      if (bf != null) 
+      { bf.setAbstract(true); }
+    } // can't be both abstract and static
+    else 
+    { bf = operationDefinition(1,i,entities,types); }
+ 
+    if (bf == null) 
+    { return null; } 
+
+    if ("query".equals(modality))
+    { bf.setQuery(true); } 
+    else 
+    { bf.setQuery(false); } 
+    return bf; 
+  } 
+
   public BehaviouralFeature parseOperation(Vector entities, Vector types)
   { int n = lexicals.size(); 
     if (n == 0) 
@@ -11702,9 +11739,15 @@ private Vector parseUsingClause(int st, int en, Vector entities, Vector types)
   { // System.out.println(Double.MAX_VALUE); 
     Compiler2 c = new Compiler2();
 
-    Vector conds = c.parse_conditions("_1`variableName _3`incrementedVariable, _1`variableName _2`lowerBound"); 
+    /* Vector conds = c.parse_conditions("_1`variableName _3`incrementedVariable, _1`variableName _2`lowerBound"); 
 
-    System.out.println(conds); 
+    System.out.println(conds); */ 
+
+    c.nospacelexicalanalysis("operation IsInRole(roleName : String) : boolean pre: true post: true activity: return this.Roles->exists( _x | lambda r : OclAny in (r.Name = roleName)->apply(_x));"); 
+
+    BehaviouralFeature bf = c.parseOperationNoSemicolon(new Vector(), new Vector()); 
+
+    System.out.println(bf); 
 
   /*  String testast = "(expression (logicalExpression (equalityExpression (additiveExpression (factorExpression C_{ (expression (logicalExpression (equalityExpression (additiveExpression (factorExpression (factor2Expression (basicExpression 2))))))) } ^{ (expression (logicalExpression (equalityExpression (additiveExpression (factorExpression (factor2Expression (basicExpression 4))))))) })))))"; */ 
 
