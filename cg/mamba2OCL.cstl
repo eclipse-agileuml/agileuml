@@ -59,7 +59,13 @@ foreach _2 in _3 { _4 } |-->for _2 : _3 do (_4`statementList)
 while _1 { } |-->while _1 do skip
 while _1 { _2 } |-->while _1 do ( _2`statementList)
 
+
+for ( int _2 = _3 ; _4 ; _5 ) { _6 } |-->for _2 : Integer.subrange(_3, _4`upperBound) do (_6`statementList)<when> _4`hasLowerBound _2, _5`isUnitIncrement true
+ 
+for int _2 = _3 ; _4 ; _5 { _6 } |-->for _2 : Integer.subrange(_3, _4`upperBound) do (_6`statementList)<when> _4`hasLowerBound _2, _5`isUnitIncrement true
+
 for ( _1 _2 = _3 ; _4 ; _5 ) { _6 } |-->(var _2 : _1 := _3;\n    while _4 do (_6`statementList; _5))
+
 for _1 _2 = _3 ; _4 ; _5 { _6 } |-->(var _2 : _1 := _3;\n    while _4 do (_6`statementList; _2 := _5))
 
 try { _1 } _* |-->try (_1`statementList) _*
@@ -134,6 +140,7 @@ Get ( _1 ) |-->OclAny
 First ( _1 ) |-->OclAny
 First ( ) |-->OclAny
 Last ( ) |-->OclAny
+Last ( _1 ) |-->OclAny
 Min ( _1 ) |-->OclAny
 Max ( _1 ) |-->OclAny
 Single ( _1 ) |-->OclAny
@@ -210,6 +217,57 @@ _1 |-->OclAny
 _* |-->OclAny
 
 
+hasLowerBound::
+_1 < _2 |-->_1
+_1 <= _2 |-->_1
+_1 _2 _3 |-->null
+_1 _2 |-->null
+
+_1 |-->_1`hasLowerBound<when> _1 factor_level6
+_1 |-->_1`hasLowerBound<when> _1 factor_level5
+_1 |-->_1`hasLowerBound<when> _1 factor_level4
+_1 |-->_1`hasLowerBound<when> _1 factor_level3
+_1 |-->_1`hasLowerBound<when> _1 factor_level2
+_1 |-->_1`hasLowerBound<when> _1 factor_level1
+_1 |-->_1`hasLowerBound<when> _1 factor_level0
+
+_1 |-->null
+
+
+upperBound::
+_1 < _2 |-->_2-1
+_1 <= _2 |-->_2
+_1 _2 _3 |-->null
+_1 _2 |-->null
+
+_1 |-->_1`upperBound<when> _1 factor_level6
+_1 |-->_1`upperBound<when> _1 factor_level5
+_1 |-->_1`upperBound<when> _1 factor_level4
+_1 |-->_1`upperBound<when> _1 factor_level3
+_1 |-->_1`upperBound<when> _1 factor_level2
+_1 |-->_1`upperBound<when> _1 factor_level1
+_1 |-->_1`upperBound<when> _1 factor_level0
+
+_1 |-->null
+
+
+isUnitIncrement::
+_1 + 1 |-->true
+1 + _1 |-->true
+
+_1 _2 _3 |-->false
+_1 _2 |-->false
+
+_1 |-->_1`isUnitIncrement<when> _1 factor_level6
+_1 |-->_1`isUnitIncrement<when> _1 factor_level5
+_1 |-->_1`isUnitIncrement<when> _1 factor_level4
+_1 |-->_1`isUnitIncrement<when> _1 factor_level3
+_1 |-->_1`isUnitIncrement<when> _1 factor_level2
+_1 |-->_1`isUnitIncrement<when> _1 factor_level1
+_1 |-->_1`isUnitIncrement<when> _1 factor_level0
+
+_1 |-->false
+ 
 
 lamda_parameter_with_datatype:: 
 _1 _2 |-->_2 : _1 
@@ -298,7 +356,17 @@ member_with_expression::
 _1 . _2 |-->_1._2
 
 
+objectRef::
+_1 . _2 |-->_1
+
+property::
+_1 . _2 |-->_2
+
+
 member::
+_1 |-->_1`member<when> _1 id_or_function_call
+_1 |-->_1`member<when> _1 function_call
+
 _1 . Length |-->_1->size()
 
 _1 . _2 |-->_2`functionArguments<when> _1 Function, _2 id_or_function_call, _2`functionName Create
@@ -307,11 +375,13 @@ _1 . _2 |-->_1_2`mapQueryForm<when> _1 Map, _2 id_or_function_call
 _1 . _2 |-->_1_2`mapQueryForm<when> _1 Map, _2 function_call
 _1 . _2 |-->_1._2`mapQueryForm<when> _1 Map, _2 member
 
-_1 . _2 |-->_1`queryForm_2`queryForm<when> _2 id_or_function_call
-_1 . _2 |-->_1`queryForm_2`queryForm<when> _2 function_call
-_1 . _2 |-->_1._2`queryForm<when> _2 member
+_1 . _2 |-->_1`member_2`queryForm<when> _2 id_or_function_call
+_1 . _2 |-->_1`member_2`queryForm<when> _2 function_call
+_1 . _2 |-->_1`member_2`queryForm<when> _2 member
 
 _1 . _2 |-->_1._2
+
+_1 |-->_1
 
 
 parenthesis_expression::
@@ -448,8 +518,13 @@ _1 . _2 |-->_1 := _1_2`mapUpdateFunctionCall<when> _1 Map, _2 id_or_function_cal
 _1 . _2 |-->_1 := _1_2`updateFunctionCall<when> _2 id_or_function_call
 _1 . _2 |-->_1 := _1_2`updateFunctionCall<when> _2 function_call
 
+_1 . _2 |-->_1._2`objectRef := _1._2`objectRef_2`updateProperty<when> _2 member
+
 _1 . _2 |-->_1._2
 
+
+updateProperty::
+_1 . _2 |-->_2`updateFunctionCall
 
 
 updateFunctionCall::
@@ -494,10 +569,13 @@ _1 ( _2) |-->._1(_2)
 
  
 queryForm::
+Length |-->->size()
+
 _1 |-->_1`queryForm<when> _1 id_or_function_call
 _1 |-->_1`queryForm<when> _1 function_call
 _1 |-->_1`queryForm<when> _1 member
 _1 |-->_1`queryForm<when> _1 operand
+
 
 Create ( ) |-->.newInstance()
 
@@ -532,6 +610,8 @@ Except ( _1 ) |--> - _1
 First ( ) |-->->first()
 First ( _1 ) |-->->any( _x | _1->apply(_x) )
 Last ( ) |-->->last()
+Last ( _1 ) |-->->reverse()->any( _x | _1->apply(_x) )
+
 All ( _1 ) |-->->forAll( _x | _1->apply(_x) )
 Any ( ) |-->->notEmpty()
 Any ( _1 ) |-->->exists( _x | _1->apply(_x) )
@@ -549,20 +629,22 @@ HasKey ( _1 ) |-->->includesKey(_1)
 GetKeys ( ) |-->->keys()
 GetValues ( ) |-->->values()
 
+_1 . Length |-->_1->size()
+
 _1 . _2 |-->_2`functionArguments<when> _1 Function, _2 id_or_function_call, _2`functionName Create
 
 _1 . _2 |-->_1_2`mapQueryForm<when> _1 Map, _2 id_or_function_call
 _1 . _2 |-->_1_2`mapQueryForm<when> _1 Map, _2 function_call
-_1 . _2 |-->_1._2`mapQueryForm<when> _1 Map, _2 member
+_1 . _2 |-->_1_2`mapQueryForm<when> _1 Map, _2 member
 
 _1 . _2 |-->_1`queryForm_2`queryForm<when> _2 id_or_function_call
 _1 . _2 |-->_1_2`queryForm<when> _2 function_call
 _1 . _2 |-->_1_2`queryForm<when> _2 member
-_1 . _2 |-->_1._2`queryForm<when> _2 operand
+_1 . _2 |-->_1_2`queryForm<when> _2 operand
  
 _1 ( _2 ) |-->._1(_2)
 _1 ( ) |-->._1()
-_1 |-->_1
+_1 |-->._1
 
 
 mapQueryForm::
