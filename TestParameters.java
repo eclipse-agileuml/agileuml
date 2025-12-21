@@ -33,10 +33,13 @@ public class TestParameters
   /* Settings for flaw/technical debt detection */ 
 
   public static int syntacticComplexityLimit = 12; /* for MEL */ 
-  public static int cloneSizeLimit = 7;           /* for DC  */
+
+  public static int cloneSizeLimit = 7;            /* for DC  */
+  public static int energyCloneSizeLimit = 4; 
+
   public static int statementNestingLimit = 5;  
   public static int cyclomaticComplexityLimit = 10; 
-  public static int referenceChainLimit = 2; 
+  public static int referenceChainLimit = 3; 
   public static int nestedTypeLimit = 3; 
 
   public static int superclassesLimit = 4; 

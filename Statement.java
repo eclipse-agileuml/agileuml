@@ -10534,6 +10534,7 @@ class SequenceStatement extends Statement
 
     // Clones of statements, at least 2: 
 
+    /* 
     Vector fstats = flattenSequenceStatement(); 
 
     // System.out.println(">>> Flatttended seq: " + fstats);
@@ -10558,7 +10559,7 @@ class SequenceStatement extends Statement
       { used.add(op); }
       clones.put(val,used);
       cdefs.put(val, sq); 
-    } 
+    } */ 
 
     // System.out.println(">>> Clones: " + clones); 
 
@@ -17264,6 +17265,7 @@ class ConditionalStatement extends Statement
       clones.put(val,used); */ 
       test.findClones(clones,rule,op); 
     } 
+
     ifPart.findClones(clones,rule,op); 
     if (elsePart != null) 
     { elsePart.findClones(clones,rule,op); } 
@@ -17274,7 +17276,9 @@ class ConditionalStatement extends Statement
                          String rule, String op)
   { if (test.syntacticComplexity() >= UCDArea.CLONE_LIMIT)
     { test.findClones(clones,cdefs,rule,op); } 
+
     ifPart.findClones(clones,cdefs,rule,op); 
+
     if (elsePart != null) 
     { elsePart.findClones(clones,cdefs,rule,op); } 
   }

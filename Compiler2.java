@@ -724,6 +724,11 @@ public class Compiler2
   { int in = INUNKNOWN; 
     char previous = ' '; 
 
+    if (str == null)
+    { lexicals = new Vector();
+      return; 
+    } 
+
     int explen = str.length(); 
     lexicals = new Vector(explen);  /* Sequence of lexicals */ 
     StringBuffer sb = null;    /* Holds current lexical item */ 
@@ -746,7 +751,7 @@ public class Compiler2
           in = INBASICEXP; 
           sb.append(c); 
         }           
-        else if (isStringDelimiter(c))
+        else if (c == '"') // (isStringDelimiter(c))
         { sb = new StringBuffer();  // new buffer for the string
           lexicals.addElement(sb);  
           in = INSTRING; 
@@ -833,10 +838,13 @@ public class Compiler2
         { in = INUNKNOWN; } 
       }
       else if (in == INSTRING) 
-      { if (isStringDelimiter(c) && prev != '\\')  /* end of string */ 
+      { if (c == '"' && prev != '\\')
+        /* (isStringDelimiter(c) && prev != '\\')  end of string */ 
         { sb.append('"'); 
           in = INUNKNOWN; 
         } 
+        else if (c == '\'' && prev != '\\')
+        { sb.append("\'"); } 
         else 
         { sb.append(c); } 
       }    
@@ -2576,7 +2584,10 @@ public class Compiler2
   } 
 
   public Expression parseExpression() 
-  { // System.out.println("LEXICALS: " + lexicals); 
+  { // System.out.println("LEXICALS: " + lexicals);
+    if (lexicals.size() == 0)
+    { return null; } 
+ 
     Vector env = new Vector(); 
     Expression ee = parse_expression(0,0,lexicals.size()-1,env,env); 
     finalexpression = ee; 
@@ -2584,7 +2595,8 @@ public class Compiler2
   } 
 
   public Expression parseExpression(Vector entities, Vector types) 
-  { Expression ee = parse_expression(0,0,lexicals.size()-1,entities,types); 
+  { Expression ee = parse_expression(0,0,lexicals.size()-1,
+                                     entities,types); 
     finalexpression = ee; 
     return ee; 
   } 
@@ -2617,6 +2629,9 @@ public class Compiler2
 
   public Expression parse_expression(int bcount, int pstart, int pend, Vector entities, Vector types)
   { Expression ee = null; 
+
+    if (lexicals.size() == 0) 
+    { return ee; } 
     
     if ("if".equals(lexicals.get(pstart) + "") && "endif".equals(lexicals.get(pend) + ""))
     { ee = parse_conditional_expression(bcount,pstart,pend,
@@ -4095,6 +4110,8 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
     { String brack = lexicals.get(i-1) + ""; 
       String strs = lexicals.get(i) + "";
       String brack2 = lexicals.get(i+1) + "";
+
+      // ).id(
  
       if (brack.equals(")") && brack2.equals("(") && 
           strs.length() > 1 && '.' == strs.charAt(0))
@@ -11743,11 +11760,16 @@ private Vector parseUsingClause(int st, int en, Vector entities, Vector types)
 
     System.out.println(conds); */ 
 
-    c.nospacelexicalanalysis("operation IsInRole(roleName : String) : boolean pre: true post: true activity: return this.Roles->exists( _x | lambda r : OclAny in (r.Name = roleName)->apply(_x));"); 
+    // c.nospacelexicalanalysis("(orderedsegments[i + 1].DepartureDateTime).AddMinutes(duration)"); 
 
-    BehaviouralFeature bf = c.parseOperationNoSemicolon(new Vector(), new Vector()); 
+    c.nospacelexicalanalysis("(DateTime.GetDiff(orderedsegments[i + 1].ArrivalDateTime, orderedsegments[i + 1].DepartureDateTime)).Minutes"); 
 
-    System.out.println(bf); 
+    // DateTime.GetDiff(orderedsegments[i + 1].ArrivalDateTime, orderedsegments[i + 1].DepartureDateTime).Minutes
+
+    Expression expr = c.parseExpression(); 
+
+    System.out.println(expr); 
+
 
   /*  String testast = "(expression (logicalExpression (equalityExpression (additiveExpression (factorExpression C_{ (expression (logicalExpression (equalityExpression (additiveExpression (factorExpression (factor2Expression (basicExpression 2))))))) } ^{ (expression (logicalExpression (equalityExpression (additiveExpression (factorExpression (factor2Expression (basicExpression 4))))))) })))))"; */ 
 

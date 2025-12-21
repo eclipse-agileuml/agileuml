@@ -166,7 +166,7 @@ public class UCDArea extends JPanel
   ModifyUseCaseDialog editucDialog; 
   WinHandling state_win = new WinHandling(); 
 
-  public static int CLONE_LIMIT = 10; /* expression size */ 
+  public static int CLONE_LIMIT = 7; /* expression size */ 
 
 
   public UCDArea(UmlTool par)
@@ -1538,11 +1538,11 @@ public class UCDArea extends JPanel
     } 
     
     String cloneLimit = 
-      JOptionPane.showInputDialog("Enter clone size limit (default 10): ");
+      JOptionPane.showInputDialog("Enter clone size limit (default 7): ");
     if (cloneLimit != null) 
     { try { CLONE_LIMIT = Integer.parseInt(cloneLimit); } 
       catch (Exception _ex) 
-      { CLONE_LIMIT = 10; } 
+      { CLONE_LIMIT = 7; } 
     } 
     
     ent1.extractOperations(); 
@@ -1568,12 +1568,12 @@ public class UCDArea extends JPanel
     } 
     
     String cloneLimit = 
-      JOptionPane.showInputDialog("Enter clone/expression size limit (default 10) for extraction: ");
+      JOptionPane.showInputDialog("Enter clone/expression size limit (default 7) for extraction: ");
 
     if (cloneLimit != null) 
     { try { CLONE_LIMIT = Integer.parseInt(cloneLimit); } 
       catch (Exception _ex) 
-      { CLONE_LIMIT = 10; } 
+      { CLONE_LIMIT = 7; } 
     } 
     
     ent1.extractLocalVariables(); 
@@ -3706,9 +3706,11 @@ public class UCDArea extends JPanel
 
   public void energyAnalysis()
   { java.util.Map clnes = new java.util.HashMap(); 
-    Vector messages = new Vector(); 
-    energyAnalysis(clnes, messages);
+    Vector messages = new Vector();
 
+    TestParameters.cloneSizeLimit = 4; 
+
+    energyAnalysis(clnes, messages);
 
     for (int i = 0; i < messages.size(); i++) 
     { String mess = (String) messages.get(i); 
@@ -4300,14 +4302,14 @@ public class UCDArea extends JPanel
     cgs.setTypes(types); 
     cgs.setEntities(entities); 
 
+    Vector generatedClasses = new Vector(); 
+
     File entf = new File("output/" + systemName + ".json"); 
     try
     { PrintWriter entfout = new PrintWriter(
                                   new BufferedWriter(
                                     new FileWriter(entf)));
       entfout.println("{ \"Classes\": ["); 
-
-      Vector generatedClasses = new Vector(); 
 
       for (int j = 0; j < entities.size(); j++) 
       { Entity ent = (Entity) entities.get(j); 
@@ -4336,67 +4338,45 @@ public class UCDArea extends JPanel
 
       entfout.close(); 
     } catch (Exception _ex) { } 
-  }
 
-// applyCSTLSpecification("./cg/cgMamba.cstl"); }
-
- /*   Vector auxcstls = new Vector(); 
-    
-    CGSpec cgs = loadCSTL("cgMamba.cstl",auxcstls); 
-    cgs.setTypes(types); 
-    cgs.setEntities(entities); 
-
-    for (int j = 0; j < entities.size(); j++) 
-    { Entity ent = (Entity) entities.get(j); 
-      String ename = ent.getName(); 
-
-      if (ent.isDerived()) { }
-      else if (ent.isComponent()) { }
-      else 
-      { String entfile = ename + ".mamba"; 
-        File entf = new File("output/" + entfile); 
-        try
-        { PrintWriter entfout = new PrintWriter(
-                                  new BufferedWriter(
-                                    new FileWriter(entf)));
-          		  					
-          ent.generateOperationDesigns(types,entities);  
-          String entcode = ent.cg(cgs);    
-          CGSpec.displayText(entcode,entfout);
-
-          entfout.println(); 
-          entfout.println(); 
-
-          // String maincode = ent.cg(cgswiftmain); 
-          // cgswiftmain.displayText(maincode,entfout); 
-
-          entfout.close();
-        } catch (Exception _e1) { _e1.printStackTrace(); }
-      }
-    } 			
-
-    System.out.println(">>> classes E are generated in files output/E.mamba"); 
-
-    String appfile = "App.mamba"; 
-    File appf = new File("output/" + appfile); 
+    File bof = new File("output/" + systemName + ".bo"); 
     try
-    { PrintWriter appfout = new PrintWriter(
-                              new BufferedWriter(
-                                new FileWriter(appf)));
-        
-      Vector entusecases = new Vector(); 
-      for (int i = 0; i < useCases.size(); i++) 
-      { if (useCases.get(i) instanceof UseCase)
-        { UseCase uc = (UseCase) useCases.get(i);
-          entusecases.add(uc);
-          String uccode = uc.cgActivity(cgs,types,entities);
-          CGSpec.displayText(uccode,appfout);
-        }       
+    { PrintWriter bofout = new PrintWriter(
+                                  new BufferedWriter(
+                                    new FileWriter(bof)));
+
+      bofout.println("<BusinessObject Model_Name=\"" + systemName + "\" Model_Description=\"\" Model_Creator=\"\">"); 
+
+      bofout.println("<Associations>"); 
+      for (int i = 0; i < associations.size(); i++) 
+      { Association ast = (Association) associations.get(i); 
+        ast.generateMambaXML(bofout, systemName); 
       } 
-   
-      appfout.close();
-    } catch (Exception _e1) { _e1.printStackTrace(); }
-  } */ 
+      bofout.println("</Associations>"); 
+
+      bofout.println("<Classes>"); 
+
+      for (int j = 0; j < generatedClasses.size(); j++) 
+      { Entity ent = (Entity) generatedClasses.get(j); 
+        String ename = ent.getName(); 
+        RectForm rf2 = (RectForm) getVisualOf(ent);
+
+        ent.generateMambaXML(bofout, systemName, cgs, 
+                          rf2.getx(),rf2.gety(),
+                          rf2.getwidth(),rf2.getheight());
+      } 
+
+      for (int k = 0; k < types.size(); k++) 
+      { Type typ = (Type) types.get(k); 
+        if (typ.isEnumeration())
+        { typ.generateMambaXML(bofout, systemName); } 
+      } 
+
+      bofout.println("</Classes>"); 
+
+      bofout.close(); 
+    } catch (Exception _ex) { } 
+  }
 
 
   public void generateSwiftUIApp()
@@ -18824,12 +18804,20 @@ public void produceCUI(PrintWriter out)
             { Vector attrs = ed.getSubnodes(); 
               for (int k = 0; k < attrs.size(); k++)
               { XMLNode anode = (XMLNode) attrs.get(k); 
+                String isInherited = 
+                     anode.getAttributeValue("IsInherited"); 
+     
+                if ("true".equals(isInherited)) 
+                { continue; } 
+
                 String dataname = 
                      anode.getAttributeValue("Name"); 
                 String atttype = 
                      anode.getAttributeValue("DataType"); 
      
-                Type typ = Type.typeFromMamba(atttype, entities, types); 
+                Type typ = 
+                  Type.typeFromMamba(atttype,entities,types);
+ 
                 Attribute att = 
                   new Attribute(dataname,typ,
                                 ModelElement.INTERNAL); 
@@ -18851,6 +18839,15 @@ public void produceCUI(PrintWriter out)
                                          "\"" + init + "\"");
                     expr.setType(typ); 
                     expr.setElementType(typ);  
+                    att.setInitialExpression(expr); 
+                  }
+                  else 
+                  { Compiler2 comp2 = new Compiler2();
+                    comp2.nospacelexicalanalysis(init); 
+                    Expression expr = 
+                      comp2.parseExpression(entities,types); 
+                    if (expr != null) 
+                    { expr.setType(typ); }
                     att.setInitialExpression(expr); 
                   }
                 }

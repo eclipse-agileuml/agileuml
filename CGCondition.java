@@ -957,15 +957,18 @@ public class CGCondition
   }
 
   public boolean conditionSatisfied(Vector v, Vector entities, CGSpec cgs, Vector gvars)
-  { // System.out.println(".>>>. Checking vector condition " + quantifier + " " + stereotype); 
+  { JOptionPane.showInputDialog(".>>>. Checking vector condition " + quantifier + " " + stereotype + " on " + v); 
     
+    int vsize = v.size(); 
+    String slowercase = stereotype.toLowerCase(); 
+
     if ("all".equals(quantifier))
-    { if (v.size() == 0) 
+    { if (vsize == 0) 
       { return true; } 
 
       CGCondition gcond = new CGCondition(stereotype, "_1"); 
       gcond.setPositive(positive);  
-      for (int i = 0; i < v.size(); i++) 
+      for (int i = 0; i < vsize; i++) 
       { Object x = v.get(i); 
         if (gcond.conditionSatisfied(x,entities,cgs)) { } 
         else 
@@ -980,7 +983,7 @@ public class CGCondition
 
       CGCondition gcond = new CGCondition(stereotype,"_1");
       gcond.setPositive(positive);  
-      for (int i = 0; i < v.size(); i++) 
+      for (int i = 0; i < vsize; i++) 
       { Object x = v.get(i); 
         if (gcond.conditionSatisfied(x,entities,cgs)) 
         { return true; } 
@@ -988,69 +991,96 @@ public class CGCondition
       return false; 
     }
 
-    if ("empty".equals(stereotype.toLowerCase()) && 
-        (v == null || v.size() == 0))
+    if ("empty".equals(slowercase) && 
+        (v == null || vsize == 0))
     { return positive; }
 
-    if ("empty".equals(stereotype.toLowerCase()) && 
-        v != null && v.size() > 0)
+    if ("empty".equals(slowercase) && 
+        v != null && vsize > 0)
     { return !positive; }
 
-    if ("multiple".equals(stereotype.toLowerCase()) && 
-        (v == null || v.size() <= 1))
+    if ("multiple".equals(slowercase) && 
+        (v == null || vsize <= 1))
     { return !positive; }
 
-    if ("multiple".equals(stereotype.toLowerCase()) && 
-        v != null && v.size() > 1)
+    if ("multiple".equals(slowercase) && 
+        v != null && vsize > 1)
     { return positive; }
 
-    if ("singleton".equals(stereotype.toLowerCase()) && 
-        (v == null || v.size() != 1))
+    if ("singleton".equals(slowercase) && 
+        (v == null || vsize != 1))
     { return !positive; }
 
-    if ("singleton".equals(stereotype.toLowerCase()) && 
-        v != null && v.size() == 1)
+    if ("singleton".equals(slowercase) && 
+        v != null && vsize == 1)
     { return positive; }
 
-    if ("1ary".equals(stereotype.toLowerCase()) && 
-        (v == null || v.size() != 1))
+    if ("1ary".equals(slowercase) && 
+        (v == null || vsize != 1))
     { return !positive; }
 
-    if ("1ary".equals(stereotype.toLowerCase()) && 
-        v != null && v.size() == 1)
+    if ("1ary".equals(slowercase) && 
+        v != null && vsize == 1)
     { return positive; }
 
-    if ("2ary".equals(stereotype.toLowerCase()) && 
-        (v == null || v.size() != 2))
+    if ("2ary".equals(slowercase) && 
+        (v == null || vsize != 2))
     { return !positive; }
 
-    if ("2ary".equals(stereotype.toLowerCase()) && 
-        v != null && v.size() == 2)
+    if ("2ary".equals(slowercase) && 
+        v != null && vsize == 2)
     { return positive; }
 
-    if ("3ary".equals(stereotype.toLowerCase()) && 
-        (v == null || v.size() != 3))
+    if ("3ary".equals(slowercase) && 
+        (v == null || vsize != 3))
     { return !positive; }
 
-    if ("3ary".equals(stereotype.toLowerCase()) && 
-        v != null && v.size() == 3)
+    if ("3ary".equals(slowercase) && 
+        v != null && vsize == 3)
     { return positive; }
 
-    if ("4ary".equals(stereotype.toLowerCase()) && 
-        (v == null || v.size() != 4))
+    if ("4ary".equals(slowercase) && 
+        (v == null || vsize != 4))
     { return !positive; }
 
-    if ("4ary".equals(stereotype.toLowerCase()) && 
-        v != null && v.size() == 4)
+    if ("4ary".equals(slowercase) && 
+        v != null && vsize == 4)
     { return positive; }
 
-    if ("5ary".equals(stereotype.toLowerCase()) && 
-        (v == null || v.size() != 5))
+    if ("5ary".equals(slowercase) && 
+        (v == null || vsize != 5))
     { return !positive; }
 
-    if ("5ary".equals(stereotype.toLowerCase()) && 
-        v != null && v.size() == 5)
+    if ("5ary".equals(slowercase) && 
+        v != null && vsize == 5)
     { return positive; }
+
+     
+    if (stereotype.startsWith("\"last ") && 
+        v.get(vsize - 1) instanceof ASTTerm)
+    { ASTTerm trm = (ASTTerm) v.get(vsize-1); 
+    
+      String stere = stereotype.split(" ")[1]; 
+
+      // JOptionPane.showInputDialog(".>>>. Checking condition " + stere + " on " + trm); 
+    
+      if (trm.getTag().equals(stere))
+      { return true; } 
+      return false; 
+    } 
+
+    if (stereotype.startsWith("\"first ") && 
+        v.get(0) instanceof ASTTerm)
+    { ASTTerm trm = (ASTTerm) v.get(0); 
+    
+      String stere = stereotype.split(" ")[1]; 
+
+      // JOptionPane.showInputDialog(".>>>. Checking condition " + stere + " on " + trm); 
+    
+      if (trm.getTag().equals(stere))
+      { return true; } 
+      return false; 
+    } 
 
     return false; 
   } 

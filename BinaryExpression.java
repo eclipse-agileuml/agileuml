@@ -3681,6 +3681,7 @@ public void findClones(java.util.Map clones,
 
   if (this.syntacticComplexity() < UCDArea.CLONE_LIMIT) 
   { return; }
+
   String val = this + ""; 
   Vector used = (Vector) clones.get(val);
   if (used == null)
@@ -3690,7 +3691,8 @@ public void findClones(java.util.Map clones,
   else if (op != null)
   { used.add(op); }
   clones.put(val,used);
-  cloneDefs.put(val, this); 
+  cloneDefs.put(val, this);
+ 
   left.findClones(clones,cloneDefs,rule,op);
   right.findClones(clones,cloneDefs,rule,op);
 
@@ -3698,7 +3700,7 @@ public void findClones(java.util.Map clones,
   { Expression expr = accumulator.getInitialExpression(); 
     if (expr != null) 
     { expr.findClones(clones,cloneDefs,rule,op); }
-  }  
+  }
 
 }
 
