@@ -253,9 +253,7 @@ class MatrixLib {
 
             for (auto z: m) {
                 bool y = (bool) z;
-                if (!y) {
-                    dmat.push_back(y);
-                }
+                dmat.push_back(!y);
             }
             return dmat;
         }
