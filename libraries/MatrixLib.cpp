@@ -272,7 +272,7 @@ class MatrixLib {
                 return n;
             }
 
-            vector<bool> dmat(m.size());
+            vector<double> dmat(m.size());
 
             for (auto z: m) {
                 double y = (double) z;
@@ -293,7 +293,7 @@ class MatrixLib {
                 return n;
             }
 
-            vector<bool> dmat(m.size());
+            vector<double> dmat(m.size());
 
             for (auto z: m) {
                 double y = (double) z;
@@ -314,7 +314,7 @@ class MatrixLib {
                 return n;
             }
 
-            vector<bool> dmat(m.size());
+            vector<double> dmat(m.size());
 
             for (auto z: m) {
                 double y = (double) z;
@@ -335,7 +335,7 @@ class MatrixLib {
                 return n;
             }
 
-            vector<bool> dmat(m.size());
+            vector<double> dmat(m.size());
 
             for (auto z: m) {
                 double y = (double) z;
@@ -356,7 +356,7 @@ class MatrixLib {
                 return n;
             }
 
-            vector<bool> dmat(m.size());
+            vector<double> dmat(m.size());
 
             for (auto z: m) {
                 double y = (double) z;
