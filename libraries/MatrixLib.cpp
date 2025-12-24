@@ -267,7 +267,7 @@ class MatrixLib {
             if (string(typeid(m[0]).name()).find("vector") != string::npos) {
                 vector<T> n(m.size());
                 for (auto _r : m) {
-                    n.push_back(elementwiseNMult({_r}, x));
+                    n.push_back(elementwiseMult({_r}, x));
                 }
                 return n;
             }
@@ -288,7 +288,7 @@ class MatrixLib {
             if (string(typeid(m[0]).name()).find("vector") != string::npos) {
                 vector<T> n(m.size());
                 for (auto _r : m) {
-                    n.push_back(elementwiseNMult({_r}, x));
+                    n.push_back(elementwisePower({_r}, x));
                 }
                 return n;
             }
