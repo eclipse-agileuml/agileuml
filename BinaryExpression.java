@@ -3681,6 +3681,7 @@ public void findClones(java.util.Map clones,
 
   if (this.syntacticComplexity() < UCDArea.CLONE_LIMIT) 
   { return; }
+
   String val = this + ""; 
   Vector used = (Vector) clones.get(val);
   if (used == null)
@@ -3690,7 +3691,8 @@ public void findClones(java.util.Map clones,
   else if (op != null)
   { used.add(op); }
   clones.put(val,used);
-  cloneDefs.put(val, this); 
+  cloneDefs.put(val, this);
+ 
   left.findClones(clones,cloneDefs,rule,op);
   right.findClones(clones,cloneDefs,rule,op);
 
@@ -3698,7 +3700,7 @@ public void findClones(java.util.Map clones,
   { Expression expr = accumulator.getInitialExpression(); 
     if (expr != null) 
     { expr.findClones(clones,cloneDefs,rule,op); }
-  }  
+  }
 
 }
 
@@ -21639,6 +21641,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
     // Integer.subrange(a,b)->collect(x | sq[x+1]) replaced by
     //     sq.subrange(a+1,b+1)
 
+    // and other simplifications for energy-efficiency & quality
+
 
     Expression lexpr = left.simplifyOCL(); 
     Expression rexpr = right.simplifyOCL(); 
@@ -21648,6 +21652,9 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
 
     if ("let".equals(operator)) 
     { return Expression.simplifyLet(accumulator, lexpr, rexpr); } 
+
+    if ("->apply".equals(operator)) 
+    { return Expression.simplifyApply(lexpr, rexpr); } 
 
     if ("|C".equals(operator))
     { BinaryExpression beleft = (BinaryExpression) lexpr; 
@@ -21813,7 +21820,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       }
     }
 
-    if (operator.equals(">") && "0".equals(right + "") && 
+    if (( (operator.equals(">") && "0".equals(right + "")) ||
+          (operator.equals(">=") && "1".equals(right + "")) ) && 
         left instanceof UnaryExpression)
     { UnaryExpression arg = (UnaryExpression) left; 
       String leftop = arg.getOperator(); 
@@ -21879,7 +21887,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       } 
     }
 
-    if (operator.equals(">") && "0".equals(right + "") && 
+    if (((operator.equals(">") && "0".equals(right + "")) ||
+         (operator.equals(">=") && "1".equals(right + "")) ) && 
         left instanceof BinaryExpression)
     { BinaryExpression be = (BinaryExpression) left; 
       String leftop = be.getOperator(); 
@@ -21896,16 +21905,19 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
 
     if (operator.equals("|"))
     { BinaryExpression arg = (BinaryExpression) left; 
-      Expression domain = arg.getRight(); 
+      Expression domain = arg.getRight();
+      Expression svar = arg.getLeft(); 
+ 
       if (domain instanceof BinaryExpression) 
       { BinaryExpression lbe = (BinaryExpression) domain; 
 
         if (lbe.operator.equals("->select"))
         { System.err.println("!! OCL efficiency smell (OES): Inefficient nested select: " + this);
+
           Expression newleft = lbe.getLeft();
           Expression newright = lbe.getRight();
           BasicExpression ref = 
-                     (BasicExpression) arg.getLeft();   
+                     (BasicExpression) svar;   
           Expression newpred = 
             Expression.simplifyAnd(
                newright.addReference(ref, ref.getType()), right); 
@@ -21914,36 +21926,89 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
                                       newleft); 
           return new BinaryExpression("|", newdomain, newpred); 
         }  
+        else if (lbe.operator.equals("|"))
+        { BinaryExpression newleft = 
+                (BinaryExpression) lbe.getLeft();
+          Expression newright = lbe.getRight();
+          Expression newvar = newleft.getLeft(); 
+
+          System.err.println("!! OCL efficiency smell (OES): Inefficient nested select: " + this);
+
+          if (("" + svar).equals("" + newvar))
+          { Expression newpred = 
+              Expression.simplifyAnd(newright, right); 
+            Expression newdomain = 
+              new BinaryExpression(":", svar, newleft.getRight()); 
+            return new BinaryExpression("|", newdomain, newpred);
+          } 
+          else 
+          { Expression subright = 
+                  right.substituteEq("" + svar, newvar);
+            Expression newpred = 
+              Expression.simplifyAnd(newright, subright); 
+            return new BinaryExpression("|", newleft, newpred);
+          }
+        }  
         else if (lbe.operator.equals("->reject"))
-        { System.err.println("!! OCL efficiency smell (OES): Inefficient nested select: " + this);
+        { System.err.println("!! OCL efficiency smell (OES): Inefficient nested reject/select: " + this);
+
           Expression newleft = lbe.getLeft(); 
           Expression newright = lbe.getRight();
           BasicExpression ref = 
-                     (BasicExpression) arg.getLeft();   
+                     (BasicExpression) svar;   
           Expression newpred = 
             Expression.simplifyAnd(
-              Expression.negate(newright.addReference(ref,
-                                           ref.getType())), 
+              Expression.negate(
+                  newright.addReference(ref,
+                                        ref.getType())), 
               right); 
           Expression newdomain = 
             new BinaryExpression(":", ref, 
                                       newleft); 
           return new BinaryExpression("|", newdomain, newpred); 
         }  
+        else if (lbe.operator.equals("|R"))
+        { BinaryExpression newleft = 
+                (BinaryExpression) lbe.getLeft();
+          Expression newright = lbe.getRight();
+          Expression newvar = newleft.getLeft();
+ 
+          System.err.println("!! OCL efficiency smell (OES): Inefficient nested reject/select: " + this);
+          
+          if (("" + svar).equals("" + newvar))
+          { Expression newpred = 
+              Expression.simplifyAnd(
+                  Expression.negate(newright), right); 
+            Expression newdomain = 
+              new BinaryExpression(":",svar, newleft.getRight()); 
+            return new BinaryExpression("|", newdomain, newpred);
+          } 
+          else 
+          { Expression subright = 
+                  right.substituteEq("" + svar, newvar);
+            Expression newpred = 
+              Expression.simplifyAnd(
+                  Expression.negate(newright), subright); 
+            return new BinaryExpression("|", newleft, newpred);
+          }
+        }  
       }
     }
     else if (operator.equals("|R"))
     { BinaryExpression arg = (BinaryExpression) left; 
       Expression domain = arg.getRight(); 
+      Expression svar = arg.getLeft(); 
+
       if (domain instanceof BinaryExpression) 
       { BinaryExpression lbe = (BinaryExpression) domain; 
 
         if (lbe.operator.equals("->select"))
         { System.err.println("!! OCL efficiency smell (OES): Inefficient nested select/reject: " + this);
+
           Expression newleft = lbe.getLeft();
           Expression newright = lbe.getRight();
           BasicExpression ref = 
-                     (BasicExpression) arg.getLeft();   
+                     (BasicExpression) svar;   
           Expression newpred = 
             Expression.simplifyAnd(
                newright.addReference(ref, ref.getType()), 
@@ -21952,6 +22017,30 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
             new BinaryExpression(":", ref, 
                                       newleft); 
           return new BinaryExpression("|", newdomain, newpred); 
+        }  
+        else if (lbe.operator.equals("|"))
+        { BinaryExpression newleft = 
+                (BinaryExpression) lbe.getLeft();
+          Expression newright = lbe.getRight();
+          Expression newvar = newleft.getLeft(); 
+          System.err.println("!! OCL efficiency smell (OES): Inefficient nested reject/select: " + this);
+
+          if (("" + svar).equals("" + newvar))
+          { Expression newpred = 
+              Expression.simplifyAnd(newright, 
+                             Expression.negate(right)); 
+            Expression newdomain = 
+              new BinaryExpression(":", svar, newleft.getRight()); 
+            return new BinaryExpression("|", newdomain, newpred);
+          }
+          else // substituteEq("" + svar, newvar)
+          { Expression subright = 
+                  right.substituteEq("" + svar, newvar);
+            Expression newpred = 
+              Expression.simplifyAnd(newright, 
+                             Expression.negate(subright)); 
+            return new BinaryExpression("|", newleft, newpred);
+          } 
         }  
         else if (lbe.operator.equals("->reject"))
         { System.err.println("!! OCL efficiency smell (OES): Inefficient nested reject: " + this);
@@ -21969,17 +22058,228 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
                                       newleft); 
           return new BinaryExpression("|R", newdomain, newpred); 
         }  
+        else if (lbe.operator.equals("|R"))
+        { BinaryExpression newleft = 
+                (BinaryExpression) lbe.getLeft();
+          Expression newright = lbe.getRight();
+          Expression newvar = newleft.getLeft(); 
+          System.err.println("!! OCL efficiency smell (OES): Inefficient nested reject: " + this);
+
+          if (("" + svar).equals("" + newvar))
+          { Expression newpred = 
+              Expression.simplifyOr(newright, right); 
+            Expression newdomain = 
+              new BinaryExpression(":",svar, newleft.getRight()); 
+            return new BinaryExpression("|R", newdomain, newpred);
+          } 
+          else 
+          { Expression subright = 
+                right.substituteEq("" + svar, newvar); 
+            Expression newpred = 
+              Expression.simplifyOr(newright, subright); 
+            return new BinaryExpression("|R", newleft, newpred);
+          }
+        }  
+      }
+    }
+    else if (operator.equals("|A"))
+    { BinaryExpression arg = (BinaryExpression) left; 
+      Expression domain = arg.getRight();
+      Expression svar = arg.getLeft(); 
+ 
+      if (domain instanceof BinaryExpression) 
+      { BinaryExpression lbe = (BinaryExpression) domain; 
+
+        if (lbe.operator.equals("->select"))
+        { System.err.println("!! OCL efficiency smell (OES): Inefficient nested select/any: " + this);
+          // col->select(P)->any(x|Q) is 
+          // col->any(x | x.P & Q)
+
+          Expression newleft = lbe.getLeft();
+          Expression newright = lbe.getRight();
+          BasicExpression ref = 
+                     (BasicExpression) svar;   
+          Expression newpred = 
+            Expression.simplifyAnd(
+               newright.addReference(ref, ref.getType()), right); 
+          Expression newdomain = 
+            new BinaryExpression(":", ref, 
+                                      newleft); 
+          return new BinaryExpression("|A", newdomain, newpred); 
+        }  
+        else if (lbe.operator.equals("|"))
+        { BinaryExpression newleft = 
+                (BinaryExpression) lbe.getLeft();
+          Expression newright = lbe.getRight();
+          Expression newvar = newleft.getLeft(); 
+          // col->select(x|P)->any(x|Q) is 
+          // col->any(x | P & Q)
+          System.err.println("!! OCL efficiency smell (OES): Inefficient nested select/any: " + this);
+
+          if (("" + svar).equals("" + newvar))
+          { Expression newpred = 
+              Expression.simplifyAnd(newright, right); 
+            Expression newdomain = 
+              new BinaryExpression(":",svar, newleft.getRight()); 
+            return new BinaryExpression("|A", newdomain, newpred);
+          } 
+          else 
+          { Expression subright = 
+              right.substituteEq("" + svar, newvar); 
+            Expression newpred = 
+              Expression.simplifyAnd(newright, subright); 
+            return new BinaryExpression("|A", newleft, newpred);
+          }
+        }  
+        else if (lbe.operator.equals("->reject"))
+        { System.err.println("!! OCL efficiency smell (OES): Inefficient nested reject/any: " + this);
+          // col->reject(P)->any(x|Q) is 
+          // col->any(x | not(x.P) & Q)
+
+          Expression newleft = lbe.getLeft(); 
+          Expression newright = lbe.getRight();
+          BasicExpression ref = 
+                     (BasicExpression) svar;   
+          Expression newpred = 
+            Expression.simplifyAnd(
+              Expression.negate(
+                  newright.addReference(ref,
+                                        ref.getType())), 
+              right); 
+          Expression newdomain = 
+            new BinaryExpression(":", ref, 
+                                      newleft); 
+          return new BinaryExpression("|A", newdomain, newpred); 
+        }  
+        else if (lbe.operator.equals("|R"))
+        { BinaryExpression newleft = 
+                (BinaryExpression) lbe.getLeft();
+          Expression newright = lbe.getRight();
+          Expression newvar = newleft.getLeft(); 
+          // col->reject(x|P)->any(x|Q) is 
+          // col->any(x | not(P) & Q)
+          System.err.println("!! OCL efficiency smell (OES): Inefficient nested reject/select: " + this);
+
+          if (("" + svar).equals("" + newvar))
+          { Expression newpred = 
+              Expression.simplifyAnd(
+                  Expression.negate(newright), right); 
+            Expression newdomain = 
+              new BinaryExpression(":",svar, newleft.getRight()); 
+            return new BinaryExpression("|A", newdomain, newpred);
+          } 
+          else 
+          { Expression subright = 
+              right.substituteEq("" + svar, newvar); 
+            Expression newpred = 
+              Expression.simplifyAnd(
+                  Expression.negate(newright), subright); 
+            return new BinaryExpression("|A", newleft, newpred);
+          }             
+        }  
+      }
+    }
+    else if (operator.equals("#"))
+    { BinaryExpression arg = (BinaryExpression) left; 
+      Expression domain = arg.getRight();
+      Expression svar = arg.getLeft(); 
+ 
+      if (domain instanceof BinaryExpression) 
+      { BinaryExpression lbe = (BinaryExpression) domain; 
+
+        if (lbe.operator.equals("->select"))
+        { System.err.println("!! OCL efficiency smell (OES): Inefficient nested select/exists: " + this);
+
+          Expression newleft = lbe.getLeft();
+          Expression newright = lbe.getRight();
+          BasicExpression ref = 
+                     (BasicExpression) svar;   
+          Expression newpred = 
+            Expression.simplifyAnd(
+               newright.addReference(ref, ref.getType()), right); 
+          Expression newdomain = 
+            new BinaryExpression(":", ref, 
+                                      newleft); 
+          return new BinaryExpression("#", newdomain, newpred); 
+        }  
+        else if (lbe.operator.equals("|"))
+        { BinaryExpression newleft = 
+                (BinaryExpression) lbe.getLeft();
+          Expression newright = lbe.getRight();
+          Expression newvar = newleft.getLeft(); 
+
+          System.err.println("!! OCL efficiency smell (OES): Inefficient nested select/exists: " + this);
+
+          if (("" + svar).equals("" + newvar))
+          { Expression newpred = 
+              Expression.simplifyAnd(newright, right); 
+            Expression newdomain = 
+              new BinaryExpression(":", svar, newleft.getRight()); 
+            return new BinaryExpression("#", newdomain, newpred);
+          } 
+          else 
+          { Expression subright = 
+                  right.substituteEq("" + svar, newvar);
+            Expression newpred = 
+              Expression.simplifyAnd(newright, subright); 
+            return new BinaryExpression("#", newleft, newpred);
+          }
+        }  
+        else if (lbe.operator.equals("->reject"))
+        { System.err.println("!! OCL efficiency smell (OES): Inefficient nested reject/exists: " + this);
+
+          Expression newleft = lbe.getLeft(); 
+          Expression newright = lbe.getRight();
+          BasicExpression ref = 
+                     (BasicExpression) svar;   
+          Expression newpred = 
+            Expression.simplifyAnd(
+              Expression.negate(
+                  newright.addReference(ref,
+                                        ref.getType())), 
+              right); 
+          Expression newdomain = 
+            new BinaryExpression(":", ref, 
+                                      newleft); 
+          return new BinaryExpression("#", newdomain, newpred); 
+        }  
+        else if (lbe.operator.equals("|R"))
+        { BinaryExpression newleft = 
+                (BinaryExpression) lbe.getLeft();
+          Expression newright = lbe.getRight();
+          Expression newvar = newleft.getLeft();
+ 
+          System.err.println("!! OCL efficiency smell (OES): Inefficient nested reject/exists: " + this);
+          
+          if (("" + svar).equals("" + newvar))
+          { Expression newpred = 
+              Expression.simplifyAnd(
+                  Expression.negate(newright), right); 
+            Expression newdomain = 
+              new BinaryExpression(":",svar, newleft.getRight()); 
+            return new BinaryExpression("#", newdomain, newpred);
+          } 
+          else 
+          { Expression subright = 
+                  right.substituteEq("" + svar, newvar);
+            Expression newpred = 
+              Expression.simplifyAnd(
+                  Expression.negate(newright), subright); 
+            return new BinaryExpression("#", newleft, newpred);
+          }
+        }  
       }
     }
     else if (operator.equals("->select"))
     {  
       if (left instanceof BinaryExpression) 
-      { BinaryExpression lbe = (BinaryExpression) left; 
+      { BinaryExpression lbe = (BinaryExpression) left;
+ 
         if (lbe.operator.equals("->select"))
         { System.err.println("!! OCL efficiency smell (OES): Inefficient nested select: " + this);
           Expression predicate1 = lbe.getRight(); 
           Expression combinedPred = 
-              new BinaryExpression("&", predicate1, right); 
+              Expression.simplifyAnd(predicate1, right); 
           BinaryExpression res = (BinaryExpression) clone();
           res.left = lbe.getLeft(); 
           res.operator = "->select"; 
@@ -21987,16 +22287,56 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
           System.out.println("!! Replacing with: " + res); 
           return res; 
         }
-        else if (lbe.operator.equals("->reject"))
+        else if (lbe.operator.equals("|"))
         { System.err.println("!! OCL efficiency smell (OES): Inefficient nested select: " + this);
+          BinaryExpression newleft = 
+                (BinaryExpression) lbe.getLeft();  
+          Expression predicate1 = lbe.getRight();
+          BasicExpression newvar = 
+               (BasicExpression) newleft.getLeft(); 
+ 
+          Expression newright = right.addReference(newvar,
+                                            newvar.getType()); 
+          Expression combinedPred = 
+              Expression.simplifyAnd(predicate1, newright); 
+          BinaryExpression res = (BinaryExpression) clone();
+          res.left = newleft; 
+          res.operator = "|"; 
+          res.right = combinedPred; 
+          System.out.println("!! Replacing with: " + res); 
+          return res; 
+        }
+        else if (lbe.operator.equals("->reject"))
+        { System.err.println("!! OCL efficiency smell (OES): Inefficient nested reject/select: " + this);
           Expression predicate1 = lbe.getRight();
           Expression pred2 = 
                Expression.negate(predicate1);  
           Expression combinedPred = 
-              new BinaryExpression("&", pred2, right); 
+              Expression.simplifyAnd(pred2, right); 
           BinaryExpression res = (BinaryExpression) clone();
           res.left = lbe.getLeft(); 
           res.operator = "->select"; 
+          res.right = combinedPred; 
+          System.out.println("!! Replacing with: " + res); 
+          return res; 
+        }
+        else if (lbe.operator.equals("|R"))
+        { System.err.println("!! OCL efficiency smell (OES): Inefficient nested reject/select: " + this);
+          BinaryExpression newleft = 
+                (BinaryExpression) lbe.getLeft();  
+          Expression predicate1 = lbe.getRight();
+          BasicExpression newvar = 
+                    (BasicExpression) newleft.getLeft(); 
+ 
+          Expression newright = right.addReference(newvar,
+                                            newvar.getType()); 
+          Expression pred2 = 
+               Expression.negate(predicate1);  
+          Expression combinedPred = 
+              Expression.simplifyAnd(pred2, newright); 
+          BinaryExpression res = (BinaryExpression) clone();
+          res.left = newleft; 
+          res.operator = "|"; 
           res.right = combinedPred; 
           System.out.println("!! Replacing with: " + res); 
           return res; 
@@ -22007,12 +22347,14 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
     {  
       if (left instanceof BinaryExpression) 
       { BinaryExpression lbe = (BinaryExpression) left; 
+
         if (lbe.operator.equals("->select"))
-        { System.err.println("!! OCL efficiency smell (OES): Inefficient nested select: " + this);
+        { System.err.println("!! OCL efficiency smell (OES): Inefficient nested select/reject: " + this);
+
           Expression predicate1 = lbe.getRight(); 
           Expression combinedPred = 
-              new BinaryExpression("&", 
-                  Expression.negate(predicate1), right); 
+              Expression.simplifyAnd( 
+                    predicate1, Expression.negate(right)); 
           BinaryExpression res = (BinaryExpression) clone();
           res.left = lbe.getLeft(); 
           res.operator = "->select"; 
@@ -22020,20 +22362,235 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
           System.out.println("!! Replacing with: " + res); 
           return res; 
         }
+        else if (lbe.operator.equals("|"))
+        { System.err.println("!! OCL efficiency smell (OES): Inefficient nested select/reject: " + this);
+
+          BinaryExpression newleft = 
+                (BinaryExpression) lbe.getLeft();  
+          Expression predicate1 = lbe.getRight();
+          BasicExpression newvar = 
+               (BasicExpression) newleft.getLeft(); 
+ 
+          Expression newright = right.addReference(newvar,
+                                            newvar.getType()); 
+          Expression combinedPred = 
+              Expression.simplifyAnd(predicate1, 
+                             Expression.negate(newright)); 
+          BinaryExpression res = (BinaryExpression) clone();
+          res.left = newleft; 
+          res.operator = "|"; 
+          res.right = combinedPred; 
+          System.out.println("!! Replacing with: " + res); 
+          return res; 
+        }
         else if (lbe.operator.equals("->reject"))
-        { System.err.println("!! OCL efficiency smell (OES): Inefficient nested select: " + this);
+        { System.err.println("!! OCL efficiency smell (OES): Inefficient nested reject: " + this);
           Expression predicate1 = lbe.getRight();
           Expression pred2 = 
                Expression.negate(predicate1); 
           pred2.setBrackets(true); 
           right.setBrackets(true);  
           Expression combinedPred = 
-              new BinaryExpression("or", pred2, right); 
+              Expression.simplifyOr(pred2, right); 
           BinaryExpression res = (BinaryExpression) clone();
           res.left = lbe.getLeft(); 
           res.operator = "->reject"; 
           res.right = combinedPred; 
           System.out.println(">> Replacing with: " + res); 
+          return res; 
+        }
+        else if (lbe.operator.equals("|R"))
+        { System.err.println("!! OCL efficiency smell (OES): Inefficient nested reject/reject: " + this);
+
+          BinaryExpression newleft = 
+                (BinaryExpression) lbe.getLeft();  
+          Expression predicate1 = lbe.getRight();
+          BasicExpression newvar = 
+               (BasicExpression) newleft.getLeft(); 
+ 
+          Expression newright = right.addReference(newvar,
+                                            newvar.getType()); 
+          Expression combinedPred = 
+              Expression.simplifyOr(predicate1, 
+                                    newright); 
+          BinaryExpression res = (BinaryExpression) clone();
+          res.left = newleft; 
+          res.operator = "|R"; 
+          res.right = combinedPred; 
+          System.out.println("!! Replacing with: " + res); 
+          return res; 
+        } // col->reject(x | P)->reject(Q) is 
+          // col->reject(x | P or x.Q)
+      }
+    }
+    else if (operator.equals("->any"))
+    {  
+      if (left instanceof BinaryExpression) 
+      { BinaryExpression lbe = (BinaryExpression) left;
+ 
+        if (lbe.operator.equals("->select"))
+        { System.err.println("!! OCL efficiency smell (OES): Inefficient nested select/any: " + this);
+          // col->select(P)->any(Q) is col->any(P & Q)
+
+          Expression predicate1 = lbe.getRight(); 
+          Expression combinedPred = 
+              Expression.simplifyAnd(predicate1, right); 
+          BinaryExpression res = (BinaryExpression) clone();
+          res.left = lbe.getLeft(); 
+          res.operator = "->any"; 
+          res.right = combinedPred; 
+          System.out.println("!! Replacing with: " + res); 
+          return res; 
+        }
+        else if (lbe.operator.equals("|"))
+        { System.err.println("!! OCL efficiency smell (OES): Inefficient nested select/any: " + this);
+          // col->select(x|P)->any(Q) is col->any(x|P & x.Q)
+
+          BinaryExpression newleft = 
+                (BinaryExpression) lbe.getLeft();  
+          Expression predicate1 = lbe.getRight();
+          BasicExpression newvar = 
+               (BasicExpression) newleft.getLeft(); 
+ 
+          Expression newright = right.addReference(newvar,
+                                            newvar.getType()); 
+          Expression combinedPred = 
+              Expression.simplifyAnd(predicate1, 
+                                     newright); 
+          BinaryExpression res = (BinaryExpression) clone();
+          res.left = newleft; 
+          res.operator = "|A"; 
+          res.right = combinedPred; 
+          System.out.println("!! Replacing with: " + res); 
+          return res; 
+        }
+        else if (lbe.operator.equals("->reject"))
+        { System.err.println("!! OCL efficiency smell (OES): Inefficient reject/any: " + this);
+          Expression predicate1 = lbe.getRight();
+          Expression pred2 = 
+               Expression.negate(predicate1); 
+          pred2.setBrackets(true); 
+          right.setBrackets(true);  
+          Expression combinedPred = 
+              Expression.simplifyAnd(pred2, right); 
+          BinaryExpression res = (BinaryExpression) clone();
+          res.left = lbe.getLeft(); 
+          res.operator = "->any"; 
+          res.right = combinedPred; 
+          System.out.println(">> Replacing with: " + res); 
+          return res; 
+        }
+        else if (lbe.operator.equals("|R"))
+        { System.err.println("!! OCL efficiency smell (OES): Inefficient nested reject/any: " + this);
+          // col->reject(x|P)->any(Q) is col->any(x|not(P) & x.Q)
+
+          BinaryExpression newleft = 
+                (BinaryExpression) lbe.getLeft();  
+          Expression predicate1 = lbe.getRight();
+          BasicExpression newvar = 
+               (BasicExpression) newleft.getLeft(); 
+ 
+          Expression newright = right.addReference(newvar,
+                                            newvar.getType()); 
+          Expression pred2 = 
+               Expression.negate(predicate1); 
+          pred2.setBrackets(true); 
+          newright.setBrackets(true);  
+          Expression combinedPred = 
+              Expression.simplifyAnd(pred2, 
+                                     newright); 
+          BinaryExpression res = (BinaryExpression) clone();
+          res.left = newleft; 
+          res.operator = "|A"; 
+          res.right = combinedPred; 
+          System.out.println("!! Replacing with: " + res); 
+          return res; 
+        }
+      }
+    }  
+    else if (operator.equals("->exists"))
+    {  
+      if (left instanceof BinaryExpression) 
+      { BinaryExpression lbe = (BinaryExpression) left;
+ 
+        if (lbe.operator.equals("->select"))
+        { System.err.println("!! OCL efficiency smell (OES): Inefficient nested select/exists: " + this);
+          // col->select(P)->exists(Q) is col->exists(P & Q)
+
+          Expression predicate1 = lbe.getRight(); 
+          Expression combinedPred = 
+              Expression.simplifyAnd(predicate1, right); 
+          BinaryExpression res = (BinaryExpression) clone();
+          res.left = lbe.getLeft(); 
+          res.operator = "->exists"; 
+          res.right = combinedPred; 
+          System.out.println("!! Replacing with: " + res); 
+          return res; 
+        }
+        else if (lbe.operator.equals("|"))
+        { System.err.println("!! OCL efficiency smell (OES): Inefficient nested select/exists: " + this);
+          // col->select(x|P)->exists(Q) is 
+          // col->exists(x|P & x.Q)
+
+          BinaryExpression newleft = 
+                (BinaryExpression) lbe.getLeft();  
+          Expression predicate1 = lbe.getRight();
+          BasicExpression newvar = 
+               (BasicExpression) newleft.getLeft(); 
+ 
+          Expression newright = right.addReference(newvar,
+                                            newvar.getType()); 
+          Expression combinedPred = 
+              Expression.simplifyAnd(predicate1, 
+                                     newright); 
+          BinaryExpression res = (BinaryExpression) clone();
+          res.left = newleft; 
+          res.operator = "#"; 
+          res.right = combinedPred; 
+          System.out.println("!! Replacing with: " + res); 
+          return res; 
+        }
+        else if (lbe.operator.equals("->reject"))
+        { System.err.println("!! OCL efficiency smell (OES): Inefficient reject/exists: " + this);
+          Expression predicate1 = lbe.getRight();
+          Expression pred2 = 
+               Expression.negate(predicate1); 
+          pred2.setBrackets(true); 
+          right.setBrackets(true);  
+          Expression combinedPred = 
+              Expression.simplifyAnd(pred2, right); 
+          BinaryExpression res = (BinaryExpression) clone();
+          res.left = lbe.getLeft(); 
+          res.operator = "->exists"; 
+          res.right = combinedPred; 
+          System.out.println(">> Replacing with: " + res); 
+          return res; 
+        }
+        else if (lbe.operator.equals("|R"))
+        { System.err.println("!! OCL efficiency smell (OES): Inefficient nested reject/exists: " + this);
+          // col->reject(x|P)->exists(Q) is 
+          // col->exists(x|not(P) & x.Q)
+
+          BinaryExpression newleft = 
+                (BinaryExpression) lbe.getLeft();  
+          Expression predicate1 = lbe.getRight();
+          BasicExpression newvar = 
+               (BasicExpression) newleft.getLeft(); 
+ 
+          Expression newright = right.addReference(newvar,
+                                            newvar.getType()); 
+          Expression pred2 = 
+               Expression.negate(predicate1); 
+          pred2.setBrackets(true); 
+          newright.setBrackets(true);  
+          Expression combinedPred = 
+              Expression.simplifyAnd(pred2, 
+                                     newright); 
+          BinaryExpression res = (BinaryExpression) clone();
+          res.left = newleft; 
+          res.operator = "#"; 
+          res.right = combinedPred; 
+          System.out.println("!! Replacing with: " + res); 
           return res; 
         }
       }
@@ -22163,8 +22720,10 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         } 
       }
     }
-    else if (operator.equals(">") && "0".equals(right + "") && 
-        left instanceof UnaryExpression)
+    else if (((operator.equals(">") && "0".equals(right + "")) || 
+              (operator.equals(">=") && "1".equals(right + ""))
+             ) && 
+             left instanceof UnaryExpression)
     { UnaryExpression arg = (UnaryExpression) left; 
       String leftop = arg.getOperator(); 
 
@@ -22177,7 +22736,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
             leftargop.equals("->reject") ||
             leftargop.equals("|") ||
             leftargop.equals("|R"))
-        { // s->select(P)->size() = 0
+        { // s->select(P)->size() > 0
 
           aUses.add("!! OCL efficiency smell (OES): Inefficient comparison: " + this + "\n!! More efficient to use ->exists");
           int ascore = (int) res.get("amber"); 
@@ -22192,7 +22751,9 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         res.set("amber", ascore+1);
       } 
     }
-    else if (operator.equals(">") && "0".equals(right + "") && 
+    else if (((operator.equals(">") && "0".equals(right + "")) ||
+              (operator.equals(">=") && "1".equals(right + ""))
+             ) && 
              left instanceof BinaryExpression)
     { BinaryExpression be = (BinaryExpression) left; 
       String leftop = be.getOperator(); 
@@ -22221,8 +22782,28 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         }
       }
     }
+    else if (operator.equals("|A"))
+    { // col->select(P)->any(x | Q) is 
+      // col->any(x | x.P & Q), etc
+
+      BinaryExpression arg = (BinaryExpression) left; 
+      Expression domain = arg.getRight(); 
+      if (domain instanceof BinaryExpression) 
+      { BinaryExpression lbe = (BinaryExpression) domain; 
+
+        if (lbe.operator.equals("|") ||
+            lbe.operator.equals("|R") ||
+            lbe.operator.equals("->select") ||
+            lbe.operator.equals("->reject"))
+        { aUses.add("!! OCL efficiency smell (OES): Inefficient  select/reject iterators (loops) in " + this + " : more efficient to combine conditions in one ->any");
+          int ascore = (int) res.get("amber"); 
+          res.set("amber", ascore+1); 
+        }
+      }
+    }
     else if (operator.equals("->select") ||
-             operator.equals("->reject"))
+             operator.equals("->reject") || 
+             operator.equals("->any"))
     {
       if (left instanceof BinaryExpression) 
       { BinaryExpression lbe = (BinaryExpression) left; 
@@ -22236,6 +22817,27 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
           res.set("amber", ascore+1); 
         }
       } 
+    }
+    else if (operator.equals("->exists") || 
+             operator.equals("#"))
+    { // col->select(P)->exists(Q) is 
+      // col->exists(P & Q), etc
+
+      BinaryExpression arg = (BinaryExpression) left; 
+      Expression domain = arg.getRight(); 
+      if (domain instanceof BinaryExpression) 
+      { BinaryExpression lbe = (BinaryExpression) domain; 
+
+        if (lbe.operator.equals("|") ||
+            lbe.operator.equals("|R") ||
+            lbe.operator.equals("->select") ||
+            lbe.operator.equals("->reject"))
+        { aUses.add("!! OCL efficiency smell (OES): Inefficient  select/reject iterators (loops) in " + this + " : more efficient to combine conditions in one ->exists");
+
+          int ascore = (int) res.get("amber"); 
+          res.set("amber", ascore+1); 
+        }
+      }
     }
     else if ("->sortedBy".equals(operator) || 
              "|sortedBy".equals(operator))
@@ -22347,6 +22949,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         operator.equals("->exists") ||
         operator.equals("->exists1") ||
         operator.equals("->isUnique") ||
+        operator.equals("->any") ||
         operator.equals("->iterate") ||  
         operator.equals("->selectMinimals") ||
         operator.equals("->selectMaximals") ||  
@@ -22377,6 +22980,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
     if (operator.equals("|") ||
         operator.equals("|R") ||
         operator.equals("|C") ||
+        operator.equals("|A") ||
         operator.equals("!") ||
         operator.equals("#") ||
         operator.equals("#1") || 
@@ -22503,6 +23107,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         operator.equals("->exists") ||
         operator.equals("->exists1") ||
         operator.equals("->isUnique") ||
+        operator.equals("->any") ||
         operator.equals("->iterate") ||  
         operator.equals("->selectMinimals") ||
         operator.equals("->selectMaximals") ||  
@@ -22543,6 +23148,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         operator.equals("!") ||
         operator.equals("#") ||
         operator.equals("#1") || 
+        operator.equals("|A") || 
         operator.equals("|unionAll") || 
         operator.equals("|intersectAll") || 
         operator.equals("|concatenateAll") || 

@@ -93,12 +93,12 @@ abstract class Statement implements Cloneable
       int k = wrv.indexOf("::"); 
       if (k >= 0) 
       { // newvars.add(wrv.substring(k+2));
-        System.err.println("! " + bf + 
+        System.out.println("! " + bf + 
                            " updates attribute " + wrv); 
         return false; 
       } 
       else if (parnames.contains(wrv))
-      { System.err.println("! " + bf + 
+      { System.out.println("! " + bf + 
                            " updates parameter " + wrv); 
         return false; 
       } 
@@ -198,7 +198,7 @@ abstract class Statement implements Cloneable
       { nontail++; } 
     } 
 
-    System.err.println(">> " + bf + " has " + 
+    System.out.println(">> " + bf + " has " + 
          nonrecursive + " non-recursive returns, " + 
          tailrecursive + " tail recursive decrement returns,\n>>" + 
          " and " + 
@@ -298,12 +298,12 @@ abstract class Statement implements Cloneable
       int k = wrv.indexOf("::"); 
       if (k >= 0) 
       { // newvars.add(wrv.substring(k+2));
-        System.err.println("! " + bf + 
+        System.out.println("! " + bf + 
                            " updates attribute " + wrv); 
         return stat; 
       } 
       else if (parnames.contains(wrv))
-      { System.err.println("! " + bf + 
+      { System.out.println("! " + bf + 
                            " updates parameter " + wrv); 
         return stat; 
       } 
@@ -501,6 +501,8 @@ abstract class Statement implements Cloneable
     { // patterns are s := s + var, s := s + var*var,
       // s := s * var, s := s - var, s := s / var
       // s := s & var, s := s or var
+      // s := s->including(var), s := s->excluding(var),
+      // s := s->append(var)
       // Also same with expr instead of var,
       // not involving var or s. 
 
@@ -724,6 +726,96 @@ abstract class Statement implements Cloneable
               new BinaryExpression(":", var, rng), expr); 
         Expression newrhs = 
             new BinaryExpression("or", lhs, coll); 
+        return new AssignStatement(lhs, newrhs);
+      }
+      else if ((lhs + "->including(" + var + ")").equals("" + rhs))
+      { // lhs := lhs->union(loopRange)
+
+        Type elemt = rng.getElementType(); 
+        BasicExpression selfvar = 
+          BasicExpression.newVariableBasicExpression(
+                                             "self",elemt); 
+        Expression newrhs = 
+            new BinaryExpression("->union", lhs, rng); 
+        return new AssignStatement(lhs, newrhs); 
+      }   
+      else if (rhs instanceof BinaryExpression && 
+        ((BinaryExpression) rhs).getOperator().equals("->including") &&
+        (((BinaryExpression) rhs).getLeft() + "").equals(lhs + ""))
+      { // lhs := lhs->append(expr)
+        Expression expr = ((BinaryExpression) rhs).getRight(); 
+        Vector vuses = expr.getVariableUses();
+
+        if (VectorUtil.containsEqualString(lhs+"", vuses))
+        { return null; } 
+
+        // lhs := lhs->concatenate(rng->collect(var|expr))
+
+        Expression coll = 
+            new BinaryExpression("|C", 
+              new BinaryExpression(":", var, rng), expr); 
+        Expression newrhs = 
+            new BinaryExpression("->union", lhs, coll); 
+        return new AssignStatement(lhs, newrhs);
+      }         
+      else if ((lhs + "->append(" + var + ")").equals("" + rhs))
+      { // lhs := lhs->union(loopRange)
+
+        Type elemt = rng.getElementType(); 
+        BasicExpression selfvar = 
+          BasicExpression.newVariableBasicExpression(
+                                             "self",elemt); 
+        Expression newrhs = 
+            new BinaryExpression("->concatenate", lhs, rng); 
+        return new AssignStatement(lhs, newrhs); 
+      }   
+      else if (rhs instanceof BinaryExpression && 
+        ((BinaryExpression) rhs).getOperator().equals("->append") &&
+        (((BinaryExpression) rhs).getLeft() + "").equals(lhs + ""))
+      { // lhs := lhs->including(expr)
+        Expression expr = ((BinaryExpression) rhs).getRight(); 
+        Vector vuses = expr.getVariableUses();
+
+        if (VectorUtil.containsEqualString(lhs+"", vuses))
+        { return null; } 
+
+        // lhs := lhs->union(rng->collect(var|expr))
+
+        Expression coll = 
+            new BinaryExpression("|C", 
+              new BinaryExpression(":", var, rng), expr); 
+        Expression newrhs = 
+            new BinaryExpression("->concatenate", lhs, coll); 
+        return new AssignStatement(lhs, newrhs);
+      }         
+      else if ((lhs + "->excluding(" + var + ")").equals("" + rhs))
+      { // lhs := lhs - loopRange
+
+        Type elemt = rng.getElementType(); 
+        BasicExpression selfvar = 
+          BasicExpression.newVariableBasicExpression(
+                                             "self",elemt); 
+        Expression newrhs = 
+            new BinaryExpression("-", lhs, rng); 
+        return new AssignStatement(lhs, newrhs); 
+      }   
+      else if (rhs instanceof BinaryExpression && 
+        ((BinaryExpression) rhs).getOperator().equals("->excluding") &&
+        (((BinaryExpression) rhs).getLeft() + "").equals(lhs + ""))
+      { // lhs := lhs->excluding(expr)
+        Expression expr = ((BinaryExpression) rhs).getRight(); 
+        Vector vuses = expr.getVariableUses();
+
+        if (VectorUtil.containsEqualString(lhs+"", vuses))
+        { return null; } 
+
+        // lhs := lhs - rng->collect(var|expr)
+
+        Expression coll = 
+            new BinaryExpression("|C", 
+              new BinaryExpression(":", var, rng), expr); 
+        Expression newrhs = 
+            new BinaryExpression("-", lhs, coll); 
         return new AssignStatement(lhs, newrhs);
       }         
     /*  else if (rhs instanceof BinaryExpression && 
@@ -1158,6 +1250,18 @@ abstract class Statement implements Cloneable
       { // lhs := lhs or loopRange->exists(self)
         return true; 
       } 
+      else if ((lhs + "->including(" + var + ")").equals("" + rhs))
+      { // lhs := lhs->union(loopRange)
+        return true; 
+      } 
+      else if ((lhs + "->excluding(" + var + ")").equals("" + rhs))
+      { // lhs := lhs - loopRange
+        return true; 
+      } 
+      else if ((lhs + "->append(" + var + ")").equals("" + rhs))
+      { // lhs := lhs->union(loopRange)
+        return true; 
+      } 
       else if (rhs instanceof BinaryExpression && 
         (((BinaryExpression) rhs).getLeft() + "").equals(
                                                     lhs + ""))
@@ -1173,7 +1277,10 @@ abstract class Statement implements Cloneable
 
         if ("+".equals(oper) || "-".equals(oper) || 
             "*".equals(oper) || "/".equals(oper) ||
-            "&".equals(oper) || "or".equals(oper))
+            "&".equals(oper) || "or".equals(oper) || 
+            "->including".equals(oper) || 
+            "->append".equals(oper) || 
+            "->excluding".equals(oper))
         { return true; }
  
         return false;
@@ -1342,6 +1449,48 @@ abstract class Statement implements Cloneable
     } 
 
     return st; 
+  } 
+
+  public static Statement getLastStatement(Statement st)
+  { if (st == null) 
+    { return null; }
+ 
+    if (st instanceof SequenceStatement) 
+    { SequenceStatement sq = (SequenceStatement) st; 
+
+      if (sq.size() >= 1) 
+      { Statement stat = sq.getStatement(sq.size() - 1); 
+        return Statement.getLastStatement(stat); 
+      } 
+
+      return null;
+    } 
+
+    return st; 
+  } 
+
+  public static Statement removeLastStatement(Statement st)
+  { if (st == null) 
+    { return null; }
+ 
+    if (st instanceof SequenceStatement) 
+    { SequenceStatement sq = (SequenceStatement) st; 
+      int n = sq.size(); 
+
+      if (n >= 1) 
+      { Statement stat = sq.getStatement(n - 1); 
+        Statement rem = Statement.removeLastStatement(stat);
+        SequenceStatement newsq = new SequenceStatement(); 
+        for (int i = 0; i < n-1; i++) 
+        { newsq.addStatement(sq.getStatement(i)); } 
+        newsq.addStatement(rem);  
+        return newsq; 
+      } 
+
+      return new InvocationStatement("skip");
+    } 
+
+    return new InvocationStatement("skip"); 
   } 
 
   public static boolean hasSingleStatement(Statement st)
@@ -10278,6 +10427,9 @@ class SequenceStatement extends Statement
     return true; 
   } 
 
+  /* public Statement getStatement(int i)
+  { return (Statement) statements.get(i); } */ 
+
   public String cg(CGSpec cgs)
   { String etext = this + "";
     Vector args = new Vector();
@@ -10382,6 +10534,7 @@ class SequenceStatement extends Statement
 
     // Clones of statements, at least 2: 
 
+    /* 
     Vector fstats = flattenSequenceStatement(); 
 
     // System.out.println(">>> Flatttended seq: " + fstats);
@@ -10406,7 +10559,7 @@ class SequenceStatement extends Statement
       { used.add(op); }
       clones.put(val,used);
       cdefs.put(val, sq); 
-    } 
+    } */ 
 
     // System.out.println(">>> Clones: " + clones); 
 
@@ -16765,7 +16918,8 @@ class ConditionalStatement extends Statement
   } 
 
   public int execute(ModelSpecification sigma, ModelState beta)
-  { Expression tval = test.evaluate(sigma, beta); 
+  { Expression tval = test.evaluate(sigma, beta);
+ 
     if ("true".equals(tval + ""))
     { int res = ifPart.execute(sigma, beta); 
       return res; 
@@ -16929,6 +17083,32 @@ class ConditionalStatement extends Statement
       return ss; 
     } 
 
+    // if duplicate code at end of each branch, put after
+    // the statement: 
+
+    if (elsec.isSkip()) { } 
+    else 
+    { Statement lastIfStat = Statement.getLastStatement(ifc);
+      Statement lastElseStat = 
+                    Statement.getLastStatement(elsec); 
+      if (("" + lastIfStat).equals("" + lastElseStat))
+      { System.out.println(">> Refactoring duplicated final statement " + lastIfStat + " from conditional statement"); 
+        Statement newifpart = 
+             Statement.removeLastStatement(ifc); 
+        Statement newelsepart = 
+             Statement.removeLastStatement(elsec);
+        Statement newif =  
+             new ConditionalStatement(testc, 
+                                      newifpart, newelsepart);
+        SequenceStatement res = 
+          new SequenceStatement(); 
+        res.addStatement(newif); 
+        res.addStatement(lastIfStat); 
+        return res; 
+      } 
+    }   
+
+
     return new ConditionalStatement(testc, ifc, elsec); 
   }  
 
@@ -17010,7 +17190,7 @@ class ConditionalStatement extends Statement
           uses.set("red", rscore + 1); 
         } 
         else if (testbeLeft.hasSetType())
-        { oUses.add("! Redundant test on set addition " + testbeLeft + " in: " + this); 
+        { oUses.add("!! Redundant test on additions to the set " + testbeLeft + " in: " + this); 
 
           int oscore = (int) uses.get("amber"); 
           uses.set("amber", oscore + 1); 
@@ -17047,12 +17227,26 @@ class ConditionalStatement extends Statement
           uses.set("red", rscore + 1); 
         } 
         else if (testbeLeft.hasSetType())
-        { oUses.add("! Redundant test on set addition " + testbeLeft + " in: " + this); 
+        { oUses.add("!! Redundant test on additions to the set " + testbeLeft + " in: " + this); 
 
           int oscore = (int) uses.get("amber"); 
           uses.set("amber", oscore + 1); 
         } 
       } 
+    } 
+
+    if (elsePart.isSkip()) { } 
+    else 
+    { Statement lastIfStat = 
+                    Statement.getLastStatement(ifPart);
+      Statement lastElseStat = 
+                    Statement.getLastStatement(elsePart); 
+
+      if (("" + lastIfStat).equals("" + lastElseStat))
+      { oUses.add("!! Duplicated code (DC): duplicated final statement " + lastIfStat + " in conditional");
+        int oscore = (int) uses.get("amber"); 
+        uses.set("amber", oscore + 1);
+      }  
     } 
 
     return uses; 
@@ -17071,6 +17265,7 @@ class ConditionalStatement extends Statement
       clones.put(val,used); */ 
       test.findClones(clones,rule,op); 
     } 
+
     ifPart.findClones(clones,rule,op); 
     if (elsePart != null) 
     { elsePart.findClones(clones,rule,op); } 
@@ -17081,7 +17276,9 @@ class ConditionalStatement extends Statement
                          String rule, String op)
   { if (test.syntacticComplexity() >= UCDArea.CLONE_LIMIT)
     { test.findClones(clones,cdefs,rule,op); } 
+
     ifPart.findClones(clones,cdefs,rule,op); 
+
     if (elsePart != null) 
     { elsePart.findClones(clones,cdefs,rule,op); } 
   }

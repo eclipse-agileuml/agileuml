@@ -476,6 +476,7 @@ SortedDict |-->OclType["SortedMap"]
 
 R _1 |-->StringLib.rawString(_1)
 r _1 |-->StringLib.rawString(_1)
+b _1 |-->StringLib.rawString(_1)
 f _1 |-->StringLib.formattedString(_1)
 
 _1 |-->_1
@@ -714,7 +715,7 @@ delattr _1 |-->    OclType.removeAttribute_1
 _1 _2 |-->    _1.closeFile()<when> _1 atom, _2`second close
 _1 _2 |-->    _1.write_2`third<when> _1 atom, _2`second write
 
-_1 _2 |-->    execute (_2`third : _1)<when> _1 atom, _2`second append
+_1 _2 |-->    _1 := _1->append(_2`third)<when> _1 atom, _2`second append
 _1 _2 |-->    execute (_2`third : _1)<when> _1 atom, _2`second add
 _1 _2 |-->    execute (_2`third /: _1)<when> _1 atom, _2`second remove
 _1 _2 |-->    execute (_2`third /: _1)<when> _1 atom, _2`second discard
@@ -727,7 +728,7 @@ _1 _2 |-->    _1`removeAtomBrackets := _1_2`trailerUpdateForm<when> _1 atom, _2 
 
 _1 _2 |-->    _1_2<when> _1 atom, _2 trailer
 
-_1 _2 _3 |-->    execute (_3`third : _1_2)<when> _1 atom, _3`second append
+_1 _2 _3 |-->    _1_2 := _1_2->append(_3`third)<when> _1 atom, _3`second append
 _1 _2 _3 |-->    execute (_3`third : _1_2)<when> _1 atom, _3`second add
 
 _1 _2 _3 |-->    _1_2_3<when> _1 atom, _2 trailer, _3 trailer
@@ -2855,6 +2856,7 @@ _1 is _2 |-->boolean
 
 r _1 |-->String
 R _1 |-->String
+b _1 |-->String
 f _1 |-->String
 
 _1 _2 |-->Sequence<when> _2 matches .shape

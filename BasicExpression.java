@@ -1891,7 +1891,21 @@ class BasicExpression extends Expression
   public void findClones(java.util.Map clones, 
                          java.util.Map cloneDefs, 
                          String rule, String op)
-  { return; } 
+  { if (syntacticComplexity() > UCDArea.CLONE_LIMIT)
+    { String val = "" + this; 
+      Vector used = (Vector) clones.get(val);
+      if (used == null)
+      { used = new Vector(); }
+      if (rule != null)
+      { used.add(rule); }
+      else if (op != null)
+      { used.add(op); }
+      clones.put(val,used);
+      cloneDefs.put(val, this);
+      // if (used.size() > 1) 
+      // { JOptionPane.showInputDialog(">> Potential clone: " + this); } 
+    } 
+  } 
 
   public void findMagicNumbers(java.util.Map mgns, String rule, String op)
   { if (umlkind == VALUE)
@@ -18730,19 +18744,11 @@ public Statement generateDesignSubtract(Expression rhs)
       } 
     } 
 
-    if (umlkind == VALUE) {} 
-    else  
-    // if (umlkind == ATTRIBUTE || umlkind == CLASSID || umlkind == UPDATEOP || 
-    //     umlkind == QUERY || umlkind == ROLE) 
     if (objectRef == null) 
     { return res + 1; } 
     else 
-    { return res + 2; }  
-
-    // one for the "." and 1 for the data.
-
-    return res; 
-  } // and arrayIndex, parameters
+    { return res + 2; }   
+  } 
 
   public int cyclomaticComplexity()
   { return 1; }   // a basic boolean predicate

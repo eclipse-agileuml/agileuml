@@ -221,6 +221,12 @@ public void findPlugins()
     // loadEcoreMI.setMnemonic(KeyEvent.VK_L);
     loadMetamodelMenu.add(loadEcoreMI);
 
+    JMenuItem loadZAppDevMI = 
+      new JMenuItem("Load zAppDev",openIcon);
+    loadZAppDevMI.addActionListener(this);
+    // loadEcoreMI.setMnemonic(KeyEvent.VK_L);
+    loadMetamodelMenu.add(loadZAppDevMI);
+
     JMenu loadMTMenu = 
       new JMenu("Load transformation");
     fileMenu.add(loadMTMenu);
@@ -1876,6 +1882,10 @@ public void findPlugins()
       }
       else if (label.equals("Load Ecore")) 
       { ucdArea.loadEcoreFromFile();
+        saved = true; 
+      }
+      else if (label.equals("Load zAppDev")) 
+      { ucdArea.loadZAppDevFromFile();
         saved = true; 
       }
       else if (label.equals("Load *.km3")) 

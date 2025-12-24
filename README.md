@@ -7,11 +7,14 @@ Program translation between Java and Python, C and JavaScript is supported by tr
 
 The executable for the toolset is in umlrsds.jar
 
-This can be executed as java -jar umlrsds.jar on the command line
+This can be executed as java -jar umlrsds.jar on the command line.
+
 The toolset expects a directory called 'output' to exist in its execution directory, 
 'output' is used to hold all input and output files, such as metamodels and models.
 
-To build the executable, run the following from the command line:
+A build script is provided in executables/build.bat, which can be run directly as a command on Windows. 
+
+To build the executable on Linux, run the following from the command line:
 
 ```bash
 jar cvfm umlrsds.jar UMLRSDSManifest.txt *.class
@@ -23,8 +26,10 @@ chmod +x umlrsds.jar # needed on Unix/Unix-like systems to make the JAR file exe
 java -jar umlrsds.jar
 ```
 
-Further information, and a manual for the toolset, can be found in the file umlrsds20.pdf and at https://nms.kcl.ac.uk/kevin.lano/uml2web/
+Further information, and a manual for the toolset, can be found in the file umlrsds20.pdf and at https://www.agilemde.co.uk
 
 Videos on the use of the toolset can be viewed at: https://www.youtube.com/channel/UCmhEP7QYIHH9MhyEjho_tdQ/
 
-Contributors to AgileUML and associated research include Kevin Lano, Pauline Kan, Kelly Androutsopoulos, David Clark, Shekoufeh Kolahdouz-Rahimi, Sobhan Yassipour-Tehrani, Hessa Alfraihi, Lyan Alwakeel, Shichao Fang, Kunxiang Jin and Qiaomu Xue.
+Contributors to AgileUML and associated research include Kevin Lano, Pauline Kan, Kelly Androutsopoulos, David Clark, Shekoufeh Kolahdouz-Rahimi, Sobhan Yassipour-Tehrani, Hessa Alfraihi, Lyan Alwakeel, Shichao Fang, Kunxiang Jin, Zishan Rahman, Asad Rahman and Qiaomu Xue.
+
+

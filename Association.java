@@ -31,7 +31,8 @@ public class Association extends ModelElement
   // also ADDONLY, FROZEN options
   private boolean addOnly = false; // also represented as stereotypes 
   private boolean frozen = false; 
-  private boolean aggregation = false; 
+  private boolean aggregation = false; // composition at E1 
+ 
   private Vector constraints = new Vector(); // those that involve this association
   private Attribute qualifier = null; // non-null for qualified associations
   private boolean instanceScope = true; 
@@ -48,10 +49,12 @@ public class Association extends ModelElement
     card2 = c2;
     role1 = r1;
     role2 = r2;
+
     if (e1 == null) 
     { System.err.println("!!! FATAL ERROR: null class at association end 1"); 
       return; 
     } 
+
     if (e2 == null) 
     { System.err.println("!!! FATAL ERROR: null class at association end 2"); 
       return; 
@@ -139,6 +142,14 @@ public class Association extends ModelElement
     role2 = r2;
   }
 
+  public static int zAppDevMultiplicity(String mult)
+  { if (mult.equals("ZeroOrOne"))
+    { return ZEROONE; } 
+    if (mult.equals("One"))
+    { return ONE; } 
+    return MANY; 
+  } 
+
   public void setInitialExpression(Expression init)
   { initialExpression = init; } 
 
@@ -224,7 +235,21 @@ public class Association extends ModelElement
   public boolean getAggregation()
   { return aggregation; } 
 
+  public boolean isComposition()
+  { return aggregation; } 
+
   public void setAggregation(boolean a)
+  { aggregation = a; 
+    if (a) 
+    { if (hasStereotype("aggregation")) { } 
+      else 
+      { addStereotype("aggregation"); } 
+    }
+    else 
+    { removeStereotype("aggregation"); } 
+  }  
+
+  public void setComposition(boolean a)
   { aggregation = a; 
     if (a) 
     { if (hasStereotype("aggregation")) { } 

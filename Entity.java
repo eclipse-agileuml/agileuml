@@ -1569,7 +1569,10 @@ public class Entity extends ModelElement implements Comparable
     //  }
     // }
 
-    // System.out.println("ADDING OPERATION " + f + " TO " + this); 
+    if (f == null) 
+    { System.out.println("!! ERROR: null operation"); 
+      return; 
+    } 
 
     String sig = f.getSignature(); 
     Vector removals = new Vector(); 
@@ -5829,14 +5832,15 @@ public class Entity extends ModelElement implements Comparable
     messages.add(""); 
 
     /* String cloneLimit = 
-      JOptionPane.showInputDialog("Enter clone size limit (default 10): ");
+      JOptionPane.showInputDialog("Enter clone size limit (default 7): ");
     if (cloneLimit != null) 
     { try { UCDArea.CLONE_LIMIT = Integer.parseInt(cloneLimit); } 
       catch (Exception _ex) 
-      { UCDArea.CLONE_LIMIT = 10; } 
+      { UCDArea.CLONE_LIMIT = 7; } 
     } */ 
 
-    UCDArea.CLONE_LIMIT = TestParameters.cloneSizeLimit;
+    UCDArea.CLONE_LIMIT = TestParameters.energyCloneSizeLimit;
+    /* 4 */ 
 
     for (int i = 0; i < attributes.size(); i++) 
     { Attribute attr = (Attribute) attributes.get(i); 
@@ -5882,12 +5886,17 @@ public class Entity extends ModelElement implements Comparable
     int n = operations.size(); 
 
     for (int i = 0; i < n; i++) 
-    { BehaviouralFeature op = (BehaviouralFeature) operations.get(i); 
+    { BehaviouralFeature op = 
+          (BehaviouralFeature) operations.get(i); 
       String opname = op.getName(); 
+
 
       Vector redDetails = new Vector(); 
       Vector amberDetails = new Vector(); 
       Map res1 = op.energyAnalysis(redDetails, amberDetails);
+
+      int redop = (int) res1.get("red"); 
+      int amberop = (int) res1.get("amber"); 
 
       java.util.Map clones = new java.util.HashMap(); 
       java.util.Map cdefs = new java.util.HashMap(); 
@@ -5900,13 +5909,19 @@ public class Entity extends ModelElement implements Comparable
       { Vector cs = (Vector) clones.get(k); 
         if (cs.size() > 1) 
         { actualClones.add(k); } 
+        if (cs.size() > 4) 
+        { messages.add("!!! (DC) flaw: Cloned expression with multiple copies: " + k + " in " + op);
+ 
+          redop = redop + 1; 
+          res1.put("red", redop); 
+          redDetails.add("!!! (DC) Expression!: " + k);
+        } 
       } 
 
       if (actualClones.size() > 0)
       { messages.add("!!! (DEV) flaw: Cloned expressions " + actualClones + " in " + op); 
-        int redcount = (int) res1.get("red");
-        redcount = redcount + actualClones.size(); 
-        res1.put("red", redcount); 
+        redop = redop + actualClones.size(); 
+        res1.put("red", redop); 
         redDetails.add("!!! Expression clones!: " + actualClones);
       }  
 
@@ -5915,8 +5930,10 @@ public class Entity extends ModelElement implements Comparable
       op.collectionOperatorUses(1, collOps, collVars, 
                                 res1, messages); 
  
-      int redop = (int) res1.get("red"); 
-      int amberop = (int) res1.get("amber"); 
+      // int redop = (int) res1.get("red"); 
+      // int amberop = (int) res1.get("amber"); 
+
+      // JOptionPane.showInputDialog(redop + " for " + op); 
       
       if (redop > 0) 
       { messages.add("!!! Operation " + opname + 
@@ -5948,7 +5965,6 @@ public class Entity extends ModelElement implements Comparable
         int amberscore = (int) res.get("amber"); 
         res.set("amber", amberscore + amberop); 
       } 
-
     } 
 
     messages.add(">> Collection operator uses in " + 
@@ -9684,6 +9700,41 @@ public class Entity extends ModelElement implements Comparable
     out.println("    \"CanRead\": null,");
     out.println("    \"CanWrite\": null");
     out.print("  }"); 
+  } 
+
+  public void generateMambaXML(PrintWriter out, String sysName,
+                            CGSpec cgs, 
+                            int x, int y, int w, int h)
+  { String nme = getName(); 
+    Attribute key = getPrincipalKey(); 
+
+    out.print("  <Class ModelName = \"app\" Name = \"" + nme + "\" ShadowModel=\"\" ShadowClass=\"\" Description=\"\" Stereotype=\"Class\""); 
+    if (key != null)
+    { out.print(" PK=\"" + key.getName() + "\""); } 
+    else
+    { out.print(" PK=\"\""); }
+    out.print(" ConcurencyControl=\"true\" AutoAssignPrimaryKey=\"true\" IsPersisted=\"true\" IsStatic=\"false\""); 
+    if (superclass != null)
+    { out.print(" BaseClass=\"" + superclass.getName() + "\" BaseClasses=\"" + superclass.getName() + "\""); } 
+    else 
+    { out.print(" BaseClass=\"\" BaseClasses=\"\""); } 
+    out.println(" BaseModel=\"\">"); 
+ 
+    out.println("    <Attributes>");
+    for (int i = 0; i < attributes.size(); i++)
+    { Attribute attr = (Attribute) attributes.get(i); 
+      attr.generateMambaXML(out); 
+    } 
+    out.println("    </Attributes>"); 
+
+    out.println("    <Operations>"); 
+    for (int i = 0; i < operations.size(); i++)
+    { BehaviouralFeature bf = 
+          (BehaviouralFeature) operations.get(i); 
+      bf.generateMambaXML(out,cgs); 
+    } 
+    out.println("    </Operations>"); 
+    out.println("  </Class>"); 
   } 
 
   public void generateCode(String language, Vector entities, Vector types, PrintWriter out,

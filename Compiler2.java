@@ -689,13 +689,27 @@ public class Compiler2
   { return (c == '<' || c == '>' || c == '=' || c == '*' || c == '/' || c == '\\' ||
             c == '-' || c == ',' || c == '\'' || c == '?' ||
             c == '+' || c == '&' || c == '^' || c == '|' ||
-            c == '(' || c == ')' || c == '{' || c == '}' || c == '[' ||
+            c == '(' || c == ')' || c == '{' || c == '}' || 
+            c == '[' ||
             c == ']' || c == '#'); 
   } 
   // { return (c == '<' || c == '>' || c == '='); } 
 
+  private static boolean isXMLSymbolCharacter2(char c)
+  { return (c == '<' || c == '>' || c == '=' || c == '*' || 
+            c == '/' || c == '\\' || c == '!' ||
+            c == '-' || c == ',' || c == '\'' || c == '?' ||
+            c == '+' || c == '&' || c == '^' || c == '|' ||
+            c == '(' || c == ')' || c == '{' || c == '}' || 
+            c == '[' || c == ';' ||
+            c == ']' || c == '#'); 
+  } 
+
   private static boolean isXMLBasicExpCharacter(char c)
-  { return (Character.isLetterOrDigit(c) || c == '.' || c == '$' || c == '@' || c == ':'); } 
+  { return (Character.isLetterOrDigit(c) || c == '.' || 
+            c == '$' || c == '@' || c == ':' ||
+            c == '_'); 
+  } // permitted _ for zAppDev 
         
   private static boolean isSymbolCharacterText(char c)
   { return (c == '(' || c == ')' || 
@@ -709,6 +723,11 @@ public class Compiler2
   public void nospacelexicalanalysis(String str) 
   { int in = INUNKNOWN; 
     char previous = ' '; 
+
+    if (str == null)
+    { lexicals = new Vector();
+      return; 
+    } 
 
     int explen = str.length(); 
     lexicals = new Vector(explen);  /* Sequence of lexicals */ 
@@ -732,7 +751,7 @@ public class Compiler2
           in = INBASICEXP; 
           sb.append(c); 
         }           
-        else if (isStringDelimiter(c))
+        else if (c == '"') // (isStringDelimiter(c))
         { sb = new StringBuffer();  // new buffer for the string
           lexicals.addElement(sb);  
           in = INSTRING; 
@@ -819,10 +838,13 @@ public class Compiler2
         { in = INUNKNOWN; } 
       }
       else if (in == INSTRING) 
-      { if (isStringDelimiter(c) && prev != '\\')  /* end of string */ 
+      { if (c == '"' && prev != '\\')
+        /* (isStringDelimiter(c) && prev != '\\')  end of string */ 
         { sb.append('"'); 
           in = INUNKNOWN; 
         } 
+        else if (c == '\'' && prev != '\\')
+        { sb.append("\'"); } 
         else 
         { sb.append(c); } 
       }    
@@ -976,6 +998,112 @@ public class Compiler2
         }
         else if (isXMLSymbolCharacter(c))
         { if (validFollowingCharacterXML(previous,c))
+          { sb.append(c); } 
+          else 
+          { sb = new StringBuffer();     // start new buffer for the new symbol
+            lexicals.addElement(sb);  
+            in = INSYMBOL; 
+            sb.append(c); 
+          }
+          previous = c; 
+        } 
+        else if (c == ' ' || c == '\n' || c == '\t' || c == '\r')
+        { in = INUNKNOWN; } 
+      }
+      else if (in == INSTRING) 
+      { if (c == '"')  /* end of string */ 
+        { sb.append(c); 
+          in = INUNKNOWN; 
+        } 
+        else 
+        { sb.append(c); } 
+      }    
+      previous = c; 
+    }
+  }
+
+  public void lexicalanalysisxml(String str) 
+  { int in = INUNKNOWN; 
+    char previous = ' '; 
+
+    int explen = str.length(); 
+    lexicals = new Vector(explen);  /* Sequence of lexicals */ 
+    StringBuffer sb = null;    /* Holds current lexical item */ 
+
+    for (int i = 0; i < explen; i++)
+    { char c = str.charAt(i);
+ 
+      if (in == INUNKNOWN) 
+      { if (isXMLSymbolCharacter2(c))
+        { sb = new StringBuffer();  // start new buffer for the symbol
+          lexicals.addElement(sb);  
+          in = INSYMBOL; 
+          sb.append(c); 
+          previous = c; 
+        }
+        else if (isXMLBasicExpCharacter(c))
+        { sb = new StringBuffer();     // start new buffer for the expression
+          lexicals.addElement(sb);  
+          in = INBASICEXP; 
+          sb.append(c); 
+        }           
+        else if (c == '"')
+        { sb = new StringBuffer();     // start new buffer for the string
+          lexicals.addElement(sb);  
+          in = INSTRING; 
+          sb.append(c); 
+        }
+        else if (c == ' ' || c == '\n' || c == '\t' || c == '\r') 
+        { } 
+        else
+        { sb = new StringBuffer();     // unrecognised lexical
+          lexicals.addElement(sb);  
+          System.out.println("!! Unrecognised literal: " + c); 
+          sb.append(c); 
+        }
+      } 
+      else if (in == INBASICEXP)
+      { if (isXMLBasicExpCharacter(c) || c == '"')
+        { sb.append(c); }              // carry on adding to current basic exp
+        else if (isXMLSymbolCharacter2(c))
+        { sb = new StringBuffer();   // start new buffer for the symbol
+          lexicals.addElement(sb);  
+          in = INSYMBOL; 
+          sb.append(c); 
+          previous = c; 
+        }
+        else if (c == ' ' || c == '\n' || c == '\t' || c == '\r')
+        { in = INUNKNOWN; } 
+        else
+        { sb = new StringBuffer();     // unrecognised lexical
+          lexicals.addElement(sb);  
+          in = INUNKNOWN; 
+          System.out.println("!! Unrecognised literal in expression: " + c); 
+          sb.append(c); 
+        }
+      }
+      else if (in == INSYMBOL)
+      { if (c == '"')
+        { sb = new StringBuffer();     // start new buffer for the string
+          lexicals.addElement(sb);  
+          in = INSTRING; 
+          sb.append(c); 
+        }
+        else if (c == '(' || c == ')')
+        { sb = new StringBuffer();     // start new buffer for the new symbol
+          lexicals.addElement(sb);  
+          in = INSYMBOL; 
+          previous = c; 
+          sb.append(c); 
+        }
+        else if (isXMLBasicExpCharacter(c))
+        { sb = new StringBuffer();     // start new buffer for basic exp
+          lexicals.addElement(sb);  
+          in = INBASICEXP; 
+          sb.append(c); 
+        }
+        else if (isXMLSymbolCharacter2(c))
+        { if (validFollowingCharacterXML2(previous,c))
           { sb.append(c); } 
           else 
           { sb = new StringBuffer();     // start new buffer for the new symbol
@@ -1322,30 +1450,89 @@ public class Compiler2
       { return true; }   
       return false; 
     }
+
     if (c1 == '>')
     { if (c2 == '=') { return true; } 
       return false; 
     }
+
     if (c1 == '/') 
     { if (c2 == '=' || c2 == ':' || c2 == '\\' || c2 == '>') { return true; } 
       return false; 
     }
+
     if (c1 == '\\')
     { if (c2 == '/') { return true; } 
       return false; 
     }
+
+    if (c1 == '!')
+    { if (c2 == '=') { return true; } 
+      return false; 
+    }
+
     if (c1 == '=')
     { if (c2 == '>') { return true; } 
       return false; 
     }
+
     if (c1 == '-')
     { if (c2 == '>') { return true; } 
       return false; 
     }
+
     if (c1 == ':')
     { if (c2 == '=') { return true; } 
       return false; 
     }
+
+    return false; 
+  } 
+
+  private static boolean validFollowingCharacterXML2(char c1, char c2)
+  { if (c1 == '<') 
+    { if (c2 == '=' || c2 == ':' || c2 == '/') 
+      { return true; }   
+      return false; 
+    }
+
+    if (c1 == '>')
+    { if (c2 == '=') { return true; } 
+      return false; 
+    }
+
+    if (c1 == '/') 
+    { if (c2 == '=' || c2 == ':' || c2 == '\\' || c2 == '>') { return true; } 
+      return false; 
+    }
+
+    if (c1 == '\\')
+    { if (c2 == '/') { return true; } 
+      return false; 
+    }
+
+    if (c1 == '!')
+    { if (c2 == '=') { return true; } 
+      return false; 
+    }
+
+    if (c1 == '=')
+    { if (c2 == '>' || 
+          c2 == '=') 
+      { return true; } 
+      return false; 
+    }
+
+    if (c1 == '-')
+    { if (c2 == '>') { return true; } 
+      return false; 
+    }
+
+    if (c1 == ':')
+    { if (c2 == '=') { return true; } 
+      return false; 
+    }
+
     return false; 
   } 
 
@@ -2397,7 +2584,10 @@ public class Compiler2
   } 
 
   public Expression parseExpression() 
-  { // System.out.println("LEXICALS: " + lexicals); 
+  { // System.out.println("LEXICALS: " + lexicals);
+    if (lexicals.size() == 0)
+    { return null; } 
+ 
     Vector env = new Vector(); 
     Expression ee = parse_expression(0,0,lexicals.size()-1,env,env); 
     finalexpression = ee; 
@@ -2405,7 +2595,8 @@ public class Compiler2
   } 
 
   public Expression parseExpression(Vector entities, Vector types) 
-  { Expression ee = parse_expression(0,0,lexicals.size()-1,entities,types); 
+  { Expression ee = parse_expression(0,0,lexicals.size()-1,
+                                     entities,types); 
     finalexpression = ee; 
     return ee; 
   } 
@@ -2438,6 +2629,9 @@ public class Compiler2
 
   public Expression parse_expression(int bcount, int pstart, int pend, Vector entities, Vector types)
   { Expression ee = null; 
+
+    if (lexicals.size() == 0) 
+    { return ee; } 
     
     if ("if".equals(lexicals.get(pstart) + "") && "endif".equals(lexicals.get(pend) + ""))
     { ee = parse_conditional_expression(bcount,pstart,pend,
@@ -3916,6 +4110,8 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
     { String brack = lexicals.get(i-1) + ""; 
       String strs = lexicals.get(i) + "";
       String brack2 = lexicals.get(i+1) + "";
+
+      // ).id(
  
       if (brack.equals(")") && brack2.equals("(") && 
           strs.length() > 1 && '.' == strs.charAt(0))
@@ -4490,6 +4686,43 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
     return null; 
   }  
 
+
+  public BehaviouralFeature parseOperationNoSemicolon(Vector entities, Vector types)
+  { int n = lexicals.size(); 
+    if (n == 0) 
+    { return null; } 
+
+    int i = n-1; 
+    while (" ".equals("" + lexicals.get(i)) || 
+           ";".equals("" + lexicals.get(i)))
+    { i = i - 1; } 
+
+    BehaviouralFeature bf;
+
+    String modality = "" + lexicals.get(0);
+
+    if ("static".equals(modality)) 
+    { bf = operationDefinition(2,i,entities,types); 
+      if (bf != null) 
+      { bf.setStatic(true); }
+    } 
+    else if ("abstract".equals(modality)) 
+    { bf = operationDefinition(2,i,entities,types); 
+      if (bf != null) 
+      { bf.setAbstract(true); }
+    } // can't be both abstract and static
+    else 
+    { bf = operationDefinition(1,i,entities,types); }
+ 
+    if (bf == null) 
+    { return null; } 
+
+    if ("query".equals(modality))
+    { bf.setQuery(true); } 
+    else 
+    { bf.setQuery(false); } 
+    return bf; 
+  } 
 
   public BehaviouralFeature parseOperation(Vector entities, Vector types)
   { int n = lexicals.size(); 
@@ -10758,7 +10991,8 @@ private Vector parseUsingClause(int st, int en, Vector entities, Vector types)
           ">".equals(lexicals.get(i+1) + ""))
       { return parsexmlnode(i+2,lexicals.size() - 1); } 
     } 
-    return null; 
+
+    return parsexmlnode(0, lexicals.size() - 1);
   } 
 
   public XMLNode parseXMLNode()
@@ -10773,7 +11007,6 @@ private Vector parseUsingClause(int st, int en, Vector entities, Vector types)
       XMLNode xnode = new XMLNode(tag);
       for (int i = st + 2; i <= en && i < lexicals.size(); i++)
       { String str = lexicals.get(i) + "";
-
 
         if (i + 1 <= en)
         { if ("=".equals(lexicals.get(i+1) + ""))
@@ -10808,14 +11041,14 @@ private Vector parseUsingClause(int st, int en, Vector entities, Vector types)
 
     for (int i = st; i <= en; i++)
     { String str = lexicals.get(i) + "";
+
       if ("</".equals(str) && i + 2 <= en &&
            tag.equals(lexicals.get(i+1) + "") &&
            ">".equals(lexicals.get(i+2) + ""))
       { if (i > st && xnode != null) 
         { xnode.setContent(content); }  
         return res;
-      } 
- 
+      }  
 
       if (">".equals(str)) 
       { String tag1 = lexicals.get(st + 1) + ""; 
@@ -10852,9 +11085,34 @@ private Vector parseUsingClause(int st, int en, Vector entities, Vector types)
         res.addAll(parsesubnodes(null,tag,i+1,en));
         return res;
       }
-      else 
-      { content = content + str; } 
+
+      if ("&".equals(str) && i + 2 <= en &&
+          "amp".equals(lexicals.get(i+1) + "") && 
+          ";".equals(lexicals.get(i+2) + ""))
+      { content = content + "&"; 
+        i = i + 2; 
+        continue;  
+      } 
+
+      if ("&".equals(str) && i + 2 <= en &&
+          "lt".equals(lexicals.get(i+1) + "") && 
+          ";".equals(lexicals.get(i+2) + ""))
+      { content = content + "<"; 
+        i = i + 2; 
+        continue;  
+      } 
+
+      if ("&".equals(str) && i + 2 <= en &&
+          "gt".equals(lexicals.get(i+1) + "") && 
+          ";".equals(lexicals.get(i+2) + ""))
+      { content = content + ">"; 
+        i = i + 2;
+        continue;  
+      } 
+
+      content = content + " " + str;  // " " 10.12.2025 
     }
+
     return res;
   } 
 
@@ -11498,9 +11756,20 @@ private Vector parseUsingClause(int st, int en, Vector entities, Vector types)
   { // System.out.println(Double.MAX_VALUE); 
     Compiler2 c = new Compiler2();
 
-    Vector conds = c.parse_conditions("_1`variableName _3`incrementedVariable, _1`variableName _2`lowerBound"); 
+    /* Vector conds = c.parse_conditions("_1`variableName _3`incrementedVariable, _1`variableName _2`lowerBound"); 
 
-    System.out.println(conds); 
+    System.out.println(conds); */ 
+
+    // c.nospacelexicalanalysis("(orderedsegments[i + 1].DepartureDateTime).AddMinutes(duration)"); 
+
+    c.nospacelexicalanalysis("(DateTime.GetDiff(orderedsegments[i + 1].ArrivalDateTime, orderedsegments[i + 1].DepartureDateTime)).Minutes"); 
+
+    // DateTime.GetDiff(orderedsegments[i + 1].ArrivalDateTime, orderedsegments[i + 1].DepartureDateTime).Minutes
+
+    Expression expr = c.parseExpression(); 
+
+    System.out.println(expr); 
+
 
   /*  String testast = "(expression (logicalExpression (equalityExpression (additiveExpression (factorExpression C_{ (expression (logicalExpression (equalityExpression (additiveExpression (factorExpression (factor2Expression (basicExpression 2))))))) } ^{ (expression (logicalExpression (equalityExpression (additiveExpression (factorExpression (factor2Expression (basicExpression 4))))))) })))))"; */ 
 

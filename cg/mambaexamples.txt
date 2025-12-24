@@ -1,0 +1,32 @@
+/* Example 1: */ 
+
+function int op() {
+  var x = 100; 
+  var y = x*x;
+  return y; 
+}  
+
+(program (function_declaration function (datatype (inner_datatype (identifier int))) (identifier op) ( ) { (stmtList (stmt var (identifier x) (variable_decl_assigment = (expr (factor_level6 (factor_level5 (factor_level4 (factor_level3 (factor_level2 (factor_level1 (factor_level0 (operand (integer 100))))))))))) ;) (stmtList (stmt var (identifier y) (variable_decl_assigment = (expr (factor_level6 (factor_level5 (factor_level4 (factor_level3 (factor_level2 (factor_level1 (factor_level1 (factor_level0 (operand (identifier x)))) * (factor_level0 (operand (identifier x))))))))))) ;) (stmtList (stmt return (expr (factor_level6 (factor_level5 (factor_level4 (factor_level3 (factor_level2 (factor_level1 (factor_level0 (operand (identifier y)))))))))) ;)))) }))
+
+
+
+
+/* Example 2: */
+
+function void op() { 
+  Collection[decimal] numbers; 
+
+  for int i = 0; i < 100; i+1 {
+    numbers.Add(i); 
+  } 
+} 
+
+(program (function_declaration function (datatype (inner_datatype (identifier void))) (identifier op) ( ) { (stmtList (stmt (datatype (inner_datatype (identifier Collection)) [ (generic_parameters (datatype (inner_datatype (identifier decimal)))) ]) (identifier numbers) ;) (stmtList (stmt for (datatype (inner_datatype (identifier int))) (identifier i) = (expr (factor_level6 (factor_level5 (factor_level4 (factor_level3 (factor_level2 (factor_level1 (factor_level0 (operand (integer 0)))))))))) ; (expr (factor_level6 (factor_level5 (factor_level4 (factor_level3 (factor_level3 (factor_level2 (factor_level1 (factor_level0 (operand (identifier i)))))) < (factor_level2 (factor_level1 (factor_level0 (operand (integer 100)))))))))) ; (expr (factor_level6 (factor_level5 (factor_level4 (factor_level3 (factor_level2 (factor_level2 (factor_level1 (factor_level0 (operand (identifier i))))) + (factor_level1 (factor_level0 (operand (integer 1)))))))))) { (stmtList (stmt (expr (factor_level6 (factor_level5 (factor_level4 (factor_level3 (factor_level2 (factor_level1 (factor_level0 (operand (member (id_or_function_call (identifier numbers)) . (id_or_function_call (function_call (identifier Add) ( (argument_list (expr (factor_level6 (factor_level5 (factor_level4 (factor_level3 (factor_level2 (factor_level1 (factor_level0 (operand (identifier i))))))))))) ))))))))))))) ;)) }))) }))
+
+
+/* Example 3: */ 
+
+(int x) => x*x
+
+
+(expr (lamda_parameters ( (lamda_parameter_with_datatype (datatype (inner_datatype (identifier int))) (identifier x)) )) => (factor_level6 (factor_level5 (factor_level4 (factor_level3 (factor_level2 (factor_level1 (factor_level1 (factor_level0 (operand (identifier x)))) * (factor_level0 (operand (identifier x))))))))))

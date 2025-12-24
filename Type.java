@@ -1773,6 +1773,19 @@ public class Type extends ModelElement
     { return "NSString(string: _x." + attname + "!)"; } 
   } 
 
+  public void generateMambaXML(PrintWriter bfout, String systemName)
+  { bfout.println("<Class ModelName=\"" + systemName + "\" Name=\"" + getName() + "\" ShadowModel=\"\" ShadowClass=\"\" Description=\"\" Stereotype=\"Enumeration\" PK=\"\" ConcurencyControl=\"false\" AutoAssignPrimaryKey=\"true\" IsPersisted=\"true\" IsStatic=\"true\" BaseClass=\"\" BaseClasses=\"\" BaseModel=\"\">"); 
+    bfout.println("<Literals>"); 
+    for (int i = 0; i < values.size(); i++) 
+    { String val = (String) values.get(i); 
+      bfout.println("<Literal Name=\"" + val + "\" IsValueClass=\"false\" Description=\"\" DataType=\"string\" BaseInfo=\"\" Length=\"100\" Precision=\"8\" Scale=\"2\" InitValue=\"\" IsRequired=\"false\" IsInherited=\"false\" Persisted=\"true\" IsEncrypted=\"false\" IsStatic=\"false\" ReadOnly=\"false\" IsExternal=\"false\" CustomValidation=\"\" IsCreditCard=\"false\" IsURL=\"false\" IsEmail=\"false\" MinLength=\"0\" MaxLength=\"100\" MinValue=\"\" MaxValue=\"\">"); 
+      bfout.println("</Literal>"); 
+    } 
+    bfout.println("</Literals>");
+    bfout.println("<Operations />"); 
+    bfout.println("</Class>"); 
+  } 
+    
 
   public boolean isEnumeration()
   { return (values != null); } 
@@ -1933,6 +1946,12 @@ public class Type extends ModelElement
   { values = new Vector(); 
     values.addAll(vals);
   }
+
+  public void addValue(String s)
+  { if (values == null) 
+    { values = new Vector(); } 
+    values.add(s); 
+  } 
 
   public String getValuesAsString()
   { if (values == null) { return ""; } 
@@ -2724,6 +2743,41 @@ public class Type extends ModelElement
     { return new Type("String",null); } 
 
     return t;  
+  } 
+
+  public static Type typeFromMamba(String etype, 
+                                   Vector entities, Vector types)   
+  { if (etype == null) 
+    { return null; } 
+
+    if (etype.endsWith("string"))
+    { return new Type("String",null); } 
+    if (etype.endsWith("int") || etype.endsWith("byte"))
+    { return new Type("int",null); } 
+    if (etype.endsWith("long"))
+    { return new Type("long",null); } 
+    if (etype.endsWith("double") || 
+        etype.endsWith("decimal"))
+    { return new Type("double",null); } 
+    if (etype.endsWith("bool"))
+    { return new Type("boolean",null); }
+
+    Type t =
+       (Type) ModelElement.lookupByName(etype,types);
+
+    if (t != null)
+    { return t; } 
+
+    Entity e = 
+       (Entity) ModelElement.lookupByName(etype, entities); 
+
+    if (e != null) 
+    { return new Type(e); } 
+
+    if ("DateTime".equals(etype))
+    { return new Type("DateTime", null); } 
+
+    return null;  
   } 
 
   public String getKM3()

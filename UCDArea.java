@@ -166,7 +166,7 @@ public class UCDArea extends JPanel
   ModifyUseCaseDialog editucDialog; 
   WinHandling state_win = new WinHandling(); 
 
-  public static int CLONE_LIMIT = 10; /* expression size */ 
+  public static int CLONE_LIMIT = 7; /* expression size */ 
 
 
   public UCDArea(UmlTool par)
@@ -1538,11 +1538,11 @@ public class UCDArea extends JPanel
     } 
     
     String cloneLimit = 
-      JOptionPane.showInputDialog("Enter clone size limit (default 10): ");
+      JOptionPane.showInputDialog("Enter clone size limit (default 7): ");
     if (cloneLimit != null) 
     { try { CLONE_LIMIT = Integer.parseInt(cloneLimit); } 
       catch (Exception _ex) 
-      { CLONE_LIMIT = 10; } 
+      { CLONE_LIMIT = 7; } 
     } 
     
     ent1.extractOperations(); 
@@ -1568,12 +1568,12 @@ public class UCDArea extends JPanel
     } 
     
     String cloneLimit = 
-      JOptionPane.showInputDialog("Enter clone/expression size limit (default 10) for extraction: ");
+      JOptionPane.showInputDialog("Enter clone/expression size limit (default 7) for extraction: ");
 
     if (cloneLimit != null) 
     { try { CLONE_LIMIT = Integer.parseInt(cloneLimit); } 
       catch (Exception _ex) 
-      { CLONE_LIMIT = 10; } 
+      { CLONE_LIMIT = 7; } 
     } 
     
     ent1.extractLocalVariables(); 
@@ -3706,9 +3706,11 @@ public class UCDArea extends JPanel
 
   public void energyAnalysis()
   { java.util.Map clnes = new java.util.HashMap(); 
-    Vector messages = new Vector(); 
-    energyAnalysis(clnes, messages);
+    Vector messages = new Vector();
 
+    TestParameters.cloneSizeLimit = 4; 
+
+    energyAnalysis(clnes, messages);
 
     for (int i = 0; i < messages.size(); i++) 
     { String mess = (String) messages.get(i); 
@@ -3728,7 +3730,7 @@ public class UCDArea extends JPanel
       else if (mess.startsWith("!!"))
       { System.err.println("<p style=\"color: orange;\">" + mess + "</p>"); }  
       else if (mess.startsWith("!"))
-      { System.err.println("<p style=\"color: orange;\">" + mess + "</p>"); }  
+      { System.err.println("<p style=\"color: blue;\">" + mess + "</p>"); }  
       else 
       { System.err.println("<p style=\"color: green;\">" + mess + "</p>"); }  
     }  
@@ -4300,14 +4302,14 @@ public class UCDArea extends JPanel
     cgs.setTypes(types); 
     cgs.setEntities(entities); 
 
+    Vector generatedClasses = new Vector(); 
+
     File entf = new File("output/" + systemName + ".json"); 
     try
     { PrintWriter entfout = new PrintWriter(
                                   new BufferedWriter(
                                     new FileWriter(entf)));
       entfout.println("{ \"Classes\": ["); 
-
-      Vector generatedClasses = new Vector(); 
 
       for (int j = 0; j < entities.size(); j++) 
       { Entity ent = (Entity) entities.get(j); 
@@ -4336,67 +4338,45 @@ public class UCDArea extends JPanel
 
       entfout.close(); 
     } catch (Exception _ex) { } 
-  }
 
-// applyCSTLSpecification("./cg/cgMamba.cstl"); }
-
- /*   Vector auxcstls = new Vector(); 
-    
-    CGSpec cgs = loadCSTL("cgMamba.cstl",auxcstls); 
-    cgs.setTypes(types); 
-    cgs.setEntities(entities); 
-
-    for (int j = 0; j < entities.size(); j++) 
-    { Entity ent = (Entity) entities.get(j); 
-      String ename = ent.getName(); 
-
-      if (ent.isDerived()) { }
-      else if (ent.isComponent()) { }
-      else 
-      { String entfile = ename + ".mamba"; 
-        File entf = new File("output/" + entfile); 
-        try
-        { PrintWriter entfout = new PrintWriter(
-                                  new BufferedWriter(
-                                    new FileWriter(entf)));
-          		  					
-          ent.generateOperationDesigns(types,entities);  
-          String entcode = ent.cg(cgs);    
-          CGSpec.displayText(entcode,entfout);
-
-          entfout.println(); 
-          entfout.println(); 
-
-          // String maincode = ent.cg(cgswiftmain); 
-          // cgswiftmain.displayText(maincode,entfout); 
-
-          entfout.close();
-        } catch (Exception _e1) { _e1.printStackTrace(); }
-      }
-    } 			
-
-    System.out.println(">>> classes E are generated in files output/E.mamba"); 
-
-    String appfile = "App.mamba"; 
-    File appf = new File("output/" + appfile); 
+    File bof = new File("output/" + systemName + ".bo"); 
     try
-    { PrintWriter appfout = new PrintWriter(
-                              new BufferedWriter(
-                                new FileWriter(appf)));
-        
-      Vector entusecases = new Vector(); 
-      for (int i = 0; i < useCases.size(); i++) 
-      { if (useCases.get(i) instanceof UseCase)
-        { UseCase uc = (UseCase) useCases.get(i);
-          entusecases.add(uc);
-          String uccode = uc.cgActivity(cgs,types,entities);
-          CGSpec.displayText(uccode,appfout);
-        }       
+    { PrintWriter bofout = new PrintWriter(
+                                  new BufferedWriter(
+                                    new FileWriter(bof)));
+
+      bofout.println("<BusinessObject Model_Name=\"" + systemName + "\" Model_Description=\"\" Model_Creator=\"\">"); 
+
+      bofout.println("<Associations>"); 
+      for (int i = 0; i < associations.size(); i++) 
+      { Association ast = (Association) associations.get(i); 
+        ast.generateMambaXML(bofout, systemName); 
       } 
-   
-      appfout.close();
-    } catch (Exception _e1) { _e1.printStackTrace(); }
-  } */ 
+      bofout.println("</Associations>"); 
+
+      bofout.println("<Classes>"); 
+
+      for (int j = 0; j < generatedClasses.size(); j++) 
+      { Entity ent = (Entity) generatedClasses.get(j); 
+        String ename = ent.getName(); 
+        RectForm rf2 = (RectForm) getVisualOf(ent);
+
+        ent.generateMambaXML(bofout, systemName, cgs, 
+                          rf2.getx(),rf2.gety(),
+                          rf2.getwidth(),rf2.getheight());
+      } 
+
+      for (int k = 0; k < types.size(); k++) 
+      { Type typ = (Type) types.get(k); 
+        if (typ.isEnumeration())
+        { typ.generateMambaXML(bofout, systemName); } 
+      } 
+
+      bofout.println("</Classes>"); 
+
+      bofout.close(); 
+    } catch (Exception _ex) { } 
+  }
 
 
   public void generateSwiftUIApp()
@@ -16160,6 +16140,52 @@ public void produceCUI(PrintWriter out)
     { System.err.println("!! Error generating C++"); } 
   } 
 
+  public String parseMambaOperation(String sourceCode)
+  { Vector auxcstls = new Vector(); 
+    ASTTerm xx = null; 
+
+    String[] args = {"Mamba3", "function_declaration"}; 
+
+    try { 
+      org.antlr.v4.gui.AntlrGUI antlr = 
+          new org.antlr.v4.gui.AntlrGUI(args); 
+
+      antlr.setText(sourceCode); 
+
+      antlr.process(); 
+
+      String asttext = antlr.getResultText(); 
+        // messageArea.setText("" + asttext);
+        // System.out.println(asttext); 
+ 
+      Compiler2 cc = new Compiler2(); 
+      xx = cc.parseGeneralAST(asttext); 
+    } 
+    catch (Exception _expt) 
+    { _expt.printStackTrace(); } 
+
+    if (xx == null) 
+    { System.out.println("!! Invalid Mamba source text !!"); 
+      System.out.println(sourceCode); 
+      return null; 
+    } 
+
+    ASTTerm.metafeatures = new java.util.HashMap(); 
+
+    File mamba2uml = new File("cg/mamba2OCL.cstl"); 
+    Vector vbs = new Vector(); 
+    CGSpec spec = loadCSTL(mamba2uml,vbs); 
+
+    if (spec == null) 
+    { System.err.println("!! ERROR: No file " + mamba2uml.getName()); 
+      return null; 
+    } 
+    
+    String reskm3 = xx.cg(spec); 
+    String arg1 = CGRule.correctNewlines(reskm3); 
+    return arg1; 
+  } 
+
   public void loadFromJavaAST(String sourcefile)
   { BufferedReader br = null; 
 
@@ -18577,6 +18603,328 @@ public void produceCUI(PrintWriter out)
             }
           }
         } 
+      }
+    }
+
+    repaint(); 
+  }
+
+  public void loadZAppDevFromFile()
+  { BufferedReader br = null;
+    Vector res = new Vector();
+    String s;
+    boolean eof = false;
+
+    File file = new File("output/mm.bo.xml");  /* default */ 
+
+    File startingpoint = new File("output");
+    JFileChooser fc = new JFileChooser();
+    fc.setCurrentDirectory(startingpoint);
+    fc.setDialogTitle("Load .bo.xml file");
+    fc.addChoosableFileFilter(new BusinessObjectFilter()); 
+    int returnVal = fc.showOpenDialog(this);
+    if (returnVal == JFileChooser.APPROVE_OPTION)
+    { file = fc.getSelectedFile(); }
+    else
+    { System.err.println("Load aborted");
+      return; 
+    }
+
+    String componentName = file.getName();  
+
+    try
+    { br = new BufferedReader(new FileReader(file)); }
+    catch (FileNotFoundException e)
+    { System.err.println("!! File not found: " + file);
+      return; 
+    }
+
+    Vector preentities = new Vector(); 
+    Vector preassociations = new Vector(); 
+    Vector pregeneralisations = new Vector();
+    Vector preconstraints = new Vector(); 
+    Vector preassertions = new Vector(); 
+    Vector preops = new Vector(); 
+    Vector pucs = new Vector(); 
+    Vector preactivities = new Vector(); 
+    Vector preucinvs = new Vector(); 
+
+    String xmlstring = ""; 
+
+    while (!eof)
+    { try { s = br.readLine(); }
+      catch (IOException e)
+      { System.out.println("!! Reading business object file failed.");
+        return; 
+      }
+
+      if (s == null) 
+      { eof = true; 
+        break; 
+      }
+      else 
+      { xmlstring = xmlstring + s + " "; } 
+    }
+
+    System.out.println(">> Input: " + xmlstring); 
+
+    Compiler2 comp = new Compiler2();  
+    comp.lexicalanalysisxml(xmlstring); 
+    XMLNode xml = comp.parseXML(); 
+    System.out.println(">>> Parsed business object data: " + xml); 
+
+    if (xml == null) 
+    { return; } 
+
+    Vector enodes = xml.getSubnodes(); 
+      // main elements: associations, entities
+
+    int delta = 200; // visual displacement 
+    int ecount = 0; 
+	
+    Vector allnodes = new Vector(); 
+
+    for (int i = 0; i < enodes.size(); i++) 
+    { XMLNode enode = (XMLNode) enodes.get(i); 
+	  
+      if ("Classes".equals(enode.getTag()))
+      { System.out.println(">>>> Classes subnode"); 
+        allnodes.addAll(enode.getSubnodes()); 
+      }  
+      else if ("Associations".equals(enode.getTag()))
+      { System.out.println(">>>> Associations subnode"); 
+        allnodes.addAll(enode.getSubnodes()); 
+      }  
+      // else 
+      // { allnodes.add(enode); }
+    } 
+
+    for (int i = 0; i < allnodes.size(); i++) 
+    { XMLNode enode = (XMLNode) allnodes.get(i); 
+	  
+      if ("Class".equals(enode.getTag()))
+      { String xsitype = enode.getAttributeValue("Stereotype"); 
+        String ename = enode.getAttributeValue("Name");
+        System.out.println(">>>> Class/type subnode: " + ename); 
+		 
+        if ("Class".equals(xsitype) && ename != null)  
+        { Entity ent = 
+            reconstructEntity(ename, 
+              40 + (ecount/3)*delta + ((ecount % 3)*delta)/2, 
+              100 + (ecount % 7)*delta, "", "*", 
+              new Vector());
+          ecount++; 
+        } 
+        else if ("Enumeration".equals(xsitype) && 
+                 ename != null) 
+        { Type dt = new Type(ename, null); 
+          types.add(dt); 
+          RectData rdt = 
+            new RectData(100 + 120*types.size(),
+                         20,getForeground(),
+                                 componentMode,
+                                 rectcount);
+          rectcount++;
+          rdt.setLabel(ename);
+          rdt.setModelElement(dt); 
+          visuals.add(rdt);
+        } 
+      } 
+    } 
+
+    for (int i = 0; i < allnodes.size(); i++) 
+    { XMLNode enode = (XMLNode) allnodes.get(i);
+ 
+      if ("Class".equals(enode.getTag()))
+      { String xsitype = enode.getAttributeValue("Stereotype"); 
+        String ename = enode.getAttributeValue("Name"); 
+        String idAttr = enode.getAttributeValue("PK"); 
+        String baseClass = enode.getAttributeValue("BaseClass"); 
+
+        if ("Enumeration".equals(xsitype) && ename != null)  
+        { Type typ = 
+            (Type) ModelElement.lookupByName(ename, types);
+
+          Vector edata = enode.getSubnodes(); 
+          for (int j = 0; j < edata.size(); j++) 
+          { XMLNode ed = (XMLNode) edata.get(j);
+            if ("Literals".equals(ed.getTag()))
+            { Vector ops = ed.getSubnodes();
+ 
+              for (int k = 0; k < ops.size(); k++) 
+              { XMLNode opnode = (XMLNode) ops.get(k); 
+                String opname = 
+                    opnode.getAttributeValue("Name"); 
+                typ.addValue(opname); 
+              } 
+            }
+          }
+        } 
+        else if ("Class".equals(xsitype) && ename != null)  
+        { Entity ent = 
+            (Entity) ModelElement.lookupByName(ename,entities);
+          
+          if (baseClass != null && 
+              baseClass.length() > 0)
+          { Entity supent = 
+              (Entity) ModelElement.lookupByName(baseClass,entities);
+            
+            if (supent != null) 
+            { Entity[] subents = new Entity[1]; 
+              subents[0] = ent; 
+              addInheritances(supent,subents); 
+              System.out.println(">>> Added inheritance: " + 
+                         ename + " --|> " + supent.getName()); 
+              supent.setAbstract(true);
+            } 
+          }  
+
+          Vector edata = enode.getSubnodes(); 
+          for (int j = 0; j < edata.size(); j++) 
+          { XMLNode ed = (XMLNode) edata.get(j);
+            if ("Operations".equals(ed.getTag()))
+            { Vector ops = ed.getSubnodes(); 
+              for (int k = 0; k < ops.size(); k++) 
+              { XMLNode opnode = (XMLNode) ops.get(k); 
+                String opname = 
+                    opnode.getAttributeValue("Name"); 
+                String opcode = 
+                    opnode.getContent(); 
+                String km3code = parseMambaOperation(opcode);
+                JOptionPane.showInputDialog("Code of " + opname + " is " + km3code); 
+                Compiler2 cc = new Compiler2(); 
+                cc.nospacelexicalanalysis(km3code); 
+                BehaviouralFeature bf = 
+                  cc.parseOperationNoSemicolon(entities, types); 
+                ent.addOperation(bf); 
+                bf.setEntity(ent); 
+              }  
+            } 
+            else if ("Attributes".equals(ed.getTag()))
+            { Vector attrs = ed.getSubnodes(); 
+              for (int k = 0; k < attrs.size(); k++)
+              { XMLNode anode = (XMLNode) attrs.get(k); 
+                String isInherited = 
+                     anode.getAttributeValue("IsInherited"); 
+     
+                if ("true".equals(isInherited)) 
+                { continue; } 
+
+                String dataname = 
+                     anode.getAttributeValue("Name"); 
+                String atttype = 
+                     anode.getAttributeValue("DataType"); 
+     
+                Type typ = 
+                  Type.typeFromMamba(atttype,entities,types);
+ 
+                Attribute att = 
+                  new Attribute(dataname,typ,
+                                ModelElement.INTERNAL); 
+                ent.addAttribute(att); 
+                att.setEntity(ent);
+                String init = 
+                     anode.getAttributeValue("InitValue");
+                String isStatic = 
+                     anode.getAttributeValue("IsStatic");
+
+                if (init != null) 
+                { att.setInitialValue(init);
+                  System.out.println(">-> Initial value for " + dataname + " = " + init); 
+
+                  if (typ != null && 
+                      "String".equals(typ.getName()))
+                  { Expression expr = 
+                      BasicExpression.newValueBasicExpression(
+                                         "\"" + init + "\"");
+                    expr.setType(typ); 
+                    expr.setElementType(typ);  
+                    att.setInitialExpression(expr); 
+                  }
+                  else 
+                  { Compiler2 comp2 = new Compiler2();
+                    comp2.nospacelexicalanalysis(init); 
+                    Expression expr = 
+                      comp2.parseExpression(entities,types); 
+                    if (expr != null) 
+                    { expr.setType(typ); }
+                    att.setInitialExpression(expr); 
+                  }
+                }
+
+                if ("true".equals(isStatic))
+                { att.setStatic(true); }    
+
+                if (idAttr.equals(dataname))
+                { att.setIdentity(true); } 
+              }
+            }
+          }
+        }  
+      }  
+      else if ("Association".equals(enode.getTag()))
+      { String e1name = enode.getAttributeValue("Class1"); 
+        String e2name = enode.getAttributeValue("Class2"); 
+        String role1 = enode.getAttributeValue("Role1"); 
+        String role2 = enode.getAttributeValue("Role2"); 
+        String mult1 = enode.getAttributeValue("Multiplicity1"); 
+        String mult2 = enode.getAttributeValue("Multiplicity2"); 
+        int card1 = Association.zAppDevMultiplicity(mult1); 
+        int card2 = Association.zAppDevMultiplicity(mult2); 
+
+        String delete1 = enode.getAttributeValue("OnDelete1"); 
+        String delete2 = enode.getAttributeValue("OnDelete2"); 
+
+        Entity ent1 = 
+          (Entity) ModelElement.lookupByName(e1name,entities);
+        if (ent1 == null)
+        { ent1 = 
+            reconstructEntity(e1name, 
+              40 + (ecount/3)*delta + ((ecount % 3)*delta)/2, 
+              100 + (ecount % 7)*delta, "", "*", 
+              new Vector());
+          ecount++; 
+        }
+
+        Entity ent2 = 
+          (Entity) ModelElement.lookupByName(e2name,entities);
+        if (ent2 == null)
+        { ent2 = 
+            reconstructEntity(e2name, 
+              40 + (ecount/3)*delta + ((ecount % 3)*delta)/2, 
+              100 + (ecount % 7)*delta, "", "*", 
+              new Vector());
+          ecount++; 
+        }
+ 
+        System.out.println(">> Association: " + role2 + " from " + e1name + " to " + e2name); 
+      
+        Association ast = 
+           new Association(ent1,ent2,card1,card2,role1,role2); 
+        associations.add(ast);  
+        ent1.addAssociation(ast); 
+        ast.setName("r" + associations.size());
+    
+        if ("CascadeDelete".equals(delete1))
+        { ast.setComposition(true); } 
+
+        int xs = 0, ys = 0, xe = 100, ye = 100;  
+        for (int m = 0; m < visuals.size(); m++)
+        { VisualData vd = (VisualData) visuals.get(m); 
+          ModelElement me = (ModelElement) vd.getModelElement(); 
+          if (me == ent1) // Entity1
+          { xs = vd.getx(); ys = vd.gety(); } 
+          else if (me == ent2) // Entity2
+          { xe = vd.getx(); ye = vd.gety(); }  
+        }
+
+        int featuresize = ent1.featureCount(); 
+        int efeaturesize = ent2.featureCount(); 
+
+        LineData sline = 
+            new LineData(xs + featuresize*4, ys+50, xe + efeaturesize*4,ye,linecount,SOLID);
+        sline.setModelElement(ast); 
+        visuals.add(sline); 
       }
     }
 
@@ -29933,4 +30281,18 @@ class EcoreFileFilter extends javax.swing.filechooser.FileFilter
 
   public String getDescription()
   { return "Select a .ecore file"; } 
+}
+
+class BusinessObjectFilter extends javax.swing.filechooser.FileFilter
+{ public boolean accept(File f) 
+  { if (f.isDirectory()) { return true; } 
+
+    if (f.getName().endsWith(".bo.xml")) 
+    { return true; } 
+
+    return false; 
+  } 
+
+  public String getDescription()
+  { return "Select a .bo.xml file"; } 
 }

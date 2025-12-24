@@ -33,10 +33,13 @@ public class TestParameters
   /* Settings for flaw/technical debt detection */ 
 
   public static int syntacticComplexityLimit = 12; /* for MEL */ 
-  public static int cloneSizeLimit = 7;           /* for DC  */
+
+  public static int cloneSizeLimit = 7;            /* for DC  */
+  public static int energyCloneSizeLimit = 4; 
+
   public static int statementNestingLimit = 5;  
   public static int cyclomaticComplexityLimit = 10; 
-  public static int referenceChainLimit = 2; 
+  public static int referenceChainLimit = 3; 
   public static int nestedTypeLimit = 3; 
 
   public static int superclassesLimit = 4; 
@@ -107,9 +110,11 @@ public class TestParameters
     sequenceCC.put("->collect", 2.0);   
     sequenceCC.put("->reject", 2.0); 
     sequenceCC.put("->isUnique", 2.0); 
+    sequenceCC.put("->any", 2.0); 
     sequenceCC.put("|", 2.0); 
     sequenceCC.put("|C", 2.0);   
     sequenceCC.put("|R", 2.0);
+    sequenceCC.put("|A", 2.0);
     sequenceCC.put("|isUnique", 2.0); 
     sequenceCC.put("->selectMinimals", 2.0); 
     sequenceCC.put("|selectMinimals", 2.0); 
@@ -178,6 +183,7 @@ public class TestParameters
       // we know it is sorted.  
     sortedsequenceCC.put("->collect", 2.0);   
     sortedsequenceCC.put("->reject", 2.0); 
+    sortedsequenceCC.put("->any", 2.0);
     sortedsequenceCC.put("|", 2.0); 
     sortedsequenceCC.put("|C", 2.0);   
     sortedsequenceCC.put("|R", 2.0); 
@@ -189,7 +195,9 @@ public class TestParameters
     sortedsequenceCC.put("->exists1", 2.0); 
     sortedsequenceCC.put("!", 2.0); 
     sortedsequenceCC.put("#", 2.0);   
-    sortedsequenceCC.put("#1", 2.0); 
+    sortedsequenceCC.put("#1", 2.0);
+    sortedsequenceCC.put("|A", 2.0);
+ 
     sortedsequenceCC.put("->selectMinimals", 2.0); 
     sortedsequenceCC.put("|selectMinimals", 2.0); 
     sortedsequenceCC.put("->selectMaximals", 2.0); 
@@ -234,10 +242,14 @@ public class TestParameters
 
     setCC.put("->select", 2.0); 
     setCC.put("->collect", 2.0);   
-    setCC.put("->reject", 2.0); 
+    setCC.put("->reject", 2.0);
+    setCC.put("->any", 2.0);
+ 
     setCC.put("|", 2.0); 
     setCC.put("|C", 2.0);   
-    setCC.put("|R", 2.0); 
+    setCC.put("|R", 2.0);
+    setCC.put("|A", 2.0);
+ 
     setCC.put("->selectMinimals", 2.0); 
     setCC.put("|selectMinimals", 2.0); 
     setCC.put("->selectMaximals", 2.0); 
@@ -288,10 +300,14 @@ public class TestParameters
 
     sortedsetCC.put("->select", 3.0); 
     sortedsetCC.put("->collect", 2.0);   
-    sortedsetCC.put("->reject", 3.0); 
+    sortedsetCC.put("->reject", 3.0);
+    sortedsetCC.put("->any", 2.0);
+ 
     sortedsetCC.put("|", 3.0); 
     sortedsetCC.put("|C", 2.0);   
-    sortedsetCC.put("|R", 3.0); 
+    sortedsetCC.put("|R", 3.0);
+    sortedsetCC.put("|A", 2.0);
+ 
     sortedsetCC.put("->isUnique", 2.0); 
     sortedsetCC.put("|isUnique", 2.0); 
     sortedsetCC.put("->selectMinimals", 3.0); 
@@ -339,9 +355,12 @@ public class TestParameters
     mapCC.put("->select", 3.0);
     mapCC.put("->reject", 3.0);
     mapCC.put("->collect", 2.0);
+    mapCC.put("->select", 2.0);
+
     mapCC.put("|", 3.0);
     mapCC.put("|R", 3.0);
     mapCC.put("|C", 2.0);
+    mapCC.put("|A", 2.0);
 
     mapCC.put("->forAll", 3.0);
     mapCC.put("->exists", 3.0);
@@ -378,6 +397,7 @@ public class TestParameters
     sortedmapCC.put("->select", 3.0);
     sortedmapCC.put("->reject", 3.0);
     sortedmapCC.put("->collect", 2.0);
+    sortedmapCC.put("->any", 2.0);
     sortedmapCC.put("|", 3.0);
     sortedmapCC.put("|R", 3.0);
     sortedmapCC.put("|C", 2.0);
@@ -388,7 +408,8 @@ public class TestParameters
     sortedmapCC.put("!", 3.0);
     sortedmapCC.put("#", 3.0);
     sortedmapCC.put("#1", 3.0);
-   
+    sortedmapCC.put("|A", 2.0);
+
     compComplexity.put("SortedMap", sortedmapCC); 
   } 
 

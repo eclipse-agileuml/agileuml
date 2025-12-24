@@ -1775,8 +1775,8 @@ public class CGRule
         }  // Other string functions could be added.  
         else if (obj instanceof Vector) // Of ASTTerm
         { Vector v = (Vector) obj;
-          // System.err.println(">***> Applying " + mffeat + " to vector of terms " + v);
-          System.out.println(); 
+
+          JOptionPane.showInputDialog(">***> Applying " + mffeat + " to vector of terms " + v);
   
           String repl = "";
           
@@ -1847,6 +1847,7 @@ public class CGRule
             //                    sep); 
 
             String replv = ""; 
+
             for (int p = 0; p < v.size(); p++)
             { if (v.get(p) instanceof ASTTerm)
               { ASTTerm x = (ASTTerm) v.get(p); 
