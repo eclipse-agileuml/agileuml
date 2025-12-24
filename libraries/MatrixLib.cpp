@@ -425,6 +425,63 @@ class MatrixLib {
             }
             return dmat;
         }
+        static double detaux(double x1, double x2, double y1, double y2) {
+            return x1 * y2 - x2 * y1;
+        }
+        static double determinant2(vector<T> m) {
+            if (m.size() == 2 and m[0].size() == 2) {
+                vector<T> m1 = (vector<T>) m[0];
+                vector<T> m2 = (vector<T>) m[1];
+
+                double d11 = (double) m[0][0];
+                double d12 = (double) m[0][1];
+                double d21 = (double) m[1][0];
+                double d22 = (double) m[1][1];
+
+                return detaux(d11, d12, d21, d22);
+            }
+            return 0.0;
+        }
+        static double determinant3(vector<T> m) {
+            if (m.size() == 3 and m[0].size() == 3) {
+                vector<vector<T>> subm1 = subMatrix(m, {2, 3}, {2, 3});
+                vector<vector<T>> subm2 = subMatrix(m, {2, 3}, {1, 3});
+                vector<vector<T>> subm3 = subMatrix(m, {2, 3}, {1, 2});
+
+                vector<T> m1 = (vector<T>) m[0];
+
+                return ((double) m1[0] * determinant2(subm1)) -
+                ((double) m1[1] * determinant2(subm2)) +
+                ((double) m1[2] * determinant2(subm3));
+            }
+            return 0.0;
+        }
+        static double determinant(vector<T> m) {
+            int n = m.size();
+
+            switch (n) {
+                case 1:
+                    return (double) m[0];
+                case 2:
+                    return determinant2(m);
+                case 3:
+                    return determinant3(m);
+                default:
+                    double res = 0.0;
+                    vector<T> row = (vector<T>) m[0];
+                    int factor = 1;
+
+                    for (int i = 0; i < n; i++) {
+                        vector<T> submat = matrixExcludingRowColumn(m, 0, i);
+                        double det = determinant(submat);
+                        double rowi = (double) row[i];
+                        res += factor * rowi * det;
+                        factor = -factor;
+                    }
+
+                    return res;
+            }
+        }
 };
 
 int main() {
