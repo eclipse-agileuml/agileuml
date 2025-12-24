@@ -362,6 +362,27 @@ class MatrixLib {
             }
             return dmat;
         }
+        static vector<T> elementwiseLess(vector<T> m, double x) {
+            if (m.size() == 0) {
+                return 0;
+            }
+
+            if (string(typeid(m[0]).name()).find("vector") != string::npos) {
+                vector<T> n(m.size());
+                for (auto _r : m) {
+                    n.push_back(elementwiseLess({_r}, x));
+                }
+                return n;
+            }
+
+            vector<bool> dmat(m.size());
+
+            for (auto z: m) {
+                bool y = (bool) z;
+                dmat.push_back(y < x);
+            }
+            return dmat;
+        }
 };
 
 int main() {
