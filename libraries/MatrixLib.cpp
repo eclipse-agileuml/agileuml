@@ -12,6 +12,10 @@ using std::endl;
 
 template <typename T>
 class MatrixLib {
+    private:
+        static bool firstElementOfListIsList(vector<T> m) {
+            return string(typeid(m[0]).name()).find("vector") != string::npos;
+        }
     public:
         MatrixLib() {};
         static vector<double> rowMult(vector<double> s, vector<vector<double>> m) {
@@ -158,7 +162,7 @@ class MatrixLib {
             if (m.size() == 0) {
                 return {};
             }
-            if (string(typeid(m[0]).name()).find("vector") != string::npos) {
+            if (firstElementOfListIsList(m)) {
                 vector<T> sq = m[0];
                 return UmlRsdsLib<T>::concatenate(flattenMatrix(sq), &UmlRsdsLib<T>::tail(m));
             }
@@ -171,7 +175,7 @@ class MatrixLib {
                 return 0.0;
             }
 
-            if (string(typeid(m[0]).name()).find("vector") != string::npos) {
+            if (firstElementOfListIsList(m)) {
                 vector<T> sq = m[0];
                 return sumMatrix(sq) + sumMatrix(UmlRsdsLib<T>::tail(m));
             }
@@ -184,7 +188,7 @@ class MatrixLib {
                 return 1.0;
             }
 
-            if (string(typeid(m[0]).name()).find("vector") != string::npos) {
+            if (firstElementOfListIsList(m)) {
                 vector<T> sq = m[0];
                 return prdMatrix(sq) * prdMatrix(UmlRsdsLib<T>::tail(m));
             }
@@ -197,7 +201,7 @@ class MatrixLib {
                 return {};
             }
 
-            if (string(typeid(m[0]).name()).find("vector") != string::npos) {
+            if (firstElementOfListIsList(m)) {
                 vector<T> n(m.size());
                 for (auto _r : m) {
                     n.push_back(elementwiseApply({_r}, f));
@@ -218,7 +222,7 @@ class MatrixLib {
                 return {};
             }
 
-            if (string(typeid(m[0]).name()).find("vector") != string::npos) {
+            if (firstElementOfListIsList(m)) {
                 vector<T> n(m.size());
                 for (auto _r : m) {
                     n.push_back(selectElements({_r}, f));
@@ -241,7 +245,7 @@ class MatrixLib {
                 return 0;
             }
 
-            if (string(typeid(m[0]).name()).find("vector") != string::npos) {
+            if (firstElementOfListIsList(m)) {
                 vector<T> n(m.size());
                 for (auto _r : m) {
                     n.push_back(elementwiseNot({_r}));
@@ -262,7 +266,7 @@ class MatrixLib {
                 return {};
             }
 
-            if (string(typeid(m[0]).name()).find("vector") != string::npos) {
+            if (firstElementOfListIsList(m)) {
                 vector<T> n(m.size());
                 for (auto _r : m) {
                     n.push_back(elementwiseMult({_r}, x));
@@ -283,7 +287,7 @@ class MatrixLib {
                 return {};
             }
 
-            if (string(typeid(m[0]).name()).find("vector") != string::npos) {
+            if (firstElementOfListIsList(m)) {
                 vector<T> n(m.size());
                 for (auto _r : m) {
                     n.push_back(elementwisePower({_r}, x));
@@ -304,7 +308,7 @@ class MatrixLib {
                 return {};
             }
 
-            if (string(typeid(m[0]).name()).find("vector") != string::npos) {
+            if (firstElementOfListIsList(m)) {
                 vector<T> n(m.size());
                 for (auto _r : m) {
                     n.push_back(elementwiseAdd({_r}, x));
@@ -325,7 +329,7 @@ class MatrixLib {
                 return {};
             }
 
-            if (string(typeid(m[0]).name()).find("vector") != string::npos) {
+            if (firstElementOfListIsList(m)) {
                 vector<T> n(m.size());
                 for (auto _r : m) {
                     n.push_back(elementwiseSubtract({_r}, x));
@@ -346,7 +350,7 @@ class MatrixLib {
                 return {};
             }
 
-            if (string(typeid(m[0]).name()).find("vector") != string::npos) {
+            if (firstElementOfListIsList(m)) {
                 vector<T> n(m.size());
                 for (auto _r : m) {
                     n.push_back(elementwiseDivide({_r}, x));
@@ -367,7 +371,7 @@ class MatrixLib {
                 return 0;
             }
 
-            if (string(typeid(m[0]).name()).find("vector") != string::npos) {
+            if (firstElementOfListIsList(m)) {
                 vector<T> n(m.size());
                 for (auto _r : m) {
                     n.push_back(elementwiseLess({_r}, x));
@@ -388,7 +392,7 @@ class MatrixLib {
                 return 0;
             }
 
-            if (string(typeid(m[0]).name()).find("vector") != string::npos) {
+            if (firstElementOfListIsList(m)) {
                 vector<T> n(m.size());
                 for (auto _r : m) {
                     n.push_back(elementwiseGreater({_r}, x));
@@ -409,7 +413,7 @@ class MatrixLib {
                 return 0;
             }
 
-            if (string(typeid(m[0]).name()).find("vector") != string::npos) {
+            if (firstElementOfListIsList(m)) {
                 vector<T> n(m.size());
                 for (auto _r : m) {
                     n.push_back(elementwiseEqual({_r}, x));
