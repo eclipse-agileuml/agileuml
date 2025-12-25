@@ -13,8 +13,14 @@ using std::endl;
 template <typename T>
 class MatrixLib {
     private:
+        static bool elementOfListIsList(vector<T> m, int i) {
+            return string(typeid(m[i]).name()).find("vector") != string::npos;
+        }
         static bool firstElementOfListIsList(vector<T> m) {
-            return string(typeid(m[0]).name()).find("vector") != string::npos;
+            return elementOfListIsList(m, 0);
+        }
+        static bool elementIsList(T* x) {
+            return string(typeid(*x).name()).find("vector") != string::npos;
         }
     public:
         MatrixLib() {};
@@ -70,14 +76,14 @@ class MatrixLib {
             return result;
         }
         static vector<T> column(vector<T> m, int i) {
-            if (string(typeid(m[i]).name()).find("vector") != string::npos) {
+            if (elementOfListIsList(m, i)) {
                 return {m[i]};
             }
             return m[i];
         }
         static vector<int> shape(T* x) {
             vector<int> result = {0};
-            if (string(typeid(x).name()).find("vector") != string::npos) {
+            if (elementIsList(x)) {
                 vector<T> sq;
                 sq.push_back(*x);
                 result = {(int) sq.size()};
