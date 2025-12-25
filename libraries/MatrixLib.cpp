@@ -522,6 +522,25 @@ class MatrixLib {
 
             return res;
         }
+        static vector<T> rowSubtraction(vector<T> m1, vector<T> m2) {
+            vector<T> res = {};
+
+            if (firstElementOfListIsList(m1)) {
+                for (int i = 0; i < m1.size(); i++) {
+                    vector<T> sq1 = (vector<T>) m1[i];
+                    vector<T> sq2 = (vector<T>) m2[i];
+                    res.push_back(rowSubtraction(sq1, sq2));
+                }
+                return res;
+            }
+
+            for (int j = 0; j < m1.size(); j++) {
+                double m1j = (double) m1[j];
+                double m2j = (double) m2[j];
+                res.push_back(m1j - m2j);
+            }
+            return res;
+        }
 };
 
 int main() {
