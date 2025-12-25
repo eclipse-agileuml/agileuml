@@ -496,17 +496,17 @@ class MatrixLib {
             vector<T> res = {};
 
             if (firstElementOfListIsList(m1)) {
-                for (int i : UmlRsdsLib<int>::integerSubrange(1, m1.size())) {
-                    vector<T> sq1 = (vector<T>) m1[i - 1];
-                    vector<T> sq2 = (vector<T>) m2[i - 1];
+                for (int i = 0; i < m1.size(); i++) {
+                    vector<T> sq1 = (vector<T>) m1[i];
+                    vector<T> sq2 = (vector<T>) m2[i];
                     res.push_back(rowAddition(sq1, sq2));
                 }
                 return res;
             }
 
-            for (int j : UmlRsdsLib<int>::integerSubrange(1, m1.size())) {
-                double m1j = (double) m1[j - 1];
-                double m2j = (double) m2[j - 1];
+            for (int j = 0; j < m1.size(); j++) {
+                double m1j = (double) m1[j];
+                double m2j = (double) m2[j];
                 res.push_back(m1j + m2j);
             }
             return res;
