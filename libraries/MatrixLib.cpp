@@ -492,7 +492,7 @@ class MatrixLib {
                     return res;
             }
         }
-        static double rowAddition(vector<T> m1, vector<T> m2) {
+        static vector<T> rowAddition(vector<T> m1, vector<T> m2) {
             vector<T> res = {};
 
             if (firstElementOfListIsList(m1)) {
