@@ -571,6 +571,17 @@ class MatrixLib {
             }
             return res;
         }
+        static vector<T> dotProduct(vector<T> m1, vector<T> m2) {
+            vector<T> res = {};
+
+            for (int i = 0; i < m1.size(); i++) {
+                vector<T> sq1 = (vector<T>) m1[i];
+                vector<T> sq2 = (vector<T>) m2[i];
+                res.push_back(rowDotProduct(sq1, sq2));
+            }
+
+            return res;
+        }
 };
 
 int main() {
