@@ -706,6 +706,17 @@ class MatrixLib {
 
             return res;
         }
+        static vector<T> transpose(vector<T> m) {
+            if (firstElementOfListIsList(m)) {
+                vector<T> res = {};
+                for (int i = 0; i < m.size(); i++) {
+                    res.push_back(column(m, i));
+                }
+                return res;
+            } else {
+                return m;
+            }
+        }
 };
 
 int main() {
