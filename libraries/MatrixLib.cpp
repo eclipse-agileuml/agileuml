@@ -44,7 +44,7 @@ class MatrixLib {
         };
         static vector<T> subRows(vector<T> m, vector<int> s) {
             vector<T> result;
-            for (auto integer :s) {
+            for (auto integer: s) {
                 if ((integer >= 0) && (integer <= m.size() - 1)) {
                     result.push_back(m[integer]);
                 }
