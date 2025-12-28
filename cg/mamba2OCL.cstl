@@ -21,9 +21,9 @@ function _1 _2 ( _3 ) { _4 } |-->operation _2(_3) : _1\n  pre: true post: true\n
 
 statementList::
 ; |-->
-_1 |-->    _1
-_1 ; |-->    _1
-_1 _2 |-->    _1; _2`statementList
+_1 |-->    _1\n
+_1 ; |-->    _1\n
+_1 _2 |-->    _1;\n_2`statementList
 
 
 stmt::
@@ -46,6 +46,11 @@ if _1 { _2 } _3 |-->if _1 then (_2`statementList) _3<when> _3 elsestat
 
 if _1 { } _2 |-->if _1 then skip _2 else skip<when> _2 elseif
 if _1 { _2 } _3 |-->if _1 then (_2`statementList) _3 else skip <when> _3 elseif
+if _1 { _2 } _3 _4 |-->if _1 then (_2`statementList) _3 _4 else skip <when> _4 elseif
+if _1 { _2 } _3 _4 _5 |-->if _1 then (_2`statementList) _3 _4 _5 else skip <when> _5 elseif
+if _1 { _2 } _3 _4 _5 _6 |-->if _1 then (_2`statementList) _3 _4 _5 _6 else skip <when> _6 elseif
+
+if _1 { _2 } _* |-->if _1 then (_2`statementList) _* else skip<when> _*`last elseif
 
 if _1 { } _* |-->if _1 then skip _*
 if _1 { _2 } _* |-->if _1 then (_2`statementList) _*
@@ -82,12 +87,12 @@ for ( _1 _2 = _3 ; _4 ; _5 ) { _6 } |-->(var _2 : _1 := _3;\n    while _4 do (_6
 
 for _1 _2 = _3 ; _4 ; _5 { _6 } |-->(var _2 : _1 := _3;\n    while _4 do (_6`statementList; _2 := _5))
 
-try { _1 } _* |-->try (_1`statementList) _*`catchList
+try { _1 } _* |-->try (_1`statementList) _*
 
 
 catch_statement::
-catch _1 _2 { _3 } |-->catch _2 : _1 do (_3`statementList)
-catch _1 _2 { } |-->catch _2 : _1 do skip
+catch _1 _2 { _3 } |-->catch (_2 : _1) do (_3`statementList)
+catch _1 _2 { } |-->catch (_2 : _1) do skip
 
 
 finally_statement:: 
@@ -95,9 +100,6 @@ finally { _1 } |--> finally (_1`statementList)
 finally { } |-->finally skip
 
 
-catchList::
-_1 _* |-->_1 _*`recurse
-_1 |-->_1
 
 
 elseif:: 
@@ -375,6 +377,7 @@ _1 as _3  |-->_1->oclAsType(_3)
 factor_level0::
 _1 |-->_1
 ! _1 |-->not(_1)
+- _1 |-->-(_1)
 
 
 operand::
@@ -409,7 +412,7 @@ member::
 _1 |-->_1`member<when> _1 id_or_function_call
 _1 |-->_1`member<when> _1 function_call
 
-this . _1 |-->self._1`member
+this . _1 |-->self_1`queryForm
 _1 . Length |-->_1->size()
 
 BusinessException . _2 |-->OclException.newOclException(_2`functionArguments)<when> _2 id_or_function_call, _2`functionName Create
@@ -418,7 +421,7 @@ _1 . _2 |-->_2`functionArguments<when> _1 Function, _2 id_or_function_call, _2`f
 
 _1 . _2 |-->_1_2`mapQueryForm<when> _1 Map, _2 id_or_function_call
 _1 . _2 |-->_1_2`mapQueryForm<when> _1 Map, _2 function_call
-_1 . _2 |-->_1._2`mapQueryForm<when> _1 Map, _2 member
+_1 . _2 |-->_1_2`mapQueryForm<when> _1 Map, _2 member
 
 _1 . _2 |-->_1`member_2`queryForm<when> _2 id_or_function_call
 _1 . _2 |-->_1`member_2`queryForm<when> _2 function_call
@@ -556,6 +559,7 @@ character_literal::
 _1 |-->_1
 
 
+
 updateForm::
 _1 |-->_1`updateForm<when> _1 factor_level6
 _1 |-->_1`updateForm<when> _1 factor_level5
@@ -566,6 +570,17 @@ _1 |-->_1`updateForm<when> _1 factor_level1
 _1 |-->_1`updateForm<when> _1 factor_level0
 _1 |-->_1`updateForm<when> _1 operand
 _1 |-->_1`updateForm<when> _1 member
+_1 |-->_1`updateForm<when> _1 id_or_function_call
+_1 |-->_1`updateForm<when> _1 function_call
+
+
+DebugLib . _1 |-->_1`updateForm
+Logger . _1 |-->_1`updateForm
+WriteErrorLine ( _1 ) |-->execute (_1)->display()
+WriteWarnLine ( _1 ) |-->execute (_1)->display()
+WriteInfoLine ( _1 ) |-->execute (StringLib.formatString_1)->display()<when> _1 multiple
+WriteInfoLine ( _1 ) |-->execute (_1)->display()
+
 
 _1 . _2 |-->_1.new_1(_2`functionArguments)<when> _2 id_or_function_call, _2`functionName Create
 
@@ -587,6 +602,7 @@ _1 . _2 |-->_2`updateFunctionCall
 
 updateFunctionCall::
 _1 |-->_1`updateFunctionCall<when> _1 function_call
+_1 |-->_1`updateFunctionCall<when> _1 id_or_function_call
 
 Add ( _1 ) |-->->including(_1)
 Set ( _1 ) |-->.setAt(_1`first + 1, _1`last)
@@ -598,6 +614,8 @@ Remove ( _1 ) |-->->excluding(_1)
 Reverse ( ) |-->->reverse()
 
 Invoke ( _1 ) |-->->apply(_1)
+
+_1 . _2 |-->_1._2
 
 _1 |-->._1
 _1 ( ) |-->._1()
@@ -656,8 +674,14 @@ ToArray ( ) |-->
 Distinct ( ) |-->->oclAsSet()
 
 IndexOf ( _1 ) |-->->indexOf(_1)-1
+
+Single ( _1 ) |-->->any( _1`directLambdaTranslation )<when> _1`isDirectLambda true
 Single ( _1 ) |-->->any( _x | _1->apply(_x) )
+
+Select ( _1 ) |-->->collect( _1`directLambdaTranslation )<when> _1`isDirectLambda true
 Select ( _1 ) |-->->collect( _x | _1->apply(_x) )
+
+SelectMany ( _1 ) |-->->collect( _1`directLambdaTranslation )->unionAll()<when> _1`isDirectLambda true
 SelectMany ( _1 ) |-->->collect( _x | _1->apply(_x))->unionAll()
 
 Min ( _1 ) |-->->collect( _1`directLambdaTranslation )->min()<when> _1`isDirectLambda true
@@ -678,22 +702,33 @@ FindLastIndex ( _1 ) |-->->lastIndexOf(_1)
 
 Skip ( _1 ) |-->.subrange(_1 + 1)
 Take ( _1 ) |-->.subrange(1, _1)
+
+Where ( _1 ) |-->->select( _1`directLambdaTranslation )<when> _1`isDirectLambda true
 Where ( _1 ) |-->->select( _x | _1->apply(_x) )
+
 Except ( _1 ) |--> - _1
 
 First ( ) |-->->first()
+First ( _1 ) |-->->any( _1`directLambdaTranslation )<when> _1`isDirectLambda true
 First ( _1 ) |-->->any( _x | _1->apply(_x) )
+
 Last ( ) |-->->last()
+Last ( _1 ) |-->->reverse()->any( _1`directLambdaTranslation )<when> _1`isDirectLambda true
 Last ( _1 ) |-->->reverse()->any( _x | _1->apply(_x) )
 
+All ( _1 ) |-->->forAll( _1`directLambdaTranslation )<when> _1`isDirectLambda true 
 All ( _1 ) |-->->forAll( _x | _1->apply(_x) )
+
 Any ( ) |-->->notEmpty()
+Any ( _1 ) |-->->exists( _1`directLambdaTranslation )<when> _1`isDirectLambda true 
 Any ( _1 ) |-->->exists( _x | _1->apply(_x) )
 
 Sum ( _1 ) |-->->collect( _x | _1->apply(_x) )->sum()
 Average ( _1 ) |-->->collect( _x | _1->apply(_x) )->average()
 
+OrderBy ( _1 ) |-->->sortedBy( _1`directLambdaTranslation )<when> _1`isDirectLambda true
 OrderBy ( _1 ) |-->->sortedBy( _x | _1->apply(_x))
+
 OrderByDescending ( _1 ) |-->->sortedBy( _x | _1->apply(_x))->reverse()
 
 GetAll ( ) |-->.allInstances()
