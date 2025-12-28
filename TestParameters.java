@@ -32,7 +32,7 @@ public class TestParameters
 
   /* Settings for flaw/technical debt detection */ 
 
-  public static int syntacticComplexityLimit = 12; /* for MEL */ 
+  public static int syntacticComplexityLimit = 20; /* for MEL */ 
 
   public static int cloneSizeLimit = 7;            /* for DC  */
   public static int energyCloneSizeLimit = 4; 

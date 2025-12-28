@@ -957,7 +957,7 @@ public class CGCondition
   }
 
   public boolean conditionSatisfied(Vector v, Vector entities, CGSpec cgs, Vector gvars)
-  { JOptionPane.showInputDialog(".>>>. Checking vector condition " + quantifier + " " + stereotype + " on " + v); 
+  { // JOptionPane.showInputDialog(".>>>. Checking vector condition " + quantifier + " " + stereotype + " on " + v); 
     
     int vsize = v.size(); 
     String slowercase = stereotype.toLowerCase(); 

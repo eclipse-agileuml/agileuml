@@ -18663,10 +18663,14 @@ public void produceCUI(PrintWriter out)
         break; 
       }
       else 
-      { xmlstring = xmlstring + s + " "; } 
+      { int commindx = s.indexOf("//"); 
+        if (commindx >= 0) 
+        { s = Compiler2.beforeComment(s); } 
+        xmlstring = xmlstring + s + " "; 
+        System.out.println(s); 
+      } 
     }
 
-    System.out.println(">> Input: " + xmlstring); 
 
     Compiler2 comp = new Compiler2();  
     comp.lexicalanalysisxml(xmlstring); 
@@ -18791,13 +18795,17 @@ public void produceCUI(PrintWriter out)
                 String opcode = 
                     opnode.getContent(); 
                 String km3code = parseMambaOperation(opcode);
-                JOptionPane.showInputDialog("Code of " + opname + " is " + km3code); 
+                JOptionPane.showInputDialog("Code of " + opname + " is " + km3code);
+ 
                 Compiler2 cc = new Compiler2(); 
                 cc.nospacelexicalanalysis(km3code); 
                 BehaviouralFeature bf = 
                   cc.parseOperationNoSemicolon(entities, types); 
-                ent.addOperation(bf); 
-                bf.setEntity(ent); 
+
+                if (bf != null) 
+                { ent.addOperation(bf); 
+                  bf.setEntity(ent);
+                }  
               }  
             } 
             else if ("Attributes".equals(ed.getTag()))

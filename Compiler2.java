@@ -14,12 +14,15 @@ import java.awt.*;
 * SPDX-License-Identifier: EPL-2.0
 * *****************************/
 
-/* This is a parser for simple expressions involving =, =>, <=>, &, or. 
+/* The original RSDS used simple expressions involving =, =>, <=>, &, or. 
    For example: var1 = 5 & var2 = 6 => var3 = tty
    No brackets are needed: => groups expressions first, then or then & 
    so   att = val & att2 = val2 or ggh = val4 => val5 = val6 
    is interpreted as 
    ((att = val & att2 = val2) or (ggh = val4)) => (val5 = val6)
+
+  Subsequently the notation has been extended to the OCL.g4 
+  grammar available from the ANTLR grammar repository. 
 
   Modified to allow  !=  (25.12.2000)
   Modified to allow object references (7.4.2001)
@@ -43,6 +46,7 @@ public class Compiler2
   static final int INBASICEXP = 1; 
   static final int INSYMBOL = 2; 
   static final int INSTRING = 3; 
+  static final int INOTHER = 4; 
 
   static final java.util.regex.Pattern 
      cstlVarPatt = java.util.regex.Pattern.compile("_[0-9]"); 
@@ -62,6 +66,39 @@ public class Compiler2
 
   public boolean isStringDelimiter(char c)
   { return (c == '"' || c == '`' || c == '\''); } 
+
+  public static String beforeComment(String s)
+  { // extracts the substring before a one-line comment
+
+    int n = s.length(); 
+    int status = INOTHER; 
+    String res = ""; 
+
+    for (int i = 0; i < n; i++) 
+    { char c = s.charAt(i); 
+      if (status == INOTHER)
+      { if (c == '"')
+        { status = INSTRING; 
+          res = res + c; 
+        } 
+        else if (c == '/' && i + 1 < n && 
+                 s.charAt(i+1) == '/') 
+        { return res; } 
+        else 
+        { res = res + c; } 
+      } 
+      else if (status == INSTRING)
+      { if (c == '"')
+        { status = INOTHER; 
+          res = res + c; 
+        } 
+        else 
+        { res = res + c; } 
+      }         
+    } 
+    return res; 
+  } 
+
 
   /* This method breaks up a string into a sequence of strings, using 
      spaces as the break points:  */ 
@@ -734,6 +771,7 @@ public class Compiler2
     StringBuffer sb = null;    /* Holds current lexical item */ 
 
     char prev = ' '; 
+    char stringDelimiter = '"'; 
 
     for (int i = 0; i < explen; i++)
     { char c = str.charAt(i); 
@@ -755,6 +793,14 @@ public class Compiler2
         { sb = new StringBuffer();  // new buffer for the string
           lexicals.addElement(sb);  
           in = INSTRING; 
+          stringDelimiter = '"'; 
+          sb.append('"'); 
+        }
+        else if (c == '\'') // (isStringDelimiter(c))
+        { sb = new StringBuffer();  // new buffer for the string
+          lexicals.addElement(sb);  
+          in = INSTRING; 
+          stringDelimiter = '\''; 
           sb.append('"'); 
         }
         else if (c == ' ' || c == '\n' || c == '\t' || c == '\r') 
@@ -797,10 +843,18 @@ public class Compiler2
         }
       }
       else if (in == INSYMBOL)
-      { if (isStringDelimiter(c))
+      { if (c == '"')
         { sb = new StringBuffer();  // new buffer for the string
           lexicals.addElement(sb);  
-          in = INSTRING; 
+          in = INSTRING;
+          stringDelimiter = '"';  
+          sb.append('"'); 
+        }
+        else if (c == '\'')
+        { sb = new StringBuffer();  // new buffer for the string
+          lexicals.addElement(sb);  
+          in = INSTRING;
+          stringDelimiter = '\'';  
           sb.append('"'); 
         }
         else if (c == '(' || c == ')')
@@ -839,12 +893,18 @@ public class Compiler2
       }
       else if (in == INSTRING) 
       { if (c == '"' && prev != '\\')
-        /* (isStringDelimiter(c) && prev != '\\')  end of string */ 
         { sb.append('"'); 
-          in = INUNKNOWN; 
+          if (stringDelimiter == '"')  // ends a " string
+          { in = INUNKNOWN; } 
         } 
         else if (c == '\'' && prev != '\\')
-        { sb.append("\'"); } 
+        { if (stringDelimiter == '\'')
+          { in = INUNKNOWN; 
+            sb.append('"');   // ends a ' string
+          }
+          else 
+          { sb.append("\'"); } // ' within a " string
+        } 
         else 
         { sb.append(c); } 
       }    
@@ -1756,9 +1816,19 @@ public class Compiler2
       } // should not have parameters.  
     } 
 
-    System.out.println("!! ERROR: unknown type: " + typ + " in " + showLexicals(st,en)); 
-        
-    return null; 
+    Entity eex = 
+       (Entity) ModelElement.lookupByName(typ,entities);
+    if (eex == null)  
+    { System.out.println("!! ERROR: unknown type: " + typ + " in " + showLexicals(st,en)); 
+
+      // JOptionPane.showInputDialog("Creating new class for " + typ); 
+
+      Entity ent = new Entity(typ); 
+      entities.add(ent);
+      return new Type(ent);  
+    }
+    
+    return new Type(eex); 
   } // also need OrderedSet, Bag, Tuple for ATL. 
 
   public Sbvrse parseSbvrse(int st, int en) 
@@ -2583,6 +2653,17 @@ public class Compiler2
     return ee; 
   } 
 
+  public Expression parsePrimitiveExpression() 
+  { System.out.println("LEXICALS: " + lexicals);
+    if (lexicals.size() == 0)
+    { return null; } 
+ 
+    Vector env = new Vector(); 
+    Expression ee = parse_primitive_expression(0,0,lexicals.size()-1,env,env); 
+    finalexpression = ee; 
+    return ee; 
+  } 
+
   public Expression parseExpression() 
   { // System.out.println("LEXICALS: " + lexicals);
     if (lexicals.size() == 0)
@@ -2965,7 +3046,7 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
         return null; 
       }
       else 
-      { Expression var = parse_expression(bc, st+1, st+1,entities,types);
+      { Expression var = parse_primitive_expression(bc, st+1, st+1,entities,types);
         if (var == null)
         { System.out.println("!! Invalid syntax of lambda variable: " + lexicals.get(st+1)); 
           return null;  
@@ -2981,7 +3062,15 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
         Expression lbody = parse_expression(bc,j+1,en,entities,types); 
         if (lbody == null)
         { System.out.println("!! Error in lambda body expression"); 
-          continue; 
+          Statement lcode = parseStatement(j+1, en, entities, types); 
+          System.out.println(">> Statement: " + lcode);
+
+          if (lcode == null) 
+          { continue; } 
+
+          lbody = BehaviouralFeature.operationFromLambdaStatements(
+                                     lcode, entities, 
+                                     var, ltype);  
         }
 
         if (ltype != null && lbody != null) 
@@ -3940,7 +4029,7 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
         "(".equals(lexicals.get(pstart+1) + ""))
     { // op(pars)
 
-      Expression op = parse_basic_expression(bc,pstart,pstart,entities,types); 
+      Expression op = parse_primitive_expression(bc,pstart,pstart,entities,types); 
 
       if (op != null && op instanceof BasicExpression)
       { Vector ve = 
@@ -3968,7 +4057,7 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
         ("" + lexicals.get(pstart + 1)).charAt(0) == '.')
     { // iden.op(args)
 
-      Expression objref = parse_basic_expression(bc,pstart,pstart,entities,types); 
+      Expression objref = parse_primitive_expression(bc,pstart,pstart,entities,types); 
       String opstring = lexicals.get(pstart + 1) + ""; 
       String opstr = opstring.substring(1,opstring.length()); 
 
@@ -4000,7 +4089,8 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
       BasicExpression ee = new BasicExpression(ss,0); 
       Expression op = ee.checkIfSetExpression(); 
       // Expression op = parse_basic_expression(bc,pstart,pstart); 
-      Expression arg = parse_additive_expression(bc,pstart+2,pend-1,entities,types); 
+      Expression arg = parse_additive_expression(bc,pstart+2,pend-1,entities,types);
+ 
       if (arg == null) 
       { Vector args = parse_array_index_sequence(bc,pstart+2,pend-1,entities,types);  
         if (args != null) 
@@ -4027,7 +4117,7 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
       if (tail.charAt(0) == '.')
       { tail = tail.substring(1,tail.length()); } 
 
-      Expression op = parse_basic_expression(bc,pstart,pstart,entities,types); 
+      Expression op = parse_primitive_expression(bc,pstart,pstart,entities,types); 
       Expression arg = parse_additive_expression(bc,pstart+2,pend-2,entities,types); 
 
       if (arg == null) 
@@ -4234,9 +4324,143 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
     }
   }
  
-  return null; 
+  return parse_primitive_expression(bc, pstart, pend, entities, types); 
 }
   
+  public Expression parse_primitive_expression(int bc, 
+       int pstart, int pend, Vector entities, Vector types)
+  { // a sequence of identifiers with parameters or 
+    // array indexes only
+
+    if (pstart > pend) { return null; } 
+
+    if (pstart == pend)
+    { String ss = lexicals.elementAt(pstart).toString(); 
+      if (invalidBasicExp(ss))
+      { // System.out.println("!!! ERROR: Invalid basic expression: " + ss); 
+        return null; 
+      } 
+
+      if (cstlVarPatt.matcher(ss).find())
+      { System.out.println("!! Warning: do not use identifiers _i for integers i: " + ss); }
+
+      /* if (isKeyword(ss))
+      { System.out.println(">>>: Invalid basic expression: keyword: " + ss); 
+        return null;
+      } */ 
+
+      BasicExpression ee = 
+         // new BasicExpression(ss,0);   // (ss) surely?
+         new BasicExpression(ss,0); 
+      Expression ef = ee.checkIfSetExpression(); 
+
+      // if (ef instanceof BasicExpression) 
+      // { ((BasicExpression) ef).setPrestate(ee.getPrestate()); } 
+
+      // System.out.println("+++ Parsed basic expression: " + ss + " " + ee + " " + ef); 
+      return ef;
+    }
+
+    boolean bracketsOk = balancedBrackets(pstart,pend); 
+    if (bracketsOk) { } 
+    else 
+    { return null; } 
+
+    if (pstart < pend &&  
+        (lexicals.get(pend) + "").charAt(0) == '.') 
+    { // be.f  valid primitive expression before .f
+
+      Expression op = parse_primitive_expression(
+                      bc,pstart,pend-1,entities,types);
+ 
+      String tail = lexicals.get(pend) + ""; 
+      if (tail.charAt(0) == '.')
+      { tail = tail.substring(1,tail.length()); } 
+    
+      if (op != null && // !("null".equals(op + "")) && 
+          op instanceof BasicExpression) // must be
+      { BasicExpression beop = (BasicExpression) op;  
+        BasicExpression rees = new BasicExpression(tail, 0); 
+        rees.setObjectRef(beop);  
+        System.out.println(">>> Parsed primitive expression: " + rees);
+        return rees;  
+      }
+
+      return null; 
+    }       
+
+    if (pstart + 1 < pend &&  
+        "]".equals(lexicals.get(pend) + "")) 
+    { // be [ ind ]  valid primitive expression be
+
+      for (int k = pend-1; k > pstart; k--)
+      { String lex = lexicals.get(k) + ""; 
+        if ("[".equals(lex) && balancedBrackets(k,pend))
+        { Expression op = parse_primitive_expression(
+                            bc,pstart,k-1,entities,types); 
+      
+          if (op == null || "null".equals(op + "")) 
+          { return null; } // no alternative 
+
+          if (op instanceof BasicExpression) // must be
+          { BasicExpression beop = (BasicExpression) op;  
+            Expression arg = parse_additive_expression(
+                               bc,k+1,pend-1,entities,types);
+
+            if (arg == null) 
+            { return null; } 
+ 
+            if (beop.arrayIndex == null)
+            { beop.setArrayIndex(arg); 
+              System.out.println(">>> Parsed array 3 primitive expression: " + beop);
+              return beop;
+            } 
+            
+            if (beop.arrayIndex != null)
+            { BinaryExpression res = 
+                      new BinaryExpression("->at", beop, arg); 
+              res.setBrackets(true); 
+              return res; 
+            } 
+          }
+        }  
+      }
+    }
+
+    if (pstart + 1 < pend && 
+        ")".equals(lexicals.get(pend) + ""))
+    { // be.op(pars)
+
+      for (int k = pend-1; k > pstart; k--)
+      { String lex = lexicals.get(k) + ""; 
+        if ("(".equals(lex) && balancedBrackets(k,pend))
+        { Expression op = parse_primitive_expression(bc, pstart, k-1, entities,types);
+          System.out.println("*** Parsing extended primitive expression " + op + "(...)");
+
+          if (op == null || "null".equals(op + "")) 
+          { return null; } // no alternative 
+
+          if (op instanceof BasicExpression)
+          { Vector ve = 
+              parse_fe_sequence(bc,k+1,pend-1,entities,types);
+           
+            if (ve == null)
+            { return null; } 
+
+            BasicExpression beop = (BasicExpression) op;
+              
+            beop.setIsEvent();
+            beop.setParameters(ve);
+            System.out.println("*** Parsed call primitive expression " + beop);
+            return beop;     
+          }
+        }
+      }
+    }
+
+    return null; 
+  }
+
 
   public Expression parse_set_expression(int bc,int pstart,int pend, Vector entities, Vector types)
   { Vector ve = 
@@ -11110,6 +11334,34 @@ private Vector parseUsingClause(int st, int en, Vector entities, Vector types)
         continue;  
       } 
 
+      if ("/".equals(str) && i + 1 <= en &&
+          "/".equals(lexicals.get(i+1) + ""))
+      { content = content + "\n    //"; 
+        i = i + 1;
+        continue;  
+      } 
+
+      if ("|".equals(str) && i + 1 <= en &&
+          "|".equals(lexicals.get(i+1) + ""))
+      { content = content + "||"; 
+        i = i + 1;
+        continue;  
+      } 
+
+      if ("/".equals(str) && i + 1 <= en &&
+          "*".equals(lexicals.get(i+1) + ""))
+      { content = content + "/*"; 
+        i = i + 1;
+        continue;  
+      } 
+
+      if ("*".equals(str) && i + 1 <= en &&
+          "/".equals(lexicals.get(i+1) + ""))
+      { content = content + "*/\n    "; 
+        i = i + 1;
+        continue;  
+      } 
+
       content = content + " " + str;  // " " 10.12.2025 
     }
 
@@ -11760,11 +12012,13 @@ private Vector parseUsingClause(int st, int en, Vector entities, Vector types)
 
     System.out.println(conds); */ 
 
-    // c.nospacelexicalanalysis("(orderedsegments[i + 1].DepartureDateTime).AddMinutes(duration)"); 
+    // c.nospacelexicalanalysis("lambda x : int in (var y : int := x*x; return y)"); 
 
-    c.nospacelexicalanalysis("(DateTime.GetDiff(orderedsegments[i + 1].ArrivalDateTime, orderedsegments[i + 1].DepartureDateTime)).Minutes"); 
+    // c.nospacelexicalanalysis("DateTime.GetDiff(orderedsegments[i + 1].ArrivalDateTime, orderedsegments[i + 1].DepartureDateTime).Minutes"); 
 
     // DateTime.GetDiff(orderedsegments[i + 1].ArrivalDateTime, orderedsegments[i + 1].DepartureDateTime).Minutes
+
+    c.nospacelexicalanalysis("arr[i][j][k]"); 
 
     Expression expr = c.parseExpression(); 
 

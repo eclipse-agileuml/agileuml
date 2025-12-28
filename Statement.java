@@ -6949,6 +6949,7 @@ class WhileStatement extends Statement
     { 
       loopTest.findClones(clones,cdefs,rule,op); 
     } 
+
     body.findClones(clones,cdefs,rule,op); 
   }
 
@@ -6967,8 +6968,8 @@ class WhileStatement extends Statement
         if (rcomp > TestParameters.syntacticComplexityLimit)
         { int acount = (int) uses.get("amber"); 
           uses.set("amber", acount + 1); 
-          aUses.add("! Code smell (MEL): too high expression complexity (" + rcomp + ") for " + loopRange + "\n" +  
-                    "! Recommend OCL refactoring"); 
+          aUses.add("!! Code smell (MEL): too high expression complexity (" + rcomp + ") for " + loopRange + "\n" +  
+                    "!! Recommend OCL refactoring"); 
         } 
       } 
     }
@@ -6977,8 +6978,8 @@ class WhileStatement extends Statement
       if (syncomp > TestParameters.syntacticComplexityLimit)
       { int acount = (int) uses.get("amber"); 
         uses.set("amber", acount + 1); 
-        aUses.add("! Code smell (MEL): too high expression complexity (" + syncomp + ") for " + loopTest + "\n" +  
-                  "! Recommend OCL refactoring"); 
+        aUses.add("!! Code smell (MEL): too high expression complexity (" + syncomp + ") for " + loopTest + "\n" +  
+                  "!! Recommend OCL refactoring"); 
       }
     }  
 
@@ -6987,19 +6988,19 @@ class WhileStatement extends Statement
           "true".equals("" + loopTest)) 
       { int rcount = (int) uses.get("red"); 
         uses.set("red", rcount + 1); 
-        rUses.add("!!! Unbounded while loop with true condition: may not terminate!: " + this); 
+        rUses.add("!!! Unbounded while loop with true condition: may not terminate!: " + loopSummary()); 
       }
       else if (loopTest != null && loopKind == REPEAT &&
                "false".equals("" + loopTest)) 
       { int rcount = (int) uses.get("red"); 
         uses.set("red", rcount + 1); 
-        rUses.add("!!! Unbounded repeat loop with false condition: may not terminate!: " + this); 
+        rUses.add("!!! Unbounded repeat loop with false condition: may not terminate!: " + loopSummary()); 
       }
       else 
       { int acount = (int) uses.get("amber"); 
         uses.set("amber", acount + 1); 
         aUses.add("!! Unbounded loops can be inefficient: " + 
-                  this + 
+                  loopSummary() + 
                   "\n!! Recommend replacing by a bounded loop");
       }  
     } 
@@ -7007,13 +7008,13 @@ class WhileStatement extends Statement
     if (Statement.hasLoopStatement(body))
     { int rcount = (int) uses.get("amber"); 
       uses.set("amber", rcount + 1); 
-      aUses.add("! Nested loops can be very inefficient: " + this); 
+      aUses.add("!! Nested loops can be very inefficient: " + loopSummary()); 
     } // or indeed if there is a collection iteration expr
     else if (loopKind == FOR && 
              Statement.isCumulativeBody(loopVar,body))
     { int rcount = (int) uses.get("amber"); 
       uses.set("amber", rcount + 1); 
-      aUses.add("! Possible code reduction of loop to assignment(s): " + this);
+      aUses.add("!! Possible code reduction of loop to assignment(s): " + loopSummary());
     }
 
     return uses; 
@@ -7694,6 +7695,21 @@ class WhileStatement extends Statement
     } 
  
     res = res + loopTest + " do " + body + " "; 
+    if (brackets)
+    { res = "( " + res + " )"; } 
+    return res; 
+  } 
+
+  public String loopSummary()
+  { String res = " while "; 
+    if (loopKind == FOR)
+    { res = " for "; }
+    else if (loopKind == REPEAT)
+    { res = "  repeat ... until " + loopTest + " "; 
+      return res;
+    } 
+ 
+    res = res + loopTest + " do ... "; 
     if (brackets)
     { res = "( " + res + " )"; } 
     return res; 
@@ -10531,6 +10547,21 @@ class SequenceStatement extends Statement
     { Statement stat = (Statement) statements.get(i); 
       stat.findClones(clones,cdefs,rule,op); 
     }
+
+    String val = this + ""; 
+    Vector used = (Vector) clones.get(val); 
+    if (used == null)
+    { used = new Vector(); }
+    if (rule != null && !used.contains(rule))
+    { used.add(rule); }
+    else if (op != null && !used.contains(op))
+    { used.add(op); }
+
+    if (used.size() > 1) 
+    { System.err.println("!!! (DC): Duplicated code segment: " + val); } 
+
+    clones.put(val,used);
+    cdefs.put(val, this); 
 
     // Clones of statements, at least 2: 
 
@@ -15697,9 +15728,10 @@ class AssignStatement extends Statement
   } 
 
   public void findClones(java.util.Map clones, String rule, String op)
-  { if (rhs.syntacticComplexity() < UCDArea.CLONE_LIMIT) 
+  { if (this.syntacticComplexity() < UCDArea.CLONE_LIMIT) 
     { return; }
-    /* String val = rhs + ""; 
+
+    String val = this + ""; 
     Vector used = (Vector) clones.get(val);
     if (used == null)  
     { used = new Vector(); }
@@ -15707,15 +15739,28 @@ class AssignStatement extends Statement
     { used.add(rule); }
     else if (op != null)
     { used.add(op); }
-    clones.put(val,used); */ 
+    clones.put(val,used); 
+
     rhs.findClones(clones,rule,op); 
   }
 
   public void findClones(java.util.Map clones, 
                          java.util.Map cdefs,
                          String rule, String op)
-  { if (rhs.syntacticComplexity() < UCDArea.CLONE_LIMIT) 
+  { if (this.syntacticComplexity() < UCDArea.CLONE_LIMIT) 
     { return; }
+
+    String val = this + ""; 
+    Vector used = (Vector) clones.get(val);
+    if (used == null)  
+    { used = new Vector(); }
+    if (rule != null)
+    { used.add(rule); }
+    else if (op != null)
+    { used.add(op); }
+    clones.put(val,used); 
+    cdefs.put(val, this);
+
     rhs.findClones(clones,cdefs,rule,op); 
   }
 

@@ -6722,13 +6722,13 @@ public void findClones(java.util.Map clones,
     if (tleft != null)
     { tlname = tleft.getName(); } 
     else 
-    { System.err.println("!! WARNING: no type for: " + left); } 
+    { System.out.println("!! WARNING: no type for: " + left); } 
 
     String trname = "Set"; 
     if (tright != null) 
     { trname = tright.getName(); } 
     else 
-    { System.err.println("!! WARNING: no type for: " + right); } 
+    { System.out.println("!! WARNING: no type for: " + right); } 
     
       
     if (operator.equals("^")  || 
@@ -6738,7 +6738,7 @@ public void findClones(java.util.Map clones,
     { if ("Sequence".equals(tlname)) 
       { type = tleft; } 
       else 
-      { System.err.println("!! WARNING: ^, ->concatenate, ->prepend, ->append can only be applied to a sequence: " + this);  
+      { System.out.println("!! WARNING: ^, ->concatenate, ->prepend, ->append can only be applied to a sequence: " + this);  
         type = new Type("Sequence",null);
         type.elementType = right.getType(); 
       }  
@@ -6758,7 +6758,7 @@ public void findClones(java.util.Map clones,
       else if ("Set".equals(tlname))
       { type = tleft; } 
       else  
-      { System.err.println("!! WARNING: unknown type for LHS of " + this);  
+      { System.out.println("!! WARNING: unknown type for LHS of " + this);  
         type = new Type("Set",null); 
         elementType = new Type("OclAny", null); 
       } 
@@ -6773,7 +6773,7 @@ public void findClones(java.util.Map clones,
       else if (tlname.equals("Set") && trname.equals("Set"))
       { type = tleft; }
       else
-      { System.err.println("!! WARNING: different types for LHS and RHS of " + this);  
+      { System.out.println("!! WARNING: different types for LHS and RHS of " + this);  
         type = tleft; 
       } 
     } 
@@ -6802,7 +6802,7 @@ public void findClones(java.util.Map clones,
       {        
         // JOptionPane.showMessageDialog(null, "Null types in " + this, 
         //                              "Type error", JOptionPane.ERROR_MESSAGE);
-        System.err.println("!! Warning: null types on both sides of " + this);
+        System.out.println("!! Warning: null types on both sides of " + this);
         if (operator.equals("^") || "->concatenate".equals(operator))
         { type = new Type("Sequence", null); } 
         else if (operator.equals("->restrict") ||
@@ -7054,7 +7054,7 @@ public void findClones(java.util.Map clones,
       else 
       { type = Expression.deduceType(operator,left,right); 
 
-        System.err.println("! Warning!: arguments must be numeric in: " + this + " Deduced type: " + type); 
+        System.out.println("! Warning!: arguments must be numeric in: " + this + " Deduced type: " + type); 
         if (type == null) 
         { // JOptionPane.showMessageDialog(null, "Arguments not numeric in: " + this, 
           //                                  "Type error", JOptionPane.ERROR_MESSAGE);
@@ -22913,7 +22913,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       Vector vuses = variablesUsedIn(vars); 
       if (level > 1 && vuses.size() == 0 && !sideeffect)
       { System.err.println("!!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
-          "!!! Use Extract local variable to optimise."); 
+          "!!! Use Extract local variable to optimise.");
+        System.err.println();  
         refactorELV = true; 
       }
 
@@ -22934,7 +22935,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       Vector vuses = variablesUsedIn(vars); 
       if (level > 1 && vuses.size() == 0 && !sideeffect)
       { System.err.println("!!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
-          "!!! Use Extract local variable to optimise."); 
+          "!!! Use Extract local variable to optimise.");
+        System.err.println();  
         refactorELV = true; 
       }
 
@@ -22966,6 +22968,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       if (level > 1 && vuses.size() == 0 && !sideeffect)
       { System.err.println("!!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
           "!!! Use Extract local variable to optimise.");
+        System.err.println(); 
         refactorELV = true;  
       }
       
@@ -23006,6 +23009,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       { System.err.println("!!! (LCE) flaw: The expression " + 
                this + " is independent of the iterator variables " + vars + "\n" + 
                "!!! Use Extract local variable to optimise.");
+        System.err.println(); 
         refactorELV = true;  
       }
 
@@ -23065,6 +23069,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       if (level > 1 && vuses.size() == 0 && !sideeffect)
       { messages.add("!!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + oldvars + "\n" + 
           "!!! Use Extract local variable to optimise."); 
+        System.err.println(); 
         refactorELV = true;
         int redScore = (int) uses.get("red"); 
         uses.set("red", redScore+1);  
@@ -23092,6 +23097,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       if (level > 1 && vuses.size() == 0 && !sideeffect)
       { messages.add("!!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + oldvars + "\n" + 
           "!!! Use Extract local variable to optimise."); 
+        messages.add(""); 
         refactorELV = true; 
       }
 
@@ -23128,6 +23134,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       if (level > 1 && vuses.size() == 0 && !sideeffect)
       { messages.add("!!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + oldvars + "\n" + 
           "!!! Use Extract local variable to optimise.");
+        messages.add(""); 
         refactorELV = true;
         int redScore = (int) uses.get("red"); 
         uses.set("red", redScore+1);    
@@ -23175,6 +23182,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       { messages.add("!!! (LCE) flaw: The expression " + 
                this + " is independent of the iterator variables " + oldvars + "\n" + 
                "!!! Use Extract local variable to optimise.");
+        messages.add(""); 
         refactorELV = true;
         int redScore = (int) uses.get("red"); 
         uses.set("red", redScore+1);    

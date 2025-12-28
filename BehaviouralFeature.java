@@ -139,6 +139,41 @@ public class BehaviouralFeature extends ModelElement
     return UnaryExpression.newLambdaUnaryExpression(be,this); 
   } 
 
+  public static Expression 
+             operationFromLambdaStatements(Statement stat,
+                                           Vector entities, 
+                                           Expression var, 
+                                           Type ltype)
+  { // create a new class and operation for this and invoke it
+    Entity opent = 
+      (Entity) ModelElement.lookupByName("_Anon_Functions", 
+                                         entities);
+    if (opent == null) 
+    { opent = new Entity("_Anon_Functions"); 
+      entities.add(opent); 
+    } 
+
+    String nme = Identifier.nextIdentifier("_anon_lambda"); 
+
+    BehaviouralFeature bf = new BehaviouralFeature(nme);  
+    bf.setActivity(stat); // get the return type
+    bf.setStatic(true); 
+    bf.setPrecondition(new BasicExpression(true)); 
+    bf.setPostcondition(new BasicExpression(true)); 
+
+    Attribute par = new Attribute(var + "", ltype, 
+                                  ModelElement.INTERNAL); 
+    bf.addParameter(par); 
+    opent.addOperation(bf); 
+
+    BasicExpression be = new BasicExpression(bf);
+    BasicExpression inst = new BasicExpression(opent);  
+    be.setObjectRef(inst); 
+    be.setStatic(true); 
+
+    return be; 
+  } 
+
   public Expression execute(ModelSpecification sigma, 
                       ModelState beta,
                       Vector parValues)
@@ -4506,22 +4541,41 @@ public class BehaviouralFeature extends ModelElement
  
       activity.findClones(clones, defs, null, name); 
       if (clones.size() > 0)
-      { java.util.Set actualClones = new java.util.HashSet(); 
+      { java.util.Set actualExpressionClones = 
+                               new java.util.HashSet(); 
+        java.util.Set actualStatementClones = 
+                               new java.util.HashSet(); 
 
         for (Object key : clones.keySet())
         { java.util.List occs = 
             (java.util.List) clones.get(key); 
+
           if (occs.size() > 1)
-          { actualClones.add(key); } 
+          { if (defs.get(key) instanceof Expression)
+            { actualExpressionClones.add(key); }
+            else if (defs.get(key) instanceof Statement) 
+            { actualStatementClones.add(key); }  
+          } 
         } 
 
-        if (actualClones.size() > 0)
-        { amberUses.add("!! Cloned expressions could be repeated evaluations (DEV): " + actualClones + "\n" + 
-             "!! Use Extract Local Variable refactoring"); 
+        if (actualExpressionClones.size() > 0)
+        { amberUses.add("!! Cloned expressions could be repeated evaluations (DEV): " + 
+             actualExpressionClones + "\n" + 
+              "!! Use Extract Local Variable refactoring"); 
           int ascore = (int) res.get("amber");
-          ascore = ascore + actualClones.size();
+          ascore = ascore + actualExpressionClones.size();
           res.set("amber", ascore);
         } 
+
+        if (actualStatementClones.size() > 0)
+        { amberUses.add("!! Cloned statements are usually a (DC) flaw: " + 
+             actualStatementClones + "\n" + 
+              "!! Use a code refactoring to remove duplicates"); 
+          int ascore = (int) res.get("amber");
+          ascore = ascore + actualStatementClones.size();
+          res.set("amber", ascore);
+        } 
+
       } // In a postcondition they usually are repeats.
     } 
 
@@ -4945,6 +4999,30 @@ public class BehaviouralFeature extends ModelElement
     out.println("          \"EventName\": \"\",");
     out.println("          \"ApplyToAttribute\": \"\"");
     out.print("        }"); 
+  } 
+
+  public void generateMambaXML(PrintWriter out, CGSpec cgs)
+  { String nme = getName();
+
+    String rt = "null"; 
+    if (resultType != null)
+    { rt = resultType.getCSharp(); } 
+
+    String fdef = this.cg(cgs); 
+    String actualDef = CGRule.correctNewlines(fdef); 
+ 
+    out.print("    <Operation "); 
+    out.print("Name = \"" + nme + "\" "); 
+    out.print("Description = \"\" ");
+    out.print("BaseInfo = \"\" ");
+    out.print("IsStatic = \"" + isStatic() + "\" ");
+    out.print("IsInherited = \"false\" ");
+    out.print("IsExternal = \"false\" ");
+    out.print("RuleType = \"Default\" ");
+    out.print("EventName = \"\" ");
+    out.print("ApplyToAttribute = \"\"> ");
+    out.print(actualDef); 
+    out.println("   </Operation>"); 
   } 
 
   public void generateJava(PrintWriter out)

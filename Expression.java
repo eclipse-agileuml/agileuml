@@ -4239,7 +4239,7 @@ abstract class Expression
     { SetExpression usrc = (SetExpression) src;
       Expression uarg = usrc.last(); 
 
-      System.out.println("! OES: Inefficient ->last operation: " + src + "->last()");
+      System.err.println("!! OES: Inefficient ->last operation: " + src + "->last()");
  
       return uarg; 
     } 
@@ -4250,7 +4250,7 @@ abstract class Expression
     { BasicExpression usrc = (BasicExpression) src; 
       String dat = usrc.getData(); 
 
-      System.out.println("! OES: Inefficient ->last operation: " + src + "->last()");
+      System.err.println("!! OES: Inefficient ->last operation: " + src + "->last()");
  
       int slen = dat.length(); 
       if (slen > 2)
@@ -4266,7 +4266,7 @@ abstract class Expression
            ((UnaryExpression) src).getOperator()))
     { UnaryExpression usrc = (UnaryExpression) src; 
       Expression uarg = usrc.getArgument(); 
-      System.out.println("! OES: Inefficient ->at operation: " + src + "->last()"); 
+      System.err.println("!! OES: Inefficient ->at operation: " + src + "->last()"); 
 
       return Expression.simplifyLast(uarg); 
     } 
@@ -4276,7 +4276,7 @@ abstract class Expression
             ((UnaryExpression) src).getOperator()))
     { UnaryExpression usrc = (UnaryExpression) src; 
       Expression uarg = usrc.getArgument();
-      System.out.println("! OES: Inefficient ->at operation: " + src + "->last()"); 
+      System.err.println("!! OES: Inefficient ->at operation: " + src + "->last()"); 
 
       Expression sze = Expression.simplifySize(uarg);  
       return new BinaryExpression("->at", uarg, 
@@ -4289,7 +4289,7 @@ abstract class Expression
            ((UnaryExpression) src).getOperator()))
     { UnaryExpression usrc = (UnaryExpression) src; 
       Expression uarg = usrc.getArgument();
-      System.out.println("! OES: Inefficient ->last operation: " + src + "->last()"); 
+      System.err.println("!! OES: Inefficient ->last operation: " + src + "->last()"); 
 
       return Expression.simplifyFirst(uarg); 
     } 
@@ -4299,7 +4299,7 @@ abstract class Expression
            ((BinaryExpression) src).getOperator()))
     { BinaryExpression usrc = (BinaryExpression) src; 
       Expression uarg = usrc.getRight();
-      System.out.println("! OES: Inefficient ->last operation: " + src + "->last()"); 
+      System.err.println("!! OES: Inefficient ->last operation: " + src + "->last()"); 
 
       return uarg; 
     } 
@@ -4318,7 +4318,7 @@ abstract class Expression
       Expression atexpr =  
         Expression.simplifyLast(srccoll); 
  
-      System.out.println("! OES: Inefficient ->last operation: " + src + "->last()"); 
+      System.err.println("!! OES: Inefficient ->last operation: " + src + "->last()"); 
 
       return BinaryExpression.newLetBinaryExpression(
                varexpr, srccoll.getElementType(), 
@@ -4339,7 +4339,7 @@ abstract class Expression
       Expression atexpr =  
         new BinaryExpression("|selectMaximals", indom, valexpr); 
  
-      System.out.println("! OES: Inefficient ->last operation: " + src + "->last()"); 
+      System.err.println("!! OES: Inefficient ->last operation: " + src + "->last()"); 
 
       return Expression.simplifyAny(atexpr); 
     } 
@@ -4364,7 +4364,7 @@ abstract class Expression
     { SetExpression usrc = (SetExpression) src; 
       Expression uarg = usrc.first(); 
 
-      System.out.println("! OES: Inefficient ->first operation: " + src + "->first()");
+      System.err.println("!! OES: Inefficient ->first operation: " + src + "->first()");
  
       return uarg; 
     }
@@ -4375,7 +4375,7 @@ abstract class Expression
     { BasicExpression usrc = (BasicExpression) src; 
       String dat = usrc.getData(); 
 
-      System.out.println("! OES: Inefficient ->first operation: " + src + "->first()");
+      System.err.println("!! OES: Inefficient ->first operation: " + src + "->first()");
  
       if (dat.length() > 2)
       { return new BasicExpression("\"" + dat.charAt(1) + "\""); } 
@@ -4391,7 +4391,7 @@ abstract class Expression
     { UnaryExpression usrc = (UnaryExpression) src; 
       Expression uarg = usrc.getArgument(); 
 
-      System.out.println("! OES: Inefficient ->at operation: " + src + "->first()");
+      System.err.println("!! OES: Inefficient ->at operation: " + src + "->first()");
  
       return new BinaryExpression("->at", 
                             uarg, new BasicExpression(2)); 
@@ -4403,7 +4403,7 @@ abstract class Expression
     { UnaryExpression usrc = (UnaryExpression) src; 
       Expression uarg = usrc.getArgument();
 
-      System.out.println("! OES: Inefficient ->first operation: " + src + "->first()"); 
+      System.err.println("!! OES: Inefficient ->first operation: " + src + "->first()"); 
 
       return Expression.simplifyFirst(uarg); 
     } 
@@ -4413,7 +4413,7 @@ abstract class Expression
            ((UnaryExpression) src).getOperator()))
     { UnaryExpression usrc = (UnaryExpression) src; 
       Expression uarg = usrc.getArgument();
-      System.out.println("! OES: Inefficient ->first operation: " + src + "->first()"); 
+      System.err.println("!! OES: Inefficient ->first operation: " + src + "->first()"); 
 
       return Expression.simplifyLast(uarg); 
     } 
@@ -4432,7 +4432,7 @@ abstract class Expression
       Expression atexpr =  
         Expression.simplifyFirst(srccoll); 
  
-      System.out.println("! OES: Inefficient ->first operation: " + src + "->first()"); 
+      System.err.println("!! OES: Inefficient ->first operation: " + src + "->first()"); 
 
       return BinaryExpression.newLetBinaryExpression(
                varexpr, srccoll.getElementType(), 
@@ -4453,7 +4453,7 @@ abstract class Expression
       Expression atexpr =  
         new BinaryExpression("|selectMinimals", indom, valexpr); 
  
-      System.out.println("! OES: Inefficient ->first operation: " + src + "->first()"); 
+      System.err.println("!! OES: Inefficient ->first operation: " + src + "->first()"); 
 
       return Expression.simplifyAny(atexpr); 
     } 
@@ -4630,7 +4630,7 @@ abstract class Expression
       if (vnames.contains(var + "") || 
           vuses.size() > 0) { } 
       else 
-      { System.out.println("!! OES flaw: " + var + " not used in " + expr);
+      { System.err.println("!! OES flaw: " + var + " not used in " + expr);
         return new BinaryExpression("*", 
                      Expression.simplifySize(col), expr);  
       } 
@@ -4704,7 +4704,7 @@ abstract class Expression
       if (vnames.contains("self") || 
           vuses.size() > 0) { } 
       else 
-      { System.out.println("!! OES flaw: " + vset + " not used in " + expr);
+      { System.err.println("!! OES flaw: " + vset + " not used in " + expr);
         return new BinaryExpression("*", 
                      Expression.simplifySize(col), expr);  
       } 
@@ -4742,7 +4742,7 @@ abstract class Expression
       if (vnames.contains(var + "") || 
           vuses.size() > 0) { } 
       else 
-      { System.out.println("!! OES flaw: " + var + " not used in " + expr);
+      { System.err.println("!! OES flaw: " + var + " not used in " + expr);
         expr.setBrackets(true); 
         return new BinaryExpression("->pow", 
                      expr, Expression.simplifySize(col));  
@@ -4775,7 +4775,7 @@ abstract class Expression
       if (vnames.contains("self") || 
           vuses.size() > 0) { } 
       else 
-      { System.out.println("!! OES flaw: " + vset + " not used in " + expr);
+      { System.err.println("!! OES flaw: " + vset + " not used in " + expr);
         expr.setBrackets(true); 
         return new BinaryExpression("->pow", expr, 
                      Expression.simplifySize(col));  
@@ -4795,7 +4795,7 @@ abstract class Expression
     { SetExpression usrc = (SetExpression) src; 
       Expression uarg = usrc.getElement(0); 
 
-      System.out.println("! OES: Inefficient ->any operation: " + src + "->any()");
+      System.err.println("!! OES: Inefficient ->any operation: " + src + "->any()");
  
       return uarg; 
     } 
@@ -4814,7 +4814,7 @@ abstract class Expression
       Expression atexpr =  
         Expression.simplifyAny(srccoll); 
  
-      System.out.println("! OES: Inefficient ->any operation: " + src + "->any()"); 
+      System.err.println("!! OES: Inefficient ->any operation: " + src + "->any()"); 
 
       return BinaryExpression.newLetBinaryExpression(
                varexpr, srccoll.getElementType(), 
@@ -4834,7 +4834,7 @@ abstract class Expression
            ((UnaryExpression) src).getOperator()))
     { UnaryExpression usrc = (UnaryExpression) src; 
       Expression uarg = usrc.getArgument(); 
-      System.out.println("! OES: Inefficient ->reverse operation: " + src + "->reverse()"); 
+      System.err.println("!! OES: Inefficient ->reverse operation: " + src + "->reverse()"); 
  
       return uarg; 
     } 
@@ -4874,7 +4874,7 @@ abstract class Expression
            ((UnaryExpression) src).getOperator()))
     { UnaryExpression usrc = (UnaryExpression) src; 
       Expression uarg = usrc.getArgument(); 
-      System.out.println("! OES: Inefficient ->front operation: " + src + "->front()"); 
+      System.err.println("!! OES: Inefficient ->front operation: " + src + "->front()"); 
 
       Expression sze = Expression.simplifySize(uarg); 
       Vector pars = new Vector(); 
@@ -4890,7 +4890,7 @@ abstract class Expression
             ((UnaryExpression) src).getOperator()))
     { UnaryExpression usrc = (UnaryExpression) src; 
       Expression uarg = usrc.getArgument();
-      System.out.println("! OES: Inefficient ->front operation: " + src + "->front()"); 
+      System.err.println("!! OES: Inefficient ->front operation: " + src + "->front()"); 
 
       Expression sze = Expression.simplifySize(uarg); 
       Vector pars = new Vector(); 
@@ -4908,7 +4908,7 @@ abstract class Expression
       Expression bleft = bsrc.getLeft();
       Expression bright = bsrc.getRight(); 
 
-      System.out.println("! OES: Inefficient ->front operation: " + src + "->front()"); 
+      System.err.println("!! OES: Inefficient ->front operation: " + src + "->front()"); 
 
       Expression newsrc = 
                    Expression.simplifyFront(bleft);  
@@ -4926,7 +4926,7 @@ abstract class Expression
       Expression x = bleft.getLeft();  
       Expression col = bleft.getRight(); 
 
-      System.out.println("! OES: Inefficient ->front operation: " + src + "->front()"); 
+      System.err.println("!! OES: Inefficient ->front operation: " + src + "->front()"); 
 
       Expression newsrc = 
                    Expression.simplifyFront(col);  
@@ -4970,7 +4970,7 @@ abstract class Expression
            ((UnaryExpression) src).getOperator()))
     { UnaryExpression usrc = (UnaryExpression) src; 
       Expression uarg = usrc.getArgument(); 
-      System.out.println("! OES: Inefficient ->tail operation: " + src + "->tail()"); 
+      System.err.println("!! OES: Inefficient ->tail operation: " + src + "->tail()"); 
 
       Expression sze = Expression.simplifySize(uarg); 
       Vector pars = new Vector(); 
@@ -4985,7 +4985,7 @@ abstract class Expression
             ((UnaryExpression) src).getOperator()))
     { UnaryExpression usrc = (UnaryExpression) src; 
       Expression uarg = usrc.getArgument();
-      System.out.println("! OES: Inefficient ->tail operation: " + src + "->tail()"); 
+      System.err.println("!! OES: Inefficient ->tail operation: " + src + "->tail()"); 
 
       Expression sze = Expression.simplifySize(uarg); 
       Vector pars = new Vector(); 
@@ -5003,7 +5003,7 @@ abstract class Expression
       Expression bleft = bsrc.getLeft();
       Expression bright = bsrc.getRight(); 
 
-      System.out.println("! OES: Inefficient ->tail operation: " + src + "->tail()"); 
+      System.err.println("!! OES: Inefficient ->tail operation: " + src + "->tail()"); 
 
       Expression newsrc = 
                    Expression.simplifyTail(bleft);  
@@ -5021,7 +5021,7 @@ abstract class Expression
       Expression x = bleft.getLeft();  
       Expression col = bleft.getRight(); 
 
-      System.out.println("! OES: Inefficient ->tail operation: " + src + "->tail()"); 
+      System.err.println("!! OES: Inefficient ->tail operation: " + src + "->tail()"); 
 
       Expression newsrc = 
                    Expression.simplifyTail(col);  
@@ -5469,7 +5469,7 @@ abstract class Expression
     { UnaryExpression usrc = (UnaryExpression) src; 
       Expression uarg = usrc.getArgument(); 
 
-      System.out.println("! OES: Inefficient ->at operation: " + src + "->at()"); 
+      System.err.println("!! OES: Inefficient ->at operation: " + src + "->at()"); 
 
       return new BinaryExpression("->at", uarg, arg); 
     } 
@@ -5479,7 +5479,7 @@ abstract class Expression
             ((UnaryExpression) src).getOperator()))
     { UnaryExpression usrc = (UnaryExpression) src; 
       Expression uarg = usrc.getArgument(); 
-      System.out.println("! OES: Inefficient ->at operation: " + src + "->at()");
+      System.err.println("!! OES: Inefficient ->at operation: " + src + "->at()");
  
       return new BinaryExpression("->at", uarg, 
                new BinaryExpression("+", arg, 
@@ -5498,7 +5498,7 @@ abstract class Expression
           new BinaryExpression("-", sze, arg), 
           new BasicExpression(1));  
  
-      System.out.println("! OES: Inefficient ->at operation: " + src + "->at()"); 
+      System.err.println("!! OES: Inefficient ->at operation: " + src + "->at()"); 
       return new BinaryExpression("->at", uarg, indx); 
     } 
 
@@ -5516,7 +5516,7 @@ abstract class Expression
       Expression atexpr =  
         new BinaryExpression("->at", srccoll, arg); 
  
-      System.out.println("! OES: Inefficient ->at operation: " + src + "->at()"); 
+      System.err.println("!! OES: Inefficient ->at operation: " + src + "->at()"); 
 
       return BinaryExpression.newLetBinaryExpression(
                varexpr, srccoll.getElementType(), 

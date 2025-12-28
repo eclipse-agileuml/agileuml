@@ -49,11 +49,13 @@ stmt
    | datatype identifier variable_decl_assigment? SEMICOLON 
    | KW_VAR identifier variable_decl_assigment SEMICOLON 
    | KW_IF expr L_CBRACK stmtList? R_CBRACK elseif* elsestat? 
-   | KW_FOREACH L_PAR? datatype? COLON? identifier KW_IN expr R_PAR? L_CBRACK stmtList? R_CBRACK 
+   | KW_FOREACH L_PAR datatype? COLON? identifier KW_IN expr R_PAR L_CBRACK stmtList? R_CBRACK 
+   | KW_FOREACH datatype? COLON? identifier KW_IN expr L_CBRACK stmtList? R_CBRACK 
    | KW_SWITCH expr L_CBRACK case_statement* R_CBRACK 
-   | KW_TRY L_CBRACK stmt* R_CBRACK catch_statement* finally_statement? 
+   | KW_TRY L_CBRACK stmtList? R_CBRACK catch_statement* finally_statement? 
    | KW_WHILE expr L_CBRACK stmtList? R_CBRACK 
-   | KW_FOR L_PAR? datatype identifier EQ expr SEMICOLON expr SEMICOLON expr R_PAR? L_CBRACK stmtList? R_CBRACK 
+   | KW_FOR L_PAR datatype identifier EQ expr SEMICOLON expr SEMICOLON expr R_PAR L_CBRACK stmtList? R_CBRACK 
+   | KW_FOR datatype identifier EQ expr SEMICOLON expr SEMICOLON expr L_CBRACK stmtList? R_CBRACK 
    | KW_BREAK SEMICOLON 
    | KW_THROW expr SEMICOLON 
    | KW_CONTINUE SEMICOLON 
@@ -152,6 +154,7 @@ factor_level1
 factor_level0 
    : operand 
    | NOT factor_level0
+   | MINUS factor_level0
    ;
 
 operand 
