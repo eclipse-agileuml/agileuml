@@ -292,6 +292,14 @@ class MatrixLib :
   def matrixMaximum(m1: list, m2: list) -> list:
     return [MatrixLib.rowMaximum(r1, r2) for r1, r2 in zip(m1, m2)]
 
+  def rowMinimum(m1: list, m2: list) -> list:
+    if isinstance(m1[0], list):
+      return [MatrixLib.rowMinimum(m1i, m2i) for m1i, m2i in zip(m1, m2)]
+    return [(m1j if (m1j < m2j) else m2j) for m1j, m2j in zip(m1, m2)]
+
+  def matrixMinimum(m1: list, m2: list) -> list:
+    return [MatrixLib.rowMinimum(r1, r2) for r1, r2 in zip(m1, m2)]
+
   def transpose(m: list) -> list:
     if not isinstance(m[0], list):
       return m
