@@ -2487,6 +2487,8 @@ public class Compiler2
       { cg.setNegative(); } 
       else if (se.equals("any"))
       { cg.setExistential(); } 
+      else if (se.equals("lastIs"))
+      { cg.setExistentialLast(); } 
       else if (se.equals("all"))
       { cg.setUniversal(); } 
       else if (se.equals("matches"))
@@ -3077,7 +3079,7 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
         { UnaryExpression letexp = new UnaryExpression("lambda", lbody); 
           letexp.accumulator = new Attribute(var + "", ltype, ModelElement.INTERNAL); 
           return letexp; 
-              // return new LetExpression(var,ltype,lexp,lbody); 
+          // return new LetExpression(var,ltype,lexp,lbody); 
         } 
       }
     } else { }  
@@ -5067,6 +5069,7 @@ public BehaviouralFeature operationDefinition(int st, int en, Vector entities, V
           } 
           else 
           { bf.setPost(pots); } 
+
           Statement act = parseStatement(j+2,en,localEntities,types); 
           if (act == null) 
           { System.out.println("!! ERROR: Invalid activity syntax: " + showLexicals(j+2,en)); 
@@ -5074,7 +5077,17 @@ public BehaviouralFeature operationDefinition(int st, int en, Vector entities, V
           } 
           bf.setActivity(act); 
 
+          // JOptionPane.showInputDialog("Local entities: " + localEntities);
+ 
+          for (int p = 0; p < localEntities.size(); p++) 
+          { Entity ent = (Entity) localEntities.get(p);       
+            if (entities.contains(ent)) { } 
+            else 
+            { entities.add(ent); } 
+          } 
+
           removeTypeParameters(bf.getTypeParameters(), entities); 
+
 
           return bf;  
         }    
@@ -8155,6 +8168,7 @@ public Vector parseAttributeDecsInit(Vector entities, Vector types)
 
     Object e1 = parseKM3classifier(
                  reached,en,entities,types,gens,pasts,errors);
+
     if (e1 != null) 
     { res.add(e1); 
       if (e1 instanceof Type)
@@ -8375,9 +8389,9 @@ public Vector parseAttributeDecsInit(Vector entities, Vector types)
         // start = st+4; 
         dt.setAlias(new Type(aname,null)); 
 
-        JOptionPane.showMessageDialog(null, 
+        /* JOptionPane.showMessageDialog(null, 
              "Simple datatype -- remove before code-generation: " + dt + " = " + aname, 
-             "", JOptionPane.INFORMATION_MESSAGE);  
+             "", JOptionPane.INFORMATION_MESSAGE);  */ 
 
         return dt;
       } 
@@ -8386,9 +8400,9 @@ public Vector parseAttributeDecsInit(Vector entities, Vector types)
             parseType(st+3,en-1,entities,types);
         dt.setAlias(aliasType);
 
-        JOptionPane.showMessageDialog(null, 
+        /* JOptionPane.showMessageDialog(null, 
              "Complex datatype -- remove before code-generation: " + dt + " = " + aliasType, 
-             "", JOptionPane.INFORMATION_MESSAGE);  
+             "", JOptionPane.INFORMATION_MESSAGE); */  
            
         return dt; 
       }  
@@ -8442,6 +8456,7 @@ public Vector parseAttributeDecsInit(Vector entities, Vector types)
     Entity res; 
     ModelElement melem = 
          ModelElement.lookupByName(rname,entities); 
+
     if (melem instanceof Entity) 
     { res = (Entity) melem; } 
     else 
@@ -8456,6 +8471,7 @@ public Vector parseAttributeDecsInit(Vector entities, Vector types)
         ">".equals(lexicals.get(start + 2) + ""))
     { System.out.println(">>> Generic class, parameter " + 
                          lexicals.get(start + 1));
+
       String parType = lexicals.get(start + 1) + ""; 
       Entity parEnt = new Entity(parType);
       parEnt.genericParameter = true; 
@@ -8595,6 +8611,7 @@ public Vector parseAttributeDecsInit(Vector entities, Vector types)
                       i > reached + 4)) 
             { BehaviouralFeature bf = 
                 operationDefinition(reached + 2, i-2, entities, types); 
+
               if (bf != null) 
               { bf.setStatic(true); 
                 res.addOperation(bf); 
@@ -8610,7 +8627,7 @@ public Vector parseAttributeDecsInit(Vector entities, Vector types)
             } 
           } 
           else if ("abstract".equals(lxr))
-          { JOptionPane.showInputDialog("Abstract operation " + lexicals.get(reached+1)); 
+          { // JOptionPane.showInputDialog("Abstract operation " + lexicals.get(reached+1)); 
 
             if (i > reached + 4 && 
                 ("operation".equals(
@@ -8701,6 +8718,7 @@ public Vector parseAttributeDecsInit(Vector entities, Vector types)
           }
           else if ("invariant".equals(lxr))
           { Expression expr = parse_expression(0,reached+1,i-2,entities,types); 
+
             if (expr != null) 
             { Constraint cons = 
                  Constraint.getConstraint(expr); 

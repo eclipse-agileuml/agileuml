@@ -147,6 +147,9 @@ public class CGCondition
   public void setExistential()
   { quantifier = "any"; }
 
+  public void setExistentialLast()
+  { quantifier = "lastIs"; }
+
   public void setUniversal()
   { quantifier = "all"; }
 
@@ -990,6 +993,19 @@ public class CGCondition
       } 
       return false; 
     }
+
+    if ("lastIs".equals(quantifier))
+    { if (v.size() == 0) 
+      { return false; } 
+
+      CGCondition gcond = new CGCondition(stereotype, "_1");
+      gcond.setPositive(positive);  
+      Object x = v.get(v.size()-1); 
+      if (gcond.conditionSatisfied(x,entities,cgs)) 
+      { return true; } 
+      return false; 
+    }
+
 
     if ("empty".equals(slowercase) && 
         (v == null || vsize == 0))

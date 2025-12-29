@@ -3629,9 +3629,11 @@ public class UCDArea extends JPanel
     { Object k = keys.next();
       Vector clonedIn = (Vector) clones.get(k); 
       if (clonedIn.size() > 1)
-      { out.println("*** " + k + " is cloned in: " + clonedIn); 
+      { out.println("!!! " + k + " is cloned in: " + clonedIn); 
+        out.println(); 
         System.err.println("!!! Code smell (DC): Clone " + k + " in " + clonedIn); 
-        System.err.println(">>> Recommend refactoring by extracting the " + clonedIn.size() + " copies as new operation"); 
+        System.err.println("!!! Recommend refactoring by code restructing or extracting clones as a new operation");
+        System.err.println();  
         clonecount++; 
       } 
     }  
@@ -3644,7 +3646,7 @@ public class UCDArea extends JPanel
     out.println("*** Total number of operations in the system is: " + topscount);  
     out.println("*** Total size of transformations in the system is: " + totalsize);  
     out.println("*** Total call graph size of system is: " + cg.size());  
-    out.println("*** Total number of clones in system is: " + clonecount);  
+    out.println("*** Total number of clones (DC) in system is: " + clonecount);  
 
     out.println(); 
 
@@ -16137,10 +16139,11 @@ public void produceCUI(PrintWriter out)
       out2.close(); 
     }
     catch (Throwable tt)
-    { System.err.println("!! Error generating C++"); } 
+    { System.out.println("!! Error generating C++"); } 
   } 
 
-  public String parseMambaOperation(String sourceCode)
+  public String parseMambaOperation(String sourceCode, 
+                                    CGSpec spec)
   { Vector auxcstls = new Vector(); 
     ASTTerm xx = null; 
 
@@ -16172,14 +16175,6 @@ public void produceCUI(PrintWriter out)
 
     ASTTerm.metafeatures = new java.util.HashMap(); 
 
-    File mamba2uml = new File("cg/mamba2OCL.cstl"); 
-    Vector vbs = new Vector(); 
-    CGSpec spec = loadCSTL(mamba2uml,vbs); 
-
-    if (spec == null) 
-    { System.err.println("!! ERROR: No file " + mamba2uml.getName()); 
-      return null; 
-    } 
     
     String reskm3 = xx.cg(spec); 
     String arg1 = CGRule.correctNewlines(reskm3); 
@@ -18736,6 +18731,17 @@ public void produceCUI(PrintWriter out)
       } 
     } 
 
+    // int classcount = entities.size(); 
+
+    File mamba2uml = new File("cg/mamba2OCL.cstl"); 
+    Vector vbs = new Vector(); 
+    CGSpec spec = loadCSTL(mamba2uml,vbs); 
+
+    if (spec == null) 
+    { System.err.println("!! ERROR: No file " + mamba2uml.getName()); 
+      return;  
+    } 
+
     for (int i = 0; i < allnodes.size(); i++) 
     { XMLNode enode = (XMLNode) allnodes.get(i);
  
@@ -18794,7 +18800,8 @@ public void produceCUI(PrintWriter out)
                     opnode.getAttributeValue("Name"); 
                 String opcode = 
                     opnode.getContent(); 
-                String km3code = parseMambaOperation(opcode);
+                String km3code = 
+                    parseMambaOperation(opcode, spec);
                 JOptionPane.showInputDialog("Code of " + opname + " is " + km3code);
  
                 Compiler2 cc = new Compiler2(); 

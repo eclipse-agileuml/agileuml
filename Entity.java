@@ -5117,9 +5117,11 @@ public class Entity extends ModelElement implements Comparable
     out.println("*** " + lowcount + " other operations of " + getName() + " are > " + TestParameters.operationSizeWarning + " complexity"); 
 
     out.println("*** Total complexity of " + getName() + " is: " + totalComplexity); 
+
     if (totalComplexity > TestParameters.classSizeLimit)
     { System.err.println("!! Code Smell: Excessively large class: " + 
                 getName() + " has c = " + totalComplexity); 
+      System.err.println(); 
     } 
 
     // out.println("*** Clones: " + clones); 
