@@ -50,7 +50,7 @@ if _1 { _2 } _3 _4 |-->if _1 then (_2`statementList) _3 _4 else skip <when> _4 e
 if _1 { _2 } _3 _4 _5 |-->if _1 then (_2`statementList) _3 _4 _5 else skip <when> _5 elseif
 if _1 { _2 } _3 _4 _5 _6 |-->if _1 then (_2`statementList) _3 _4 _5 _6 else skip <when> _6 elseif
 
-if _1 { _2 } _* |-->if _1 then (_2`statementList) _* else skip<when> _*`last elseif
+if _1 { _2 } _* |-->if _1 then (_2`statementList) _* else skip<when> _* lastIs elseif
 
 if _1 { } _* |-->if _1 then skip _*
 if _1 { _2 } _* |-->if _1 then (_2`statementList) _*
