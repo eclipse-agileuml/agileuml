@@ -415,6 +415,8 @@ _1 |-->_1`member<when> _1 function_call
 this . _1 |-->self_1`queryForm
 _1 . Length |-->_1->size()
 
+RuntimeType . _1 |-->(_1`functionArguments)->oclType()<when> _1 id_or_function_call, _1`functionName GetTypeOf
+
 BusinessException . _2 |-->OclException.newOclException(_2`functionArguments)<when> _2 id_or_function_call, _2`functionName Create
 
 _1 . _2 |-->_2`functionArguments<when> _1 Function, _2 id_or_function_call, _2`functionName Create
@@ -581,6 +583,8 @@ WriteWarnLine ( _1 ) |-->execute (_1)->display()
 WriteInfoLine ( _1 ) |-->execute (StringLib.formatString_1)->display()<when> _1 multiple
 WriteInfoLine ( _1 ) |-->execute (_1)->display()
 
+_1 ( _2 ) |-->execute _1(_2)
+_1 ( ) |-->execute _1()
 
 _1 . _2 |-->_1.new_1(_2`functionArguments)<when> _2 id_or_function_call, _2`functionName Create
 
@@ -743,7 +747,6 @@ GetValues ( ) |-->->values()
 OrderByKey ( ) |-->->sort()
 OrderByValue ( ) |-->->sortedBy(_x | _x)
 
-
 _1 . Length |-->_1`queryForm->size()
 
 
@@ -775,8 +778,12 @@ GetKeys ( ) |-->->keys()
 GetValues ( ) |-->->values()
 GetItems ( ) |-->->values()
 
+OrderByKey ( ) |-->->sort()
+OrderByValue ( ) |-->->sortedBy(_x | _x)
+
  
 _1 ( _2 ) |-->._1(_2)
+_1 ( ) |-->._1()
 _1 |-->._1
 
 
