@@ -18265,11 +18265,14 @@ public Statement generateDesignSubtract(Expression rhs)
 
     if (vars.contains(s))
     { res.add(s); }  // eg, att, or sig1.sig
-    else if (vars.contains(data))
+    
+    if (vars.contains(data))
     { res.add(data); } 
-    else if (objectRef != null) 
+    
+    if (objectRef != null) 
     { res.addAll(objectRef.variablesUsedIn(vars)); } 
-    else if (arrayIndex != null) // Added 22.5.2025 
+    
+    if (arrayIndex != null) // Added 22.5.2025 
     { res.addAll(arrayIndex.variablesUsedIn(vars)); } 
 
     if (parameters != null) 
