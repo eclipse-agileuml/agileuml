@@ -160,6 +160,7 @@ public class BehaviouralFeature extends ModelElement
     bf.setStatic(true); 
     bf.setPrecondition(new BasicExpression(true)); 
     bf.setPostcondition(new BasicExpression(true)); 
+    bf.setResultType(new Type("OclAny", null)); 
 
     Attribute par = new Attribute(var + "", ltype, 
                                   ModelElement.INTERNAL); 
@@ -4716,6 +4717,7 @@ public class BehaviouralFeature extends ModelElement
     if (pars > TestParameters.numberOfParametersLimit) 
     { System.err.println("!!! Code smell (EPL): too many parameters (" + pars + ") for " + nme); 
       System.err.println(">>> Recommend refactoring by introducing value object for parameters or splitting operation into parts"); 
+      System.err.println(); 
     }  
 
     int complexity = 0; 
@@ -4740,10 +4742,12 @@ public class BehaviouralFeature extends ModelElement
       if (acomp > TestParameters.operationSizeLimit) 
       { System.err.println("!!! Code smell (EOS): too high activity complexity (" + acomp + ") for " + nme); 
         System.err.println(">>> Recommend refactoring by splitting operation"); 
+        System.err.println(); 
       }  
       else if (acomp > TestParameters.operationSizeWarning) 
       { System.err.println("*** Warning: high activity complexity (" + acomp + ") for " + nme); }  
-      complexity = complexity + acomp; 
+      complexity = complexity + acomp;
+      System.err.println();  
     }
     
     out.println("*** Total complexity of operation " + nme + " = " + complexity); 
@@ -4752,15 +4756,18 @@ public class BehaviouralFeature extends ModelElement
     if (cyc > TestParameters.cyclomaticComplexityLimit) 
     { System.err.println("!!! Code smell (CC): high cyclomatic complexity (" + cyc + ") for " + nme);
       System.err.println(">>> Recommend refactoring by splitting operation"); 
+      System.err.println(); 
     }  
 
     if (complexity > TestParameters.operationSizeLimit) 
     { System.err.println("!!! Code smell (EHS): too high complexity (" + complexity + ") for " + nme); 
       System.err.println(">>> Recommend refactoring by splitting operation"); 
+      System.err.println(); 
     }  
     else if (complexity > TestParameters.operationSizeWarning) 
-    { System.err.println("*** Warning: high complexity (" + complexity + ") for " + nme); }  
-
+    { System.err.println("*** Warning: high complexity (" + complexity + ") for " + nme); 
+      System.err.println(); 
+    }  
 
     return complexity; 
   } 
