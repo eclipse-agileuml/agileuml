@@ -23,6 +23,13 @@ _1 |-->_1
 _1 , _* |-->_1, _*`recurse
 
 sequenceFormation::
+( _1 ) |-->(_1`sequenceFormation)
+_1 |-->_1`sequenceFormation<when> _1 trailer
+_1 |-->_1`sequenceFormation<when> _1 arguments
+_1 |-->_1`sequenceFormation<when> _1 arglist
+_1 |-->_1`sequenceFormation<when> _1 argument
+
+
 _1 |-->_1<when> _1 star_expr
 _1 |-->Sequence{ _1 }
 _1 , |-->Sequence{ _1 }
@@ -240,7 +247,9 @@ round _1 |-->MathLib.roundN(_1`firstArg, _1`secondArg)
 slice _1 |-->Integer.subrange(1,_1`firstArg)<when> _1`numberOfArguments 1
 slice _1 |-->Integer.subrange(_1`firstArg+1,_1`secondArg)
 
-sum _1 |-->_1->sum()
+sum _1 |-->_1->sum()<when> _1`isSequenceExpression true
+sum _1 |-->(_1`sequenceFormation)->sum()
+
 type _1 |-->_1->oclType()<when> _1`numberOfArguments 1
 type _1 |-->OclType.newOclType(_1`firstArg)
 
@@ -609,6 +618,7 @@ _1 |-->_1`isSequenceExpression<when> _1 logical_test
 _1 |-->_1`isSequenceExpression<when> _1 comparison
 _1 |-->_1`isSequenceExpression<when> _1 expr
 _1 |-->_1`isSequenceExpression<when> _1 atom
+_1 |-->_1`isSequenceExpression<when> _1 argument
 
 print _1 |-->false
 del _1 |-->false
@@ -734,6 +744,14 @@ _1 _2 _3 |-->    execute (_3`third : _1_2)<when> _1 atom, _3`second add
 _1 _2 _3 |-->    _1_2_3<when> _1 atom, _2 trailer, _3 trailer
 
 _1 , _* |-->    _1 ;\n_*`recurse
+
+_1 * _2 |-->    execute (_1*_2)
+_1 + _2 |-->    execute (_1+_2)
+_1 / _2 |-->    execute (_1/_2)
+_1 - _2 |-->    execute (_1-(_2))
+_1 // _2 |-->    execute (_1 div _2)
+_1 ** _2 |-->    execute _1->pow(_2)
+
 _1 |-->
 
 
@@ -1160,6 +1178,9 @@ _1 |-->
 
 
 mapQueryForm::
+. get _1 |-->->at(_1`firstArg)<when> _1 multiple
+. get _1 |-->->at_1
+
 . count _1 |-->->count_1
 . index _1 |-->->indexOf_1 - 1
 . sort _1 |-->->sort()
