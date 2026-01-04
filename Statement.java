@@ -3,7 +3,7 @@ import java.io.*;
 import javax.swing.JOptionPane;
 
 /******************************
-* Copyright (c) 2003--2025 Kevin Lano
+* Copyright (c) 2003--2026 Kevin Lano
 * This program and the accompanying materials are made available under the
 * terms of the Eclipse Public License 2.0 which is available at
 * http://www.eclipse.org/legal/epl-2.0
@@ -106,7 +106,7 @@ abstract class Statement implements Cloneable
       { newvars.add(wrv); } 
     }  
 
-    System.out.println(">> local variables " + newvars + " are written in " + stat); 
+    // System.out.println(">> local variables " + newvars + " are written in " + stat); 
 
     Attribute par = (Attribute) pars.get(0); 
     Type partype = par.getType(); 
@@ -4181,6 +4181,13 @@ class ReturnStatement extends Statement
     return new ReturnStatement(newval); 
   }  
 
+  public Vector variablesUsedIn(Vector vars) 
+  { Vector res = new Vector(); 
+    if (value != null) 
+    { return value.variablesUsedIn(vars); } 
+    return res; 
+  } 
+
   public java.util.Map collectionOperatorUses(
                              int nestingLevel, 
                              java.util.Map operatorsAtLevel,
@@ -4699,6 +4706,11 @@ class BreakStatement extends Statement
     return res; 
   } 
 
+  public Vector variablesUsedIn(Vector vars) 
+  { Vector res = new Vector(); 
+    return res; 
+  } 
+
   public Vector writeFrame() 
   { Vector res = new Vector();
     return res;
@@ -4908,6 +4920,11 @@ class ContinueStatement extends Statement
 
   public Vector readFrame() 
   { Vector res = new Vector();
+    return res; 
+  } 
+
+  public Vector variablesUsedIn(Vector vars) 
+  { Vector res = new Vector(); 
     return res; 
   } 
 
@@ -5337,13 +5354,20 @@ class InvocationStatement extends Statement
   public Vector allVariableNames()
   { return callExp.allVariableNames(); } 
 
+  public Vector variablesUsedIn(Vector vars) 
+  { Vector res = new Vector(); 
+    if (callExp != null) 
+    { return callExp.variablesUsedIn(vars); } 
+    return res; 
+  } 
+
   public Statement optimiseOCL()
   { Expression cexp = callExp.simplifyOCL(); 
     return new InvocationStatement(cexp); 
   }  
 
   public Map energyUse(Map uses, 
-                                Vector rUses, Vector oUses)
+                       Vector rUses, Vector oUses)
   { callExp.energyUse(uses, rUses, oUses);  
 
     int syncomp = callExp.syntacticComplexity(); 
@@ -6131,15 +6155,29 @@ class ImplicitInvocationStatement extends Statement
   public Vector allVariableNames()
   { return callExp.allVariableNames(); } 
 
+  public Vector variablesUsedIn(Vector vars) 
+  { Vector res = new Vector(); 
+    if (callExp != null) 
+    { return callExp.variablesUsedIn(vars); } 
+    return res; 
+  } 
+
   public Map energyUse(Map uses, 
-                                Vector rUses, Vector oUses)
+                       Vector rUses, Vector oUses)
   { callExp.energyUse(uses, rUses, oUses); 
 
     int syncomp = callExp.syntacticComplexity(); 
     if (syncomp > TestParameters.syntacticComplexityLimit)
-    { System.err.println("!! Code smell (MEL): too high expression complexity (" + syncomp + ") for " + callExp); 
-      System.err.println("!! Recommend OCL refactoring");
-      System.err.println();  
+    { int auses = (int) uses.get("amber"); 
+      uses.set("amber", auses+1); 
+      oUses.add("!! Code smell (MEL): too high expression complexity (" + syncomp + ") for " + callExp);   
+    } 
+
+    if (callExp.isSideEffecting()) { } 
+    else 
+    { int auses = (int) uses.get("amber"); 
+      uses.set("amber", auses+1); 
+      oUses.add("!! Redundant code (RC): invocation of expression: " + callExp + " with no effect"); 
     } 
 
     return uses; 
@@ -6905,6 +6943,19 @@ class WhileStatement extends Statement
     return Expression.simplify("&", rtest, bdef, null); 
   } 
 
+  public Vector variablesUsedIn(Vector vars) 
+  { Vector res = new Vector(); 
+
+    if (loopRange != null) 
+    { res = loopRange.variablesUsedIn(vars); } 
+    else if (loopTest != null) 
+    { res = loopTest.variablesUsedIn(vars); }
+
+    Vector res1 = body.variablesUsedIn(vars); 
+ 
+    return VectorUtil.union(res, res1); 
+  } 
+
   public void findClones(java.util.Map clones, String rule, String op)
   { if (loopRange != null && 
         loopRange.syntacticComplexity() >= UCDArea.CLONE_LIMIT) 
@@ -6984,22 +7035,37 @@ class WhileStatement extends Statement
     }  
 
     if (loopKind == WHILE || loopKind == REPEAT)
-    { if (loopTest != null && loopKind == WHILE &&
+    { if (loopTest == null || "false".equals("" + loopTest))
+      { if (loopKind == WHILE)
+        { int acount = (int) uses.get("amber"); 
+          uses.set("amber", acount + 1); 
+          aUses.add("!! Redundant code (RC):" + 
+            " loop never executes: " + this);
+        } 
+        else // REPEAT
+        { int acount = (int) uses.get("amber"); 
+          uses.set("amber", acount + 1); 
+          aUses.add("!! Redundant code (RC):" + 
+            " loop only executes once: " + this);
+        } 
+      } 
+
+      if (loopTest != null && loopKind == WHILE &&
           "true".equals("" + loopTest)) 
       { int rcount = (int) uses.get("red"); 
         uses.set("red", rcount + 1); 
-        rUses.add("!!! Unbounded while loop with true condition: may not terminate!: " + loopSummary()); 
+        rUses.add("!!! (NTE) Unbounded while loop with true condition: may not terminate!: " + loopSummary()); 
       }
       else if (loopTest != null && loopKind == REPEAT &&
                "false".equals("" + loopTest)) 
       { int rcount = (int) uses.get("red"); 
         uses.set("red", rcount + 1); 
-        rUses.add("!!! Unbounded repeat loop with false condition: may not terminate!: " + loopSummary()); 
+        rUses.add("!!! (NTE) Unbounded repeat loop with false condition: may not terminate!: " + loopSummary()); 
       }
       else 
       { int acount = (int) uses.get("amber"); 
         uses.set("amber", acount + 1); 
-        aUses.add("!! Unbounded loops can be inefficient: " + 
+        aUses.add("!! (OES) Unbounded loops can be inefficient: " + 
                   loopSummary() + 
                   "\n!! Recommend replacing by a bounded loop");
       }  
@@ -9054,6 +9120,14 @@ class CreationStatement extends Statement
     return new BasicExpression(true); 
   } 
 
+  public Vector variablesUsedIn(Vector vars)
+  { Vector res = new Vector(); 
+    if (initialExpression != null) 
+    { return initialExpression.variablesUsedIn(vars); }
+    return res; 
+  }  
+    
+
   public Vector allVariableNames()
   { Vector res = new Vector(); 
     res.add(assignsTo); 
@@ -10607,6 +10681,18 @@ class SequenceStatement extends Statement
     return res; 
   } 
   
+  public Vector variablesUsedIn(Vector vars)
+  { Vector res = new Vector(); 
+
+    for (int i = 0; i < statements.size(); i++) 
+    { Statement stat = (Statement) statements.get(i); 
+      res = VectorUtil.union(res,
+                         stat.variablesUsedIn(vars)); 
+    }
+
+    return res; 
+  }  
+
 
   public Map energyUse(Map uses, Vector rUses, Vector aUses)
   { for (int i = 0; i < statements.size(); i++) 
@@ -11536,8 +11622,13 @@ class SequenceStatement extends Statement
       String var = cs.getDefinedVariable(); 
       Expression use = 
         ModelElement.lookupExpressionByName(var,res); 
-      if (use == null) 
-      { System.err.println("!! Code smell (UVA): no use of local variable " + var + " in statements " + sstail); 
+
+      Vector vv = new Vector(); 
+      vv.add(var); 
+      Vector isused = sstail.variablesUsedIn(vv); 
+
+      if (use == null && isused.size() == 0) 
+      { System.err.println("!! Code smell (UVA): there may be no use of local variable " + var + " in statements " + sstail); 
         System.err.println(); 
         cs.unusedStatement = true; 
       } 
@@ -11560,6 +11651,21 @@ class SequenceStatement extends Statement
 
     if (statements.size() == 1) 
     { res = s1.getVariableUses(unused); 
+
+      if (s1 instanceof CreationStatement)
+      { CreationStatement cs = (CreationStatement) s1; 
+        String var = cs.getDefinedVariable();
+
+        // Vector vv = new Vector(); 
+        // vv.add(var); 
+        // Vector isused = sstail.variablesUsedIn(vv); 
+
+        System.err.println("!! Code smell (UVA): there may be no use of local variable " + var); 
+        System.err.println(); 
+        unused.add(var); 
+        cs.unusedStatement = true;
+      }
+
       return res; 
     } 
 
@@ -11572,11 +11678,16 @@ class SequenceStatement extends Statement
 
     if (s1 instanceof CreationStatement)
     { CreationStatement cs = (CreationStatement) s1; 
-      String var = cs.getDefinedVariable(); 
+      String var = cs.getDefinedVariable();
+      Vector vv = new Vector(); 
+      vv.add(var); 
+ 
+      Vector used = sstail.variablesUsedIn(vv); 
       Expression use = 
         ModelElement.lookupExpressionByName(var,res); 
-      if (use == null) 
-      { System.err.println("!! Code smell (UVA): no use of local variable " + var + " in statements " + sstail); 
+
+      if (use == null && used.size() == 0) 
+      { System.err.println("!! Code smell (UVA): possible for no use of local variable " + var + " in statements " + sstail); 
         System.err.println(); 
         unused.add(var); 
         cs.unusedStatement = true; 
@@ -11950,6 +12061,20 @@ class CaseStatement extends Statement
     }
   }
 
+  public Vector variablesUsedIn(Vector vars)
+  { Vector res = new Vector(); 
+    int n = cases.elements.size();
+
+    for (int i = 0; i < n; i++) 
+    { Maplet mm = (Maplet) cases.elements.elementAt(i);
+      Statement stat = (Statement) mm.dest; 
+      res = VectorUtil.union(res,
+                         stat.variablesUsedIn(vars)); 
+    }
+
+    return res; 
+  } 
+
   public String toStringJava()
   /* s is name of actuator/sensor */
   { int n = cases.elements.size();
@@ -12217,6 +12342,13 @@ class ErrorStatement extends Statement
     } 
     return new ErrorStatement(null); 
   } 
+
+  public Vector variablesUsedIn(Vector vars) 
+  { if (thrownObject != null) 
+    { return thrownObject.variablesUsedIn(vars); } 
+
+    return new Vector(); 
+  }      
 
   public Map energyUse(Map uses, Vector rUses, Vector aUses)
   { if (thrownObject != null) 
@@ -12637,6 +12769,20 @@ class AssertStatement extends Statement
     { newmessage = message.dereference(var); }
     return new AssertStatement(newcond,newmessage); 
   }  
+
+  public Vector variablesUsedIn(Vector vars) 
+  { Vector res = new Vector();
+ 
+    if (condition != null) 
+    { res = condition.variablesUsedIn(vars); } 
+
+    if (message != null) 
+    { res = VectorUtil.union(res, 
+                             message.variablesUsedIn(vars)); 
+    }
+
+    return res; 
+  }      
 
   public Statement optimiseOCL() 
   { Expression newcond = condition; 
@@ -13082,6 +13228,20 @@ class CatchStatement extends Statement
     { cact = action.optimiseOCL(); } 
 
     return new CatchStatement(cobj,cact); 
+  }
+
+  public Vector variablesUsedIn(Vector vars) 
+  { Vector res = new Vector(); 
+
+    if (caughtObject != null) 
+    { res = caughtObject.variablesUsedIn(vars); }
+
+    if (action != null) 
+    { res = VectorUtil.union(res,
+                             action.variablesUsedIn(vars)); 
+    } 
+
+    return res; 
   }
 
   public void findClones(java.util.Map clones, String rule, String op)
@@ -13545,6 +13705,29 @@ class TryStatement extends Statement
     return res; 
   }
 
+  public Vector variablesUsedIn(Vector vars) 
+  { Vector res = new Vector(); 
+
+    if (body != null) 
+    { res = body.variablesUsedIn(vars); }
+
+    for (int i = 0; i < catchClauses.size(); i++) 
+    { Statement cs = (Statement) catchClauses.get(i);
+      res = VectorUtil.union(res, 
+                             cs.variablesUsedIn(vars)); 
+    } 
+
+    if (endStatement != null) 
+    { res = 
+        VectorUtil.union(res,
+                         endStatement.variablesUsedIn(vars)); 
+    } 
+
+    return res; 
+  }
+
+
+
   public String toAST()
   { String res = "(OclStatement try ";
     if (body != null) 
@@ -13601,6 +13784,12 @@ class TryStatement extends Statement
 
     if (endStatement != null)
     { endStatement.energyUse(uses, rUses, aUses); } 
+
+    if (body == null || body.isSkip())
+    { int acount = (int) uses.get("amber");
+      uses.set("amber", acount+1);  
+      aUses.add("!! Redundant code (RC): " + this); 
+    } 
 
     return uses; 
   } 
@@ -16367,6 +16556,31 @@ class AssignStatement extends Statement
     return res;  
   }  
 
+  public Vector variablesUsedIn(Vector vars)
+  { Vector res = new Vector();
+
+    res = rhs.variablesUsedIn(vars);
+
+    if (lhs instanceof BasicExpression)
+    { BasicExpression be = (BasicExpression) lhs; 
+      Expression indx = be.getArrayIndex(); 
+      if (indx != null) 
+      { res = VectorUtil.union(res, 
+                             indx.variablesUsedIn(vars)); 
+      } 
+    } 
+    else if (lhs instanceof BinaryExpression)
+    { BinaryExpression expr = (BinaryExpression) lhs; 
+      if (expr.getOperator().equals("->at"))
+      { Expression indx = expr.getRight(); 
+        res = VectorUtil.union(res, 
+                               indx.variablesUsedIn(vars)); 
+      } 
+    }
+
+    return res;  
+  }  
+
   public Vector writeFrame()
   { Vector res = new Vector();
 
@@ -16377,6 +16591,17 @@ class AssignStatement extends Statement
       { frame = e.getName() + "::" + frame; } 
       res.add(frame); 
     } // also case of v->at(i) := expr, etc
+    else if (lhs instanceof BinaryExpression)
+    { BinaryExpression expr = (BinaryExpression) lhs; 
+      if (expr.getOperator().equals("->at"))
+      { Expression arg = expr.getLeft();
+        String frame = arg + "";  
+        Entity e = arg.getEntity(); 
+        if (e != null) 
+        { frame = e.getName() + "::" + frame; } 
+        res.add(frame); 
+      } 
+    }
 
     // res.add(lhs + "");  // lhs.data if a BasicExpression
     return res;  
@@ -17034,6 +17259,19 @@ class ConditionalStatement extends Statement
     return res; 
   } 
 
+  public Vector variablesUsedIn(Vector vars)
+  { Vector testd = test.variablesUsedIn(vars); 
+    Vector ifdef = ifPart.variablesUsedIn(vars);
+    Vector res = VectorUtil.union(testd, ifdef); 
+ 
+    if (elsePart != null) 
+    { res = 
+        VectorUtil.union(res, 
+                         elsePart.variablesUsedIn(vars)); 
+    }
+
+    return res; 
+  } 
 
   public Object clone()
   { Expression testc = (Expression) test.clone(); 
@@ -17084,7 +17322,7 @@ class ConditionalStatement extends Statement
                         testbeRight, testbeLeft) && 
           "->includes".equals(testbe.getOperator()) && 
           testbeLeft.hasSetType())
-      { System.out.println("! Removing redundant test for set addition: " + this); 
+      { System.err.println("! Removing redundant test for set addition: " + this); 
         return elseStat; 
       } // valid for Set and SortedSet, not OrderedSet 
     } 
@@ -17109,7 +17347,7 @@ class ConditionalStatement extends Statement
                         testbeRight, testbeLeft) &&
           "->excludes".equals(testbe.getOperator()) && 
           testbeLeft.hasSetType())
-      { System.out.println("! Removing redundant test for set addition: " + this); 
+      { System.err.println("! Removing redundant test for set addition: " + this); 
         return ifStat; 
       } // valid for Set and SortedSet, not OrderedSet
     } 
@@ -17123,7 +17361,7 @@ class ConditionalStatement extends Statement
            new ConditionalStatement(testc, ifc, skipstat)); 
       ss.addStatement(elsec);
 
-      System.out.println(">> Promoting nested statements from else branch: " + elsec); 
+      System.err.println(">> Promoting nested statements from else branch: " + elsec); 
  
       return ss; 
     } 
@@ -17137,7 +17375,8 @@ class ConditionalStatement extends Statement
       Statement lastElseStat = 
                     Statement.getLastStatement(elsec); 
       if (("" + lastIfStat).equals("" + lastElseStat))
-      { System.out.println(">> Refactoring duplicated final statement " + lastIfStat + " from conditional statement"); 
+      { System.err.println(">> Refactoring duplicated final statement " + lastIfStat + " from conditional statement"); 
+
         Statement newifpart = 
              Statement.removeLastStatement(ifc); 
         Statement newelsepart = 
@@ -17152,7 +17391,6 @@ class ConditionalStatement extends Statement
         return res; 
       } 
     }   
-
 
     return new ConditionalStatement(testc, ifc, elsec); 
   }  
@@ -17196,6 +17434,14 @@ class ConditionalStatement extends Statement
 
     if (elsePart != null) 
     { elsePart.energyUse(uses, rUses, oUses); } 
+
+    if (ifPart.isSkip() && 
+        (elsePart == null || elsePart.isSkip()))
+    { int acount = (int) uses.get("amber"); 
+      uses.set("amber", acount + 1); 
+      oUses.add("!! Redundant code (RC): " + this);
+      return uses; 
+    } 
 
     Statement elseStat = 
                      Statement.getFirstStatement(elsePart); 

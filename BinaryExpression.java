@@ -3,7 +3,7 @@ import java.io.*;
 import javax.swing.JOptionPane; 
 
 /******************************
-* Copyright (c) 2003--2025 Kevin Lano
+* Copyright (c) 2003--2026 Kevin Lano
 * This program and the accompanying materials are made available under the
 * terms of the Eclipse Public License 2.0 which is available at
 * http://www.eclipse.org/legal/epl-2.0
@@ -961,15 +961,24 @@ class BinaryExpression extends Expression
 
     if ("=>".equals(beleft.operator) && "=>".equals(beright.operator))
     { return res; }
+
     if ("=>".equals(beleft.operator) && beright.isCaseExpression())
     { return res; }
+
     if ("=>".equals(beright.operator) && beleft.isCaseExpression())
     { return res; }
+
     return false;
   }
 
   public boolean isSideEffecting()
-  { return left.isSideEffecting() || 
+  { if (":".equals(operator) || 
+        "/:".equals(operator) ||
+        "<:".equals(operator) || 
+        "/<:".equals(operator)) 
+    { return true; } // if rhs is writable
+
+    return left.isSideEffecting() || 
            right.isSideEffecting(); 
   } 
 
@@ -6850,7 +6859,25 @@ public void findClones(java.util.Map clones,
         operator.equals("->excludingFirst")
        )
     { elementType = etleft;
-      type.setElementType(elementType); 
+      if (type != null) 
+      { type.setElementType(elementType); }
+      else 
+      { if (operator.equals("->excludingAt") ||
+            operator.equals("->excludingFirst"))
+        { type = new Type("Sequence", null); 
+          type.setElementType(elementType);
+          type.setSorted(left.isSorted); 
+        } 
+        else if (operator.equals("->restrict") ||
+                 operator.equals("->antirestrict") ||
+                 operator.equals("->excludingKey") || 
+                 operator.equals("->excludingValue"))
+        { type = new Type("Map", null); 
+          type.setElementType(elementType);
+          type.setSorted(left.isSorted); 
+        }
+      } 
+
       isSorted = left.isSorted;
     } 
     else if (operator.equals("->including") || 
@@ -23069,6 +23096,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       if (level > 1 && vuses.size() == 0 && !sideeffect)
       { messages.add("!!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + oldvars + "\n" + 
           "!!! Use Extract local variable to optimise."); 
+        messages.add(""); 
         System.err.println(); 
         refactorELV = true;
         int redScore = (int) uses.get("red"); 
@@ -23213,12 +23241,16 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
   { int maxleft = left.maximumReferenceChain();
 
     if (maxleft > TestParameters.referenceChainLimit)
-    { System.err.println("!! (LRC) flaw: The expression " + left + " has too many (" + maxleft + ") chained references"); } 
+    { System.err.println("!! (LRC) flaw: The expression " + left + " has too many (" + maxleft + ") chained references"); 
+      System.err.println(); 
+    } 
 
     int maxright = right.maximumReferenceChain();
 
     if (maxright > TestParameters.referenceChainLimit)
-    { System.err.println("!! (LRC) flaw: The expression " + right + " has too many (" + maxright + ") chained references"); } 
+    { System.err.println("!! (LRC) flaw: The expression " + right + " has too many (" + maxright + ") chained references");     
+      System.err.println(); 
+    } 
 
     return Math.max(maxleft, maxright); 
   } 

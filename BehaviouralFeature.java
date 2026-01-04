@@ -7,7 +7,7 @@ import java.util.HashSet;
 
 
 /******************************
-* Copyright (c) 2003--2025 Kevin Lano
+* Copyright (c) 2003--2026 Kevin Lano
 * This program and the accompanying materials are made available under the
 * terms of the Eclipse Public License 2.0 which is available at
 * http://www.eclipse.org/legal/epl-2.0
@@ -2661,8 +2661,8 @@ public class BehaviouralFeature extends ModelElement
 
     Vector removals = new Vector(); 
 
-    System.err.println(">> Write frame of " + this + " is " + 
-                       writtenVars); 
+    // System.err.println(">> Write frame of " + this + " is " + 
+    //                   writtenVars); 
 
     for (int p = 0; p < parameters.size(); p++) 
     { Attribute par = (Attribute) parameters.get(p); 
@@ -2682,11 +2682,11 @@ public class BehaviouralFeature extends ModelElement
     } 
 
     writtenVars.removeAll(removals); 
-    if (writtenVars.size() > 0)
+    /* if (writtenVars.size() > 0)
     { System.err.println("! Warning: operation " + this + 
                      " writes non-local variable(s) " + 
                      writtenVars); 
-    }     
+    }  */    
     
     return false; 
   } 
