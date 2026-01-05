@@ -198,7 +198,10 @@ await _1 |-->_1.join()
 bool _1 |-->_1->toBoolean()
 
 Counter _1 |-->_1`counterarguments->asBag()
+
 dict _1 |-->_1`dictarguments
+dict _1 _2 |-->_1`dictarguments_2`mapQueryForm
+
 set _1 |-->Set{}->union(_1)
 set _1 _2 |-->Set{}->union(_1)_2
 
@@ -210,7 +213,8 @@ divmod _1 |-->Sequence{(_1`firstArg div _1`secondArg), (_1`firstArg mod _1`secon
 filter _1 |-->(_1`secondArg)->select( _x | (_1`firstArg)->apply(_x) = true )
 format _1 |-->(_1`firstArg + "")
 frozenset _1 |-->Set{}
-map _1 |-->(_1`secondArg)->collect( _x | (_1`firstArg)->apply(_x) )
+
+map _1 |-->(_1`secondArg)->collect( _x | _1`applyFunction(_x) )
 
 hex _1 |-->MathLib.decimal2hex_1
 oct _1 |-->MathLib.decimal2octal_1
@@ -408,6 +412,7 @@ _1 |-->_1
 
 
 dictarguments::
+( ) |-->Map{}
 ( _1 ) |-->(_1`dictarguments)
 { } |-->Map{}
 { _1 } |-->_1
@@ -722,6 +727,22 @@ getattr _1 |-->    OclType.getAttributeValue_1
 hasattr _1 |-->    OclType.hasAttribute_1
 delattr _1 |-->    OclType.removeAttribute_1
 
+abs _1 |-->    execute _1->abs()
+set _1 |-->    execute _1->asSet()
+list _1 |-->    execute _1->asSequence()
+bool _1 |-->    execute _1->toBoolean()
+len _1 |-->    execute _1->size()
+sorted _1 |-->    execute _1->sort()
+
+dict _1 |-->    execute _1`dictarguments
+dict _1 _2 |-->    execute _1`dictarguments_2`mapQueryForm
+
+max _1 |-->    execute _1->max()<when> _1`argCount 1
+max _1 |-->    execute Set{_1`argList}->max()
+
+min _1 |-->    execute _1->min()<when> _1`argCount 1
+min _1 |-->    execute Set{_1`argList}->min()
+
 _1 _2 |-->    _1.closeFile()<when> _1 atom, _2`second close
 _1 _2 |-->    _1.write_2`third<when> _1 atom, _2`second write
 
@@ -736,7 +757,7 @@ _1 _2 |-->    execute ((_1 - _2`third) /<: _1)<when> _1 atom, _2`second intersec
 
 _1 _2 |-->    _1`removeAtomBrackets := _1_2`trailerUpdateForm<when> _1 atom, _2 trailer, _2`isUpdating true
 
-_1 _2 |-->    _1_2<when> _1 atom, _2 trailer
+_1 _2 |-->    execute _1_2<when> _1 atom, _2 trailer
 
 _1 _2 _3 |-->    _1_2 := _1_2->append(_3`third)<when> _1 atom, _3`second append
 _1 _2 _3 |-->    execute (_3`third : _1_2)<when> _1 atom, _3`second add
@@ -2063,6 +2084,20 @@ _1 _2 _3 |-->_3`firstArg
 
 thirdSecondArg::
 _1 _2 _3 |-->_3`secondArg
+
+
+applyFunction::
+( ) |-->
+( _1 ) |-->_1`applyFunction
+[ ] |-->
+[ _1 ] |-->_1`applyFunction
+
+str , _* |-->"" +
+int , _* |-->Integer.parse
+_1 , _* |-->_1->apply
+
+_1 |-->_1`applyFunction
+
 
 allUnion::
 ( ) |-->

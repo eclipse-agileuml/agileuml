@@ -382,7 +382,7 @@ _1 * _3  |-->_1 * _3
 _1 / _3  |-->_1 / _3 
 _1 % _3  |-->_1 mod _3 
 _1 ^ _3  |-->MathLib.intPower(_1, _3) 
-_1 as _3  |-->_1->oclAsType(_3) 
+_1 as _3  |-->(_1->oclAsType(_3)) 
 
 
 factor_level0::
@@ -426,7 +426,7 @@ _1 |-->_1`member<when> _1 function_call
 this . _1 |-->self_1`queryForm
 _1 . Length |-->_1->size()
 
-RuntimeType . _1 |-->(_1`functionArguments)->oclType()<when> _1 id_or_function_call, _1`functionName GetTypeOf
+RuntimeType . _1 |-->((_1`functionArguments)->oclType())<when> _1 id_or_function_call, _1`functionName GetTypeOf
 
 BusinessException . _2 |-->OclException.newOclException(_2`functionArguments)<when> _2 id_or_function_call, _2`functionName Create
 
@@ -597,7 +597,9 @@ WriteInfoLine ( _1 ) |-->execute (_1)->display()
 _1 ( _2 ) |-->execute _1(_2)
 _1 ( ) |-->execute _1()
 
-_1 . _2 |-->_1.new_1(_2`functionArguments)<when> _2 id_or_function_call, _2`functionName Create
+_1 . _2 |-->execute (_1.new_1(_2`functionArguments))<when> _2 id_or_function_call, _2`functionName Create
+
+_1 . _2 |-->execute _1.persist()<when> _2 id_or_function_call, _2`functionName Save
 
 _1 . _2 |-->_1 := lambda _x : OclAny in (_1->apply(_x) & (_2`functionArguments)->apply(_x))<when> _1 Function, _2 id_or_function_call, _2`functionName And
 _1 . _2 |-->_1 := lambda _x : OclAny in (_1->apply(_x) or (_2`functionArguments)->apply(_x))<when> _1 Function, _2 id_or_function_call, _2`functionName Or
