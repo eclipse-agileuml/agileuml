@@ -28919,6 +28919,16 @@ public void produceCUI(PrintWriter out)
     } 
   }  
 
+  public void determinacyCheck()
+  { for (int i = 0; i < entities.size(); i++) 
+    { Entity ent = (Entity) entities.get(i); 
+
+      if (ent.isDerived()) { continue; } 
+
+      ent.checkDeterminacy(); 
+    } 
+  } 
+
   public void loadFromJavaScript()
   { BufferedReader br = null;
     Vector res = new Vector();

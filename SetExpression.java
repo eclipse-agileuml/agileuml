@@ -4,7 +4,7 @@ import javax.swing.*;
 
 
 /******************************
-* Copyright (c) 2003--2025 Kevin Lano
+* Copyright (c) 2003--2026 Kevin Lano
 * This program and the accompanying materials are made available under the
 * terms of the Eclipse Public License 2.0 which is available at
 * http://www.eclipse.org/legal/epl-2.0
@@ -158,6 +158,17 @@ public class SetExpression extends Expression
       { return true; } 
     } 
     return false; 
+  } 
+
+  public boolean isValueSetExpression()
+  { for (int i = 0; i < elements.size(); i++) 
+    { Expression expr = (Expression) elements.get(i); 
+      if (expr.isValue()) { } 
+      else 
+      { return false; } 
+    } 
+
+    return true; 
   } 
 
   public static SetExpression asSet(

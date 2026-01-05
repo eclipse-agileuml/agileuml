@@ -5006,15 +5006,29 @@ public class Entity extends ModelElement implements Comparable
       String nme = op.getName(); 
       Vector opuses = op.operationsUsedIn();
 
+      if (opuses.contains(ename + "::" + nme))
+      { System.err.println("!! Code smell (CBR2): self-recursion in " + op); 
+        System.err.println("!! Refactor by replacing recursion by iteration, or use caching to optimise.\n"); 
+      } 
+
       Vector vuses = new Vector(); 
       Vector newopuses = VectorUtil.union(vuses,opuses); 
 
-      if (newopuses.size() > TestParameters.efoLimit) 
-      { System.err.println("!! Code smell (EFO): > " + 
+      if (newopuses.size() >= TestParameters.efoLimit) 
+      { System.err.println("!! Code smell (EFO): >= " + 
            TestParameters.efoLimit + 
            " operations used in " + ename + "::" + nme); 
         System.err.println("!! Suggest refactoring by splitting operation\n"); 
       } 
+
+      Vector pars = op.getParameters(); 
+
+      if (pars != null && 
+          pars.size() > TestParameters.numberOfParametersLimit) 
+      { System.err.println("!!! Code smell (EPL): too many parameters (" + pars + ") for " + nme); 
+        System.err.println(">>> Recommend refactoring by introducing value object for parameters or splitting operation into parts"); 
+        System.err.println(); 
+      }  
 
       int sze = op.syntacticComplexity(); 
       if (sze >= TestParameters.operationSizeLimit) 
@@ -5032,14 +5046,21 @@ public class Entity extends ModelElement implements Comparable
         continue;
       }
 
-      Vector args = op.getParameterExpressions(); 
-      op.definedness(args);
-      op.determinate(args);  
       op.isSideEffecting();
       System.err.println();  
     } 
   } 
 
+  public void checkDeterminacy()
+  { for (int i = 0; i < operations.size(); i++)
+    { BehaviouralFeature op = (BehaviouralFeature) operations.get(i);
+    
+      Vector args = op.getParameterExpressions(); 
+      op.definedness(args);
+      op.determinate(args); 
+    }
+  }
+  
   public void checkInvariants() 
   { for (int i = 0; i < operations.size(); i++)
     { BehaviouralFeature op = (BehaviouralFeature) operations.get(i);

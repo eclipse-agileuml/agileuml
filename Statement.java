@@ -16182,8 +16182,10 @@ class AssignStatement extends Statement
   { // Also recognise the type as an entity or enumeration if it exists
     boolean res = lhs.typeCheck(types,entities,cs,env); 
     res = rhs.typeCheck(types,entities,cs,env);
+
     if (lhs.type == null && rhs.type != null) 
     { lhs.type = rhs.type; } 
+
     if (rhs.elementType != null && lhs.elementType == null) 
     { lhs.elementType = rhs.elementType; } 
     else if (lhs.elementType != null && rhs.elementType == null) 
@@ -16201,6 +16203,11 @@ class AssignStatement extends Statement
       att.setElementType(lhs.elementType);
       System.out.println(">>> " + lhs + " has type " + att.getType());  
       env.add(att); 
+    } 
+
+    if (lhs instanceof SetExpression) 
+    { if (((SetExpression) lhs).isValueSetExpression())
+      { System.err.println("!! Cannot assign to value set expression: " + lhs); }
     } 
 
     return res; 

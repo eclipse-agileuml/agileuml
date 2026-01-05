@@ -3714,21 +3714,21 @@ public class BehaviouralFeature extends ModelElement
     if (activity != null)
     { Vector wrf = activity.writeFrame(); 
 
-      System.out.println(">>> Parameters or variables " + wrf + " are written in " + getName() + " activity."); 
+      // System.out.println(">>> Parameters or variables " + wrf + " are written in " + getName() + " activity."); 
 
       Vector actuses = activity.getVariableUses(unused);
       actuses = ModelElement.removeExpressionByName("skip", actuses); 
  
-      System.out.println(">>> Parameters or non-local variables " + actuses + " are used in " + getName() + " activity."); 
+      // System.out.println(">>> Parameters or non-local variables " + actuses + " are used in " + getName() + " activity."); 
 
       Vector attrs = activity.allAttributesUsedIn(); 
 
-      System.out.println(">>> Attributes " + attrs + " are used in " + getName() + " activity."); 
+      // System.out.println(">>> Attributes " + attrs + " are used in " + getName() + " activity."); 
       System.out.println(); 
  
       if (unused.size() > 0) 
-      { System.out.println("!! Parameters or non-local variables " + unused + " are declared but not used in " + getName() + " activity."); 
-        System.err.println("!!! UVA (local variables) = " + unused.size() + " for operation " + name); 
+      { System.out.println("!! Parameters or non-local variables " + unused + " are declared but may not be used in " + getName() + " activity."); 
+        System.err.println("!! UVA (local variables) = " + unused.size() + " for operation " + name); 
         return true; 
       } 
 
