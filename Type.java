@@ -2750,15 +2750,19 @@ public class Type extends ModelElement
   { if (etype == null) 
     { return null; } 
 
-    if (etype.endsWith("string"))
+    if (etype.endsWith("string") || etype.endsWith("char"))
     { return new Type("String",null); } 
+
     if (etype.endsWith("int") || etype.endsWith("byte"))
     { return new Type("int",null); } 
+
     if (etype.endsWith("long"))
     { return new Type("long",null); } 
+
     if (etype.endsWith("double") || 
         etype.endsWith("decimal"))
     { return new Type("double",null); } 
+
     if (etype.endsWith("bool"))
     { return new Type("boolean",null); }
 

@@ -4,7 +4,7 @@ import javax.swing.JOptionPane;
 import java.io.*; 
 
 /******************************
-* Copyright (c) 2003--2025 Kevin Lano
+* Copyright (c) 2003--2026 Kevin Lano
 * This program and the accompanying materials are made available under the
 * terms of the Eclipse Public License 2.0 which is available at
 * http://www.eclipse.org/legal/epl-2.0
@@ -415,7 +415,10 @@ class BasicExpression extends Expression
   } 
 
   public boolean isConstructorCall()
-  { if (type != null && type.isEntity())
+  { if (data.equals("newInstance"))
+    { return true; } 
+
+    if (type != null && type.isEntity())
     { String tname = type.getName();
       if (data.endsWith(".new" + tname))
       { return true; }   
@@ -4491,8 +4494,10 @@ class BasicExpression extends Expression
           Type newleftET = 
             Type.refineType(elementType,partyp); 
           System.out.println(">> Deduced element type of " + this + " = " + newleftET); 
-          elementType = newleftET; 
-          type.setElementType(newleftET);
+
+          elementType = newleftET;
+          if (type != null) 
+          { type.setElementType(newleftET); }
 
           Expression par1 = (Expression) parameters.get(0); 
           if (par1.isInteger()) { } 
@@ -6088,8 +6093,9 @@ class BasicExpression extends Expression
           Type newleftET = 
             Type.refineType(elementType,partyp); 
           System.out.println(">> Deduced element type of " + this + " = " + newleftET); 
-          elementType = newleftET; 
-          type.setElementType(newleftET); 
+          elementType = newleftET;
+          if (type != null) 
+          { type.setElementType(newleftET); } 
         } 
 
         if (type != null && 
@@ -18265,11 +18271,14 @@ public Statement generateDesignSubtract(Expression rhs)
 
     if (vars.contains(s))
     { res.add(s); }  // eg, att, or sig1.sig
-    else if (vars.contains(data))
+    
+    if (vars.contains(data))
     { res.add(data); } 
-    else if (objectRef != null) 
+    
+    if (objectRef != null) 
     { res.addAll(objectRef.variablesUsedIn(vars)); } 
-    else if (arrayIndex != null) // Added 22.5.2025 
+    
+    if (arrayIndex != null) // Added 22.5.2025 
     { res.addAll(arrayIndex.variablesUsedIn(vars)); } 
 
     if (parameters != null) 
@@ -18639,7 +18648,8 @@ public Statement generateDesignSubtract(Expression rhs)
       if (level > 1 && vuses.size() == 0 && !sideeffect)
       { System.err.println("!!! Energy-use flaw: (LCE): The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
           "!!!  Use Extract local variable to optimise.");
-        refactorELV = true;  
+        refactorELV = true; 
+        System.err.println();  
       }
  
       return res; 
@@ -18674,12 +18684,14 @@ public Statement generateDesignSubtract(Expression rhs)
     { boolean sideeffect = isSideEffecting(); 
       Vector vuses = variablesUsedIn(vars);
  
-      if (level > 1 && vuses.size() == 0 && !sideeffect)
+      if (syntacticComplexity() > UCDArea.CLONE_LIMIT &&
+          level > 1 && vuses.size() == 0 && !sideeffect)
       { messages.add("!!! Energy-use flaw: (LCE): The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
           "!!!  Use Extract local variable to optimise.");
         refactorELV = true;  
         int redScore = (int) uses.get("red"); 
         uses.set("red", redScore+1); 
+        messages.add(""); 
       }
     } // Any non-trivial basic expression
 

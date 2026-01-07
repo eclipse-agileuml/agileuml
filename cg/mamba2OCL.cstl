@@ -39,6 +39,8 @@ var _1 _2 ; |-->var _1 : _2`ocltype _2
 _1 _2 ; |-->var _2 : _1<when> _1 datatype<action> _2 _1`typeAsOcl
 _1 _2 _3 ; |-->var _2 : _1 _3<when> _1 datatype<action> _2 _1`typeAsOcl
 
+if _1 { } |-->if _1 then skip else skip
+
 if _1 { _2 } |-->if _1 then (_2`statementList) else skip
 
 if _1 { } _2 |-->if _1 then skip _2<when> _2 elsestat
@@ -80,13 +82,22 @@ while _1 { _2 } |-->while _1 do ( _2`statementList)
 
 
 for ( int _2 = _3 ; _4 ; _5 ) { _6 } |-->for _2 : Integer.subrange(_3, _4`upperBound) do (_6`statementList)<when> _4`hasLowerBound _2, _5`isUnitIncrement true
+
+for ( int _2 = _3 ; _4 ; _5 ) { } |-->for _2 : Integer.subrange(_3, _4`upperBound) do skip<when> _4`hasLowerBound _2, _5`isUnitIncrement true
  
 for int _2 = _3 ; _4 ; _5 { _6 } |-->for _2 : Integer.subrange(_3, _4`upperBound) do (_6`statementList)<when> _4`hasLowerBound _2, _5`isUnitIncrement true
 
-for ( _1 _2 = _3 ; _4 ; _5 ) { _6 } |-->(var _2 : _1 := _3;\n    while _4 do (_6`statementList; _5))
+for int _2 = _3 ; _4 ; _5 { } |-->for _2 : Integer.subrange(_3, _4`upperBound) do skip<when> _4`hasLowerBound _2, _5`isUnitIncrement true
+
+for ( _1 _2 = _3 ; _4 ; _5 ) { _6 } |-->(var _2 : _1 := _3;\n    while _4 do (_6`statementList; _2 := _5))
+
+for ( _1 _2 = _3 ; _4 ; _5 ) { } |-->(var _2 : _1 := _3;\n    while _4 do (_2 := _5))
 
 for _1 _2 = _3 ; _4 ; _5 { _6 } |-->(var _2 : _1 := _3;\n    while _4 do (_6`statementList; _2 := _5))
 
+for _1 _2 = _3 ; _4 ; _5 { } |-->(var _2 : _1 := _3;\n    while _4 do (_2 := _5))
+
+try { } _* |-->try ( skip ) _*
 try { _1 } _* |-->try (_1`statementList) _*
 
 
@@ -113,7 +124,7 @@ else { } |-->else skip
 
 
 case_statement::
-case _1 : _2 |-->    if _case = _1 & not(_found) then\n  (_2`statementList; _found := true) else skip;\n
+case _1 : _2 |-->    if _case = _1 & not(_found) then\n  (_2`statementList    ; _found := true) else skip;\n
 
 default : _1 |-->    if not(_found) then\n  (_1`statementList) else skip;\n
 
@@ -371,7 +382,7 @@ _1 * _3  |-->_1 * _3
 _1 / _3  |-->_1 / _3 
 _1 % _3  |-->_1 mod _3 
 _1 ^ _3  |-->MathLib.intPower(_1, _3) 
-_1 as _3  |-->_1->oclAsType(_3) 
+_1 as _3  |-->(_1->oclAsType(_3)) 
 
 
 factor_level0::
@@ -414,6 +425,8 @@ _1 |-->_1`member<when> _1 function_call
 
 this . _1 |-->self_1`queryForm
 _1 . Length |-->_1->size()
+
+RuntimeType . _1 |-->((_1`functionArguments)->oclType())<when> _1 id_or_function_call, _1`functionName GetTypeOf
 
 BusinessException . _2 |-->OclException.newOclException(_2`functionArguments)<when> _2 id_or_function_call, _2`functionName Create
 
@@ -581,8 +594,12 @@ WriteWarnLine ( _1 ) |-->execute (_1)->display()
 WriteInfoLine ( _1 ) |-->execute (StringLib.formatString_1)->display()<when> _1 multiple
 WriteInfoLine ( _1 ) |-->execute (_1)->display()
 
+_1 ( _2 ) |-->execute _1(_2)
+_1 ( ) |-->execute _1()
 
-_1 . _2 |-->_1.new_1(_2`functionArguments)<when> _2 id_or_function_call, _2`functionName Create
+_1 . _2 |-->execute (_1.new_1(_2`functionArguments))<when> _2 id_or_function_call, _2`functionName Create
+
+_1 . _2 |-->execute _1.persist()<when> _2 id_or_function_call, _2`functionName Save
 
 _1 . _2 |-->_1 := lambda _x : OclAny in (_1->apply(_x) & (_2`functionArguments)->apply(_x))<when> _1 Function, _2 id_or_function_call, _2`functionName And
 _1 . _2 |-->_1 := lambda _x : OclAny in (_1->apply(_x) or (_2`functionArguments)->apply(_x))<when> _1 Function, _2 id_or_function_call, _2`functionName Or
@@ -708,11 +725,11 @@ Where ( _1 ) |-->->select( _x | _1->apply(_x) )
 
 Except ( _1 ) |--> - _1
 
-First ( ) |-->->first()
+First ( ) |-->.first
 First ( _1 ) |-->->any( _1`directLambdaTranslation )<when> _1`isDirectLambda true
 First ( _1 ) |-->->any( _x | _1->apply(_x) )
 
-Last ( ) |-->->last()
+Last ( ) |-->.last
 Last ( _1 ) |-->->reverse()->any( _1`directLambdaTranslation )<when> _1`isDirectLambda true
 Last ( _1 ) |-->->reverse()->any( _x | _1->apply(_x) )
 
@@ -743,7 +760,6 @@ GetValues ( ) |-->->values()
 OrderByKey ( ) |-->->sort()
 OrderByValue ( ) |-->->sortedBy(_x | _x)
 
-
 _1 . Length |-->_1`queryForm->size()
 
 
@@ -764,6 +780,9 @@ _1 |-->._1
 
 
 mapQueryForm::
+_1 |-->_1`mapQueryForm<when> _1 id_or_function_call
+_1 |-->_1`mapQueryForm<when> _1 member
+_1 |-->_1`mapQueryForm<when> _1 operand
 _1 |-->_1`mapQueryForm<when> _1 function_call
 
 Get ( _1 ) |-->->at(_1)
@@ -775,8 +794,22 @@ GetKeys ( ) |-->->keys()
 GetValues ( ) |-->->values()
 GetItems ( ) |-->->values()
 
+OrderByKey ( ) |-->->sort()
+OrderByValue ( ) |-->->sortedBy(_x | _x)
+
+_1 . _2 |-->_2`functionArguments<when> _1 Function, _2 id_or_function_call, _2`functionName Create
+
+_1 . _2 |-->_1_2`mapQueryForm<when> _1 Map, _2 id_or_function_call
+_1 . _2 |-->_1_2`mapQueryForm<when> _1 Map, _2 function_call
+_1 . _2 |-->_1_2`mapQueryForm<when> _1 Map, _2 member
+
+_1 . _2 |-->_1`queryForm_2`queryForm<when> _2 id_or_function_call
+_1 . _2 |-->_1`queryForm_2`queryForm<when> _2 function_call
+_1 . _2 |-->_1`queryForm_2`queryForm<when> _2 member
+_1 . _2 |-->_1`queryForm_2`queryForm<when> _2 operand
  
 _1 ( _2 ) |-->._1(_2)
+_1 ( ) |-->._1()
 _1 |-->._1
 
 

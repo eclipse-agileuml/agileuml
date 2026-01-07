@@ -6,7 +6,7 @@ import javax.swing.JTextArea;
 import java.awt.*; 
 
 /******************************
-* Copyright (c) 2003--2025 Kevin Lano
+* Copyright (c) 2003--2026 Kevin Lano
 * This program and the accompanying materials are made available under the
 * terms of the Eclipse Public License 2.0 which is available at
 * http://www.eclipse.org/legal/epl-2.0
@@ -4019,8 +4019,9 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
     } // likewise for "not" and "~"
 
 
-    if (pstart + 1 < pend && ")".equals(lexicals.get(pend) + "") && 
-      "(".equals(lexicals.get(pstart) + ""))
+    if (pstart + 1 < pend && 
+        ")".equals(lexicals.get(pend) + "") && 
+        "(".equals(lexicals.get(pstart) + ""))
     { Expression res = parse_bracketed_expression(bc,pstart,pend,entities,types); 
       if (res != null) 
       { return res; } 
@@ -4053,6 +4054,7 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
       // return null; 
     }       
 
+  /*
     if (pstart + 2 < pend && 
         ")".equals(lexicals.get(pend) + "") && 
         "(".equals(lexicals.get(pstart+2) + "") && 
@@ -4063,7 +4065,8 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
       String opstring = lexicals.get(pstart + 1) + ""; 
       String opstr = opstring.substring(1,opstring.length()); 
 
-      Vector ve = parse_fe_sequence(bc,pstart+3,pend-1,entities,types); 
+      Vector ve = parse_fe_sequence(bc,pstart+3,pend-1,entities,types);
+ 
       if (ve != null && objref != null && 
           objref instanceof BasicExpression) // must be
       { BasicExpression beopref = (BasicExpression) objref; 
@@ -4080,39 +4083,47 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
         return beop;  
       } 
       // return null; 
-    }       
+    }       */ 
 
     if (pstart < pend && 
         "]".equals(lexicals.get(pend) + "") && 
-        "[".equals(lexicals.get(pstart+1) + ""))
+        "[".equals(lexicals.get(pstart+1) + "") && 
+        balancedBrackets(pstart+1, pend))
     { // iden[indexes]
 
       String ss = lexicals.elementAt(pstart).toString(); 
       BasicExpression ee = new BasicExpression(ss,0); 
       Expression op = ee.checkIfSetExpression(); 
-      // Expression op = parse_basic_expression(bc,pstart,pstart); 
-      Expression arg = parse_additive_expression(bc,pstart+2,pend-1,entities,types);
- 
-      if (arg == null) 
-      { Vector args = parse_array_index_sequence(bc,pstart+2,pend-1,entities,types);  
-        if (args != null) 
-        { Expression opx = defineArrayIndex(op,args,entities,types); 
-          // System.out.println(">>> Array index sequence: " + args + " for " + opx); 
-          return opx; 
-        } 
-      } 
-      else if (op != null && op instanceof BasicExpression) // must be
-      { BasicExpression beop = (BasicExpression) op;  
-        beop.setArrayIndex(arg); 
-        // System.out.println(">> Parsed array expression: " + beop);
-        return beop;  
-      } 
-      // return null; 
-    }       
 
-    if (pstart < pend && "]".equals(lexicals.get(pend-1) + "") && 
+      if (op != null) 
+      // Expression op = parse_basic_expression(bc,pstart,pstart);
+      { 
+        Expression arg = parse_additive_expression(bc,pstart+2,pend-1,entities,types);
+ 
+        if (arg == null) 
+        { Vector args = parse_array_index_sequence(bc,pstart+2,pend-1,entities,types);  
+
+          if (args != null) 
+          { Expression opx = defineArrayIndex(op,args,entities,types); 
+          // System.out.println(">>> Array index sequence: " + args + " for " + opx); 
+            return opx; 
+          } 
+        } 
+        else if (op instanceof BasicExpression) // must be
+        { BasicExpression beop = (BasicExpression) op;  
+          beop.setArrayIndex(arg); 
+        // System.out.println(">> Parsed array expression: " + beop);
+          return beop;  
+        } 
+      // return null; 
+      }       
+    } 
+
+    if (pstart < pend && 
+        "]".equals(lexicals.get(pend-1) + "") && 
         "[".equals(lexicals.get(pstart+1) + "") &&
-        (lexicals.get(pend) + "").charAt(0) == '.')  
+        (lexicals.get(pend) + "").charAt(0) == '.' && 
+        balancedBrackets(pstart+1, pend-1))  
     { // be[inds].f
 
       String tail = lexicals.get(pend) + ""; 
@@ -4120,69 +4131,82 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
       { tail = tail.substring(1,tail.length()); } 
 
       Expression op = parse_primitive_expression(bc,pstart,pstart,entities,types); 
-      Expression arg = parse_additive_expression(bc,pstart+2,pend-2,entities,types); 
 
-      if (arg == null) 
-      { System.out.println("!! ERROR: Invalid array argument: " + showLexicals(pstart+2,pend-2)); 
-        Vector args = parse_array_index_sequence(bc,pstart+2,pend-2,entities,types);  
-        if (args != null) 
-        { Expression opx = 
-            defineArrayIndex(op,args,entities,types); 
-          System.out.println(">>> Array index sequence: " + args + " for " + opx);
-          opx.setBrackets(true); 
-          BasicExpression res = new BasicExpression(tail,0); 
-          Expression ef = res.checkIfSetExpression(); 
-          if (ef != null && (ef instanceof BasicExpression)) 
-          { ((BasicExpression) ef).setInnerObjectRef(opx); 
-            return ef;
+      if (op != null) 
+      { 
+        Expression arg = parse_additive_expression(bc,pstart+2,pend-2,entities,types); 
+
+        if (arg == null) 
+        { // System.out.println("!! ERROR: Invalid array argument: " + showLexicals(pstart+2,pend-2)); 
+          Vector args = parse_array_index_sequence(bc,pstart+2,pend-2,entities,types);
+  
+          if (args != null) 
+          { Expression opx = 
+              defineArrayIndex(op,args,entities,types); 
+          // System.out.println(">>> Array index sequence: " + args + " for " + opx);
+            opx.setBrackets(true); 
+            BasicExpression res = new BasicExpression(tail,0); 
+            Expression ef = res.checkIfSetExpression(); 
+            if (ef != null && (ef instanceof BasicExpression)) 
+            { ((BasicExpression) ef).setInnerObjectRef(opx); 
+              return ef;
+            } 
           } 
         } 
-      } 
-      else if (op != null && 
-               op instanceof BasicExpression) // must be
-      { BasicExpression beop = (BasicExpression) op;  
-        beop.setArrayIndex(arg); 
-        BasicExpression te = 
+        else if (op instanceof BasicExpression) // must be
+        { BasicExpression beop = (BasicExpression) op;  
+          beop.setArrayIndex(arg); 
+          BasicExpression te = 
           // new BasicExpression(ss,0);   // (ss) surely?
                        new BasicExpression(tail,0); 
-        Expression ef = te.checkIfSetExpression(); 
-        if (ef != null && (ef instanceof BasicExpression)) 
-        { ((BasicExpression) ef).setInnerObjectRef(beop); }  
+          Expression ef = te.checkIfSetExpression(); 
+          if (ef != null && (ef instanceof BasicExpression)) 
+          { ((BasicExpression) ef).setInnerObjectRef(beop); }  
         // System.out.println(">> Parsed array 1 expression: " + ef);
-        return ef;  
-      } 
+          return ef;  
+        } 
       // return null; 
-    }       
+      }       
+    } 
 
     /* Also ( ... ) .f */ 
 
     if (pstart+1 < pend &&
         !(")".equals(lexicals.get(pend) + "")) && 
         ")".equals(lexicals.get(pend-1) + "") &&
-        "(".equals(lexicals.get(pstart) + ""))  
+        "(".equals(lexicals.get(pstart) + "") && 
+        balancedBrackets(pstart, pend-1))  
     { String tail = lexicals.get(pend) + ""; 
       if (tail.charAt(0) == '.')
       { tail = tail.substring(1,tail.length()); 
       
-        // System.out.println(">>> Parsing: (...) . " + tail); 
+        BasicExpression te = 
+            // new BasicExpression(ss,0);   // (ss) surely?
+              new BasicExpression(tail,0); 
             
         Expression op = 
           parse_basic_expression(bc+1,
                         pstart+1,pend-2,entities,types);
-
-        BasicExpression te = 
-            // new BasicExpression(ss,0);   // (ss) surely?
-            new BasicExpression(tail,0); 
-           
-        if (op != null && op instanceof BasicExpression) // must be
+        
+        if (op != null && op instanceof BasicExpression) 
         { BasicExpression beop = (BasicExpression) op;  
+           
           Expression ef = te.checkIfSetExpression(); 
           if (ef != null && (ef instanceof BasicExpression)) 
           { ((BasicExpression) ef).setInnerObjectRef(beop); }  
           return ef;  
         }
-        else if (op instanceof UnaryExpression && 
-                 "!".equals(((UnaryExpression) op).operator))
+        else if (op != null && 
+                 op instanceof UnaryExpression && 
+                 validObjectRefOperator(((UnaryExpression) op).operator))
+        { Expression ef = te.checkIfSetExpression(); 
+          if (ef != null && (ef instanceof BasicExpression)) 
+          { ((BasicExpression) ef).setInnerObjectRef(op); }  
+          return ef;  
+        } 
+        else if (op != null && 
+                 op instanceof BinaryExpression && 
+                 validObjectRefOperator(((BinaryExpression) op).operator))
         { Expression ef = te.checkIfSetExpression(); 
           if (ef != null && (ef instanceof BasicExpression)) 
           { ((BasicExpression) ef).setInnerObjectRef(op); }  
@@ -4206,61 +4230,54 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
       // ).id(
  
       if (brack.equals(")") && brack2.equals("(") && 
-          strs.length() > 1 && '.' == strs.charAt(0))
+          strs.length() > 1 && '.' == strs.charAt(0) && 
+          balancedBrackets(i+1, pend))
       { Expression op = parse_basic_expression(bc, pstart+1, i-2, entities,types);
-        System.out.println("*** Parsing extended basic expression " + op + strs + "(...)");
 
-        if (op != null && op instanceof BasicExpression)
-        { Vector ve = 
+        if (op == null) { continue; } 
+
+        Vector ve = 
             parse_fe_sequence(bc,i+2,pend-1,entities,types);
-           
-          if (ve != null)
-          { BasicExpression beop = (BasicExpression) op;
-            beop.setBrackets(true); 
+
+        if (ve == null) { continue; } 
+
+        System.out.println("*** Parsing extended basic expression " + op + strs + "(" + ve + ")");
+
+        if (op instanceof BasicExpression)
+        { BasicExpression beop = (BasicExpression) op;
+          beop.setBrackets(true); 
  
-            String tail = strs.substring(1,strs.length()); 
-            BasicExpression rees = new BasicExpression(tail, 0); 
-            rees.setObjectRef(beop); // setInnerObjectRef  
-            rees.setIsEvent();
-            rees.setParameters(ve);
-            System.out.println("*** Parsed extended call expression " + rees);
-            return rees;
-          }
+          String tail = strs.substring(1,strs.length()); 
+          BasicExpression rees = new BasicExpression(tail, 0); 
+          rees.setObjectRef(beop); // setInnerObjectRef  
+          rees.setIsEvent();
+          rees.setParameters(ve);
+          System.out.println("*** Parsed extended call expression " + rees);
+          return rees;
         }
         else if (op instanceof UnaryExpression && 
-                 "!".equals(((UnaryExpression) op).operator))
-        { Vector ve = 
-            parse_fe_sequence(bc,i+2,pend-1,entities,types);
-
-          if (ve != null)
-          { String tail = strs.substring(1,strs.length()); 
-            BasicExpression rees = new BasicExpression(tail, 0); 
-            op.setBrackets(true); 
-            rees.setInnerObjectRef(op); // setInnerObjectRef  
-            rees.setIsEvent();
-            rees.setParameters(ve);
-            System.out.println("*** Parsed extended call expression " + rees);
-            return rees;
-          }  
-        } 
+                 validObjectRefOperator(((UnaryExpression) op).operator))
+        { String tail = strs.substring(1,strs.length()); 
+          BasicExpression rees = new BasicExpression(tail, 0); 
+          op.setBrackets(true); 
+          rees.setInnerObjectRef(op); // setInnerObjectRef  
+          rees.setIsEvent();
+          rees.setParameters(ve);
+          System.out.println("*** Parsed extended call expression " + rees);
+          return rees;
+        }   
         else if (op instanceof BinaryExpression && 
-                 "->at".equals(((BinaryExpression) op).operator))
-        { Vector ve = 
-            parse_fe_sequence(bc,i+2,pend-1,entities,types);
+                 validObjectRefOperator(((BinaryExpression) op).operator))
+        { String tail = strs.substring(1,strs.length()); 
+          BasicExpression rees = new BasicExpression(tail, 0); 
+          op.setBrackets(true); 
 
-          if (ve != null)
-          { String tail = strs.substring(1,strs.length()); 
-            BasicExpression rees = new BasicExpression(tail, 0); 
-            op.setBrackets(true); 
-
-            rees.setInnerObjectRef(op); // setInnerObjectRef  
-            rees.setIsEvent();
-            rees.setParameters(ve);
-            System.out.println("*** Parsed extended call expression " + rees);
-            return rees;
-          }  
+          rees.setInnerObjectRef(op); // setInnerObjectRef  
+          rees.setIsEvent();
+          rees.setParameters(ve);
+          System.out.println("*** Parsed extended call expression " + rees);
+          return rees;  
         } 
-
       }
     }
   }
@@ -4272,18 +4289,21 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
   { // iden[ ... ].f  valid basic expression before .f
 
     Expression op = parse_basic_expression(
-                      bc,pstart,pend-1,entities,types); 
-    String tail = lexicals.get(pend) + ""; 
-    if (tail.charAt(0) == '.')
-    { tail = tail.substring(1,tail.length()); } 
+                      bc,pstart,pend-1,entities,types);
+
+    if (op != null) 
+    { String tail = lexicals.get(pend) + ""; 
+      if (tail.charAt(0) == '.')
+      { tail = tail.substring(1,tail.length()); } 
     
-    if (op instanceof BasicExpression) // must be
-    { BasicExpression beop = (BasicExpression) op;  
-      BasicExpression rees = new BasicExpression(tail, 0); 
-      rees.setObjectRef(beop);  
-      System.out.println(">>> Parsed array 2 expression: " + rees);
-      return rees;  
-    }
+      if (op instanceof BasicExpression) // must be
+      { BasicExpression beop = (BasicExpression) op;  
+        BasicExpression rees = new BasicExpression(tail, 0); 
+        rees.setObjectRef(beop);  
+        System.out.println(">>> Parsed array 2 expression: " + rees);
+        return rees;  
+      }
+    } 
     // return null; 
   }       
 
@@ -4293,10 +4313,14 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
 
     for (int k = pend-1; k >= pstart; k--)
     { String lex = lexicals.get(k) + ""; 
-      if ("[".equals(lex))
+      if ("[".equals(lex) && 
+          balancedBrackets(k,pend))
       { Expression op = parse_basic_expression(
-                       bc,pstart,k-1,entities,types); 
+                           bc,pstart,k-1,entities,types); 
       
+        if (op == null) 
+        { continue; } 
+
         if (op instanceof BasicExpression) // must be
         { BasicExpression beop = (BasicExpression) op;  
           Expression arg = parse_additive_expression(
@@ -4328,6 +4352,17 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
  
   return parse_primitive_expression(bc, pstart, pend, entities, types); 
 }
+
+  public static boolean validObjectRefOperator(String op)
+  { // can be used before .feature chain
+    return "!".equals(op) || 
+       "->first".equals(op) || 
+       "->last".equals(op) ||  
+       "->at".equals(op) || 
+       "->any".equals(op) || 
+       "|A".equals(op); 
+  } // others such as ->max, ->min, 
+    // ->front, ->tail for strings
   
   public Expression parse_primitive_expression(int bc, 
        int pstart, int pend, Vector entities, Vector types)
@@ -4375,15 +4410,17 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
       Expression op = parse_primitive_expression(
                       bc,pstart,pend-1,entities,types);
  
+      if (op == null) 
+      { return null; } 
+
       String tail = lexicals.get(pend) + ""; 
       if (tail.charAt(0) == '.')
       { tail = tail.substring(1,tail.length()); } 
     
-      if (op != null && // !("null".equals(op + "")) && 
-          op instanceof BasicExpression) // must be
+      if (op instanceof BasicExpression) // must be
       { BasicExpression beop = (BasicExpression) op;  
         BasicExpression rees = new BasicExpression(tail, 0); 
-        rees.setObjectRef(beop);  
+        rees.setObjectRef(beop); // InnerObjectRef  
         System.out.println(">>> Parsed primitive expression: " + rees);
         return rees;  
       }
@@ -4435,12 +4472,14 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
 
       for (int k = pend-1; k > pstart; k--)
       { String lex = lexicals.get(k) + ""; 
+
         if ("(".equals(lex) && balancedBrackets(k,pend))
         { Expression op = parse_primitive_expression(bc, pstart, k-1, entities,types);
-          System.out.println("*** Parsing extended primitive expression " + op + "(...)");
 
           if (op == null || "null".equals(op + "")) 
           { return null; } // no alternative 
+
+          System.out.println("*** Parsing extended primitive expression " + op + "(...)");
 
           if (op instanceof BasicExpression)
           { Vector ve = 
@@ -6462,16 +6501,31 @@ public Vector parseAttributeDecsInit(Vector entities, Vector types)
     int ccb = 0;
     String mostrecentopen = null; 
     boolean instring = false;  
+    String stringMark = "\""; 
 	 
     for (int i = st; i <= en; i++)
-    { String lex = lexicals.get(i) + ""; 
-      if ("\"".equals(lex)) 
-      { if (instring) 
-        { instring = false; } 
-        else 
-        { instring = true; } 
+    { String lex = lexicals.get(i) + "";
+
+      if (instring)
+      {  
+        if (stringMark.equals(lex)) 
+        { instring = false; }
+        continue;  
       } 
-      else if ("(".equals(lex) && !instring)
+      
+      if ("\"".equals(lex))
+      { instring = true;
+        stringMark = "\"";
+        continue; 
+      }
+
+      if ("'".equals(lex))
+      { instring = true;
+        stringMark = "'";
+        continue; 
+      }
+ 
+      if ("(".equals(lex) && !instring)
       { ob++; 
         mostrecentopen = "("; 
       }
@@ -6541,17 +6595,23 @@ public Vector parseAttributeDecsInit(Vector entities, Vector types)
 
  
     if ("while".startsWith(st)) 
-    { mess[0] = "Unbounded loop statement: while expr do statement\nCan only be used in an activity"; 
+    { mess[0] = "Unbounded loop statement:\n" + 
+                " while expr do statement\n" + 
+                " Can only be used in an activity"; 
       return "while"; 
     }
 
     if ("for".startsWith(st)) 
-    { mess[0] = "Bounded loop statement: for variable : collection do statement\nThe variable must not already be defined\nThis statement can only be used in an activity"; 
+    { mess[0] = "Bounded loop statement:\n" + 
+                " for variable : collection do code\n" + 
+                " The variable must not already be defined, and cannot be written in the code.\n" + 
+                " This statement can only be used in an activity"; 
       return "for"; 
     }
 
     if ("var".startsWith(st)) 
-    { mess[0] = "Declaration/creation statement: var variable : Type\nCan only be used in an activity"; 
+    { mess[0] = "Declaration/creation statement:\n" +  
+        " var variable : Type\nCan only be used in an activity"; 
       return "var"; 
     } 
 
@@ -6562,7 +6622,8 @@ public Vector parseAttributeDecsInit(Vector entities, Vector types)
     } 
  
     if ("operation".startsWith(st)) 
-    { mess[0] = "Operation declaration:\noperation name(parameters) : Type\n" + 
+    { mess[0] = "Operation declaration:\n" + 
+                "operation name(parameters) : Type\n" + 
                 "pre: expression\npost: expression\nactivity: statement;\n\n" + 
                 "Or with a generic type parameter name T:\n" + 
                 "operation name<T>(parameters) : Type\n" + 
@@ -6572,7 +6633,7 @@ public Vector parseAttributeDecsInit(Vector entities, Vector types)
     } 
     
     if ("query".startsWith(st)) 
-    { mess[0] = "Query operation declaration, returning a result value:\n" + 
+    { mess[0] = "Query operation declaration,\n returning a result value:\n" + 
                 "query name(parameters) : Type\n" + 
                 "pre: expression\npost: expression\nactivity: statement;\n\n" + 
                 "Or with a generic type parameter name T:\n" + 
@@ -6582,47 +6643,56 @@ public Vector parseAttributeDecsInit(Vector entities, Vector types)
     }
  
     if ("pre".startsWith(st)) 
-    { mess[0] = "Operation precondition, eg: pre: true\nOr usecase precondition, eg: precondition par > 0;\n"; 
+    { mess[0] = "Operation precondition,\n" + 
+                " e.g: pre: true\n" + 
+                "Or usecase precondition, e.g.: precondition par > 0;\n"; 
       return "pre: expr   or    precondition expr;"; 
     } 
  
 
     if ("let".startsWith(st))
-    { mess[0] = "let expression to define local variable:\n let x : Type = init in (expr)"; 
+    { mess[0] = "let expression:\n" + 
+                " let x : Type = init in (expr)"; 
       return "let"; 
     } 
  
     if ("activity".startsWith(st)) 
-    { mess[0] = "Operation or usecase code, activity: statement;"; 
+    { mess[0] = "Activity of operation or usecase\n" + 
+                " activity: statement;"; 
       return "activity:"; 
     }
  
     if ("class".startsWith(st)) 
-    { mess[0] = "Class declaration, eg: class Name { ... }"; 
+    { mess[0] = "Class declaration,\n" + 
+                " e.g: class Name { ... }"; 
       return "class"; 
     } 
 
     if ("abstract".startsWith(st)) 
-    { mess[0] = "Abstract class or operation declaration, eg: abstract class Name { ... }\n  abstract operation op() pre: true post: true;"; 
+    { mess[0] = "Abstract class or operation declaration,\n" + 
+        " e.g.: abstract class Name { ... }\n  abstract operation op() pre: true post: true;"; 
       return "abstract class/operation"; 
     } 
 
     if ("usecase".startsWith(st)) 
-    { mess[0] = "usecase declaration, eg: usecase name : Type { ... }"; 
+    { mess[0] = "usecase declaration,\n" + 
+                " e.g.: usecase name : Type { ... }"; 
       return "usecase"; 
     } 
 
 
 
     if ("attribute".startsWith(st)) 
-    { mess[0] = "attribute declaration, e.g.: attribute name : Type; or\n" + 
+    { mess[0] = "attribute declaration,\n" + 
+                " e.g.: attribute name : Type; or\n" + 
            "attribute name identity : String;\n" +  
            "attribute name frozen : String;\n"; 
       return "attribute"; 
     }
 
     if ("assert".startsWith(st)) 
-    { mess[0] = "assert statement, e.g.: assert condition do message;"; 
+    { mess[0] = "assert statement,\n" + 
+                " e.g.: assert condition do message;"; 
       return "assert"; 
     }
 
@@ -6633,13 +6703,15 @@ public Vector parseAttributeDecsInit(Vector entities, Vector types)
       }
 
       if ("post".startsWith(st)) 
-      { mess[0] = "Operation postcondition, e.g.: post: true\n" + 
+      { mess[0] = "Operation postcondition,\n" + 
+                  " e.g.: post: true\n" + 
                 "or post: result = expression"; 
         return "post:"; 
       }
 
       if ("parameter".startsWith(st)) 
-      { mess[0] = "usecase parameter, e.g.: parameter name : Type;"; 
+      { mess[0] = "usecase parameter,\n" + 
+                  " e.g.: parameter name : Type;"; 
         return "parameter"; 
       } 
 
@@ -11280,6 +11352,7 @@ private Vector parseUsingClause(int st, int en, Vector entities, Vector types)
     // System.out.println(">>> Parsing subnodes of " + tag); 
 
     String content = ""; 
+    boolean instring = false; 
 
     for (int i = st; i <= en; i++)
     { String str = lexicals.get(i) + "";
@@ -11328,6 +11401,17 @@ private Vector parseUsingClause(int st, int en, Vector entities, Vector types)
         return res;
       }
 
+      // distinguish being in a string and not. 
+      // Within a string characters are copied, no extra
+      // spaces. 
+
+      if ("\\".equals(str) && i + 1 <= en && 
+          "\"".equals(lexicals.get(i+1) + ""))
+      { content = content + "\\\""; 
+        i = i+1;
+        continue;  
+      } 
+
       if ("&".equals(str) && i + 2 <= en &&
           "amp".equals(lexicals.get(i+1) + "") && 
           ";".equals(lexicals.get(i+2) + ""))
@@ -11336,11 +11420,29 @@ private Vector parseUsingClause(int st, int en, Vector entities, Vector types)
         continue;  
       } 
 
+      if ("&".equals(str) && i + 3 <= en &&
+          "lt".equals(lexicals.get(i+1) + "") && 
+          ";".equals(lexicals.get(i+2) + "") && 
+          "=".equals(lexicals.get(i+3) + ""))
+      { content = content + "<="; 
+        i = i + 3; 
+        continue;  
+      } 
+
       if ("&".equals(str) && i + 2 <= en &&
           "lt".equals(lexicals.get(i+1) + "") && 
           ";".equals(lexicals.get(i+2) + ""))
       { content = content + "<"; 
         i = i + 2; 
+        continue;  
+      } 
+
+      if ("&".equals(str) && i + 3 <= en &&
+          "gt".equals(lexicals.get(i+1) + "") && 
+          ";".equals(lexicals.get(i+2) + "") && 
+          "=".equals(lexicals.get(i+3) + ""))
+      { content = content + ">="; 
+        i = i + 3; 
         continue;  
       } 
 
@@ -11380,7 +11482,17 @@ private Vector parseUsingClause(int st, int en, Vector entities, Vector types)
         continue;  
       } 
 
-      content = content + " " + str;  // " " 10.12.2025 
+      if ("\"".equals(str))
+      { if (instring) 
+        { instring = false; } 
+        else 
+        { instring = true; } 
+      } 
+
+      if (instring) 
+      { content = content + str; } 
+      else 
+      { content = content + " " + str; }  // " " 10.12.2025 
     }
 
     return res;
@@ -12036,7 +12148,9 @@ private Vector parseUsingClause(int st, int en, Vector entities, Vector types)
 
     // DateTime.GetDiff(orderedsegments[i + 1].ArrivalDateTime, orderedsegments[i + 1].DepartureDateTime).Minutes
 
-    c.nospacelexicalanalysis("arr[i][j][k]"); 
+    c.nospacelexicalanalysis("DomainModel.Station.Find(lambda x : OclAny in (x.GTFSId = transportLeg.sname1)).first.ParentStation.GTFSId"); 
+
+    System.out.println(c.balancedBrackets(0, c.lexicals.size()-1)); 
 
     Expression expr = c.parseExpression(); 
 

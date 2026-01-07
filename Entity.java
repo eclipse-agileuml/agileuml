@@ -7,7 +7,7 @@ import java.util.StringTokenizer;
 
 
 /******************************
-* Copyright (c) 2003--2025 Kevin Lano
+* Copyright (c) 2003--2026 Kevin Lano
 * This program and the accompanying materials are made available under the
 * terms of the Eclipse Public License 2.0 which is available at
 * http://www.eclipse.org/legal/epl-2.0
@@ -4998,16 +4998,69 @@ public class Entity extends ModelElement implements Comparable
   } 
 
   public void checkDefinedness() 
-  { for (int i = 0; i < operations.size(); i++)
+  { String ename = getName(); 
+
+    for (int i = 0; i < operations.size(); i++)
     { BehaviouralFeature op = (BehaviouralFeature) operations.get(i);
-      Vector args = op.getParameterExpressions(); 
-      op.definedness(args);
-      op.determinate(args);  
+
+      String nme = op.getName(); 
+      Vector opuses = op.operationsUsedIn();
+
+      if (opuses.contains(ename + "::" + nme))
+      { System.err.println("!! Code smell (CBR2): self-recursion in " + op); 
+        System.err.println("!! Refactor by replacing recursion by iteration, or use caching to optimise.\n"); 
+      } 
+
+      Vector vuses = new Vector(); 
+      Vector newopuses = VectorUtil.union(vuses,opuses); 
+
+      if (newopuses.size() >= TestParameters.efoLimit) 
+      { System.err.println("!! Code smell (EFO): >= " + 
+           TestParameters.efoLimit + 
+           " operations used in " + ename + "::" + nme); 
+        System.err.println("!! Suggest refactoring by splitting operation\n"); 
+      } 
+
+      Vector pars = op.getParameters(); 
+
+      if (pars != null && 
+          pars.size() > TestParameters.numberOfParametersLimit) 
+      { System.err.println("!!! Code smell (EPL): too many parameters (" + pars + ") for " + nme); 
+        System.err.println(">>> Recommend refactoring by introducing value object for parameters or splitting operation into parts"); 
+        System.err.println(); 
+      }  
+
+      int sze = op.syntacticComplexity(); 
+      if (sze >= TestParameters.operationSizeLimit) 
+      { System.err.println("!!! Operation " + 
+                           ename + "::" + nme + 
+                           " too large (EOS): " + sze);
+        System.err.println();  
+        continue;
+      }
+
+      if (sze >= TestParameters.operationSizeWarning) 
+      { System.err.println("!! Warning: large operation (EOS): " + 
+            ename + "::" + nme + " size = " + sze); 
+        System.err.println();  
+        continue;
+      }
+
       op.isSideEffecting();
-      System.out.println();  
+      System.err.println();  
     } 
   } 
 
+  public void checkDeterminacy()
+  { for (int i = 0; i < operations.size(); i++)
+    { BehaviouralFeature op = (BehaviouralFeature) operations.get(i);
+    
+      Vector args = op.getParameterExpressions(); 
+      op.definedness(args);
+      op.determinate(args); 
+    }
+  }
+  
   public void checkInvariants() 
   { for (int i = 0; i < operations.size(); i++)
     { BehaviouralFeature op = (BehaviouralFeature) operations.get(i);

@@ -1,6 +1,6 @@
 
 /******************************
-* Copyright (c) 2003--2025 Kevin Lano
+* Copyright (c) 2003--2026 Kevin Lano
 * This program and the accompanying materials are made available under the
 * terms of the Eclipse Public License 2.0 which is available at
 * http://www.eclipse.org/legal/epl-2.0
@@ -1453,8 +1453,9 @@ public class UCDArea extends JPanel
     if (query) 
     { if (tt == null) 
       { System.err.println("!! Error: query operation must have a return type!"); 
-        JOptionPane.showMessageDialog(null, "Error: no return type!", 
-                                      "",JOptionPane.ERROR_MESSAGE);  
+        JOptionPane.showMessageDialog(null, 
+                        "Error: no return type!", 
+                        "",JOptionPane.ERROR_MESSAGE);  
       } 
     } 
     else 
@@ -21452,7 +21453,7 @@ public void produceCUI(PrintWriter out)
         families.add(f2);
       }
     }
-    System.out.println("New inheritance families: " + families); 
+    System.out.println(">> New inheritance families: " + families); 
   }
 
   public boolean consistencyCheck()  // checks model properties, and invariants
@@ -28917,6 +28918,16 @@ public void produceCUI(PrintWriter out)
       } 
     } 
   }  
+
+  public void determinacyCheck()
+  { for (int i = 0; i < entities.size(); i++) 
+    { Entity ent = (Entity) entities.get(i); 
+
+      if (ent.isDerived()) { continue; } 
+
+      ent.checkDeterminacy(); 
+    } 
+  } 
 
   public void loadFromJavaScript()
   { BufferedReader br = null;

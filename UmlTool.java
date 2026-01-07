@@ -1,5 +1,5 @@
 /******************************
-* Copyright (c) 2003--2025 Kevin Lano
+* Copyright (c) 2003--2026 Kevin Lano
 * This program and the accompanying materials are made available under the
 * terms of the Eclipse Public License 2.0 which is available at
 * http://www.eclipse.org/legal/epl-2.0
@@ -12,7 +12,7 @@
  * 
  * Version information : 2.5
  *
- * Date : February 2025
+ * Date : January 2026
  * 
  * Description : This describes the GUI interface of 
  * the UML RSDS tool,
@@ -830,12 +830,21 @@ public void findPlugins()
     qualCheck.addActionListener(this);
     analyseMenu.add(qualCheck);
 
+    JMenuItem deterCheck = 
+      new JMenuItem("Determinacy check"); 
+    deterCheck.setToolTipText(
+      "Checks for determinacy & definedness");
+    deterCheck.addActionListener(this);
+    analyseMenu.add(deterCheck);
+
     JMenuItem measuresItem = new JMenuItem("Quality measures"); 
     measuresItem.addActionListener(this);
     analyseMenu.add(measuresItem);
 
     JMenuItem energyAnal = new JMenuItem("Energy analysis"); 
     energyAnal.addActionListener(this);
+    energyAnal.setToolTipText(
+      "Checks for energy use flaws");
     analyseMenu.add(energyAnal);
 
     JMenuItem carchItem = new JMenuItem("Clean architecture properties"); 
@@ -2851,6 +2860,8 @@ public void findPlugins()
       }
       else if (label.equals("Quality check"))
       { ucdArea.qualityCheck(); }
+      else if (label.equals("Determinacy check"))
+      { ucdArea.determinacyCheck(); }
       else if (label.equals("Extract Interface"))
       { ucdArea.extractInterface(); 
         repaint(); 

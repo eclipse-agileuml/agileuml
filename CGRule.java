@@ -1776,7 +1776,7 @@ public class CGRule
         else if (obj instanceof Vector) // Of ASTTerm
         { Vector v = (Vector) obj;
 
-          JOptionPane.showInputDialog(">***> Applying " + mffeat + " to vector of terms " + v);
+          // JOptionPane.showInputDialog(">***> Applying " + mffeat + " to vector of terms " + v);
   
           String repl = "";
           
@@ -2036,19 +2036,30 @@ public class CGRule
 
   public static String correctNewlines(String str) 
   { String res = ""; 
+
     if (str == null || str.length() == 0) 
     { return res; } 
 
     boolean instring = false; 
+    char stringSep = '"'; 
 
     for (int i = 0; i < str.length() - 1; i++) 
     { char c1 = str.charAt(i); 
       char c2 = str.charAt(i+1);
 
-      if (c1 == '"' && instring) 
-      { instring = false; } 
+      if (instring)
+      { if (c1 == stringSep && i > 0 && 
+            !('\\' == str.charAt(i-1)))
+        { instring = false; }
+      }  
       else if (c1 == '"')
-      { instring = true; } 
+      { instring = true;
+        stringSep = '"'; 
+      }
+      else if (c1 == '\'') 
+      { instring = true; 
+        stringSep = '\''; 
+      }  
  
       if (instring && c1 == '\n') 
       { res = res + "\\n"; } 
@@ -2233,14 +2244,9 @@ public class CGRule
   } 
 
   public static void main(String[] args) 
-  { Vector vars = CGRule.metavariables("_1 ffdd _10 iioo _13"); 
-    System.out.println(vars); 
-
-    Vector mfs = CGRule.metafeatures("_1`CC.met"); 
-    System.out.println(mfs); 
-
-    // String res = correctNewlines("\"%d %s\n\""); 
-    // System.out.println(res); 
+  { String res = // correctNewlines("\"%d %s\n\"");
+             correctNewlines("'\n' \n \"three\"");  
+    System.out.println(res); 
   } 
 
   /* CGRule r = new CGRule("_1 _2", "_1>_2"); 
