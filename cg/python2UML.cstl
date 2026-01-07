@@ -650,7 +650,7 @@ _1 + _2 |-->_1`isSequenceExpression
 
 _1 _2 |-->false<when> _1 atom, _2 trailer
 _1 , _* |-->false
-_1 |-->true<when> _1 Sequence
+_1 |-->true<when> _1`ocltype Sequence
 _1 |-->false
 
 
@@ -691,7 +691,7 @@ _1 | _2 |-->_1`isBagExpression
 
 _1 _2 |-->false<when> _1 atom, _2 trailer
 _1 , _* |-->false
-_1 |-->true<when> _1 Bag
+_1 |-->true<when> _1`ocltype Bag
 _1 |-->false
 
 
@@ -2242,7 +2242,7 @@ _1 |-->->at(_1 + 1)
 
 
 subscriptlist::
-: |-->
+: |-->->copy()
 _1 |-->_1
 : :-1 |-->->reverse()
 : , _1 |-->->collect( _r | _r_1 )
