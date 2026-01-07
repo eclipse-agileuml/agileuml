@@ -140,6 +140,7 @@ public class TestParameters
     sequenceCC.put("->sortedBy", 3.0);     // O(n log n) 
     sequenceCC.put("|sortedBy", 3.0);     // O(n log n) 
     sequenceCC.put("->asSet", 2.0); 
+    sequenceCC.put("->asSequence", 2.0);  // same as ->copy
      
     compComplexity.put("Sequence", sequenceCC); 
 
@@ -212,6 +213,7 @@ public class TestParameters
     sortedsequenceCC.put("->sortedBy", 3.0);     // O(n log n) 
     sortedsequenceCC.put("|sortedBy", 3.0);     // O(n log n) 
     sortedsequenceCC.put("->asSet", 2.0); 
+    sortedsequenceCC.put("->asSequence", 2.0);  
      
     compComplexity.put("SortedSequence", sortedsequenceCC); 
 
@@ -268,7 +270,8 @@ public class TestParameters
     setCC.put("->sort", 3.0);     // O(n log n) 
     setCC.put("->sortedBy", 3.0); 
     setCC.put("|sortedBy", 3.0); 
-    setCC.put("->asSet", 1.0); 
+    setCC.put("->asSet", 2.0);   // same as ->copy 
+    setCC.put("->asSequence", 2.0);  
      
     compComplexity.put("Set", setCC); 
 
@@ -325,8 +328,9 @@ public class TestParameters
     sortedsetCC.put("->sort", 1.0);     
     sortedsetCC.put("->sortedBy", 3.0); 
     sortedsetCC.put("|sortedBy", 3.0); 
-    sortedsetCC.put("->asSet", 1.0); 
-     
+    sortedsetCC.put("->asSet", 2.0); 
+    sortedsetCC.put("->asSequence", 2.0);  
+
     compComplexity.put("SortedSet", sortedsetCC); 
 
     HashMap<String,Double> mapCC = 
@@ -350,6 +354,7 @@ public class TestParameters
     mapCC.put("->copy", 2.0); 
 
     mapCC.put("->sort", 3.0);
+    mapCC.put("->sortedBy", 3.0);
     mapCC.put("->restrict", 3.0);
     mapCC.put("->antirestrict", 3.0);
     mapCC.put("->select", 3.0);
@@ -358,6 +363,7 @@ public class TestParameters
     mapCC.put("->select", 2.0);
 
     mapCC.put("|", 3.0);
+    mapCC.put("|sortedBy", 3.0);
     mapCC.put("|R", 3.0);
     mapCC.put("|C", 2.0);
     mapCC.put("|A", 2.0);
@@ -398,9 +404,11 @@ public class TestParameters
     sortedmapCC.put("->reject", 3.0);
     sortedmapCC.put("->collect", 2.0);
     sortedmapCC.put("->any", 2.0);
+    sortedmapCC.put("->sortedBy", 3.0);
     sortedmapCC.put("|", 3.0);
     sortedmapCC.put("|R", 3.0);
     sortedmapCC.put("|C", 2.0);
+    sortedmapCC.put("|sortedBy", 3.0);
 
     sortedmapCC.put("->forAll", 3.0);
     sortedmapCC.put("->exists", 3.0);

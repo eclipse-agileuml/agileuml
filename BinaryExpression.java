@@ -6159,8 +6159,7 @@ public void findClones(java.util.Map clones,
  
           if (ast.isClosurable()) { } 
           else 
-          { JOptionPane.showMessageDialog(null, "ERROR: association in " + this + " cannot be closured",
-		          "Expression error", JOptionPane.ERROR_MESSAGE);
+          { System.err.println("!!! ERROR: association in " + this + " cannot be closured");
           } 
           // System.out.println(">>> FOUND ASSOCIATION " + ast); 
         } 
@@ -6181,8 +6180,8 @@ public void findClones(java.util.Map clones,
     boolean lt = false; 
     if (left == null) 
     { System.err.println("!! SYNTAX ERROR: Left expression of " + this + " invalid!"); 
-      JOptionPane.showMessageDialog(null, "Left expression of " + this + " invalid!", 
-                                      "Syntax error", JOptionPane.ERROR_MESSAGE);
+      /* JOptionPane.showMessageDialog(null, "Left expression of " + this + " invalid!", 
+              "Syntax error", JOptionPane.ERROR_MESSAGE); */ 
       return false; 
     } 
     else 
@@ -6192,8 +6191,8 @@ public void findClones(java.util.Map clones,
 
     if (right == null) 
     { System.err.println("!! SYNTAX ERROR: Right expression of " + this + " invalid!"); 
-      JOptionPane.showMessageDialog(null, "Right expression of " + this + " invalid!", 
-                                      "Syntax error", JOptionPane.ERROR_MESSAGE);
+      /* JOptionPane.showMessageDialog(null, "Right expression of " + this + " invalid!", 
+               "Syntax error", JOptionPane.ERROR_MESSAGE); */ 
       return false; 
     } 
     else 
@@ -6470,7 +6469,7 @@ public void findClones(java.util.Map clones,
       else 
       { System.err.println("!! TYPE ERROR: LHS of " + this + " must be a collection");
        // JOptionPane.showMessageDialog(null, "LHS of " + this + " must be a collection!", 
-       //                              "Type error", JOptionPane.ERROR_MESSAGE);
+       //        "Type error", JOptionPane.ERROR_MESSAGE);
       } // deduce type of one side from that of other
 
       if (tright == null && tleft != null)
@@ -6495,7 +6494,7 @@ public void findClones(java.util.Map clones,
       else 
       { System.err.println("!! TYPE ERROR: LHS of " + this + " must be a map");
        // JOptionPane.showMessageDialog(null, "LHS of " + this + " must be a collection!", 
-       //                              "Type error", JOptionPane.ERROR_MESSAGE);
+       //    "Type error", JOptionPane.ERROR_MESSAGE);
       } // deduce type of one side from that of other
     } 
     else if (operator.equals("&") || operator.equals("<=>") || 
@@ -6604,7 +6603,7 @@ public void findClones(java.util.Map clones,
         }
  
         // JOptionPane.showMessageDialog(null, "Disallowed types in " + this, 
-        //                              "Type error", JOptionPane.WARNING_MESSAGE);
+        //        "Type error", JOptionPane.WARNING_MESSAGE);
 
         if (tleft != null && tleft.isNumeric())
         { 
@@ -6629,7 +6628,7 @@ public void findClones(java.util.Map clones,
       else 
       { System.err.println("!! TYPE ERROR: disallowed types " + tleft + " " + tright + " in +: " + this);
         // JOptionPane.showMessageDialog(null, "Disallowed types in " + this, 
-        //                              "Type error", JOptionPane.ERROR_MESSAGE);
+        //          "Type error", JOptionPane.ERROR_MESSAGE);
         type = new Type("OclAny", null); 
       }
     }
@@ -6693,7 +6692,7 @@ public void findClones(java.util.Map clones,
       else if (type == null)
       { System.err.println("! Warning!: disallowed types in -: " + this); 
         // JOptionPane.showMessageDialog(null, "Disallowed types in " + this, 
-        //                               "Type error", JOptionPane.ERROR_MESSAGE);
+        //           "Type error", JOptionPane.ERROR_MESSAGE);
         type = tleft; 
       } 
     }
@@ -6810,8 +6809,9 @@ public void findClones(java.util.Map clones,
       else if (tleft == null && tright == null) 
       {        
         // JOptionPane.showMessageDialog(null, "Null types in " + this, 
-        //                              "Type error", JOptionPane.ERROR_MESSAGE);
-        System.out.println("!! Warning: null types on both sides of " + this);
+        //        "Type error", JOptionPane.ERROR_MESSAGE);
+        System.err.println("!! Warning: null types on both sides of " + this);
+
         if (operator.equals("^") || "->concatenate".equals(operator))
         { type = new Type("Sequence", null); } 
         else if (operator.equals("->restrict") ||
@@ -7015,17 +7015,17 @@ public void findClones(java.util.Map clones,
     else if (collectleft.isMultiple())
     { } 
     else 
-    { System.err.println("!!! TYPE ERROR: LHS of collect must be a collection! " + this); 
+    { System.err.println("!! TYPE ERROR: LHS of collect must be a collection! " + this); 
       // JOptionPane.showMessageDialog(null, "LHS must be a collection: " + this, 
-      //                                    "Type error", JOptionPane.ERROR_MESSAGE);
+      //        "Type error", JOptionPane.ERROR_MESSAGE);
       // type = null; 
       // return; 
     } 
 
     if (tright == null) 
-    { System.err.println("!!! TYPE ERROR: No type for collect RHS: " + this); 
+    { System.err.println("!! TYPE ERROR: No type for collect RHS: " + this); 
       // JOptionPane.showMessageDialog(null, "ERROR: No type for collect RHS: " + this,                                          
-	//                                 "Type error", JOptionPane.ERROR_MESSAGE);
+	//        "Type error", JOptionPane.ERROR_MESSAGE);
       return; 
     } 
     
@@ -7081,10 +7081,10 @@ public void findClones(java.util.Map clones,
       else 
       { type = Expression.deduceType(operator,left,right); 
 
-        System.out.println("! Warning!: arguments must be numeric in: " + this + " Deduced type: " + type); 
+        System.err.println("! Warning!: arguments must be numeric in: " + this + " Deduced type: " + type); 
         if (type == null) 
         { // JOptionPane.showMessageDialog(null, "Arguments not numeric in: " + this, 
-          //                                  "Type error", JOptionPane.ERROR_MESSAGE);
+          //       "Type error", JOptionPane.ERROR_MESSAGE);
         } 
       } 
 
@@ -7103,8 +7103,8 @@ public void findClones(java.util.Map clones,
     { type = Expression.deduceType(operator,left,right); 
 
       System.err.println("!! TYPE ERROR: invalid types " + tleft + " " + tright + " in: " + this + ". Deduced type " + type);
-      JOptionPane.showMessageDialog(null, "Missing types in: " + this, 
-                                          "Type error", JOptionPane.ERROR_MESSAGE);
+      // JOptionPane.showMessageDialog(null, "Missing types in: " + this, 
+      //            "Type error", JOptionPane.ERROR_MESSAGE);
       if (tleft != null)
       { right.setType(tleft);
         type = tleft;
@@ -7130,8 +7130,8 @@ public void findClones(java.util.Map clones,
       {  }
       else
       { System.err.println("! Warning: invalid types " + tlname + " " + trname + " in: " + this);
-        JOptionPane.showMessageDialog(null, "Arguments must be booleans: " + this, 
-                                            "Type error", JOptionPane.ERROR_MESSAGE); 
+        // JOptionPane.showMessageDialog(null, "Arguments must be booleans: " + this, 
+        //      "Type error", JOptionPane.ERROR_MESSAGE); 
         if ("int".equals(tlname) && "int".equals(trname))
         { // bitwise operator
           System.err.println("!! Bitwise operator expected here !!"); 
@@ -7142,8 +7142,8 @@ public void findClones(java.util.Map clones,
     } 
     else 
     { System.err.println("!! TYPE ERROR: invalid types in: " + this);
-      JOptionPane.showMessageDialog(null, "Missing types in: " + this, 
-                                          "Type error", JOptionPane.ERROR_MESSAGE);
+      // JOptionPane.showMessageDialog(null, "Missing types in: " + this, 
+      //            "Type error", JOptionPane.ERROR_MESSAGE);
     }
     type = new Type("boolean",null); 
     elementType = type; 
@@ -7632,16 +7632,16 @@ public boolean conflictsWithIn(String op, Expression el,
 
       if (entity == null) 
       { System.err.println("!! No entity for " + this); 
-        JOptionPane.showMessageDialog(null, "No entity for: " + this, 
-                                      "Semantic error", JOptionPane.ERROR_MESSAGE);
+        // JOptionPane.showMessageDialog(null, "No entity for: " + this, 
+        //      "Semantic error", JOptionPane.ERROR_MESSAGE);
         return ""; 
       }  
 
       if (left.isMultiple()) {} 
       else 
       { System.err.println("!! ERROR: LHS of " + this + " must be collection");                             
-        JOptionPane.showMessageDialog(null, "ERROR: LHS of " + this + " must be collection",                               
-		                              "Type error", JOptionPane.ERROR_MESSAGE);
+        // JOptionPane.showMessageDialog(null, "ERROR: LHS of " + this + " must be collection",                               
+        //       "Type error", JOptionPane.ERROR_MESSAGE);
       }
 
       if (entity != null)       
@@ -7655,9 +7655,9 @@ public boolean conflictsWithIn(String op, Expression el,
  
           if (ast.isClosurable()) { } 
           else 
-          { JOptionPane.showMessageDialog(null, "ERROR: association in " + this + " cannot be closured",                               
-		                                  "Expression error", JOptionPane.ERROR_MESSAGE);
+          { System.err.println("!! ERROR: association in " + this + " cannot be closured");
           }
+
           Entity ent1 = ast.getEntity1(); 
           return "Set.closure" + ent1.getName() + rel + "(" + lqf + ")";  
         } 
@@ -8197,10 +8197,10 @@ public boolean conflictsWithIn(String op, Expression el,
     if (operator.equals("->closure"))
     { String rel = right + ""; 
       if (entity == null) 
-      { JOptionPane.showMessageDialog(null, "No entity for: " + this, 
-                                      "Semantic error", JOptionPane.ERROR_MESSAGE);
+      { System.err.println("!! No entity for: " + this);
         return ""; 
       }  
+
       return "Set.closure" + entity.getName() + rel + "(" + lqf + ")"; 
     } // left must be set-valued. 
 
@@ -8720,10 +8720,10 @@ public boolean conflictsWithIn(String op, Expression el,
     if (operator.equals("->closure"))
     { String rel = right + ""; 
       if (entity == null) 
-      { JOptionPane.showMessageDialog(null, "No entity for: " + this, 
-                                      "Semantic error", JOptionPane.ERROR_MESSAGE);
+      { System.err.println("!! No entity for: " + this);
         return ""; 
       }  
+
       return "Ocl.closure" + entity.getName() + rel + "(" + lqf + ")"; 
     } // left must be set-valued. 
 
@@ -9378,9 +9378,8 @@ public boolean conflictsWithIn(String op, Expression el,
     if (operator.equals("->closure"))
     { String rel = right + ""; 
       if (entity == null) 
-      { JOptionPane.showMessageDialog(null, 
-           "No entity for: " + this, 
-           "Semantic error", JOptionPane.ERROR_MESSAGE);
+      { System.err.println( 
+           "!! No entity for: " + this);
         return ""; 
       }  
 
@@ -10034,10 +10033,10 @@ public boolean conflictsWithIn(String op, Expression el,
     if (operator.equals("->closure"))
     { String rel = right + ""; 
       if (entity == null) 
-      { JOptionPane.showMessageDialog(null, "No entity for: " + this, 
-                                      "Semantic error", JOptionPane.ERROR_MESSAGE);
+      { System.err.println("!! No entity for: " + this);
         return ""; 
       }  
+
       return "UmlRsdsLib<" + rcet + ">::closure" + entity.getName() + rel + "(" + lqf + ")"; 
     } // left must be set-valued. 
 
@@ -10437,8 +10436,8 @@ public boolean conflictsWithIn(String op, Expression el,
       // localentity = left.getEntity(); // or entity of the elementType
       if (left.elementType == null) 
       { System.err.println("!! DESIGN ERROR: no element type for: " + left); 
-        JOptionPane.showMessageDialog(null, "no element type for " + left + " in " + this, 
-                                      "Design error", JOptionPane.ERROR_MESSAGE);
+        // JOptionPane.showMessageDialog(null, "no element type for " + left + " in " + this, 
+        //    "Design error", JOptionPane.ERROR_MESSAGE);
       } 
       else
       { localentity = left.elementType.getEntity(); }  
@@ -10451,8 +10450,8 @@ public boolean conflictsWithIn(String op, Expression el,
       // localentity = beleft.right.getEntity(); // or entity of the elementType
       if (beleft.right == null || beleft.right.elementType == null)
       { System.out.println("!! DESIGN ERROR: no element type of: " + beleft); 
-        JOptionPane.showMessageDialog(null, "no element type for " + beleft + " in " + this, 
-                                      "Design error", JOptionPane.ERROR_MESSAGE);
+        // JOptionPane.showMessageDialog(null, "no element type for " + beleft + " in " + this, 
+        //    "Design error", JOptionPane.ERROR_MESSAGE);
       }
       else  
       { localentity = beleft.right.elementType.getEntity(); }  
@@ -10535,8 +10534,8 @@ public boolean conflictsWithIn(String op, Expression el,
       // localentity = left.getEntity(); // or entity of the elementType
       if (left.elementType == null) 
       { System.err.println("!! DESIGN ERROR: no element type for: " + left); 
-        JOptionPane.showMessageDialog(null, "no element type for " + left + " in " + this, 
-                                      "Design error", JOptionPane.ERROR_MESSAGE);
+        // JOptionPane.showMessageDialog(null, "no element type for " + left + " in " + this, 
+        //     "Design error", JOptionPane.ERROR_MESSAGE);
       } 
       else
       { localentity = left.elementType.getEntity(); }  
@@ -10550,8 +10549,8 @@ public boolean conflictsWithIn(String op, Expression el,
       // localentity = beleft.right.getEntity(); // or entity of the elementType
       if (beleft.right == null || beleft.right.elementType == null)
       { System.out.println("!! DESIGN ERROR: no element type of: " + beleft); 
-        JOptionPane.showMessageDialog(null, "no element type for " + beleft + " in " + this, 
-                                      "Design error", JOptionPane.ERROR_MESSAGE);
+        // JOptionPane.showMessageDialog(null, "no element type for " + beleft + " in " + this, 
+        //    "Design error", JOptionPane.ERROR_MESSAGE);
       }
       else  
       { localentity = beleft.right.elementType.getEntity(); }  
@@ -10638,9 +10637,9 @@ public boolean conflictsWithIn(String op, Expression el,
       existsleft = left; 
       // localentity = left.getEntity(); // or entity of the elementType
       if (left.elementType == null) 
-      { System.err.println("DESIGN ERROR: no element type for: " + left); 
-        JOptionPane.showMessageDialog(null, "no element type for " + left + " in " + this, 
-                                      "Design error", JOptionPane.ERROR_MESSAGE);
+      { System.err.println("!! DESIGN ERROR: no element type for: " + left); 
+        // JOptionPane.showMessageDialog(null, "no element type for " + left + " in " + this, 
+        //         "Design error", JOptionPane.ERROR_MESSAGE);
       } 
       else
       { localentity = left.elementType.getEntity(); }  
@@ -10652,9 +10651,9 @@ public boolean conflictsWithIn(String op, Expression el,
       existsvar = beleft.left + ""; 
       // localentity = beleft.right.getEntity(); // or entity of the elementType
       if (beleft.right == null || beleft.right.elementType == null)
-      { System.out.println("DESIGN ERROR: no element type of: " + beleft);
-        JOptionPane.showMessageDialog(null, "no element type for " + beleft + " in " + this, 
-                                      "Design error", JOptionPane.ERROR_MESSAGE);
+      { System.out.println("!! DESIGN ERROR: no element type of: " + beleft);
+        // JOptionPane.showMessageDialog(null, "no element type for " + beleft + " in " + this, 
+        //   "Design error", JOptionPane.ERROR_MESSAGE);
       }
       else  
       { localentity = beleft.right.elementType.getEntity(); }  
@@ -10743,9 +10742,9 @@ public boolean conflictsWithIn(String op, Expression el,
       existsleft = left; 
       // localentity = left.getEntity(); // or entity of the elementType
       if (left.elementType == null) 
-      { System.err.println("DESIGN ERROR: no element type for: " + left); 
-        JOptionPane.showMessageDialog(null, "no element type for " + left + " in " + this, 
-                                      "Design error", JOptionPane.ERROR_MESSAGE);
+      { System.err.println("!! DESIGN ERROR: no element type for: " + left); 
+        // JOptionPane.showMessageDialog(null, "no element type for " + left + " in " + this, 
+        //        "Design error", JOptionPane.ERROR_MESSAGE);
       } 
       else
       { localentity = left.elementType.getEntity(); }  
@@ -10757,9 +10756,9 @@ public boolean conflictsWithIn(String op, Expression el,
       existsvar = beleft.left + ""; 
       // localentity = beleft.right.getEntity(); // or entity of the elementType
       if (beleft.right == null || beleft.right.elementType == null)
-      { System.err.println("DESIGN ERROR: no element type of: " + beleft);
-        JOptionPane.showMessageDialog(null, "no element type for " + beleft + " in " + this, 
-                                      "Design error", JOptionPane.ERROR_MESSAGE);
+      { System.err.println("!! DESIGN ERROR: no element type of: " + beleft);
+        // JOptionPane.showMessageDialog(null, "no element type for " + beleft + " in " + this, 
+        //    "Design error", JOptionPane.ERROR_MESSAGE);
       }
       else  
       { localentity = beleft.right.elementType.getEntity(); }  
@@ -10848,9 +10847,9 @@ public boolean conflictsWithIn(String op, Expression el,
       // selectleft = left; 
       // localentity = left.getEntity(); // or entity of the elementType
       if (left.elementType == null) 
-      { System.err.println("DESIGN ERROR: no element type for: " + left); 
-        JOptionPane.showMessageDialog(null, "no element type for " + left + " in " + this, 
-                                      "Design error", JOptionPane.ERROR_MESSAGE);
+      { System.err.println("!! DESIGN ERROR: no element type for: " + left); 
+        // JOptionPane.showMessageDialog(null, "no element type for " + left + " in " + this, 
+        //     "Design error", JOptionPane.ERROR_MESSAGE);
       } 
       else
       { localentity = left.elementType.getEntity(); }  
@@ -10864,9 +10863,9 @@ public boolean conflictsWithIn(String op, Expression el,
       selectvar = beleft.left + ""; 
       // localentity = beleft.right.getEntity(); // or entity of the elementType
       if (beleft.right == null || beleft.right.elementType == null)
-      { System.err.println("DESIGN ERROR: no element type of: " + beleft);
-        JOptionPane.showMessageDialog(null, "no element type for " + beleft + " in " + this, 
-                                      "Design error", JOptionPane.ERROR_MESSAGE);
+      { System.err.println("!! DESIGN ERROR: no element type of: " + beleft);
+        // JOptionPane.showMessageDialog(null, "no element type for " + beleft + " in " + this, 
+        //     "Design error", JOptionPane.ERROR_MESSAGE);
       }
       else  
       { localentity = beleft.right.elementType.getEntity(); }  
@@ -22945,6 +22944,23 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         refactorELV = true; 
       }
 
+      if (left.isSequence() && level > 1 && 
+          (operator.equals("->excluding") ||
+           operator.equals("->excludingFirst") ||
+           operator.equals("->includes") ||
+           operator.equals("->excludes") ||
+           operator.equals("->includesAll") ||
+           operator.equals("->excludesAll") ||
+           operator.equals("<:") ||
+           operator.equals(":") ||
+           operator.equals("/:") ||
+           operator.equals("->intersection") ||
+           operator.equals("->union"))
+         )    
+      { System.err.println("!! (OES) flaw: O(n)+ operation " + operator + " used in loop: could be O(n*n)+\n");
+        System.err.println();  
+      } 
+         
       right.collectionOperatorUses(level,res,vars); 
       return res; 
     } 
@@ -22961,8 +22977,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       boolean sideeffect = isSideEffecting(); 
       Vector vuses = variablesUsedIn(vars); 
       if (level > 1 && vuses.size() == 0 && !sideeffect)
-      { System.err.println("!!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
-          "!!! Use Extract local variable to optimise.");
+      { System.err.println("!! (LCE) flaw: The expression " + this + " may be independent of the iterator variables " + vars + "\n" + 
+          "!! Use Extract local variable to optimise.");
         System.err.println();  
         refactorELV = true; 
       }
@@ -22993,12 +23009,17 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       boolean sideeffect = isSideEffecting(); 
       Vector vuses = variablesUsedIn(vars); 
       if (level > 1 && vuses.size() == 0 && !sideeffect)
-      { System.err.println("!!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
-          "!!! Use Extract local variable to optimise.");
+      { System.err.println("!! (LCE) flaw: The expression " + this + " may be independent of the iterator variables " + vars + "\n" + 
+          "!! Use Extract local variable to optimise.");
         System.err.println(); 
         refactorELV = true;  
       }
       
+      if (level > 1)
+      { System.err.println("!! (OES) flaw: O(n)+ operation " + this + " executed in loop, may be O(n*n)+.");
+        System.err.println(); 
+      }
+
       Vector newvars = new Vector(); 
       newvars.addAll(vars); 
       newvars.add("self"); 
@@ -23033,11 +23054,16 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       boolean sideeffect = isSideEffecting(); 
       Vector vuses = variablesUsedIn(vars); 
       if (level > 1 && vuses.size() == 0 && !sideeffect)
-      { System.err.println("!!! (LCE) flaw: The expression " + 
-               this + " is independent of the iterator variables " + vars + "\n" + 
-               "!!! Use Extract local variable to optimise.");
+      { System.err.println("!! (LCE) flaw: The expression " + 
+               this + " may be independent of the iterator variables " + vars + "\n" + 
+               "!! Use Extract local variable to optimise.");
         System.err.println(); 
         refactorELV = true;  
+      }
+
+      if (level > 1)
+      { System.err.println("!! (OES) flaw: O(n)+ operation " + this + " executed in loop, may be O(n*n)+.");
+        System.err.println(); 
       }
 
       String var = "" + iter.getLeft(); 
@@ -23047,7 +23073,16 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       newvars.add(var); 
 
       right.collectionOperatorUses(level+1, res, newvars); 
-      return res; 
+    } 
+
+    if ("->firstMatch".equals(operator) ||
+        "->isMatch".equals(operator) ||
+        "->hasMatch".equals(operator) || 
+        operator.equals("->allMatches"))
+    { if (level > 1)
+      { System.err.println("!! (OES) flaw: O(n)+ operation " + this + " executed in loop, may be O(n*n)+.");
+        System.err.println(); 
+      }
     } 
 
     left.collectionOperatorUses(level,res,vars); 
@@ -23094,13 +23129,32 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       boolean sideeffect = isSideEffecting(); 
       Vector vuses = variablesUsedIn(oldvars); 
       if (level > 1 && vuses.size() == 0 && !sideeffect)
-      { messages.add("!!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + oldvars + "\n" + 
-          "!!! Use Extract local variable to optimise."); 
+      { messages.add("!! (LCE) flaw: The expression " + this + " may be independent of the iterator variables " + oldvars + "\n" + 
+          "!! Use Extract local variable to optimise."); 
         messages.add(""); 
         System.err.println(); 
         refactorELV = true;
-        int redScore = (int) uses.get("red"); 
-        uses.set("red", redScore+1);  
+        int aScore = (int) uses.get("amber"); 
+        uses.set("amber", aScore+1);  
+      }
+
+      if (left.isSequence() && level > 1 && 
+          (operator.equals("->excluding") ||
+           operator.equals("->excludingFirst") ||
+           operator.equals("->includes") ||
+           operator.equals("->excludes") ||
+           operator.equals("->includesAll") ||
+           operator.equals("->excludesAll") ||
+           operator.equals("<:") ||
+           operator.equals(":") ||
+           operator.equals("/:") ||
+           operator.equals("->intersection") ||
+           operator.equals("->union"))
+         )    
+      { messages.add("!! (OES) flaw: O(n)+ operator " + operator + " used in loop, could be O(n*n)"); 
+        messages.add(""); 
+        int aScore = (int) uses.get("amber"); 
+        uses.set("amber", aScore+1);  
       }
 
       right.collectionOperatorUses(level,res,oldvars,
@@ -23123,9 +23177,11 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       boolean sideeffect = isSideEffecting(); 
       Vector vuses = variablesUsedIn(oldvars); 
       if (level > 1 && vuses.size() == 0 && !sideeffect)
-      { messages.add("!!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + oldvars + "\n" + 
-          "!!! Use Extract local variable to optimise."); 
+      { messages.add("!! (LCE) flaw: The expression " + this + " may be independent of the iterator variables " + oldvars + "\n" + 
+          "!! Use Extract local variable to optimise."); 
         messages.add(""); 
+        int aScore = (int) uses.get("amber"); 
+        uses.set("amber", aScore+1);  
         refactorELV = true; 
       }
 
@@ -23160,13 +23216,21 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       boolean sideeffect = isSideEffecting(); 
       Vector vuses = variablesUsedIn(oldvars); 
       if (level > 1 && vuses.size() == 0 && !sideeffect)
-      { messages.add("!!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + oldvars + "\n" + 
-          "!!! Use Extract local variable to optimise.");
+      { messages.add("!! (LCE) flaw: The expression " + this + " may be independent of the iterator variables " + oldvars + "\n" + 
+          "!! Use Extract local variable to optimise.");
         messages.add(""); 
         refactorELV = true;
-        int redScore = (int) uses.get("red"); 
-        uses.set("red", redScore+1);    
+        int aScore = (int) uses.get("amber"); 
+        uses.set("amber", aScore+1);  
       }
+
+      if (level > 1) 
+      { messages.add("!! (OES) flaw: O(n)+ operator " + operator + " used in loop, could be O(n*n)"); 
+        messages.add(""); 
+        int aScore = (int) uses.get("amber"); 
+        uses.set("amber", aScore+1);  
+      }
+
       
       Vector newvars = new Vector(); 
       newvars.addAll(oldvars); 
@@ -23207,13 +23271,20 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       boolean sideeffect = isSideEffecting(); 
       Vector vuses = variablesUsedIn(oldvars); 
       if (level > 1 && vuses.size() == 0 && !sideeffect)
-      { messages.add("!!! (LCE) flaw: The expression " + 
-               this + " is independent of the iterator variables " + oldvars + "\n" + 
-               "!!! Use Extract local variable to optimise.");
+      { messages.add("!! (LCE) flaw: The expression " + 
+               this + " may be independent of the iterator variables " + oldvars + "\n" + 
+               "!! Use Extract local variable to optimise.");
         messages.add(""); 
         refactorELV = true;
-        int redScore = (int) uses.get("red"); 
-        uses.set("red", redScore+1);    
+        int aScore = (int) uses.get("amber"); 
+        uses.set("amber", aScore+1);  
+      }
+
+      if (level > 1) 
+      { messages.add("!! (OES) flaw: O(n)+ operator " + operator + " used in loop, could be O(n*n)"); 
+        messages.add(""); 
+        int aScore = (int) uses.get("amber"); 
+        uses.set("amber", aScore+1);  
       }
 
       String var = "" + iter.getLeft(); 
@@ -23226,6 +23297,18 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
                                    uses, messages); 
       return res; 
     } 
+
+    if ("->firstMatch".equals(operator) ||
+        "->isMatch".equals(operator) ||
+        "->hasMatch".equals(operator) || 
+        operator.equals("->allMatches"))
+    { if (level > 1)
+      { messages.add("!! (OES) flaw: O(n)+ operator " + operator + " used in loop, could be O(n*n)"); 
+        messages.add(""); 
+        int aScore = (int) uses.get("amber"); 
+        uses.set("amber", aScore+1);  
+      }
+    }
 
     Vector oldvars = new Vector();
     oldvars.addAll(vars); 

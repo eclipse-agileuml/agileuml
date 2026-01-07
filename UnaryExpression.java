@@ -860,6 +860,14 @@ public void findClones(java.util.Map clones,
         }
       } 
     }
+    else if ("->copy".equals(operator) ||
+             "->asSet".equals(operator) ||
+             "->asSequence".equals(operator))
+    { aUses.add("!! O(n) operator " + this);  
+
+      int ascore = (int) res.get("amber"); 
+      res.set("amber", ascore+1); 
+    } 
     else if ("->sort".equals(operator))
     { if (argument.isSorted())
       { aUses.add("!! Redundant ->sort operation: " + this + 
@@ -1171,8 +1179,13 @@ public void findClones(java.util.Map clones,
         operator.equals("->intersectAll") || 
         operator.equals("->concatenateAll") ||
         operator.equals("->any") ||
+        operator.equals("->copy") ||
+        operator.equals("->asSet") ||
+        operator.equals("->asSequence") ||
         operator.equals("->first") ||
         operator.equals("->last") ||
+        operator.equals("->sum") ||
+        operator.equals("->prd") ||
         operator.equals("->max") ||
         operator.equals("->min"))
     { Vector opers = (Vector) res.get(level); 
@@ -1183,16 +1196,36 @@ public void findClones(java.util.Map clones,
 
       Vector vuses = variablesUsedIn(vars);
       boolean sideeffects = isSideEffecting(); 
+
+      if (level > 1)
+      { System.err.println("!! (OES): nested execution of O(n)+ operator " + operator + " could be O(n*n)+"); 
+        System.err.println(); 
+      } 
  
       if (level > 1 && vuses.size() == 0 && !sideeffects)
-      { System.out.println(); 
-        System.out.println("!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
+      { System.err.println(); 
+        System.err.println("!! (LCE) flaw: The expression " + this + " may be independent of the iterator variables " + vars + "\n" + 
           "Use Extract local variable to optimise.");
         System.out.println(); 
         refactorELV = true;  
       }
-          
-      return res; 
+
+      if ((operator.equals("->sort") && !argument.isSorted()) || 
+          operator.equals("->unionAll") || 
+          operator.equals("->intersectAll") || 
+          operator.equals("->concatenateAll") ||
+          operator.equals("->copy") ||
+          operator.equals("->sum") ||
+          operator.equals("->prd") ||
+          operator.equals("->asSet") ||
+          operator.equals("->asSequence") ||
+          (operator.equals("->max") && !argument.isSorted()) ||
+          (operator.equals("->min") && !argument.isSorted()))
+      { if (level > 1)
+        { System.err.println("!! (OES): nested execution of O(n)+ operator " + operator + " could be O(n*n)+"); 
+          System.err.println(); 
+        } 
+      }
     } 
 
     return res; 
@@ -1212,11 +1245,12 @@ public void findClones(java.util.Map clones,
     boolean sideeffects = isSideEffecting(); 
  
     if (level > 1 && vuses.size() == 0 && !sideeffects)
-    { messages.add("!!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
-          "!!! Use Extract local variable to optimise.");
+    { messages.add("!! (LCE) flaw: The expression " + this + " may be independent of the iterator variables " + vars + "\n" + 
+          "!! Use Extract local variable to optimise.");
+      messages.add(""); 
       refactorELV = true; 
-      int redScore = (int) uses.get("red"); 
-      uses.set("red", redScore + 1);  
+      int aScore = (int) uses.get("amber"); 
+      uses.set("amber", aScore + 1);  
     }
 
     if (operator.equals("->sort") || 
@@ -1227,15 +1261,34 @@ public void findClones(java.util.Map clones,
         operator.equals("->first") ||
         operator.equals("->last") ||
         operator.equals("->max") ||
-        operator.equals("->min"))
+        operator.equals("->min") ||
+        operator.equals("->sum") ||
+        operator.equals("->prd"))
     { Vector opers = (Vector) res.get(level); 
       if (opers == null) 
       { opers = new Vector(); } 
       opers.add(this); 
       res.put(level, opers); 
-          
-      return res; 
     } 
+
+    if ((operator.equals("->sort") && !argument.isSorted()) || 
+        operator.equals("->unionAll") || 
+        operator.equals("->intersectAll") || 
+        operator.equals("->concatenateAll") ||
+        operator.equals("->copy") ||
+        operator.equals("->sum") ||
+        operator.equals("->prd") ||
+        operator.equals("->asSet") ||
+        operator.equals("->asSequence") ||
+        (operator.equals("->max") && !argument.isSorted()) ||
+        (operator.equals("->min") && !argument.isSorted()))
+    { if (level > 1)
+      { messages.add("!! (OES): nested execution of O(n)+ operator " + operator + " could be O(n*n)+"); 
+        messages.add(""); 
+        int aScore = (int) uses.get("amber"); 
+        uses.set("amber", aScore + 1);
+      }
+    }
 
     return res; 
   } // also any in the argument. 

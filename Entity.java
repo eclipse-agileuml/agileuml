@@ -5509,6 +5509,9 @@ public class Entity extends ModelElement implements Comparable
         if (obj instanceof Expression)
         { Expression expr = (Expression) obj;
 
+          if (expr.isSideEffecting()) 
+          { continue; } 
+
           // If clones all in same op, then try to refactor
           // using a new local variable of the op - at first
           // location where expr read frame is not subsequently 
@@ -5524,7 +5527,7 @@ public class Entity extends ModelElement implements Comparable
 
           Type etype = expr.getType(); 
           Type elemtype = expr.getElementType(); 
-          System.out.println(">> Clone expression type: " + etype + " (" + elemtype + ")"); 
+          System.err.println(">> Clone expression type: " + etype + " (" + elemtype + ")"); 
 
           System.err.println(">>> Extracting local variable for clone: " + clne + " with copies " + copies);
           
@@ -5945,7 +5948,6 @@ public class Entity extends ModelElement implements Comparable
           (BehaviouralFeature) operations.get(i); 
       String opname = op.getName(); 
 
-
       Vector redDetails = new Vector(); 
       Vector amberDetails = new Vector(); 
       Map res1 = op.energyAnalysis(redDetails, amberDetails);
@@ -5987,8 +5989,8 @@ public class Entity extends ModelElement implements Comparable
       op.collectionOperatorUses(1, collOps, collVars, 
                                 res1, messages); 
  
-      // int redop = (int) res1.get("red"); 
-      // int amberop = (int) res1.get("amber"); 
+      redop = (int) res1.get("red"); 
+      amberop = (int) res1.get("amber"); 
 
       // JOptionPane.showInputDialog(redop + " for " + op); 
       

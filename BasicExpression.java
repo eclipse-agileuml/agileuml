@@ -3778,7 +3778,7 @@ class BasicExpression extends Expression
     { if (contexts.size() == 0)
       { if (objectRef == null) 
         { System.err.println("!!ERROR!!: Invalid occurrence of super, not instance context"); 
-          JOptionPane.showMessageDialog(null, "ERROR!!: Invalid occurrence of super, not in instance context", "Semantic error", JOptionPane.ERROR_MESSAGE);
+        //  JOptionPane.showMessageDialog(null, "ERROR!!: Invalid occurrence of super, not in instance context", "Semantic error", JOptionPane.ERROR_MESSAGE);
         } 
         else if (objectRef.elementType != null && 
                  objectRef.elementType.isEntity()) 
@@ -3787,9 +3787,9 @@ class BasicExpression extends Expression
           { type = new Type(entity.getSuperclass()); }
           else 
           { System.err.println("!!ERROR!!: Invalid occurrence of super, no superclass for " + entity); 
-            JOptionPane.showMessageDialog(null, 
-                "ERROR!!: Invalid occurrence of super, no superclass of " + entity, 
-                "Semantic error", JOptionPane.ERROR_MESSAGE);
+           // JOptionPane.showMessageDialog(null, 
+           //     "ERROR!!: Invalid occurrence of super, no superclass of " + entity, 
+           //     "Semantic error", JOptionPane.ERROR_MESSAGE);
           }   
         } 
         else 
@@ -3868,9 +3868,10 @@ class BasicExpression extends Expression
         if (bf != null) 
         { if (bf.parametersMatch(parameters)) { } 
           else 
-          { JOptionPane.showMessageDialog(null, 
-              "Actual parameters do not match operation formal pars: " + this + " /= " + bf,                       
-              "Type warning", JOptionPane.WARNING_MESSAGE); 
+          { // JOptionPane.showMessageDialog(null, 
+            //   "Actual parameters do not match operation formal pars: " + this + " /= " + bf,                       
+            //  "Type warning", JOptionPane.WARNING_MESSAGE);
+            System.err.println("!! Actual parameters do not match operation formal pars: " + this + " /= " + bf);  
           }  
 
           bf.setFormalParameters(parameters, vartypes); 
@@ -3936,9 +3937,9 @@ class BasicExpression extends Expression
         for (int i = 0; i < entities.size(); i++) 
         { Entity ex = (Entity) entities.get(i); 
           if (ex.hasAttribute(data)) 
-          { JOptionPane.showMessageDialog(null, 
-              "Located possible class " + ex + " of " + objectRef, 
-              "", JOptionPane.INFORMATION_MESSAGE);
+          { // JOptionPane.showMessageDialog(null, 
+            //   "Located possible class " + ex + " of " + objectRef, 
+            //   "", JOptionPane.INFORMATION_MESSAGE);
             objectRef.type = new Type(ex);
 
             vartypes.put("" + objectRef, objectRef.type); 
@@ -4006,9 +4007,8 @@ class BasicExpression extends Expression
           entity = e;
           if (bf.parametersMatch(parameters)) { } 
           else 
-          { JOptionPane.showMessageDialog(null, 
-              "Actual parameters do not match operation pars: " + this + " " + bf, 
-              "Type warning", JOptionPane.WARNING_MESSAGE);
+          { System.err.println( 
+              "!! Actual parameters do not match operation pars: " + this + " " + bf);
             continue; 
           }  
 
@@ -4120,9 +4120,8 @@ class BasicExpression extends Expression
           System.out.println(">> Function parameter " + data + " of type " + type + "(" + elementType + ")"); 
         } 
         else 
-        { JOptionPane.showMessageDialog(null, data + " is not a function parameter or known function in " + this + ".\n" + 
-            "Please re-type-check or correct your specification.", 
-            "Type warning", JOptionPane.WARNING_MESSAGE);
+        { System.err.println("!! " + data + " is not a function parameter or known function in " + this + ".\n" + 
+            "!! Please re-type-check or correct your specification.");
 
           if (parameters != null && parameters.size() == 1)
           { // assume it is a function
@@ -4612,8 +4611,8 @@ class BasicExpression extends Expression
           // System.out.println("Element type of " + data + ": " + e + " " + type);
           if (type == null) // || type.getName().equals("Set"))
           { System.err.println("!!! ERROR: Can't determine element type of " + this); 
-            JOptionPane.showMessageDialog(null, "ERROR: Can't determine element type of " + this,
-                            "Semantic error", JOptionPane.ERROR_MESSAGE);            
+            // JOptionPane.showMessageDialog(null, "ERROR: Can't determine element type of " + this,
+            //                "Semantic error", JOptionPane.ERROR_MESSAGE);            
             type = new Type("void",null);
           }  // actually a void or Object type. 
         }  
@@ -4721,7 +4720,8 @@ class BasicExpression extends Expression
           Attribute att = subent.getAttribute(data);
           if (att == null)   // something very bad has happened
           { System.err.println("!! TYPE ERROR: attribute: " + data + " is not defined in class " + subent); 
-            JOptionPane.showMessageDialog(null, "Undefined attribute: " + data, "Type error",                                           JOptionPane.ERROR_MESSAGE);  
+            // JOptionPane.showMessageDialog(null, "Undefined attribute: " + data, "Type error",                                           
+            //    JOptionPane.ERROR_MESSAGE);  
             return false; 
           } 
           modality = att.getKind();
@@ -4755,8 +4755,8 @@ class BasicExpression extends Expression
         Association ast = ent.getDefinedRole(data); 
         if (ast == null)   // something very bad has happened
         { System.err.println("!! TYPE ERROR: role: " + data + " is not defined in class " + ent.getName()); 
-          JOptionPane.showMessageDialog(null, "Undefined role " + data, "Type error",                                         
-		                                JOptionPane.ERROR_MESSAGE);  
+          // JOptionPane.showMessageDialog(null, "Undefined role " + data, "Type error",                                         
+	    //                      JOptionPane.ERROR_MESSAGE);  
           return false; 
         } 
 
@@ -4993,9 +4993,8 @@ class BasicExpression extends Expression
           entity = e;
           if (bf.parametersMatch(parameters)) { } 
           else 
-          { JOptionPane.showMessageDialog(null, 
-              "Parameters do not match operation pars: " + this + " " + bf, 
-              "Type warning", JOptionPane.WARNING_MESSAGE);
+          { System.err.println( 
+              "!! Parameters do not match operation pars: " + this + " " + bf);
             continue; 
           }  
 
@@ -5241,7 +5240,7 @@ class BasicExpression extends Expression
     { if (contexts.size() == 0)
       { if (objectRef == null) 
         { System.err.println("!!ERROR!!: Invalid occurrence of super, not instance context"); 
-          JOptionPane.showMessageDialog(null, "ERROR!!: Invalid occurrence of super, not in instance context", "Semantic error", JOptionPane.ERROR_MESSAGE);
+          // JOptionPane.showMessageDialog(null, "ERROR!!: Invalid occurrence of super, not in instance context", "Semantic error", JOptionPane.ERROR_MESSAGE);
         } 
         else if (objectRef.elementType != null && 
                  objectRef.elementType.isEntity()) 
@@ -5250,9 +5249,9 @@ class BasicExpression extends Expression
           { type = new Type(entity.getSuperclass()); }
           else 
           { System.err.println("!!ERROR!!: Invalid occurrence of super, no superclass for " + entity); 
-            JOptionPane.showMessageDialog(null, 
-                "ERROR!!: Invalid occurrence of super, no superclass of " + entity, 
-                "Semantic error", JOptionPane.ERROR_MESSAGE);
+            // JOptionPane.showMessageDialog(null, 
+            //    "ERROR!!: Invalid occurrence of super, no superclass of " + entity, 
+            //    "Semantic error", JOptionPane.ERROR_MESSAGE);
           } 
         } 
         else 
@@ -5282,7 +5281,7 @@ class BasicExpression extends Expression
     if ("equivalent".equals(data))
     { if (contexts.size() == 0)
       { System.err.println("!!ERROR!!: no context for ETL equivalent() operator"); 
-        JOptionPane.showMessageDialog(null, "ERROR!!: Invalid occurrence of equivalent, not in instance context", "Semantic error", JOptionPane.ERROR_MESSAGE); 
+        // JOptionPane.showMessageDialog(null, "ERROR!!: Invalid occurrence of equivalent, not in instance context", "Semantic error", JOptionPane.ERROR_MESSAGE); 
       }
       else 
       { // entity = (Entity) contexts.get(0); // the most local context
@@ -5711,8 +5710,7 @@ class BasicExpression extends Expression
         if (bf != null) 
         { if (bf.parametersMatch(parameters)) { } 
           else 
-          { JOptionPane.showMessageDialog(null, "Actual parameters do not match operation formal pars: " + this + " /= " + bf, 
-                                    "Type warning", JOptionPane.WARNING_MESSAGE); 
+          { System.err.println("!! Actual parameters do not match operation formal pars: " + this + " /= " + bf); 
           }  
 
           bf.setFormalParameters(parameters); 
@@ -5816,9 +5814,8 @@ class BasicExpression extends Expression
 
           if (bf.parametersMatch(parameters)) { } 
           else 
-          { JOptionPane.showMessageDialog(null, 
-              "Parameters do not match operation pars: " + this + " " + bf, 
-              "Type warning", JOptionPane.WARNING_MESSAGE);
+          { System.err.println( 
+              "!! Parameters do not match operation pars: " + this + " " + bf);
             continue; 
           }  
 
@@ -5909,9 +5906,8 @@ class BasicExpression extends Expression
           System.out.println(">> Function parameter " + data + " of type " + type + "(" + elementType + ")"); 
         } 
         else 
-        { JOptionPane.showMessageDialog(null, data + " is not a function parameter or known function in " + this + ".\n" + 
-            "Please re-type-check or correct your specification.", 
-            "Type warning", JOptionPane.WARNING_MESSAGE);
+        { System.err.println("!! " + data + " is not a function parameter or known function in " + this + ".\n" + 
+            "!! Please re-type-check or correct your specification.");
 
           if (parameters != null && parameters.size() == 1)
           { // assume it is a function
@@ -6158,8 +6154,8 @@ class BasicExpression extends Expression
           // System.out.println("Element type of " + data + ": " + e + " " + type);
           if (type == null) // || type.getName().equals("Set"))
           { System.err.println("!!! ERROR: Can't determine element type of " + this); 
-            JOptionPane.showMessageDialog(null, "ERROR: Can't determine element type of " + this,
-                            "Semantic error", JOptionPane.ERROR_MESSAGE);            
+            // JOptionPane.showMessageDialog(null, "ERROR: Can't determine element type of " + this,
+            //      "Semantic error", JOptionPane.ERROR_MESSAGE);            
             type = new Type("void",null);
           }  // actually a void or Object type. 
         }  
@@ -6262,7 +6258,8 @@ class BasicExpression extends Expression
           Attribute att = subent.getAttribute(data);
           if (att == null)   // something very bad has happened
           { System.err.println("!! TYPE ERROR: attribute: " + data + " is not defined in class " + subent); 
-            JOptionPane.showMessageDialog(null, "Undefined attribute: " + data, "Type error",                                           JOptionPane.ERROR_MESSAGE);  
+            // JOptionPane.showMessageDialog(null, "Undefined attribute: " + data, "Type error",         
+            //    JOptionPane.ERROR_MESSAGE);  
             return false; 
           } 
           modality = att.getKind();
@@ -6290,8 +6287,8 @@ class BasicExpression extends Expression
         Association ast = ent.getDefinedRole(data); 
         if (ast == null)   // something very bad has happened
         { System.err.println("!! TYPE ERROR: role: " + data + " is not defined in class " + ent.getName()); 
-          JOptionPane.showMessageDialog(null, "Undefined role " + data, "Type error",                                         
-		                                JOptionPane.ERROR_MESSAGE);  
+          // JOptionPane.showMessageDialog(null, "Undefined role " + data, "Type error",                                         
+          //              JOptionPane.ERROR_MESSAGE);  
           return false; 
         } 
 
@@ -6513,9 +6510,8 @@ class BasicExpression extends Expression
           entity = e;
           if (bf.parametersMatch(parameters)) { } 
           else 
-          { JOptionPane.showMessageDialog(null, 
-              "Parameters do not match operation pars: " + this + " " + bf, 
-              "Type warning", JOptionPane.WARNING_MESSAGE);
+          { System.err.println( 
+              "!! Parameters do not match operation pars: " + this + " " + bf);
             continue; 
           }  
 
@@ -11529,9 +11525,9 @@ public Statement generateDesignSubtract(Expression rhs)
     // either a sequence or map, or 
     // itself an indexed expression
 
-   JOptionPane.showInputDialog(
-            ">>> Update to " + obj + "[" + ind + 
-            "] := " + val2); 
+   // JOptionPane.showInputDialog(
+   //         ">>> Update to " + obj + "[" + ind + 
+   //         "] := " + val2); 
  
    Type objt = obj.getType();
    if (objt == null) 
@@ -16760,7 +16756,7 @@ public Statement generateDesignSubtract(Expression rhs)
 
      
       if (type == null) 
-      { System.out.println("!Warning: null type in: " + data); 
+      { System.err.println("!Warning: null type in: " + data); 
         // JOptionPane.showMessageDialog(null, "Null type in: " + this, 
         // "Error", JOptionPane.ERROR_MESSAGE); 
         return false; 
@@ -18555,7 +18551,7 @@ public Statement generateDesignSubtract(Expression rhs)
 
   public Map energyUse(Map res, Vector rUses, Vector oUses) 
   { // Calls to OclType reflection operators and OclDatasource
-    // connect are red flags. 
+    // connect are red flags. Also factorial, file opening. 
 
     if (objectRef != null) 
     { objectRef.energyUse(res,rUses,oUses); }
@@ -18646,16 +18642,30 @@ public Statement generateDesignSubtract(Expression rhs)
       boolean sideeffect = isSideEffecting(); 
       Vector vuses = variablesUsedIn(vars); 
       if (level > 1 && vuses.size() == 0 && !sideeffect)
-      { System.err.println("!!! Energy-use flaw: (LCE): The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
-          "!!!  Use Extract local variable to optimise.");
+      { System.err.println("!! Energy-use flaw: (LCE): The expression " + this + " may be independent of the iterator variables " + vars + "\n" + 
+          "!!  Use Extract local variable to optimise.");
         refactorELV = true; 
         System.err.println();  
       }
- 
-      return res; 
+
+      if (level > 1 && !(data.equals("setAt")))
+      { System.err.println("!! (OES) flaw: O(n) operation " + this + " within loop may be O(n*n)");
+
+        System.err.println();
+      }
     } 
    
-    // Also check operation calls for being LCE
+    if (level > 1 && 
+        (data.equals("newOclFile_Write") || 
+         data.equals("newOclFile_Read") || 
+         data.equals("factorial") || 
+         data.equals("formattedString") || 
+         data.equals("executeQuery") ||
+         data.equals("executeMany") || 
+         data.equals("createStatement")))
+    { System.err.println("!! (OES) flaw: expensive operation " + this + " within loop");
+      System.err.println(); 
+    }
 
     if (arrayIndex != null) 
     { BasicExpression be = (BasicExpression) clone(); 
@@ -18667,7 +18677,6 @@ public Statement generateDesignSubtract(Expression rhs)
       { opers = new Vector(); } 
       opers.add(newbe); 
       res.put(level, opers); 
-      return res; 
     } 
 
     return res; 
@@ -18686,11 +18695,11 @@ public Statement generateDesignSubtract(Expression rhs)
  
       if (syntacticComplexity() > UCDArea.CLONE_LIMIT &&
           level > 1 && vuses.size() == 0 && !sideeffect)
-      { messages.add("!!! Energy-use flaw: (LCE): The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
-          "!!!  Use Extract local variable to optimise.");
+      { messages.add("!! Energy-use flaw: (LCE): The expression " + this + " may be independent of the iterator variables " + vars + "\n" + 
+          "!!  Use Extract local variable to optimise.");
         refactorELV = true;  
-        int redScore = (int) uses.get("red"); 
-        uses.set("red", redScore+1); 
+        int amberScore = (int) uses.get("amber"); 
+        uses.set("amber", amberScore+1); 
         messages.add(""); 
       }
     } // Any non-trivial basic expression
@@ -18707,10 +18716,31 @@ public Statement generateDesignSubtract(Expression rhs)
       opers.add(this); 
       res.put(level, opers);
 
-      return res; 
+      if (level > 1 && !(data.equals("setAt")))
+      { messages.add("!! (OES) flaw: O(n) operation " + this + " within loop may be O(n*n)");
+
+        int amberScore = (int) uses.get("amber"); 
+        uses.set("amber", amberScore+1); 
+        messages.add("");
+      }
     } 
    
     // Also check operation calls for being LCE
+
+    if (level > 1 && 
+        (data.equals("newOclFile_Write") || 
+         data.equals("newOclFile_Read") || 
+         data.equals("factorial") ||
+         data.equals("formattedString") ||
+         data.equals("executeQuery") ||
+         data.equals("executeMany") || 
+         data.equals("createStatement")))
+    { messages.add("!! (OES) flaw: expensive operation " + this + " within loop");
+
+      int amberScore = (int) uses.get("amber"); 
+      uses.set("amber", amberScore+1); 
+      messages.add("");
+    }
 
     if (arrayIndex != null) 
     { BasicExpression be = (BasicExpression) clone(); 
@@ -18722,7 +18752,6 @@ public Statement generateDesignSubtract(Expression rhs)
       { opers = new Vector(); } 
       opers.add(newbe); 
       res.put(level, opers); 
-      return res; 
     } 
 
     return res; 
