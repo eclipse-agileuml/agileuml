@@ -840,12 +840,16 @@ public class SetExpression extends Expression
   public int size()
   { return elements.size(); } 
 
-  public Expression definedness()
-  { Expression res = new BasicExpression(true);   // conjunction of definedness of elements
+  public Expression definedness(Map uses, Vector messages)
+  { Expression res = new BasicExpression(true);   
+      // conjunction of definedness of elements
+
     for (int i = 0; i < elements.size(); i++) 
     { Expression elem = (Expression) elements.get(i); 
-      res = Expression.simplifyAnd(res,elem.definedness());  
+      Expression defn = elem.definedness(uses, messages);
+      res = Expression.simplifyAnd(res,defn);  
     } 
+
     return res; 
   } 
 

@@ -5,7 +5,7 @@ import java.io.*;
 import javax.swing.JOptionPane; 
 
 /******************************
-* Copyright (c) 2003--2025 Kevin Lano
+* Copyright (c) 2003--2026 Kevin Lano
 * This program and the accompanying materials are made available under the
 * terms of the Eclipse Public License 2.0 which is available at
 * http://www.eclipse.org/legal/epl-2.0
@@ -901,6 +901,17 @@ abstract class Expression
     return false; 
   } 
 
+  public boolean hasBooleanType()
+  { if (type == null) 
+    { return false; } 
+
+    String nme = type.getName(); 
+    if (nme.equals("boolean"))
+    { return true; } 
+
+    return false; 
+  } 
+
   public static void addOperator(String op, Vector types,
                                  String typ) 
   { Type t = (Type) ModelElement.lookupByName(typ,types); 
@@ -999,7 +1010,7 @@ abstract class Expression
   } 
 
 
-  public abstract Expression definedness(); 
+  public abstract Expression definedness(Map uses, Vector messages); 
 
   public abstract Expression determinate(); 
 
@@ -1407,6 +1418,9 @@ abstract class Expression
   public boolean isSelfCall(BehaviouralFeature bf) 
   { return false; } 
 
+  public boolean isSelfCall(BehaviouralFeature bf, int n) 
+  { return false; } 
+
   public boolean isSelfCallDecrement(BehaviouralFeature bf, 
                                      String par) 
   { return false; } 
@@ -1785,10 +1799,38 @@ abstract class Expression
     return false; 
   }  
 
+  public boolean hasNumericType()
+  { if (type != null) 
+    { return type.getName().equals("int") || 
+        type.getName().equals("double") || 
+        type.getName().equals("long"); 
+    } 
+
+    return false; 
+  }  
+
   public boolean isInteger()
   { if (type != null) 
     { return type.getName().equals("int") || 
         type.getName().equals("long"); 
+    } 
+    return false; 
+  }  
+
+  public boolean hasIntegerType()
+  { if (Expression.isIntegerValue(this + ""))
+    { type = new Type("int", null); 
+      return true; 
+    } 
+    
+    if (Expression.isLongValue(this + ""))
+    { type = new Type("long", null); 
+      return true; 
+    } 
+
+    if (type != null) 
+    { return type.getName().equals("int") || 
+         type.getName().equals("long"); 
     } 
     return false; 
   }  
@@ -2114,6 +2156,9 @@ abstract class Expression
   public boolean isString()
   { return type != null && type.isString(); }
 
+  public boolean hasStringType()
+  { return type != null && type.isString(); }
+
   public boolean isCollection()
   { return type != null && type.isCollection(); }
 
@@ -2179,6 +2224,9 @@ abstract class Expression
 
   public boolean hasFunctionType()
   { return type != null && type.isFunctionType(); }
+
+  public boolean hasMapType()
+  { return type != null && type.isMapType(); }
 
   public boolean isRef()
   { return type != null && type.isRef(); }
@@ -4187,6 +4235,11 @@ abstract class Expression
 
     return new BinaryExpression("xor",e1,e2); 
   }  
+
+
+  public static Expression simplifyImplies(final Expression ante,
+                                       final Expression succ)
+  { return simplifyImp(ante, succ); } 
 
   public static Expression simplifyImp(final Expression ante,
                                        final Expression succ)

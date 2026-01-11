@@ -1,5 +1,5 @@
 /******************************
-* Copyright (c) 2003--2025 Kevin Lano
+* Copyright (c) 2003--2026 Kevin Lano
 * This program and the accompanying materials are made available under the
 * terms of the Eclipse Public License 2.0 which is available at
 * http://www.eclipse.org/legal/epl-2.0
@@ -1279,16 +1279,31 @@ public Vector singleMutants()
     return pand.simplify();
   }
 
-  public Expression definedness()
-  { Expression dand = 
-        new BinaryExpression("=>", test, ifExp.definedness());
+  public Expression definedness(Map uses, Vector messages)
+  { Expression tdef = test.definedness(uses, messages);
+    if (test.hasBooleanType()) { } 
+    else 
+    { messages.add("!! (SEM): conditional test " + test + " should have boolean type"); 
+      int oscore = (int) uses.get("amber"); 
+      uses.set("amber", oscore+1); 
+    }  
+    
+    Expression dand = 
+        new BinaryExpression("=>", test, 
+          ifExp.definedness(uses,messages));
     Expression pand = 
-        new BinaryExpression("=>", new UnaryExpression("not", test), elseExp.definedness());
-    Expression tdef = test.definedness(); 
+        new BinaryExpression("=>", 
+          new UnaryExpression("not", test), 
+            elseExp.definedness(uses, messages));
+
     dand.setBrackets(true); 
     pand.setBrackets(true); 
-    Expression and1 = new BinaryExpression("&", dand.simplify(), pand.simplify()); 
-    Expression and2 = new BinaryExpression("&", tdef, and1); 
+
+    Expression and1 = 
+      Expression.simplifyAnd(
+           dand.simplify(), pand.simplify()); 
+    Expression and2 = 
+      Expression.simplifyAnd(tdef, and1); 
 
     return and2.simplify();
   }

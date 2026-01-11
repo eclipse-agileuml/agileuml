@@ -488,8 +488,72 @@ public class UnaryExpression extends Expression
     return false; 
   } 
 
-  public Expression definedness()
-  { Expression res = argument.definedness();
+  public Expression definedness(Map uses,
+                                Vector messages)
+  { Expression res = argument.definedness(uses, messages);
+
+    if ("->ceil".equals(operator) || 
+        "->floor".equals(operator) || 
+        "->abs".equals(operator) || 
+        "->round".equals(operator) ||
+        "->sin".equals(operator) || 
+        "->cos".equals(operator) ||
+        "->tan".equals(operator) ||
+        "->exp".equals(operator) ||
+        "->log".equals(operator) ||
+        "->log10".equals(operator) ||
+        "->asin".equals(operator) || 
+        "->acos".equals(operator) ||
+        "->atan".equals(operator) ||
+        "->sqrt".equals(operator) ||
+        "->cbrt".equals(operator))
+    { if (argument.hasNumericType()) { } 
+      else 
+      { Expression typeofdouble = 
+          new BinaryExpression("->oclIsKindOf",
+                               argument,
+            BasicExpression.newTypeBasicExpression("double")); 
+        res = Expression.simplifyAnd(typeofdouble, res);
+
+        messages.add("!! (SEM): missing type for " + argument + " in " + this + " Should be numeric"); 
+        int ascore = (int) uses.get("amber");
+        uses.set("amber", ascore+1);    
+      } 
+    }     
+
+    if ("->toLowerCase".equals(operator) ||
+        "->toUpperCase".equals(operator) || 
+        "->trim".equals(operator))
+    { if (argument.hasStringType()) { } 
+      else 
+      { Expression typeofstring = 
+          new BinaryExpression("->oclIsTypeOf",
+                               argument,
+            BasicExpression.newTypeBasicExpression("String")); 
+        res = Expression.simplifyAnd(typeofstring, res); 
+
+        messages.add("!! (SEM): missing type for " + argument + " in " + this + " Should be String"); 
+        int ascore = (int) uses.get("amber");
+        uses.set("amber", ascore+1);    
+      } 
+    }     
+
+    if ("->keys".equals(operator) || 
+        "->values".equals(operator))
+    { if (argument.hasMapType()) { } 
+      else 
+      { Expression typeofmap = 
+          new BinaryExpression("->oclIsTypeOf", argument,
+            BasicExpression.newTypeBasicExpression("Map")); 
+        res = Expression.simplifyAnd(typeofmap, res); 
+
+        messages.add("!! (SEM): missing type for " + argument + " in " + this + " Should be Map"); 
+        int ascore = (int) uses.get("amber");
+        uses.set("amber", ascore+1);    
+      } 
+    }     
+
+
     if ("->last".equals(operator) || 
         "->first".equals(operator) ||
         "->front".equals(operator) || 
@@ -512,7 +576,15 @@ public class UnaryExpression extends Expression
     }
     else if ("->log".equals(operator) || 
              "->log10".equals(operator))
-    { Expression zero = new BasicExpression(0);
+    { if ("0".equals(argument + "") || 
+          "0.0".equals(argument + ""))
+      { messages.add("!!! (SEM): explicit zero argument in " + this + " Must be > 0"); 
+        int rscore = (int) uses.get("red");
+        uses.set("red", rscore+1);    
+        return new BasicExpression(false); 
+      } 
+
+      Expression zero = new BasicExpression(0);
       Expression nneg = 
           new BinaryExpression(">",argument,zero);
       return simplify("&",nneg,res,null);
@@ -1185,6 +1257,10 @@ public void findClones(java.util.Map clones,
         operator.equals("->first") ||
         operator.equals("->last") ||
         operator.equals("->sum") ||
+        operator.equals("->size") ||
+        operator.equals("->front") ||
+        operator.equals("->tail") ||
+        operator.equals("->reverse") || 
         operator.equals("->prd") ||
         operator.equals("->max") ||
         operator.equals("->min"))
@@ -1196,11 +1272,6 @@ public void findClones(java.util.Map clones,
 
       Vector vuses = variablesUsedIn(vars);
       boolean sideeffects = isSideEffecting(); 
-
-      if (level > 1)
-      { System.err.println("!! (OES): nested execution of O(n)+ operator " + operator + " could be O(n*n)+"); 
-        System.err.println(); 
-      } 
  
       if (level > 1 && vuses.size() == 0 && !sideeffects)
       { System.err.println(); 
@@ -1217,6 +1288,9 @@ public void findClones(java.util.Map clones,
           operator.equals("->copy") ||
           operator.equals("->sum") ||
           operator.equals("->prd") ||
+          operator.equals("->front") ||
+          operator.equals("->tail") ||
+          operator.equals("->reverse") || 
           operator.equals("->asSet") ||
           operator.equals("->asSequence") ||
           (operator.equals("->max") && !argument.isSorted()) ||
@@ -1258,7 +1332,11 @@ public void findClones(java.util.Map clones,
         operator.equals("->intersectAll") || 
         operator.equals("->concatenateAll") ||
         operator.equals("->any") ||
+        operator.equals("->reverse") ||
+        operator.equals("->front") ||
+        operator.equals("->tail") ||
         operator.equals("->first") ||
+        operator.equals("->size") ||
         operator.equals("->last") ||
         operator.equals("->max") ||
         operator.equals("->min") ||
@@ -1276,6 +1354,9 @@ public void findClones(java.util.Map clones,
         operator.equals("->intersectAll") || 
         operator.equals("->concatenateAll") ||
         operator.equals("->copy") ||
+        operator.equals("->reverse") ||
+        operator.equals("->front") ||
+        operator.equals("->tail") ||
         operator.equals("->sum") ||
         operator.equals("->prd") ||
         operator.equals("->asSet") ||

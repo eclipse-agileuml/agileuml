@@ -5007,7 +5007,7 @@ public class Entity extends ModelElement implements Comparable
       Vector opuses = op.operationsUsedIn();
 
       if (opuses.contains(ename + "::" + nme))
-      { System.err.println("!! Code smell (CBR2): self-recursion in " + op); 
+      { System.err.println("!! Code smell (CBR2): potential self-recursion in " + op); 
         System.err.println("!! Refactor by replacing recursion by iteration, or use caching to optimise.\n"); 
       } 
 
@@ -5057,7 +5057,10 @@ public class Entity extends ModelElement implements Comparable
     
       Vector args = op.getParameterExpressions(); 
       op.definedness(args);
+      System.err.println(); 
+
       op.determinate(args); 
+      System.err.println(); 
     }
   }
   
@@ -8301,26 +8304,36 @@ public class Entity extends ModelElement implements Comparable
   } 
 
   public BehaviouralFeature getDefinedOperation(String nme, 
-                                         Vector parameters)
+                                      Vector parameters)
   { BehaviouralFeature res = null; 
     for (int i = 0; i < operations.size(); i++) 
     { res = (BehaviouralFeature) operations.get(i); 
       if (nme.equals(res.getName()) && 
           res.parametersMatch(parameters))
       { return res; } 
-    }  
+    } 
+
+    if (superclass != null) 
+    { BehaviouralFeature bf =
+        superclass.getDefinedOperation(nme,parameters); 
+      if (bf != null) 
+      { return bf; }
+    }   
 
     for (int i = 0; i < operations.size(); i++) 
     { res = (BehaviouralFeature) operations.get(i); 
       if (nme.equals(res.getName()) && 
           res.parametersSupset(parameters))
-      { System.out.println("!! There is no operation " + nme + " in class " + name + " with " + parameters.size() + " parameters,\n   but there is an operation with " + res.getParameters().size() + " parameters -- the call needs to be extended."); 
+      { System.err.println("!! There is no operation " + nme + " in class " + name + " with " + parameters.size() + " parameters,\n   but there is an operation with " + res.getParameters().size() + " parameters -- the call needs to be extended."); 
+        BehaviouralFeature bf = 
+          res.partialParametersOperation(parameters); 
+      
+        if (bf != null)
+        { addOperation(bf); 
+          return bf; 
+        }  
       }   
     } 
-
-    if (superclass != null) 
-    { return superclass.getDefinedOperation(nme,parameters); } 
-
 
     return null; 
   } 

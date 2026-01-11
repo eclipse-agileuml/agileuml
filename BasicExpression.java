@@ -2942,7 +2942,7 @@ class BasicExpression extends Expression
     return res; 
   }
 
-  public Expression definedness()
+  public Expression definedness(Map uses, Vector messages)
   { Expression res = new BasicExpression(true);
 
     // for E[ind] for E entity with primary key key, ind : E.key
@@ -2951,23 +2951,30 @@ class BasicExpression extends Expression
       { Attribute pk = entity.getPrincipalKey(); 
         if (pk == null) { return res; } 
         String pkname = pk.getName();
-        res = arrayIndex.definedness();  
+        res = arrayIndex.definedness(uses, messages);  
         BasicExpression edom = new BasicExpression(pkname); 
         edom.setObjectRef(new BasicExpression(data)); 
         Expression indom = new BinaryExpression(":",arrayIndex,edom);
         res = simplify("&",res,indom,null); 
       } 
+
       return res; 
     }   
 
     // For s[ind] with s a sequence, ind >= 1 & ind <= s.size:
 
-    if ((umlkind == ROLE || umlkind == ATTRIBUTE || umlkind == VARIABLE)
+    if ((umlkind == ROLE || umlkind == ATTRIBUTE || 
+         umlkind == VARIABLE)
         && arrayIndex != null)
     { // if not qualified, but is ordered
       if (objectRef != null) 
-      { res = objectRef.definedness(); }
-      res = simplify("&",res,arrayIndex.definedness(),null);  
+      { res = objectRef.definedness(uses,messages); }
+
+      Expression indxDefn = 
+             arrayIndex.definedness(uses,messages);
+
+      res = simplify("&",res,indxDefn,null); 
+ 
       if (isQualified()) 
       { if (multiplicity == ModelElement.MANY)
         { return res; } 
@@ -2976,15 +2983,20 @@ class BasicExpression extends Expression
           Type t2 = getElementType(); 
           if (t2 != null && t2.isEntity())
           { Entity e2 = t2.getEntity(); 
-            BasicExpression e2x = new BasicExpression(e2.getName().toLowerCase()); 
-            BinaryExpression eqe2x = new BinaryExpression("=", this, e2x); 
+            BasicExpression e2x = 
+              new BasicExpression(e2.getName().toLowerCase()); 
+            BinaryExpression eqe2x = 
+              new BinaryExpression("=", this, e2x); 
             return new BinaryExpression("#", 
-                         new BinaryExpression(":", e2x, new BasicExpression(e2)), 
+               new BinaryExpression(":", e2x, 
+                         new BasicExpression(e2)), 
                          eqe2x); 
           } 
         } 
+
         return res; 
       } 
+
       BasicExpression newdata = new BasicExpression(data);
       newdata.setObjectRef(objectRef); 
       newdata.umlkind = ROLE;  
@@ -2998,13 +3010,40 @@ class BasicExpression extends Expression
     if (parameters != null) 
     { for (int i = 0; i < parameters.size(); i++) 
       { Expression par = (Expression) parameters.get(i); 
-        Expression pdef = par.definedness(); 
+        Expression pdef = par.definedness(uses,messages); 
         res = simplify("&", res, pdef, null); 
       } 
+  
+      if ("subrange".equals(data) && 
+          parameters.size() > 0)
+      { Expression par1 = (Expression) parameters.get(0);
+ 
+        if (par1.hasIntegerType()) { } 
+        else 
+        { messages.add("!! (SEM): parameter " + par1 + 
+             " of " + this + " must have integer type"); 
+          int ascore = (int) uses.get("amber");
+          uses.set("amber", ascore+1); 
+        } 
+
+        if (parameters.size() > 1) 
+        { Expression par2 = (Expression) parameters.get(1);
+ 
+          if (par2.hasIntegerType()) { } 
+          else 
+          { messages.add("!! (SEM): parameter " + par2 + 
+               " of " + this + " must have integer type"); 
+            int ascore = (int) uses.get("amber");
+            uses.set("amber", ascore+1); 
+          }
+        } 
+      }
     } 
 
-    if ((umlkind == UPDATEOP || umlkind == QUERY) && entity != null) 
+    if ((umlkind == UPDATEOP || umlkind == QUERY) && 
+        entity != null) 
     { BehaviouralFeature bf = entity.getDefinedOperation(data);
+
       if (bf != null) 
       { Expression spre = bf.definedness(parameters); 
         return simplify("&",res,spre,null);
@@ -3013,7 +3052,7 @@ class BasicExpression extends Expression
 
     if (objectRef == null) 
     { return res; }
-    res = objectRef.definedness();
+    res = objectRef.definedness(uses,messages);
 
 
     if (umlkind == FUNCTION)
@@ -3023,7 +3062,15 @@ class BasicExpression extends Expression
         return simplify("&",nneg,res,null);
       }
       else if ("log".equals(data) || "log10".equals(data))
-      { Expression pos = new BinaryExpression(">",objectRef,zero);
+      { if ("0".equals(objectRef + "") || 
+            "0.0".equals(objectRef + ""))
+       { messages.add("!!! (SEM): explicit 0 argument of " + this); 
+         int rscore = (int) uses.get("red");
+         uses.set("red", rscore+1);
+         return new BasicExpression(false); 
+       } 
+
+       Expression pos = new BinaryExpression(">",objectRef,zero);
         return simplify("&",pos,res,null);
       }
       else if ("acos".equals(data) || "asin".equals(data))
@@ -3036,7 +3083,8 @@ class BasicExpression extends Expression
       }
       else if ("last".equals(data) || "first".equals(data) ||
           "front".equals(data) || "tail".equals(data) ||
-          "max".equals(data) || "min".equals(data) || "any".equals(data))
+          "max".equals(data) || "min".equals(data) || 
+          "any".equals(data))
       { UnaryExpression orsize = new UnaryExpression("->size",objectRef);
         Expression pos = 
           new BinaryExpression(">",orsize,zero);
@@ -17684,6 +17732,25 @@ public Statement generateDesignSubtract(Expression rhs)
     return false;  
   } 
 
+  public boolean isSelfCall(BehaviouralFeature bf, int n)
+  { String nme = bf.getName();
+
+    if (arrayIndex != null) 
+    { return false; } 
+ 
+    if (isSelfCall(nme, n))
+    { return true; } 
+
+    Entity owner = bf.getEntity(); 
+    if (bf.isStatic() && owner != null) 
+    { String ename = owner.getName(); 
+      if (isSelfCall(ename, nme, n))
+      { return true; } 
+    } 
+
+    return false;  
+  } 
+
   public boolean isSelfCallDecrement(BehaviouralFeature bf, 
                                      String par)
   { String nme = bf.getName();
@@ -17709,6 +17776,21 @@ public Statement generateDesignSubtract(Expression rhs)
           nme + " " + data + " " + objectRef); */ 
 
     if (data.equals(nme) && 
+        "self".equals(objectRef + "") && 
+        (umlkind == UPDATEOP || umlkind == QUERY ||
+         isEvent)) 
+    { return true; } 
+
+    return false;  
+  }
+
+  public boolean isSelfCall(String nme, int n)
+  { /* JOptionPane.showInputDialog(">>> Is self-call? " + 
+          nme + " " + data + " " + objectRef); */ 
+
+    if (data.equals(nme) && 
+        parameters != null && 
+        parameters.size() == n && 
         "self".equals(objectRef + "") && 
         (umlkind == UPDATEOP || umlkind == QUERY ||
          isEvent)) 
@@ -17749,6 +17831,17 @@ public Statement generateDesignSubtract(Expression rhs)
 
   public boolean isSelfCall(String ename, String nme)
   { if (data.equals(nme) && 
+        ename.equals(objectRef + "") && 
+        (umlkind == UPDATEOP || umlkind == QUERY ||
+         isEvent)) 
+    { return true; } 
+    return false;  
+  }
+
+  public boolean isSelfCall(String ename, String nme, int n)
+  { if (data.equals(nme) && 
+        parameters != null && 
+        parameters.size() == n &&
         ename.equals(objectRef + "") && 
         (umlkind == UPDATEOP || umlkind == QUERY ||
          isEvent)) 
@@ -18627,6 +18720,16 @@ public Statement generateDesignSubtract(Expression rhs)
                                 java.util.Map res, Vector vars)
   { //  level |-> [x.setAt(i,y), etc]
 
+    boolean sideeffect = isSideEffecting(); 
+    Vector vuses = variablesUsedIn(vars); 
+
+    if (level > 1 && vuses.size() == 0 && !sideeffect)
+    { System.err.println("!! Warning (LCE): The expression " + this + " may be independent of the iterator variables " + vars + "\n" + 
+       "!!  Use Extract local variable to optimise.");
+       refactorELV = true; 
+       System.err.println();  
+    }
+
     if (data.equals("insertAt") || 
         data.equals("insertInto") ||
         data.equals("subrange") ||
@@ -18638,15 +18741,6 @@ public Statement generateDesignSubtract(Expression rhs)
       { opers = new Vector(); } 
       opers.add(this); 
       res.put(level, opers);
-
-      boolean sideeffect = isSideEffecting(); 
-      Vector vuses = variablesUsedIn(vars); 
-      if (level > 1 && vuses.size() == 0 && !sideeffect)
-      { System.err.println("!! Energy-use flaw: (LCE): The expression " + this + " may be independent of the iterator variables " + vars + "\n" + 
-          "!!  Use Extract local variable to optimise.");
-        refactorELV = true; 
-        System.err.println();  
-      }
 
       if (level > 1 && !(data.equals("setAt")))
       { System.err.println("!! (OES) flaw: O(n) operation " + this + " within loop may be O(n*n)");
@@ -18692,10 +18786,15 @@ public Statement generateDesignSubtract(Expression rhs)
         arrayIndex != null)
     { boolean sideeffect = isSideEffecting(); 
       Vector vuses = variablesUsedIn(vars);
+      int syncom = syntacticComplexity(); 
  
-      if (syntacticComplexity() > UCDArea.CLONE_LIMIT &&
+      /* JOptionPane.showInputDialog("Complexity of " + this + 
+          " = " + syncom + " uses = " + vuses + 
+          " level: " + level + " sideeffect: " + sideeffect); */
+
+      if (syncom >= TestParameters.energyCloneSizeLimit &&
           level > 1 && vuses.size() == 0 && !sideeffect)
-      { messages.add("!! Energy-use flaw: (LCE): The expression " + this + " may be independent of the iterator variables " + vars + "\n" + 
+      { messages.add("!! Warning (LCE): The expression " + this + " may be independent of the iterator variables " + vars + "\n" + 
           "!!  Use Extract local variable to optimise.");
         refactorELV = true;  
         int amberScore = (int) uses.get("amber"); 

@@ -88,8 +88,6 @@ public class BehaviouralFeature extends ModelElement
     if (pars == null) 
     { parameters = new Vector(); } 
 
-    
-
     query = false;
     if (stats == null || stats.size() == 0) 
     { activity = new InvocationStatement("skip");
@@ -115,6 +113,57 @@ public class BehaviouralFeature extends ModelElement
     resultType = null; 
     elementType = null; 
   } 
+
+  public BehaviouralFeature partialParametersOperation(
+                                            Vector pars)
+  { // pars.size() < parameters.size()
+    // new operation has pars subset of parameters.
+    // Its code is self.nme(pars, null, null ...)  
+
+    String nme = getName(); 
+
+    BehaviouralFeature res = 
+            new BehaviouralFeature(nme);
+
+    res.post = post; 
+    res.pre = pre; 
+    res.query = query;
+    
+    Vector newparameters = new Vector(); 
+    Vector newargs = new Vector(); 
+
+    int i = 0; 
+    while (i < parameters.size())
+    { if (i < pars.size())
+      { Attribute arg = (Attribute) parameters.get(i); 
+        Expression par = (Expression) pars.get(i); 
+        /* if (par.getType() == null ||
+            Type.isVacuousType(par.getType())) { } 
+        else if (par.getType().equals(arg.getType())) { } 
+        else if (Type.isSubType(arg.getType(), par.getType())) 
+        { }
+        else 
+        { return null; } */ 
+        newparameters.add(arg);
+        newargs.add(new BasicExpression(arg));  
+      } 
+      else 
+      { newargs.add(new BasicExpression("null")); } 
+   
+      i++; 
+    } 
+  
+    res.parameters = newparameters; 
+
+    BasicExpression call = 
+       BasicExpression.newCallBasicExpression(nme, 
+                           new BasicExpression("self"), 
+                           newargs); 
+    Statement stat = 
+      new InvocationStatement(call);   
+    res.activity = stat;
+    return res;  
+  }
 
   public void setType(Type rt)
   { resultType = rt; }
@@ -3233,20 +3282,29 @@ public class BehaviouralFeature extends ModelElement
 
   public Expression definedness(Vector arguments) 
   { // pre & (pre => def(post))
-    Expression res; 
+    Expression res;
+
+    String nme = getName(); 
+ 
     if (defcond != null) 
-    { return substituteParameters(defcond, arguments); } 
-    else if (post != null)  
+    { return substituteParameters(defcond, arguments); }
+ 
+    Map uses = new Map(); 
+    uses.set("amber", 0); 
+    uses.set("red", 0); 
+    Vector messages = new Vector(); 
+
+    if (post != null)  
     { if (pre != null) 
       { defcond = (Expression) pre.clone();  
-        Expression defpost = post.definedness(); 
-        Expression imp = new BinaryExpression("=>", defcond, defpost); 
+        Expression defpost = post.definedness(uses, messages); 
+        Expression imp = Expression.simplifyImplies(defcond, defpost); 
         imp.setBrackets(true); 
-        res = new BinaryExpression("&", defcond, imp);
+        res = Expression.simplifyAnd(defcond, imp);
       } 
       else 
       { defcond = new BasicExpression(true); 
-        res = post.definedness();  
+        res = post.definedness(uses, messages);  
       }
     }   
     else 
@@ -3255,7 +3313,10 @@ public class BehaviouralFeature extends ModelElement
  
     // JOptionPane.showMessageDialog(null, "Definedness obligation for " + getName() + " is:\n" + res,
     //   "Internal consistency condition", JOptionPane.INFORMATION_MESSAGE); 
-    System.out.println("***> Definedness obligation for " + getName() + " is:\n" + res); 
+
+    System.err.println(); 
+    System.err.println("***> Definedness obligation for " + getName() + " specification is:\n" + res); 
+    System.err.println(); 
 
     if (activity != null) 
     { Vector calls = 
@@ -3272,21 +3333,36 @@ public class BehaviouralFeature extends ModelElement
       if (VectorUtil.containsEqualString(selfexpr, calls) ||
           VectorUtil.containsEqualString(selfexpr1, calls))
       { 
-        System.out.println("!! Warning: possible infinite recursion: " + 
+        System.err.println("!! Warning (NTE): possible infinite recursion: " + 
            selfexpr + " is in calls of activity: " + calls);
       } 
 
       if (VectorUtil.containsEqualString(selfexpr, returns) ||
           VectorUtil.containsEqualString(selfexpr1, returns))
       { 
-        System.out.println("!! Warning: possible infinite recursion: " + 
+        System.err.println("!! Warning (NTE): possible infinite recursion: " + 
             selfexpr + " is in returned values: " + returns);
       }   
 
-      Expression def = activity.definedness(); 
-      System.out.println(">> Activity definedness: " + def); 
-    } 
- 
+      Expression def = activity.definedness(uses,messages); 
+      System.err.println(">> Activity definedness: " + def); 
+      System.err.println(""); 
+    }
+
+    for (int i = 0; i < messages.size(); i++)
+    { String mess = (String) messages.get(i); 
+      System.err.println(mess + "\n"); 
+    }  
+
+    int ocount = (int) uses.get("amber"); 
+    int rcount = (int) uses.get("red"); 
+
+    if (ocount > 0)
+    { System.err.println("!! There are " + ocount + " semantic flaws in operation " + nme); } 
+
+    if (rcount > 0)
+    { System.err.println("!!! There are " + rcount + " semantic errors in operation " + nme); } 
+
     return substituteParameters(res, arguments);  
   } 
 
@@ -4592,39 +4668,42 @@ public class BehaviouralFeature extends ModelElement
 
     Vector opuses = this.operationsUsedIn();
 
-    System.out.println(">>> Operations " + opuses + 
-                       " are used in " + name); 
+    // System.out.println(">>> Operations " + opuses + 
+    //                    " are used in " + name); 
 
     if (opuses.contains(entity + "::" + name) && 
         activity != null)
-    { boolean tailrec = Statement.isTailRecursion(this, name, 
-                                                  activity); 
-      System.err.println(); 
+    { if (Statement.isQueryRecursion(this, name, activity))
+      { boolean tailrec = 
+            Statement.isTailRecursion(this, name, 
+                                                 activity); 
+        System.err.println(); 
 
-      if (tailrec) 
-      { amberUses.add("!! Tail recursive operation! (CBR2) " + name);   
-        amberUses.add("!! Use 'Replace recursion by loop' refactoring"); 
-        int ascore = (int) res.get("amber");
-        ascore = ascore + 1;
-        res.set("amber", ascore);
-      } 
-      else 
-      { boolean semitail = 
-          Statement.isSemiTailRecursive(this, name, activity); 
-        if (semitail) 
-        { amberUses.add("!! Semi-tail-recursion (CBR2) in " + name);   
-          amberUses.add("!! Use 'Replace recursion by loop' refactoring");
+        if (tailrec) 
+        { amberUses.add("!! Possible tail recursive operation! (CBR2) " + name);   
+          amberUses.add("!! Use 'Replace recursion by loop' refactoring"); 
           int ascore = (int) res.get("amber");
           ascore = ascore + 1;
           res.set("amber", ascore);
-        }
+        } 
         else 
-        { redUses.add("!!! Non-tail-recursion (CBR2) in " + name); 
-          redUses.add("!!! Use 'Make operation cached' refactoring");
-          int rscore = (int) res.get("red");
-          rscore = rscore + 1;
-          res.set("red", rscore);
-        }  
+        { boolean semitail = 
+            Statement.isSemiTailRecursive(this, name, activity); 
+          if (semitail) 
+          { amberUses.add("!! Possible semi-tail-recursion (CBR2) in " + name);   
+            amberUses.add("!! Use 'Replace recursion by loop' refactoring");
+            int ascore = (int) res.get("amber");
+            ascore = ascore + 1;
+            res.set("amber", ascore);
+          }
+          else 
+          { redUses.add("!!! Non-tail-recursion (CBR2) in " + name); 
+            redUses.add("!!! Use 'Make operation cached' refactoring");
+            int rscore = (int) res.get("red");
+            rscore = rscore + 1;
+            res.set("red", rscore);
+          }  
+        } 
       } 
 
       // System.err.println(); 
@@ -4638,14 +4717,14 @@ public class BehaviouralFeature extends ModelElement
 
       System.err.println(); 
       if (istailrec)
-      { amberUses.add("!! Tail recursive operation! (CBR2) " + name);   
+      { amberUses.add("!! Possible tail recursive operation! (CBR2) " + name);   
         amberUses.add("!! Use 'Replace recursion by loop' refactoring"); 
         int ascore = (int) res.get("amber");
         ascore = ascore + 1;
         res.set("amber", ascore); 
       } 
       else if (isSemiTailRecursive(cases))
-      { amberUses.add("!! Semi-tail-recursion (CBR2) in " + name);   
+      { amberUses.add("!! Possible semi-tail-recursion (CBR2) in " + name);   
         amberUses.add("!! Use 'Replace recursion by loop' refactoring");
         int ascore = (int) res.get("amber");
         ascore = ascore + 1;

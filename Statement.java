@@ -1619,7 +1619,7 @@ abstract class Statement implements Cloneable
 
   public abstract Statement optimiseOCL();
 
-  public Expression definedness()
+  public Expression definedness(Map uses, Vector messages)
   { return new BasicExpression(true); } 
 
   public abstract Map energyUse(Map uses, 
@@ -1777,6 +1777,30 @@ abstract class Statement implements Cloneable
 
     if (semitail == 0 && nontail == 0)
     { return true; } 
+    return false;  
+  } 
+
+  public static boolean isQueryRecursion(
+            BehaviouralFeature bf, String nme, Statement st)
+  { // Some call of exactly the same bf
+
+    Vector pars = bf.getParameters(); 
+    int pcount = pars.size(); 
+
+    Vector rets = Statement.getReturnValues(st); 
+
+    Vector names = new Vector(); 
+    names.add(nme); 
+    
+    for (int i = 0; i < rets.size(); i++) 
+    { Expression expr = (Expression) rets.get(i); 
+      Vector uses = expr.variablesUsedIn(names);
+
+      if (uses.size() == 0) { }  
+      else if (expr.isSelfCall(bf, pcount))
+      { return true; } 
+    } 
+
     return false;  
   } 
 
@@ -4113,9 +4137,10 @@ class ReturnStatement extends Statement
     return Statement.RETURN; 
   } 
 
-  public Expression definedness()
+  public Expression definedness(Map uses, Vector messages)
   { if (value != null) 
-    { return value.definedness(); } 
+    { return value.definedness(uses, messages); }
+ 
     return new BasicExpression(true); 
   } 
 
@@ -6930,15 +6955,15 @@ class WhileStatement extends Statement
     return res; 
   } 
 
-  public Expression definedness()
+  public Expression definedness(Map uses, Vector messages)
   { Expression rtest = new BasicExpression(true); 
 
     if (loopRange != null) 
-    { rtest = loopRange.definedness(); } 
+    { rtest = loopRange.definedness(uses, messages); } 
     else if (loopTest != null) 
-    { rtest = loopTest.definedness(); } 
+    { rtest = loopTest.definedness(uses, messages); } 
      
-    Expression bdef = body.definedness(); 
+    Expression bdef = body.definedness(uses, messages); 
 
     return Expression.simplify("&", rtest, bdef, null); 
   } 
@@ -7020,7 +7045,7 @@ class WhileStatement extends Statement
         { int acount = (int) uses.get("amber"); 
           uses.set("amber", acount + 1); 
           aUses.add("!! Code smell (MEL): too high expression complexity (" + rcomp + ") for " + loopRange + "\n" +  
-                    "!! Recommend OCL refactoring"); 
+                    "!! Recommend OCL refactoring\n"); 
         } 
       } 
     }
@@ -7030,7 +7055,7 @@ class WhileStatement extends Statement
       { int acount = (int) uses.get("amber"); 
         uses.set("amber", acount + 1); 
         aUses.add("!! Code smell (MEL): too high expression complexity (" + syncomp + ") for " + loopTest + "\n" +  
-                  "!! Recommend OCL refactoring"); 
+                  "!! Recommend OCL refactoring\n"); 
       }
     }  
 
@@ -7040,47 +7065,99 @@ class WhileStatement extends Statement
         { int acount = (int) uses.get("amber"); 
           uses.set("amber", acount + 1); 
           aUses.add("!! Redundant code (RC):" + 
-            " loop never executes: " + this);
+            " loop never executes: " + this + "\n");
         } 
         else // REPEAT
         { int acount = (int) uses.get("amber"); 
           uses.set("amber", acount + 1); 
           aUses.add("!! Redundant code (RC):" + 
-            " loop only executes once: " + this);
+            " loop only executes once: " + this + "\n");
         } 
+
+        return uses; 
       } 
 
-      if (loopTest != null && loopKind == WHILE &&
+      // if WHILE or REPEAT and vars(loopTest) /\ wr(body) = {}
+      // and no return/break/exit within the loop, 
+      // (NTE) error.  
+
+      Vector newvars = new Vector(); 
+      Vector wrfr = body.writeFrame();
+      for (int i = 0; i < wrfr.size(); i++) 
+      { String wrv = (String) wrfr.get(i); 
+        int k = wrv.indexOf("::"); 
+        if (k >= 0) 
+        { newvars.add(wrv.substring(k+2)); } 
+        else 
+        { newvars.add(wrv); } 
+      }  
+
+      Vector vuses = loopTest.variablesUsedIn(newvars); 
+
+      if (loopKind == WHILE &&
           "true".equals("" + loopTest)) 
       { int rcount = (int) uses.get("red"); 
         uses.set("red", rcount + 1); 
-        rUses.add("!!! (NTE) Unbounded while loop with true condition: may not terminate!: " + loopSummary()); 
+        rUses.add("!!! (NTE) Unbounded while loop with true condition: may not terminate!: " + loopSummary() + "\n"); 
       }
-      else if (loopTest != null && loopKind == REPEAT &&
+      else if (loopKind == REPEAT &&
                "false".equals("" + loopTest)) 
       { int rcount = (int) uses.get("red"); 
         uses.set("red", rcount + 1); 
-        rUses.add("!!! (NTE) Unbounded repeat loop with false condition: may not terminate!: " + loopSummary()); 
+        rUses.add("!!! (NTE) Unbounded repeat loop with false condition: may not terminate!: " + loopSummary() + "\n"); 
+      }
+      else if (vuses.size() == 0) 
+      { int rcount = (int) uses.get("red"); 
+        uses.set("red", rcount + 1); 
+        rUses.add("!!! (NTE) Unbounded loop with no updates to loop condition: may not terminate!: " + loopSummary() + "\n"); 
       }
       else 
       { int acount = (int) uses.get("amber"); 
         uses.set("amber", acount + 1); 
         aUses.add("!! (OES) Unbounded loops can be inefficient: " + 
                   loopSummary() + 
-                  "\n!! Recommend replacing by a bounded loop");
+                  "\n!! Recommend replacing by a bounded loop\n");
       }  
     } 
 
     if (Statement.hasLoopStatement(body))
     { int rcount = (int) uses.get("amber"); 
       uses.set("amber", rcount + 1); 
-      aUses.add("!! Nested loops can be very inefficient: " + loopSummary()); 
+      aUses.add("!! Nested loops can be very inefficient: " + loopSummary() + "\n"); 
     } // or indeed if there is a collection iteration expr
     else if (loopKind == FOR && 
              Statement.isCumulativeBody(loopVar,body))
     { int rcount = (int) uses.get("amber"); 
       uses.set("amber", rcount + 1); 
-      aUses.add("!! Possible code reduction of loop to assignment(s): " + loopSummary());
+      aUses.add("!! (RC): Possible code reduction of loop to assignment(s): " + loopSummary() + "\n");
+    }
+    else if (loopKind == WHILE)
+    { if (loopTest instanceof BinaryExpression && 
+          "<".equals(((BinaryExpression) loopTest).getOperator()))
+      { BinaryExpression ltexpr = 
+                             (BinaryExpression) loopTest; 
+        Expression lft = ltexpr.getLeft(); 
+        Expression rgt = ltexpr.getRight(); 
+        String vname = "" + lft; 
+        Vector vvs = new Vector(); 
+        vvs.add(vname); 
+      
+        body.setBrackets(false); 
+        String bodytext = (body + "").trim(); 
+
+        Vector vuses = rgt.variablesUsedIn(vvs);
+ 
+        if ((vname + " := " + vname + " + 1").equals(bodytext) && 
+            vuses.size() == 0)
+        { int rcount = (int) uses.get("amber"); 
+          uses.set("amber", rcount + 1); 
+          aUses.add("!! (RC): RHS of loop test " + loopTest + 
+            " independent of incremented variable!\n" + 
+            "!! Possible code reduction of loop to conditional: " + loopSummary() + "\n");
+        }
+
+        body.setBrackets(true); 
+      }
     }
 
     return uses; 
@@ -7096,7 +7173,7 @@ class WhileStatement extends Statement
                                        vars); 
     }
     else if (loopTest != null)
-    { loopTest.collectionOperatorUses(nestingLevel, 
+    { loopTest.collectionOperatorUses(nestingLevel+1, 
                                       operatorsAtLevel, 
                                       vars); 
     }
@@ -7136,41 +7213,52 @@ class WhileStatement extends Statement
                              java.util.Map operatorsAtLevel, 
                              Vector vars, Map uses, 
                              Vector messages)
-  { if (loopRange != null) 
-    { loopRange.collectionOperatorUses(nestingLevel, 
-                                       operatorsAtLevel, 
-                                       vars, uses, messages); 
-    }
-    else if (loopTest != null)
-    { loopTest.collectionOperatorUses(nestingLevel, 
-                                      operatorsAtLevel, 
-                                      vars, uses, messages); 
-    }
+  { Vector oldvars = new Vector(); 
+    oldvars.addAll(vars); 
 
     Vector newvars = new Vector(); 
     newvars.addAll(vars); 
     
     if (loopVar != null) 
-    { newvars.add("" + loopVar); }
+    { oldvars.add("" + loopVar); 
+      newvars.add("" + loopVar); 
+    }
     else if (loopTest != null)
     { Vector evuses = loopTest.getVariableUses(); 
       Vector vuses = 
                 VectorUtil.getStrings(evuses); 
       newvars.addAll(vuses); 
-    }  
+    } // not to oldvars  
   
-    // Also add the write frame variables of body to newvars
+    // Also add the write frame variables of body to both
 
     Vector wrfr = body.writeFrame();
     for (int i = 0; i < wrfr.size(); i++) 
     { String wrv = (String) wrfr.get(i); 
       int k = wrv.indexOf("::"); 
       if (k >= 0) 
-      { newvars.add(wrv.substring(k+2)); } 
+      { newvars.add(wrv.substring(k+2));
+        oldvars.add(wrv.substring(k+2));
+      } 
       else 
-      { newvars.add(wrv); } 
+      { newvars.add(wrv);
+        oldvars.add(wrv);
+      } 
     }  
  
+    if (loopRange != null) 
+    { loopRange.collectionOperatorUses(nestingLevel, 
+                                       operatorsAtLevel, 
+                                       newvars, 
+                                       uses, messages); 
+    }
+    else if (loopTest != null)
+    { loopTest.collectionOperatorUses(nestingLevel + 1, 
+                                      operatorsAtLevel, 
+                                      oldvars, 
+                                      uses, messages); 
+    }
+
     body.collectionOperatorUses(nestingLevel + 1,
                                 operatorsAtLevel, newvars, 
                                 uses, messages);
@@ -7269,7 +7357,39 @@ class WhileStatement extends Statement
         { return newcode; }  
       } 
     } 
+    else if (loopKind == WHILE)
+    { if (lt instanceof BinaryExpression && 
+          "<".equals(((BinaryExpression) lt).getOperator()))
+      { BinaryExpression ltexpr = 
+                             (BinaryExpression) lt; 
+        Expression lft = ltexpr.getLeft(); 
+        Expression rgt = ltexpr.getRight(); 
+        String vname = "" + lft; 
+        Vector vvs = new Vector(); 
+        vvs.add(vname); 
+      
+        newbody.setBrackets(false); 
+        String bodytext = (newbody + "").trim(); 
 
+        Vector vuses = rgt.variablesUsedIn(vvs);
+ 
+        if ((vname + " := " + vname + " + 1").equals(bodytext) && 
+            vuses.size() == 0)
+        { System.err.println(">>> Reducing while loop to conditional");
+ 
+          rgt.setBrackets(true); 
+
+          ConditionalStatement res = 
+            new ConditionalStatement(lt, 
+              new AssignStatement(lft, 
+                new UnaryExpression("->ceil", rgt)), 
+                  new InvocationStatement("skip")); 
+          return res; 
+        } 
+
+        newbody.setBrackets(true); 
+      } 
+    } 
 
     WhileStatement res = new WhileStatement(lt,newbody); 
     res.setEntity(entity); 
@@ -8128,7 +8248,8 @@ class WhileStatement extends Statement
   public Statement generateDesign(java.util.Map env, boolean local)
   { Statement bdy = body.generateDesign(env,local); 
     WhileStatement result = (WhileStatement) clone(); 
-    if (loopRange != null && loopRange instanceof BasicExpression)
+    if (loopRange != null && 
+        loopRange instanceof BasicExpression)
     { if (loopRange.umlkind == Expression.CLASSID) 
       { BasicExpression lr = new BasicExpression("allInstances"); 
         lr.umlkind = Expression.FUNCTION;
@@ -8833,13 +8954,13 @@ class WhileStatement extends Statement
       Expression expr = 
         ModelElement.lookupExpressionByName(lv, res); 
       if (expr == null) 
-      { System.err.println("! Warning: no use of loop variable " +
+      { System.err.println("!! Warning: no use of loop variable " +
                  loopVar + " in loop body: " + body); 
       } 
       res = ModelElement.removeExpressionByName(lv,res); 
     } 
 
-    if (loopRange != null) 
+    if (loopVar != null && loopRange != null) 
     { Vector lrvars = loopRange.getVariableUses(); 
       res.addAll(lrvars); 
       Expression rexpr = 
@@ -9114,9 +9235,9 @@ class CreationStatement extends Statement
     return Statement.EXCEPTION;  
   } 
 
-  public Expression definedness()
+  public Expression definedness(Map uses, Vector messages)
   { if (initialExpression != null) 
-    { return initialExpression.definedness(); } 
+    { return initialExpression.definedness(uses, messages); } 
     return new BasicExpression(true); 
   } 
 
@@ -10482,13 +10603,13 @@ class SequenceStatement extends Statement
   } 
 
 
-  public Expression definedness()
+  public Expression definedness(Map uses, Vector messages)
   { Expression res = new BasicExpression(true); 
     Expression post = new BasicExpression(true); 
     
     for (int i = statements.size() - 1; i >= 0; i--) 
     { Statement stat = (Statement) statements.get(i); 
-      Expression def = stat.definedness();
+      Expression def = stat.definedness(uses, messages);
       def.setBrackets(true);  
       Expression inv = stat.wpc(res, post); 
       inv.setBrackets(true); 
@@ -13262,8 +13383,15 @@ class CatchStatement extends Statement
   } 
 
   public Map energyUse(Map uses, Vector rUses, Vector aUses)
-  { if (action != null) 
-    { action.energyUse(uses, rUses, aUses); } 
+  { if (action == null || 
+        action.isSkip())
+    { int ocount = (int) uses.get("amber"); 
+      uses.set("amber", ocount+1); 
+      aUses.add("!! Warning (RC): empty action for catch statement: " + this); 
+    } 
+    else 
+    { action.energyUse(uses, rUses, aUses); }
+  
     return uses; 
   } 
 
@@ -15766,9 +15894,9 @@ class AssignStatement extends Statement
     return Statement.NORMAL;  
   } 
 
-  public Expression definedness()
-  { Expression ldef = lhs.definedness(); 
-    Expression rdef = rhs.definedness(); 
+  public Expression definedness(Map uses, Vector messages)
+  { Expression ldef = lhs.definedness(uses, messages); 
+    Expression rdef = rhs.definedness(uses, messages); 
 
     Expression res = Expression.simplify("&", ldef, rdef, null); 
     return res; 
@@ -17253,16 +17381,19 @@ class ConditionalStatement extends Statement
     return args;
   }
 
-  public Expression definedness()
-  { Expression testd = test.definedness(); 
-    Expression ifdef = ifPart.definedness(); 
+  public Expression definedness(Map uses, Vector messages)
+  { Expression testd = test.definedness(uses, messages); 
+    // must be boolean
+
+    Expression ifdef = ifPart.definedness(uses, messages); 
     Expression res = 
       Expression.simplify("&", testd, ifdef, null); 
     if (elsePart != null) 
     { res = 
         Expression.simplify("&", res, 
-                            elsePart.definedness(), null); 
+           elsePart.definedness(uses, messages), null); 
     }
+
     return res; 
   } 
 
@@ -17441,6 +17572,17 @@ class ConditionalStatement extends Statement
 
     if (elsePart != null) 
     { elsePart.energyUse(uses, rUses, oUses); } 
+
+    if ("true".equals(test + "")) 
+    { int acount = (int) uses.get("amber"); 
+      uses.set("amber", acount + 1); 
+      oUses.add("!! Redundant code (RC), true conditional test: " + this);
+    } 
+    else if ("false".equals(test + "")) 
+    { int acount = (int) uses.get("amber"); 
+      uses.set("amber", acount + 1); 
+      oUses.add("!! Redundant code (RC), false conditional test: " + this); 
+    } 
 
     if (ifPart.isSkip() && 
         (elsePart == null || elsePart.isSkip()))

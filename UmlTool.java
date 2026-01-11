@@ -831,7 +831,7 @@ public void findPlugins()
     analyseMenu.add(qualCheck);
 
     JMenuItem deterCheck = 
-      new JMenuItem("Determinacy check"); 
+      new JMenuItem("Definedness/Determinacy"); 
     deterCheck.setToolTipText(
       "Checks for determinacy & definedness");
     deterCheck.addActionListener(this);
@@ -2860,7 +2860,7 @@ public void findPlugins()
       }
       else if (label.equals("Quality check"))
       { ucdArea.qualityCheck(); }
-      else if (label.equals("Determinacy check"))
+      else if (label.equals("Definedness/Determinacy"))
       { ucdArea.determinacyCheck(); }
       else if (label.equals("Extract Interface"))
       { ucdArea.extractInterface(); 

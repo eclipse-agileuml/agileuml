@@ -35,7 +35,7 @@ class BinaryExpression extends Expression
                     // for map operators ->including(key,right), 
                     // ->excluding(key,right)
 
-
+ 
   public BinaryExpression(String op, Expression ll, Expression rr)
   { operator = op; 
 
@@ -645,18 +645,156 @@ class BinaryExpression extends Expression
     return null;  
   } 
 
-  public Expression definedness()
-  { Expression dl = left.definedness();
-    Expression dr = right.definedness();
+  public Expression definedness(Map uses, Vector messages)
+  { Expression dl = left.definedness(uses, messages);
+    Expression dr = right.definedness(uses, messages);
     Expression res = simplify("&",dl,dr,null);  
-                     // simplifyAnd(dl,dr); 
-      
-    if ("/".equals(operator) || 
+                     // simplifyAnd(dl,dr);
+
+    if ("->append".equals(operator) || 
+        "->prepend".equals(operator) || 
+        "->concatenate".equals(operator))
+    { if (left.hasSequenceType()) { } 
+      else 
+      { Expression typeofseq = 
+          new BinaryExpression("->oclIsTypeOf",left,
+            BasicExpression.newTypeBasicExpression("Sequence")); 
+        res = Expression.simplifyAnd(typeofseq, res);
+
+        int oscore = (int) uses.get("amber"); 
+        uses.set("amber", oscore+1); 
+        messages.add("!! (SEM): Type missing for " + left + " in " + this + " Should be Sequence");  
+      } 
+    }     
+    else if ("->excludingKey".equals(operator) || 
+        "->excludingValue".equals(operator) || 
+        "->restrict".equals(operator) ||
+        "->antirestrict".equals(operator))
+    { if (left.hasMapType()) { } 
+      else 
+      { Expression typeofmap = 
+          new BinaryExpression("->oclIsTypeOf",left,
+            BasicExpression.newTypeBasicExpression("Map")); 
+        res = Expression.simplifyAnd(typeofmap, res); 
+
+        int oscore = (int) uses.get("amber"); 
+        uses.set("amber", oscore+1); 
+        messages.add("!! (SEM): Type missing for " + left + " in " + this + " Should be Map");  
+      } 
+    }     
+    else if ("+".equals(operator))
+    { if (left.hasNumericType() || left.hasStringType()) { } 
+      else 
+      { Expression typeofdouble = 
+          new BinaryExpression("->oclIsKindOf",left,
+            BasicExpression.newTypeBasicExpression("double")); 
+    
+        Expression typeofstring = 
+          new BinaryExpression("->oclIsTypeOf",left,
+            BasicExpression.newTypeBasicExpression("String")); 
+ 
+        int oscore = (int) uses.get("amber"); 
+        uses.set("amber", oscore+1); 
+        messages.add("!! (SEM): Type missing for " + left + " in " + this + " Should be numeric or String");  
+
+        Expression typedefinedness =
+          new BinaryExpression("or", typeofdouble, typeofstring);
+        typedefinedness.setBrackets(true); 
+  
+        res = Expression.simplifyAnd(typedefinedness, res); 
+      } 
+
+      if (right.hasNumericType() || right.hasStringType()) { } 
+      else 
+      { Expression typeofdouble = 
+          new BinaryExpression("->oclIsKindOf", right,
+            BasicExpression.newTypeBasicExpression("double")); 
+    
+        Expression typeofstring = 
+          new BinaryExpression("->oclIsTypeOf", right,
+            BasicExpression.newTypeBasicExpression("String")); 
+ 
+        Expression typedefinedness =
+          new BinaryExpression("or", typeofdouble, typeofstring);  
+        typedefinedness.setBrackets(true); 
+
+        res = Expression.simplifyAnd(typedefinedness, res); 
+
+        int oscore = (int) uses.get("amber"); 
+        uses.set("amber", oscore+1); 
+        messages.add("!! (SEM): Type missing for " + right + " in " + this + " Should be numeric or String");  
+      } 
+    }
+    else if ("->pow".equals(operator) ||
+             "*".equals(operator))
+    { if (left.hasNumericType()) { } 
+      else 
+      { Expression typeofdouble = 
+          new BinaryExpression("->oclIsKindOf",left,
+            BasicExpression.newTypeBasicExpression("double")); 
+    
+        res = Expression.simplifyAnd(typeofdouble, res); 
+
+        int oscore = (int) uses.get("amber"); 
+        uses.set("amber", oscore+1); 
+        messages.add("!! (SEM): Type missing for " + left + " in " + this + " Should be numeric");  
+      } 
+
+      if (right.hasNumericType()) { } 
+      else 
+      { Expression typeofdouble = 
+          new BinaryExpression("->oclIsKindOf", right,
+            BasicExpression.newTypeBasicExpression("double")); 
+     
+        res = Expression.simplifyAnd(typeofdouble, res);
+
+        int oscore = (int) uses.get("amber"); 
+        uses.set("amber", oscore+1); 
+        messages.add("!! (SEM): Type missing for " + right + " in " + this + " Should be numeric ");  
+      } 
+    }  
+    else if ("/".equals(operator) || 
         "mod".equals(operator) || "div".equals(operator)) 
-    { Expression zero = new BasicExpression(0);
+    { if ("0".equals(right + "") || 
+          "0.0".equals(right + ""))
+      { messages.add("!!! (SEM) Error: explicit divide by zero: " + this); 
+        int rscore = (int) uses.get("red"); 
+        uses.set("red", rscore+1); 
+
+        return new BasicExpression(false); 
+      } 
+
+      Expression zero = new BasicExpression(0);
       Expression rexpr = (Expression) right.clone(); 
       rexpr.setBrackets(true); 
       Expression neqz = new BinaryExpression("/=",rexpr,zero);
+
+      if (left.hasNumericType()) { } 
+      else 
+      { Expression typeofdouble = 
+          new BinaryExpression("->oclIsKindOf",left,
+            BasicExpression.newTypeBasicExpression("double")); 
+    
+        res = Expression.simplifyAnd(typeofdouble, res);
+
+        int oscore = (int) uses.get("amber"); 
+        uses.set("amber", oscore+1); 
+        messages.add("!! (SEM): Type missing for " + left + " in " + this + " Should be numeric");   
+      } 
+
+      if (right.hasNumericType()) { } 
+      else 
+      { Expression typeofdouble = 
+          new BinaryExpression("->oclIsKindOf", right,
+            BasicExpression.newTypeBasicExpression("double")); 
+     
+        res = Expression.simplifyAnd(typeofdouble, res);
+
+        int oscore = (int) uses.get("amber"); 
+        uses.set("amber", oscore+1); 
+        messages.add("!! (SEM): Type missing for " + right + " in " + this + " Should be numeric");   
+      } 
+
       return simplify("&",res,neqz,null);
     }
 
@@ -666,7 +804,7 @@ class BinaryExpression extends Expression
       Expression eqz = new BinaryExpression("=",left,zero);
       Expression geqz = new BinaryExpression(">",right,zero); 
       Expression pex = new BinaryExpression("=>",eqz,geqz);
-	  pex.setBrackets(true);  
+      pex.setBrackets(true);  
       return simplify("&",res,pex,null);
     }  // left < 0  =>  right->oclIsTypeOf("int")
 
@@ -22910,6 +23048,16 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
                                       Vector vars)
   { //  level |-> [x.setAt(i,y), etc]
 
+    boolean sideeffect = isSideEffecting(); 
+    Vector vuses = variablesUsedIn(vars); 
+    
+    if (level > 1 && vuses.size() == 0 && !sideeffect)
+    { System.err.println("!! (LCE) flaw: The expression " + this + " may be independent of the iterator variables " + vars + "\n" + 
+          "!! Use Extract local variable to optimise.");
+      System.err.println();  
+      refactorELV = true; 
+    }
+
     if (operator.equals("->including") ||
         operator.equals("->prepend") ||
         operator.equals("->append") ||
@@ -22934,15 +23082,6 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       { opers = new Vector(); } 
       opers.add(this); 
       res.put(level, opers); 
-
-      boolean sideeffect = isSideEffecting(); 
-      Vector vuses = variablesUsedIn(vars); 
-      if (level > 1 && vuses.size() == 0 && !sideeffect)
-      { System.err.println("!!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
-          "!!! Use Extract local variable to optimise.");
-        System.err.println();  
-        refactorELV = true; 
-      }
 
       if (left.isSequence() && level > 1 && 
           (operator.equals("->excluding") ||
@@ -22974,15 +23113,6 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       opers.add(this); 
       res.put(level, opers); 
 
-      boolean sideeffect = isSideEffecting(); 
-      Vector vuses = variablesUsedIn(vars); 
-      if (level > 1 && vuses.size() == 0 && !sideeffect)
-      { System.err.println("!! (LCE) flaw: The expression " + this + " may be independent of the iterator variables " + vars + "\n" + 
-          "!! Use Extract local variable to optimise.");
-        System.err.println();  
-        refactorELV = true; 
-      }
-
       right.collectionOperatorUses(level,res,vars); 
       return res; 
     } 
@@ -23005,15 +23135,6 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       { opers = new Vector(); } 
       opers.add(this); 
       res.put(level, opers); 
-
-      boolean sideeffect = isSideEffecting(); 
-      Vector vuses = variablesUsedIn(vars); 
-      if (level > 1 && vuses.size() == 0 && !sideeffect)
-      { System.err.println("!! (LCE) flaw: The expression " + this + " may be independent of the iterator variables " + vars + "\n" + 
-          "!! Use Extract local variable to optimise.");
-        System.err.println(); 
-        refactorELV = true;  
-      }
       
       if (level > 1)
       { System.err.println("!! (OES) flaw: O(n)+ operation " + this + " executed in loop, may be O(n*n)+.");
@@ -23051,16 +23172,6 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       opers.add(this); 
       res.put(level, opers); 
 
-      boolean sideeffect = isSideEffecting(); 
-      Vector vuses = variablesUsedIn(vars); 
-      if (level > 1 && vuses.size() == 0 && !sideeffect)
-      { System.err.println("!! (LCE) flaw: The expression " + 
-               this + " may be independent of the iterator variables " + vars + "\n" + 
-               "!! Use Extract local variable to optimise.");
-        System.err.println(); 
-        refactorELV = true;  
-      }
-
       if (level > 1)
       { System.err.println("!! (OES) flaw: O(n)+ operation " + this + " executed in loop, may be O(n*n)+.");
         System.err.println(); 
@@ -23097,6 +23208,19 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
                                       Vector messages)
   { //  level |-> [x.setAt(i,y), etc]
 
+    boolean sideeffect = isSideEffecting(); 
+    Vector vuses = variablesUsedIn(vars);
+ 
+    if (level > 1 && vuses.size() == 0 && !sideeffect)
+    { messages.add("!! (LCE) flaw: The expression " + this + " may be independent of the iterator variables " + vars + "\n" + 
+        "!! Use Extract local variable to optimise."); 
+      messages.add(""); 
+      System.err.println(); 
+      refactorELV = true;
+      int aScore = (int) uses.get("amber"); 
+      uses.set("amber", aScore+1);  
+    }
+
     if (operator.equals("->including") ||
         operator.equals("->prepend") ||
         operator.equals("->append") ||
@@ -23125,18 +23249,6 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       { opers = new Vector(); } 
       opers.add(this); 
       res.put(level, opers); 
-
-      boolean sideeffect = isSideEffecting(); 
-      Vector vuses = variablesUsedIn(oldvars); 
-      if (level > 1 && vuses.size() == 0 && !sideeffect)
-      { messages.add("!! (LCE) flaw: The expression " + this + " may be independent of the iterator variables " + oldvars + "\n" + 
-          "!! Use Extract local variable to optimise."); 
-        messages.add(""); 
-        System.err.println(); 
-        refactorELV = true;
-        int aScore = (int) uses.get("amber"); 
-        uses.set("amber", aScore+1);  
-      }
 
       if (left.isSequence() && level > 1 && 
           (operator.equals("->excluding") ||
@@ -23174,17 +23286,6 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       opers.add(this); 
       res.put(level, opers); 
 
-      boolean sideeffect = isSideEffecting(); 
-      Vector vuses = variablesUsedIn(oldvars); 
-      if (level > 1 && vuses.size() == 0 && !sideeffect)
-      { messages.add("!! (LCE) flaw: The expression " + this + " may be independent of the iterator variables " + oldvars + "\n" + 
-          "!! Use Extract local variable to optimise."); 
-        messages.add(""); 
-        int aScore = (int) uses.get("amber"); 
-        uses.set("amber", aScore+1);  
-        refactorELV = true; 
-      }
-
       right.collectionOperatorUses(level,res,oldvars,
                                    uses,messages); 
       return res; 
@@ -23213,24 +23314,12 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       opers.add(this); 
       res.put(level, opers); 
 
-      boolean sideeffect = isSideEffecting(); 
-      Vector vuses = variablesUsedIn(oldvars); 
-      if (level > 1 && vuses.size() == 0 && !sideeffect)
-      { messages.add("!! (LCE) flaw: The expression " + this + " may be independent of the iterator variables " + oldvars + "\n" + 
-          "!! Use Extract local variable to optimise.");
-        messages.add(""); 
-        refactorELV = true;
-        int aScore = (int) uses.get("amber"); 
-        uses.set("amber", aScore+1);  
-      }
-
       if (level > 1) 
       { messages.add("!! (OES) flaw: O(n)+ operator " + operator + " used in loop, could be O(n*n)"); 
         messages.add(""); 
         int aScore = (int) uses.get("amber"); 
         uses.set("amber", aScore+1);  
       }
-
       
       Vector newvars = new Vector(); 
       newvars.addAll(oldvars); 
@@ -23267,18 +23356,6 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       { opers = new Vector(); } 
       opers.add(this); 
       res.put(level, opers); 
-
-      boolean sideeffect = isSideEffecting(); 
-      Vector vuses = variablesUsedIn(oldvars); 
-      if (level > 1 && vuses.size() == 0 && !sideeffect)
-      { messages.add("!! (LCE) flaw: The expression " + 
-               this + " may be independent of the iterator variables " + oldvars + "\n" + 
-               "!! Use Extract local variable to optimise.");
-        messages.add(""); 
-        refactorELV = true;
-        int aScore = (int) uses.get("amber"); 
-        uses.set("amber", aScore+1);  
-      }
 
       if (level > 1) 
       { messages.add("!! (OES) flaw: O(n)+ operator " + operator + " used in loop, could be O(n*n)"); 
@@ -23319,6 +23396,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
 
     return res; 
   } // and the left and right. 
+
 
   public int maximumReferenceChain() 
   { int maxleft = left.maximumReferenceChain();

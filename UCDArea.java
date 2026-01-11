@@ -1474,11 +1474,17 @@ public class UCDArea extends JPanel
     uc.addOperation(op);
     op.setUseCase(uc); 
 
+    Map uses = new Map(); 
+    uses.set("red", 0); 
+    uses.set("amber", 0); 
+
+    Vector messages = new Vector(); 
+
     boolean tc2 = effect.typeCheck(types,entities,contexts,vars); 
     if (!tc2) 
     { System.err.println("!! Failed to type-check postcondition"); }
     else 
-    { System.out.println(">> Definedness condition: " + effect.definedness()); 
+    { System.out.println(">> Definedness condition: " + effect.definedness(uses, messages)); 
       System.out.println(">> Determinacy condition: " + effect.determinate()); 
     } 
 
@@ -1748,6 +1754,11 @@ public class UCDArea extends JPanel
     uc.addOperation(op);
     op.setUseCase(uc); 
 
+    Map uses = new Map(); 
+    uses.set("red", 0); 
+    uses.set("amber", 0); 
+    Vector messages = new Vector(); 
+
     boolean tc2 = effect.typeCheck(types,entities,contexts,vars); 
     if (!tc2) 
     { System.err.println("! Warning: Unable to type-check postcondition " + effect); 
@@ -1755,7 +1766,7 @@ public class UCDArea extends JPanel
                                     JOptionPane.ERROR_MESSAGE);  
     }
     else 
-    { System.out.println(">>> Definedness condition: " + effect.definedness()); 
+    { System.out.println(">>> Definedness condition: " + effect.definedness(uses, messages)); 
       System.out.println(">>> Determinacy condition: " + effect.determinate()); 
     } 
 
@@ -3778,21 +3789,21 @@ public class UCDArea extends JPanel
 
     // compute transitive closure of this
 
-    Map tc = new Map(); 
-    tc.elements = Map.transitiveClosure(res.elements);
+    // Map tc = new Map(); 
+    // tc.elements = Map.transitiveClosure(res.elements);
     // out.println(">>> Transitive closure of operations call graph is: " + tc);  
 
-    Vector selfcalls = tc.getSelfMaps(); 
+    // Vector selfcalls = tc.getSelfMaps(); 
     // System.out.println("!! Warning: Recursive operations: " + selfcalls);
   
-    int selfcallsn = selfcalls.size();  
+    // int selfcallsn = selfcalls.size();  
  
-    if (selfcallsn > 0) 
+    /* if (selfcallsn > 0) 
     { messages.add("!!! Red flag: " + selfcallsn + " recursive dependencies"); 
       messages.add("!!! Use Replace recursion by iteration (for tail recursions) to reduce energy cost\n    Or make operation <<cached>>"); 
 
       redFlags = redFlags + selfcallsn; 
-    }
+    } */ 
 
     java.util.Set lastfound = new java.util.HashSet(); 
     int n = res.maxPathLength(lastfound); 
@@ -6853,12 +6864,17 @@ public class UCDArea extends JPanel
 
     ent.addOperation(op);
 
+    Map uses = new Map(); 
+    uses.set("red", 0); 
+    uses.set("amber", 0); 
+    Vector messages = new Vector(); 
+
     boolean tc2 = effect.typeCheck(types,entities,contexts,vars); 
     if (!tc2) 
-    { System.out.println("Warning: cannot type postcondition: " + effect); }
+    { System.out.println("!! Warning: cannot type postcondition: " + effect); }
     else 
-    { System.out.println("Definedness condition: " + effect.definedness()); 
-      System.out.println("Determinacy condition: " + effect.determinate()); 
+    { System.out.println(">> Definedness condition: " + effect.definedness(uses, messages)); 
+      System.out.println(">> Determinacy condition: " + effect.determinate()); 
     } 
 
     op.setPre(spre); 
@@ -7064,12 +7080,17 @@ public class UCDArea extends JPanel
  
     ent.addOperation(op);
 
+    Map uses = new Map(); 
+    uses.set("red", 0); 
+    uses.set("amber", 0); 
+    Vector messages = new Vector(); 
+
     boolean tc2 = effect.typeCheck(types,entities,contexts,vars); 
     if (!tc2) 
-    { System.out.println("Warning, cannot type postcondition: " + effect); }
+    { System.out.println("!! Warning, cannot type postcondition: " + effect); }
     else 
-    { System.out.println("Definedness condition: " + effect.definedness()); 
-      System.out.println("Determinacy condition: " + effect.determinate()); 
+    { System.out.println(">> Definedness condition: " + effect.definedness(uses, messages)); 
+      System.out.println(">> Determinacy condition: " + effect.determinate()); 
     } 
 
     op.setPre(spre); 
