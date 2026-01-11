@@ -57,7 +57,7 @@ if _1 { _2 } _* |-->if _1 then (_2`statementList) _* else skip<when> _* lastIs e
 if _1 { } _* |-->if _1 then skip _*
 if _1 { _2 } _* |-->if _1 then (_2`statementList) _*
 
-switch _1 { _* } |-->(var _case : _1`ocltype := _1;\n    var _found : boolean := false;\n_*    skip)
+switch _1 { _* } |-->for _i : Set{0} do (var _case : _1`ocltype := _1;\n_*    skip)
 
 foreach ( _1 : _2 in _3 ) { } |-->for _2 : _3 do skip
 foreach ( _1 : _2 in _3 ) { _4 } |-->for _2 : _3 do (_4`statementList)
@@ -124,9 +124,9 @@ else { } |-->else skip
 
 
 case_statement::
-case _1 : _2 |-->    if _case = _1 & not(_found) then\n  (_2`statementList    ; _found := true) else skip;\n
+case _1 : _2 |-->    if _case = _1 then\n  (_2`statementList    ; break) else skip;\n
 
-default : _1 |-->    if not(_found) then\n  (_1`statementList) else skip;\n
+default : _1 |-->    _1`statementList    ;
 
 
 variable_decl_assigment::

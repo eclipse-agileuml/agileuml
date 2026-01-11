@@ -121,11 +121,19 @@ _1 < _2 |-->_1 & (_1`last < _2)<when> _1 comparison, _1 multiple
 
 _1 < _2 |-->MatrixLib.matrixLess(_1,_2)<when> _1`ocltype Sequence, _2`ocltype Sequence
 _1 < _2 |-->MatrixLib.elementwiseLess(_1,_2)<when> _1`ocltype Sequence
+
+_1 < _2 |-->_1->forAll(_x | _1->count(_x) < _2->count(_x))<when> _1`ocltype Bag
+
 _1 < _2 |-->_1 < _2<when> _1`ocltype String
 _1 < _2 |-->_1 < _2<when> _1`ocltype double
+_1 < _2 |-->_1 < _2<when> _1`ocltype int
+_1 < _2 |-->_1 < _2<when> _1`ocltype long
+
 _1 < _2 |-->_1 < _2<when> _2`ocltype String
 _1 < _2 |-->_1 < _2<when> _2`ocltype double
-_1 < _2 |-->_1->forAll(_x | _1->count(_x) < _2->count(_x))<when> _1`ocltype Bag
+_1 < _2 |-->_1 < _2<when> _2`ocltype int
+_1 < _2 |-->_1 < _2<when> _2`ocltype long
+
 _1 < _2 |-->(_1->compareTo(_2)) < 0
 
 
@@ -133,31 +141,53 @@ _1 > _2 |-->_1 & (_1`last > _2)<when> _1 comparison, _1 multiple
 
 _1 > _2 |-->MatrixLib.matrixGreater(_1,_2)<when> _1`ocltype Sequence, _2`ocltype Sequence
 _1 > _2 |-->MatrixLib.elementwiseGreater(_1,_2)<when> _1`ocltype Sequence
+
+_1 > _2 |-->_1->forAll(_x | _1->count(_x) > _2->count(_x))<when> _1`ocltype Bag
+
 _1 > _2 |-->_1 > _2<when> _1`ocltype String
 _1 > _2 |-->_1 > _2<when> _1`ocltype double
+_1 > _2 |-->_1 > _2<when> _1`ocltype int
+_1 > _2 |-->_1 > _2<when> _1`ocltype long
+
 _1 > _2 |-->_1 > _2<when> _2`ocltype String
 _1 > _2 |-->_1 > _2<when> _2`ocltype double
-_1 > _2 |-->_1->forAll(_x | _1->count(_x) > _2->count(_x))<when> _1`ocltype Bag
+_1 > _2 |-->_1 > _2<when> _2`ocltype int
+_1 > _2 |-->_1 > _2<when> _2`ocltype long
+
 _1 > _2 |-->(_1->compareTo(_2)) > 0
 
 
 _1 >= _2 |-->_1 & (_1`last >= _2)<when> _1 comparison, _1 multiple
 
-_1 >= _2 |-->_1 >= _2<when> _1 String
-_1 >= _2 |-->_1 >= _2<when> _1 real
-_1 >= _2 |-->_1 >= _2<when> _2 String
-_1 >= _2 |-->_1 >= _2<when> _2 real
-_1 >= _2 |-->_1->forAll(_x | _1->count(_x) >= _2->count(_x))<when> _1 Bag
+_1 >= _2 |-->_1->forAll(_x | _1->count(_x) >= _2->count(_x))<when> _1`ocltype Bag
+
+_1 >= _2 |-->_1 >= _2<when> _1`ocltype String
+_1 >= _2 |-->_1 >= _2<when> _1`ocltype double
+_1 >= _2 |-->_1 >= _2<when> _1`ocltype int
+_1 >= _2 |-->_1 >= _2<when> _1`ocltype long
+
+_1 >= _2 |-->_1 >= _2<when> _2`ocltype String
+_1 >= _2 |-->_1 >= _2<when> _2`ocltype double
+_1 >= _2 |-->_1 >= _2<when> _2`ocltype int
+_1 >= _2 |-->_1 >= _2<when> _2`ocltype long
+
 _1 >= _2 |-->(_1->compareTo(_2)) >= 0
 
 
 _1 <= _2 |-->_1 & (_1`last <= _2)<when> _1 comparison, _1 multiple
 
-_1 <= _2 |-->_1 <= _2<when> _1 String
-_1 <= _2 |-->_1 <= _2<when> _1 real
-_1 <= _2 |-->_1 <= _2<when> _2 String
-_1 <= _2 |-->_1 <= _2<when> _2 real
 _1 <= _2 |-->_1->forAll(_x | _1->count(_x) <= _2->count(_x))<when> _1 Bag
+
+_1 <= _2 |-->_1 <= _2<when> _1`ocltype String
+_1 <= _2 |-->_1 <= _2<when> _1`ocltype double
+_1 <= _2 |-->_1 <= _2<when> _1`ocltype int
+_1 <= _2 |-->_1 <= _2<when> _1`ocltype long
+
+_1 <= _2 |-->_1 <= _2<when> _2`ocltype String
+_1 <= _2 |-->_1 <= _2<when> _2`ocltype double
+_1 <= _2 |-->_1 <= _2<when> _2`ocltype int
+_1 <= _2 |-->_1 <= _2<when> _2`ocltype long
+
 _1 <= _2 |-->(_1->compareTo(_2)) <= 0
 
 _1 == _2 |-->_1 & (_1`last == _2)<when> _1 comparison, _1 multiple
@@ -252,7 +282,12 @@ slice _1 |-->Integer.subrange(1,_1`firstArg)<when> _1`numberOfArguments 1
 slice _1 |-->Integer.subrange(_1`firstArg+1,_1`secondArg)
 
 sum _1 |-->_1->sum()<when> _1`isSequenceExpression true
+sum _1 |-->_1->sum()<when> _1`numberOfArguments 1
 sum _1 |-->(_1`sequenceFormation)->sum()
+
+average _1 |-->MathLib.mean_1<when> _1`isSequenceExpression true
+average _1 |-->MathLib.mean_1<when> _1`numberOfArguments 1
+average _1 |-->MathLib.mean(_1`sequenceFormation)
 
 type _1 |-->_1->oclType()<when> _1`numberOfArguments 1
 type _1 |-->OclType.newOclType(_1`firstArg)
@@ -1106,7 +1141,10 @@ trailer::
 . remove _1 |-->->excludingFirst_1
 . discard _1 |-->->excluding_1
 . clear _1 |-->->intersection(Set{})
-. items _1 |-->->asSequence()->collect( _mx | Sequence{_mx->keys()->any(), _mx->values()->any()})
+
+. items |-->->asSequence()->collect( _mx | Sequence{_mx->keys()->any(), _mx->values()->any()})
+. items _1 |-->->asSequence()->collect( _mx | Sequence{_mx->keys()->any(), _mx->values()->any()})_1
+
 . elements _1 |-->->asSequence()
 . total _1 |-->->size()
 . range _1 |-->_1`rangeArguments
@@ -1224,6 +1262,8 @@ mapQueryForm::
 . clear _1 |-->->intersection(Set{})
 . items _1 |-->->asSequence()->collect( _mx | Sequence{_mx->keys()->any(), _mx->values()->any()})
 
+. keys _1 |-->->keys()
+. values _1 |-->->values()
 
 . max _1 |-->->max()
 . min _1 |-->->min()
