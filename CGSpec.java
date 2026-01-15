@@ -1,5 +1,5 @@
 /******************************
-* Copyright (c) 2003--2025 Kevin Lano
+* Copyright (c) 2003--2026 Kevin Lano
 * This program and the accompanying materials are made available under the
 * terms of the Eclipse Public License 2.0 which is available at
 * http://www.eclipse.org/legal/epl-2.0
@@ -217,8 +217,11 @@ public class CGSpec
     { System.err.println("!! Warning: no rules for category " + category); 
       return obj + ""; 
     } 
+
+    System.err.println(">> Calling " + category + " on " + obj + "\n"); 
+
     return obj.cgRules(this,res); 
-  } 
+  } // cache on the basis of the category
 
 /*  public String applyUMLRuleset(String category, ModelElement obj)
   { Vector res = (Vector) categoryRules.get(category); 

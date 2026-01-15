@@ -683,47 +683,54 @@ class BinaryExpression extends Expression
       } 
     }     
     else if ("+".equals(operator))
-    { if (left.hasNumericType() || left.hasStringType()) { } 
-      else 
-      { Expression typeofdouble = 
-          new BinaryExpression("->oclIsKindOf",left,
-            BasicExpression.newTypeBasicExpression("double")); 
-    
-        Expression typeofstring = 
-          new BinaryExpression("->oclIsTypeOf",left,
-            BasicExpression.newTypeBasicExpression("String")); 
+    { if (left.hasStringType() || right.hasStringType()) 
+      { } // result is a string 
+      else if (left.hasNumericType()) 
+      { if (right.hasNumericType() || 
+            right.hasStringType()) { } 
+        else // right must be string or numeric
+        { Expression typeofdouble = 
+            new BinaryExpression("->oclIsKindOf",right,
+              BasicExpression.newTypeBasicExpression("double")); 
+          
+          Expression typeofstring = 
+            new BinaryExpression("->oclIsTypeOf",right,
+              BasicExpression.newTypeBasicExpression("String")); 
  
-        int oscore = (int) uses.get("amber"); 
-        uses.set("amber", oscore+1); 
-        messages.add("!! (SEM): Type missing for " + left + " in " + this + " Should be numeric or String");  
+          int oscore = (int) uses.get("amber"); 
+          uses.set("amber", oscore+1); 
+          messages.add("!! (SEM): Type missing for " + right + " in " + this + " Should be numeric or String");  
 
-        Expression typedefinedness =
-          new BinaryExpression("or", typeofdouble, typeofstring);
-        typedefinedness.setBrackets(true); 
+          Expression typedefinedness =
+            new BinaryExpression("or", typeofdouble, typeofstring);
+          typedefinedness.setBrackets(true); 
   
-        res = Expression.simplifyAnd(typedefinedness, res); 
+          res = Expression.simplifyAnd(typedefinedness, res); 
+        }
       } 
-
-      if (right.hasNumericType() || right.hasStringType()) { } 
-      else 
-      { Expression typeofdouble = 
-          new BinaryExpression("->oclIsKindOf", right,
-            BasicExpression.newTypeBasicExpression("double")); 
+      else if (right.hasNumericType())  
+      { if (left.hasNumericType() || 
+            left.hasStringType()) { } 
+        else // left must be string or numeric
+        { Expression typeofdouble = 
+             new BinaryExpression("->oclIsKindOf", left,
+               BasicExpression.newTypeBasicExpression("double")); 
     
-        Expression typeofstring = 
-          new BinaryExpression("->oclIsTypeOf", right,
-            BasicExpression.newTypeBasicExpression("String")); 
+          Expression typeofstring = 
+            new BinaryExpression("->oclIsTypeOf", left,
+              BasicExpression.newTypeBasicExpression("String")); 
  
-        Expression typedefinedness =
-          new BinaryExpression("or", typeofdouble, typeofstring);  
-        typedefinedness.setBrackets(true); 
+          Expression typedefinedness =
+            new BinaryExpression("or", typeofdouble, typeofstring);  
+          typedefinedness.setBrackets(true); 
 
-        res = Expression.simplifyAnd(typedefinedness, res); 
+          res = Expression.simplifyAnd(typedefinedness, res); 
 
-        int oscore = (int) uses.get("amber"); 
-        uses.set("amber", oscore+1); 
-        messages.add("!! (SEM): Type missing for " + right + " in " + this + " Should be numeric or String");  
-      } 
+          int oscore = (int) uses.get("amber"); 
+          uses.set("amber", oscore+1); 
+          messages.add("!! (SEM): Type missing for " + left + " in " + this + " Should be numeric or String"); 
+        } 
+      }  
     }
     else if ("->pow".equals(operator) ||
              "*".equals(operator))

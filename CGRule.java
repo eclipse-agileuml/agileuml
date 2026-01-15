@@ -1,5 +1,5 @@
 /******************************
-* Copyright (c) 2003--2025 Kevin Lano
+* Copyright (c) 2003--2026 Kevin Lano
 * This program and the accompanying materials are made available under the
 * terms of the Eclipse Public License 2.0 which is available at
 * http://www.eclipse.org/legal/epl-2.0
@@ -552,6 +552,16 @@ public class CGRule
     return CGCondition.allConditionsSatisfied(this,
                 conditions,variables,
                 eargs,newargs,entities,cgs,rhsVariables); 
+  } 
+
+  public boolean quickCheck(Vector eargs, Vector entities, 
+                            CGSpec cgs)
+  { // evaluate the conditions just using the eargs terms/vectors
+    // Not computing any metafeatures of them
+
+    return CGCondition.quickChecks(this, conditions, variables,
+                                   eargs, entities,
+                                   rhsVariables, cgs); 
   } 
 
   public int variablePosition(String var)
@@ -1983,6 +1993,18 @@ public class CGRule
 
     return res;
   }
+
+  public void assertActions(Vector eargs, Vector entities, 
+                            CGSpec cgs)
+  { // Apply actions, in order
+
+    for (int i = 0; i < actions.size(); i++) 
+    { CGCondition act = (CGCondition) actions.get(i); 
+      act.applyQuickAction(variables,eargs,
+                      cgs,entities,rhsVariables); 
+    } 
+  }
+
   
   public String applyTextRule(String actualText)
   { String res = "" + rhs; 

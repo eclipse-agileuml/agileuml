@@ -655,13 +655,21 @@ public class ASTCompositeTerm extends ASTTerm
     // the r LHS, then apply first rule to the cg results of 
     // the LHS matchings. 
 
+    // boolean singleTerm = this.isNestedSymbolTerm();
+
     // if already cached, return that value: 
-    String cachedValue = ASTTerm.getCg_cache(cgs,this); 
-    if (cachedValue != null) 
-    { return cachedValue; } 
+    // if (singleTerm) 
+    { String cachedValue = ASTTerm.getCg_cache(cgs,this); 
+      if (cachedValue != null)
+      { // System.err.println(">> repeated call: " + this + 
+        //                    " " + cachedValue);  
+        return cachedValue; 
+      }
+    }  
 
     Vector rules = cgs.getRulesForCategory(tag);
     String res = cgRules(cgs,rules); 
+
     ASTTerm.putCg_cache(cgs,this,res); 
     return res; 
   } 
@@ -856,6 +864,17 @@ public class ASTCompositeTerm extends ASTTerm
       if (failed == false) 
       { // System.out.println(">> Matched " + tag + " rule " + r + " for " + this);  
 
+        Vector ents = new Vector(); 
+
+        // all conditions can be checked directly from the 
+        // argument terms -- replacements are only 
+        // nested symbol terms -- and are true: 
+
+        /* if (r.quickCheck(eargs, ents, cgs)) 
+        { System.out.println(">> Quick check " + r + " holds for " + eargs); 
+          r.assertActions(eargs, ents, cgs); 
+        }  */ 
+
         // Repeated evaluation of term.cg(cgs). Must be cached
 
         for (int p = 0; p < eargs.size(); p++)
@@ -876,11 +895,10 @@ public class ASTCompositeTerm extends ASTTerm
           }     
         } 
 
-        Vector ents = new Vector(); 
 
         if (r.satisfiesAllConditions(args,eargs,ents,cgs))
         { // System.out.println("|| Conditions satisfied, Applying " + tag + 
-          //                   " rule " + r + " for " + this); 
+          //        " rule " + r + " for " + this); 
 
           return r.applyRule(args,eargs,cgs); 
         }  

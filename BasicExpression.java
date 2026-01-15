@@ -362,6 +362,14 @@ class BasicExpression extends Expression
     return true; 
   } 
 
+  public boolean isSingleIdentifier() 
+  { if (objectRef == null && arrayIndex == null && 
+        parameters == null) 
+    { return true; }
+ 
+    return false; 
+  } 
+
   public void setVariableType(Type t) 
   { if (variable != null) 
     { variable.setType(t); } 
@@ -4954,10 +4962,12 @@ class BasicExpression extends Expression
       { adjustTypeForArrayIndex(var); } 
 	  
       if (parameters != null && 
+          var.getType() != null && 
           var.getType().isFunctionType()) // application of a Function(S,T)
       { Type ftype = var.getType(); 
-        type = ftype.getElementType(); 
-        elementType = type.getElementType(); 
+        type = ftype.getElementType();
+        if (type != null)  
+        { elementType = type.getElementType(); } 
         System.out.println(">>>> TYPE CHECKED: Type of variable expression " + this + " is " + type + " entity: " + entity); 
       }
 	  

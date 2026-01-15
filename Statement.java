@@ -9196,6 +9196,19 @@ class CreationStatement extends Statement
     assignsTo = var + ""; 
   }
 
+  public CreationStatement(Expression var, Type typ, 
+                           Expression init)
+  { instanceType = typ; 
+    elementType = typ.getElementType(); 
+    if (Type.isStringType(instanceType))
+    { elementType = new Type("String", null); }
+  
+    initialExpression = init; 
+    createsInstanceOf = instanceType.getName(); 
+    assignsTo = var + ""; 
+  }
+
+
   public CreationStatement defaultVersion()
   { CreationStatement res = (CreationStatement) clone(); 
     Expression defaultInit = 
@@ -10139,7 +10152,8 @@ class CreationStatement extends Statement
                     ModelElement.INTERNAL); 
 
     Type typ = Type.getTypeFor(createsInstanceOf, 
-                               types, entities); 
+                               types, entities);
+ 
     if (instanceType == null && typ != null) 
     { instanceType = typ; } 
     if (elementType != null) 
@@ -15689,6 +15703,8 @@ class AssignStatement extends Statement
   private Expression lhs;
   private Expression rhs;
   private boolean copyValue = false; 
+  private boolean missingDeclaration = false; 
+
   private String operator = ":=";  // default
   
   /* Note that the version with a type is depricated 
@@ -15895,7 +15911,13 @@ class AssignStatement extends Statement
   } 
 
   public Expression definedness(Map uses, Vector messages)
-  { Expression ldef = lhs.definedness(uses, messages); 
+  { if (this.missingDeclaration)
+    { int ascore = (int) uses.get("amber"); 
+      uses.set("amber", ascore + 1); 
+      messages.add("!! (UDEF) Undefined variable: " + lhs); 
+    } 
+
+    Expression ldef = lhs.definedness(uses, messages); 
     Expression rdef = rhs.definedness(uses, messages); 
 
     Expression res = Expression.simplify("&", ldef, rdef, null); 
@@ -16036,7 +16058,17 @@ class AssignStatement extends Statement
   } 
 
   public Statement optimiseOCL()
-  { Expression newlhs = lhs.simplifyOCL(); 
+  { if (missingDeclaration &&
+        lhs instanceof BasicExpression && 
+        ((BasicExpression) lhs).isSingleIdentifier()) 
+    { // not a local variable or parameter
+      Expression newrhs = rhs.simplifyOCL(); 
+      CreationStatement cs = 
+          new CreationStatement(lhs, lhs.getType(), newrhs); 
+      return cs; 
+    } 
+
+    Expression newlhs = lhs.simplifyOCL(); 
     Expression newrhs = rhs.simplifyOCL(); 
     AssignStatement res = new AssignStatement(newlhs,newrhs); 
     res.setType(type); 
@@ -16174,7 +16206,7 @@ class AssignStatement extends Statement
   { if (type == null) 
     { return lhs + " " + operator + " " + rhs + " "; }
     else 
-    { return lhs + " : " + type + " := " + rhs + " "; } 
+    { return "var " + lhs + " : " + type + " := " + rhs + " "; } 
   }  
 
   public String toAST() 
@@ -16308,6 +16340,37 @@ class AssignStatement extends Statement
 
   public boolean typeCheck(Vector types, Vector entities, Vector cs, Vector env)
   { // Also recognise the type as an entity or enumeration if it exists
+
+    if (lhs instanceof BasicExpression && 
+        ((BasicExpression) lhs).isSingleIdentifier() &&
+        ModelElement.lookupByName(lhs+"", env) == null) 
+    { // not a local variable or parameter
+
+      boolean found = false; 
+
+      for (int i = 0; i < cs.size(); i++) 
+      { Entity ent = (Entity) cs.get(i); 
+        if (ent != null && 
+            ent.hasDefinedAttribute("" + lhs))
+        { System.err.println("! Please use self before attribute name in " + this); 
+          found = true; 
+          this.missingDeclaration = false;
+        }
+      } 
+      
+      if (found == false)
+      { System.err.println("!! Unknown variable: " + lhs); 
+        System.err.println("!! It needs to be declared.\n");
+        this.missingDeclaration = true;
+        Attribute newattr = 
+             new Attribute(lhs + "", lhs.getType(),  
+                           ModelElement.INTERNAL); 
+        env.add(newattr);       
+      }   
+    } 
+    else 
+    { this.missingDeclaration = false; } 
+
     boolean res = lhs.typeCheck(types,entities,cs,env); 
     res = rhs.typeCheck(types,entities,cs,env);
 

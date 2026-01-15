@@ -1,5 +1,5 @@
 /******************************
-* Copyright (c) 2003--2025 Kevin Lano
+* Copyright (c) 2003--2026 Kevin Lano
 * This program and the accompanying materials are made available under the
 * terms of the Eclipse Public License 2.0 which is available at
 * http://www.eclipse.org/legal/epl-2.0
@@ -226,8 +226,16 @@ public class ASTBasicTerm extends ASTTerm
   } 
 
   public String cg(CGSpec cgs)
-  { Vector rules = cgs.getRulesForCategory(tag); 
-    return cgRules(cgs,rules); 
+  { // if already cached, return that value: 
+    String cachedValue = ASTTerm.getCg_cache(cgs,this); 
+    if (cachedValue != null) 
+    { return cachedValue; } 
+
+
+    Vector rules = cgs.getRulesForCategory(tag); 
+    String res = cgRules(cgs,rules); 
+    ASTTerm.putCg_cache(cgs,this,res); 
+    return res;  
   } 
 
   public String cgRules(CGSpec cgs, Vector rules)

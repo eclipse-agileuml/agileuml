@@ -1,5 +1,5 @@
 /******************************
-* Copyright (c) 2003--2025 Kevin Lano
+* Copyright (c) 2003--2026 Kevin Lano
 * This program and the accompanying materials are made available under the
 * terms of the Eclipse Public License 2.0 which is available at
 * http://www.eclipse.org/legal/epl-2.0
@@ -528,8 +528,8 @@ public abstract class ASTTerm
       ASTTerm.metafeatures.put(lit,stereotypes);  
     } 
 
-    // System.out.println(">>> " + lit + " metafeature values = " +
-    //                   ASTTerm.metafeatures.get(lit));  
+    System.out.println(">>> " + lit + " metafeature values = " +
+                      ASTTerm.metafeatures.get(lit));  
   } 
 
   public static void removeStereo(String lit, String str) 
@@ -546,8 +546,8 @@ public abstract class ASTTerm
       stereotypes.removeAll(removed);
     }   
 
-    // System.out.println("*** " + lit + " metafeature values= " +
-    //                   ASTTerm.metafeatures.get(lit));  
+    System.out.println("*** " + lit + " metafeature values= " +
+                       ASTTerm.metafeatures.get(lit));  
   } 
 
   public boolean hasStereotype(String str) 
@@ -577,9 +577,9 @@ public abstract class ASTTerm
   } 
 
   public static void setStereotypeValue(String lit, String val)
-  { // System.out.println(">>>--- Global variable " +  lit + 
-    //                    " set to " + val);  
-    // System.out.println(); 
+  { System.out.println(">>>--- Global variable " +  lit + 
+                        " set to " + val);  
+    System.out.println(); 
     ASTTerm.metafeatures.put(lit,val); 
   } 
 
