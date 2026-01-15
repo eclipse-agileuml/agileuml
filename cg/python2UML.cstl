@@ -13,6 +13,9 @@ eval_input::
 _1 |-->_1
 _1 _* |-->_1
 
+returnList::
+_1 |-->_1
+_1 , _* |-->Sequence{_1, _*}
 
 testlist::
 _1 |-->_1
@@ -101,15 +104,15 @@ _1 |-->_1
 
 
 logical_test::
-not _1 |-->not(_1 = 0)<when> _1 real
+not _1 |-->not(_1 = 0)<when> _1 double
 not _1 |-->not(_1 = "")<when> _1 String
 not _1 |-->not(_1)
 
-_1 and _2 |-->if _1 = 0 then _1 else _2 endif<when> _1 real
+_1 and _2 |-->if _1 = 0 then _1 else _2 endif<when> _1 double
 _1 and _2 |-->if _1 = "" then _1 else _2 endif<when> _1 String
 _1 and _2 |-->_1 & _2
 
-_1 or _2 |-->if _1 /= 0 then _1 else _2 endif<when> _1 real
+_1 or _2 |-->if _1 /= 0 then _1 else _2 endif<when> _1 double
 _1 or _2 |-->if _1 /= "" then _1 else _2 endif<when> _1 String
 _1 or _2 |-->_1 or _2
 
@@ -360,6 +363,7 @@ _1 * _2 |-->StringLib.nCopies(_1, _2)<when> _1 String
 
 _1 * _2 |-->MatrixLib.dotProduct(_1,_2)<when> _1`ocltype Sequence, _2`ocltype Sequence
 _1 * _2 |-->MatrixLib.elementwiseMult(_1, _2)<when> _1`ocltype Sequence
+_1 * _2 |-->MatrixLib.elementwiseMult(_1, _2)<when> _1`isSequenceExpression true
 _1 * _2 |-->MatrixLib.elementwiseMult(_2, _1)<when> _2`ocltype Sequence
 _1 * _2 |-->_1 * _2
 
@@ -440,6 +444,9 @@ _1 _* |-->_1->apply_*<when> _1 Function
 _1 _2 |-->_1_2`mapQueryForm<when> _1 Map
 _1 _2 |-->_1_2`sequenceQueryForm<when> _1 Sequence
 _1 _2 |-->_1_2`bagQueryForm<when> _1 Bag
+
+_1 _2 |-->_1_2<when> _1 atom
+_1 _2 _3 |-->_1_2_3<when> _1 atom
 
 _1 _* |-->_1_*<when> _1 atom
 _1 |-->_1
@@ -685,7 +692,8 @@ _1 + _2 |-->_1`isSequenceExpression
 
 _1 _2 |-->false<when> _1 atom, _2 trailer
 _1 , _* |-->false
-_1 |-->true<when> _1`ocltype Sequence
+
+_1 |-->true<when> _1 Sequence
 _1 |-->false
 
 
@@ -726,7 +734,7 @@ _1 | _2 |-->_1`isBagExpression
 
 _1 _2 |-->false<when> _1 atom, _2 trailer
 _1 , _* |-->false
-_1 |-->true<when> _1`ocltype Bag
+_1 |-->true<when> _1 Bag
 _1 |-->false
 
 
@@ -737,6 +745,9 @@ _1 |-->_1`updateForm<when> _1 test
 _1 |-->_1`updateForm<when> _1 logical_test
 _1 |-->_1`updateForm<when> _1 comparison
 _1 |-->_1`updateForm<when> _1 expr
+_1 |-->_1`updateForm<when> _1 atom
+
+"" _1 "" |-->    execute (_1)->display()
 
 exec _1 |-->_0`pythonExec
 exec _* |-->    execute _*
@@ -798,6 +809,11 @@ _1 _2 _3 |-->    _1_2 := _1_2->append(_3`third)<when> _1 atom, _3`second append
 _1 _2 _3 |-->    execute (_3`third : _1_2)<when> _1 atom, _3`second add
 
 _1 _2 _3 |-->    _1_2_3<when> _1 atom, _2 trailer, _3 trailer
+
+_1 _2 _3 _4 |-->    _1_2_3 := _1_2_3->append(_4`third)<when> _1 atom, _2 trailer, _3 trailer, _4 trailer, _4`second append
+_1 _2 _3 _4 |-->    execute (_4`third : _1_2_3)<when> _1 atom, _2 trailer, _3 trailer, _4 trailer, _4`second add
+
+_1 _2 _3 _4 |-->    _1_2_3_4<when> _1 atom, _2 trailer, _3 trailer, _4 trailer
 
 _1 , _* |-->    _1 ;\n_*`recurse
 
@@ -902,8 +918,8 @@ _1 , _* |-->_1, _*`recurse
 vardef_parameter::
 * |-->$star : Sequence(OclAny)
 _1 |-->_1 : OclAny
-_1 = _2 |-->_1 : int<when> _2 integer
-_1 = _2 |-->_1 : double<when> _2 real
+_1 = _2 |-->_1 : int<when> _2 int
+_1 = _2 |-->_1 : double<when> _2 double
 _1 = _2 |-->_1 : String<when> _2 String
 _1 = _2 |-->_1 : boolean<when> _2 boolean
 
@@ -938,6 +954,7 @@ _1 , _* |-->_1`asSettings_*`recurse
 
 parametersTail::
 self |-->
+_1 |-->_1
 _1 |-->_1`parametersTail<when> _1 def_parameters
 self , |-->
 _1 , |-->_1
@@ -970,10 +987,11 @@ _1 , _* |-->_1`asSetting_*`recurse
 def_parameter::
 _1 = _2 |-->_1`parameterName : String<when> _2 String, _1 1ary <action> _1`parameterName String, _1`defined true
 _1 = _2 |-->_1`parameterName : int<when> _2 int, _1 1ary <action> _1`parameterName int, _1`defined true
-_1 = _2 |-->_1`parameterName : double<when> _2 real, _1 1ary <action> _1`parameterName real, _1`defined true
+_1 = _2 |-->_1`parameterName : double<when> _2 double, _1 1ary <action> _1`parameterName double, _1`defined true
 _1 = _2 |-->_1<action> _1`defined true
 
 _1 |-->_1<action> _1`defined true
+
 * |-->
 
 
@@ -987,7 +1005,7 @@ _1 |-->
 asAttribute::
 _1 = _2 |-->  attribute _1`parameterName : String;\n<when> _2 String, _1 1ary <action> _1`parameterName String
 _1 = _2 |-->  attribute _1`parameterName : int;\n<when> _2 int, _1 1ary <action> _1`parameterName int
-_1 = _2 |-->  attribute _1`parameterName : double;\n<when> _2 real, _1 1ary <action> _1`parameterName real
+_1 = _2 |-->  attribute _1`parameterName : double;\n<when> _2 double, _1 1ary <action> _1`parameterName double
 _1 = _2 |-->_1
 
 * |-->
@@ -996,7 +1014,7 @@ _1 |-->_1`asAttribute<when> _1 named_parameter
 _1 |-->  attribute _1 : OclAny;\n
 _1 : int |-->  attribute _1 : int;\n<action> _1 int
 _1 : bool |-->  attribute _1 : boolean;\n<action> _1 boolean
-_1 : float |-->  attribute _1 : double;\n<action> _1 real
+_1 : float |-->  attribute _1 : double;\n<action> _1 double
 _1 : dict |-->  attribute _1 : Map(String,OclAny);\n<action> _1 Map
 _1 : str |-->  attribute _1 : String;\n<action> _1 String
 _1 : list |-->  attribute _1 : Sequence(OclAny);\n<action> _1 Sequence
@@ -1019,7 +1037,7 @@ _1 |-->_1`asSetting<when> _1 named_parameter
 _1 |-->resx._1 = _1 & 
 _1 : int |-->resx._1 = _1 & <action> _1 int
 _1 : bool |-->resx._1 = _1 & <action> _1 boolean
-_1 : float |-->resx._1 = _1 & <action> _1 real
+_1 : float |-->resx._1 = _1 & <action> _1 double
 _1 : dict |-->resx._1 = _1 & <action> _1 Map
 _1 : str |-->resx._1 = _1 & <action> _1 String
 _1 : list |-->resx._1 = _1 & <action> _1 Sequence
@@ -1033,7 +1051,7 @@ named_parameter::
 _1 |-->_1 : OclAny
 _1 : int |-->_1 : int<action> _1 int
 _1 : bool |-->_1 : boolean<action> _1 boolean
-_1 : float |-->_1 : double<action> _1 real
+_1 : float |-->_1 : double<action> _1 double
 _1 : dict |-->_1 : Map(String,OclAny)<action> _1 Map
 _1 : str |-->_1 : String<action> _1 String
 _1 : list |-->_1 : Sequence(OclAny)<action> _1 Sequence
@@ -1098,7 +1116,7 @@ _1 : _2 |-->_1
 
 isBasicTypeTrailer::
 . _1 |-->true<when> _1 int
-. _1 |-->true<when> _1 real
+. _1 |-->true<when> _1 double
 . _1 |-->true<when> _1 String
 . _1 |-->true<when> _1 boolean
 . _1 |-->false
@@ -2202,7 +2220,7 @@ _1 |-->false
 
 argument::
 _1 |-->_1
-_1 = _2 |-->_1
+_1 = _2 |-->_2
 
 
 arglist::
@@ -2331,6 +2349,8 @@ _1 |-->_1`subscript<when> _1 comparison
 _1 |-->_1`subscript<when> _1 expr
 _1 |-->_1`subscript<when> _1 atom
 
+: |-->->copy()
+
 _1 |-->[_1+1]
 
 _1 - _2 |-->[(_1 - _2) + 1]
@@ -2341,6 +2361,8 @@ _1 // _2 |-->[(_1 div _2) + 1]
 _1 ** _2 |-->[(_1->pow(_2)) + 1]
 _1 % _2 |-->[(_1 mod _2) + 1]
 
+_1 _2 |-->[_1_2]<when> _1 atom
+_1 _2 _3 |-->[_1_2_3]<when> _1 atom
 
 
 literalSubscript::
@@ -2372,6 +2394,9 @@ _1 / _2 |-->(_1 / _2) + 1
 _1 // _2 |-->(_1 div _2) + 1
 _1 ** _2 |-->(_1->pow(_2)) + 1
 _1 % _2 |-->(_1 mod _2) + 1
+
+_1 _2 |-->_1_2<when> _1 atom
+_1 _2 _3 |-->_1_2_3<when> _1 atom
 
 
 mapSubscript::
@@ -2442,6 +2467,12 @@ with _1 , _2 : _3 |-->    try (_1    _2_3)\n    catch (_e : OclException) do ski
 _1 |-->    skip
 
 
+
+methodBody::
+_1 |-->_1
+_1 _* |-->_1_*`followingStatement
+
+
 suite::
 _1 |-->_1
 _1 _* |-->_1_*`followingStatement
@@ -2509,20 +2540,27 @@ del _1 |-->    execute (_1)->isDeleted()
 pass |-->    skip
 break |-->    break
 continue |-->    continue
-return _1 |-->    return _1
+
+return _1 |-->    return _1`returnList
 return |-->    return
+
 raise _1 |-->    error _1`errorToUML
 raise _1 from _2 |-->    error _1`errorToUML
 raise _* |-->    _*`errorlist
 
 import _1 |-->    skip
 from _* |-->    skip
+
+global _1 |-->_1`assertDefined
 global _* |-->_*`assertDefined
+
 exec _1 |-->_0`pythonExec
 exec _* |-->    execute _*
+
 assert _1 |-->    assert _1 do "assertion failed"
 assert _1 , _2 |-->    assert _1 do _2
 
+nonlocal _1 |-->_1`assertDefined
 nonlocal _* |-->_*`assertDefined
 
 _1 |-->_1<when> _1 yield_expr
@@ -2758,9 +2796,8 @@ assign_part::
 ocltype::
 = _1 |-->String<when> _1 String
 = _1 |-->int<when> _1 int
-= _1 |-->double<when> _1 real
+= _1 |-->double<when> _1 double
 = _1 |-->Sequence<when> _1`isSequenceExpression true
-= _1 |-->Sequence<when> _1`ocltype Sequence
 = _1 |-->Map<when> _1`isMapExpression true
 = _1 |-->Bag<when> _1`isBagExpression true
 = _1 |-->_1`ocltype
@@ -2791,22 +2828,6 @@ name |-->String
 SortedSet |-->SortedSet
 SortedList |-->SortedSequence
 SortedDict |-->SortedMap
-
-_1 |-->_1`ocltype<when> _1 testlist_star_expr
-_1 |-->_1`ocltype<when> _1 testlist
-_1 |-->_1`ocltype<when> _1 trailer
-_1 |-->_1`ocltype<when> _1 arglist
-_1 |-->_1`ocltype<when> _1 argument
-_1 |-->_1`ocltype<when> _1 arguments
-_1 |-->_1`ocltype<when> _1 test
-_1 |-->_1`ocltype<when> _1 logical_test
-_1 |-->_1`ocltype<when> _1 comparison
-_1 |-->_1`ocltype<when> _1 expr
-_1 |-->_1`ocltype<when> _1 atom
-_1 |-->_1`ocltype<when> _1 name
-_1 |-->_1`ocltype<when> _1 subscriptlist
-_1 |-->_1`ocltype<when> _1 subscript
-_1 |-->_1`type<when> _1 number
 
 callable _1 |-->boolean
 bool _1 |-->boolean
@@ -2981,11 +3002,26 @@ _1 _2 |-->_2`bagTrailerType<when> _1 Bag, _2 trailer
 
 _1 _2 |-->_2`trailerOclType<when> _1 atom, _2 trailer
 
+_1 |-->_1`ocltype<when> _1 testlist_star_expr
+_1 |-->_1`ocltype<when> _1 testlist
+_1 |-->_1`ocltype<when> _1 trailer
+_1 |-->_1`ocltype<when> _1 arglist
+_1 |-->_1`ocltype<when> _1 argument
+_1 |-->_1`ocltype<when> _1 arguments
+_1 |-->_1`ocltype<when> _1 test
+_1 |-->_1`ocltype<when> _1 logical_test
+_1 |-->_1`ocltype<when> _1 comparison
+_1 |-->_1`ocltype<when> _1 expr
+_1 |-->_1`ocltype<when> _1 atom
+_1 |-->_1`ocltype<when> _1 subscriptlist
+_1 |-->_1`ocltype<when> _1 subscript
+_1 |-->_1`type<when> _1 number
+
 _1 |-->int<when> _1 int
-_1 |-->double<when> _1 real
+_1 |-->double<when> _1 double
 _1 |-->String<when> _1 String
 _1 |-->Sequence<when> _1`isSequenceExpression true
-_1 |-->Sequence<when> _1 Sequence
+_1 |-->Bag<when> _1`isBagExpression true
 
 _1 |-->OclAny
 _* |-->OclAny
@@ -3131,8 +3167,8 @@ _1 as _2 |-->
 
 
 functionDefinitions::
-_1 |-->_1<when> _1 funcdef
-_1 _* |-->_1_*`functionDefinitions<when> _1 funcdef
+_1 |-->_1`functionDefinitions<when> _1 funcdef 
+_1 _* |-->_1`functionDefinitions_*`functionDefinitions<when> _1 funcdef
 
 _1 |-->_1`functionDefinitions<when> _1 compound_stmt
 _1 _* |-->_1`functionDefinitions_*`functionDefinitions<when> _1 compound_stmt
@@ -3145,6 +3181,32 @@ _1 _* |-->_*`functionDefinitions<when> _1 classdef
 
 _1 |-->
 
+async def _1 ( _2 ) -> _3 : _4 |-->_4`functionDefinitions  operation _1(_2) : _3`indicator2OCL\n  pre: true post: true\n  activity:\n_2`defaultParamSettings_4;\n\n
+
+def _1 ( _2 ) -> _3 : _4 |-->_4`functionDefinitions  operation _1(_2) : _3`indicator2OCL\n  pre: true post: true\n  activity:\n_2`defaultParamSettings_4;\n\n
+
+async def _1 ( _2 ) : _3 |-->_3`functionDefinitions  operation _1(_2) : OclAny\n  pre: true post: true\n  activity:\n_2`defaultParamSettings_3;\n\n<when> _3`hasValueReturn true
+
+async def _1 ( _2 ) : _3 |-->_3`functionDefinitions  operation _1(_2)\n  pre: true post: true\n  activity:\n_2`defaultParamSettings_3;\n\n
+
+def _1 ( _2 ) : _3 |-->_3`functionDefinitions  operation _1(_2) : OclAny\n  pre: true post: true\n  activity:\n_2`defaultParamSettings_3`methodBody;\n\n<when> _3`hasValueReturn true 
+
+def _1 ( _2 ) : _3 |-->_3`functionDefinitions  operation _1(_2)\n  pre: true post: true\n  activity:\n_2`defaultParamSettings_3;\n\n  
+
+async def _1 ( ) -> _2 : _3 |-->_3`functionDefinitions  operation _1() : _2`indicator2OCL\n  pre: true post: true\n  activity:\n_3;\n\n
+
+def _1 ( ) -> _2 : _3 |-->_3`functionDefinitions  operation _1() : _2`indicator2OCL\n  pre: true post: true\n  activity:\n_3;\n\n
+
+async def _1 ( ) : _2 |-->_2`functionDefinitions  operation _1() : OclAny\n  pre: true post: true\n  activity:\n_2;\n\n<when> _2`hasValueReturn true
+
+async def _1 ( ) : _2 |-->_2`functionDefinitions  operation _1()\n  pre: true post: true\n  activity:\n_2;\n\n
+
+def _1 ( ) : _2 |-->_2`functionDefinitions  operation _1(_position_ : int) : OclAny\n  pre: true post: true\n  activity:\n    var _yieldCount_ : int := 0;\n_2;\n\n<when> _2`hasYieldStatement true <action> _1 generator
+
+def _1 ( ) : _2 |-->_2`functionDefinitions  static operation _1() : OclAny\n  pre: true post: true\n  activity:\n_2;\n\n<when> _2`hasValueReturn true
+
+def _1 ( ) : _2 |-->_2`functionDefinitions  static operation _1()\n  pre: true post: true\n  activity:\n_2;\n\n
+
 if _1 : _2 |-->
 if _1 : _2 _3 |-->
 if _1 : _2 _* |-->
@@ -3154,47 +3216,56 @@ for _1 in _2 : _3 |-->
 _* |-->
 
 
-
 funcdef::
 async def _1 ( _2 ) -> _3 : _4 |-->  operation _1(_2) : _3`indicator2OCL\n  pre: true post: true\n  activity:\n_2`defaultParamSettings_4;\n\n
+
 def _1 ( _2 ) -> _3 : _4 |-->  operation _1(_2) : _3`indicator2OCL\n  pre: true post: true\n  activity:\n_2`defaultParamSettings_4;\n\n
 
 async def _1 ( _2 ) : _3 |-->  operation _1(_2) : OclAny\n  pre: true post: true\n  activity:\n_2`defaultParamSettings_3;\n\n<when> _3`hasValueReturn true
+
 async def _1 ( _2 ) : _3 |-->  operation _1(_2)\n  pre: true post: true\n  activity:\n_2`defaultParamSettings_3;\n\n
 
-def _1 ( _2 ) : _3 |-->  operation _1(_2) : OclAny\n  pre: true post: true\n  activity:\n_2`defaultParamSettings_3;\n\n<when> _3`hasValueReturn true
-def _1 ( _2 ) : _3 |-->  operation _1(_2)\n  pre: true post: true\n  activity:\n_2`defaultParamSettings_3;\n\n
+def _1 ( _2 ) : _3 |-->  operation _1(_2) : OclAny\n  pre: true post: true\n  activity:\n_2`defaultParamSettings_3`methodBody;\n\n<when> _3`hasValueReturn true 
+
+def _1 ( _2 ) : _3 |-->  operation _1(_2)\n  pre: true post: true\n  activity:\n_2`defaultParamSettings_3;\n\n  
 
 async def _1 ( ) -> _2 : _3 |-->  operation _1() : _2`indicator2OCL\n  pre: true post: true\n  activity:\n_3;\n\n
+
 def _1 ( ) -> _2 : _3 |-->  operation _1() : _2`indicator2OCL\n  pre: true post: true\n  activity:\n_3;\n\n
 
 async def _1 ( ) : _2 |-->  operation _1() : OclAny\n  pre: true post: true\n  activity:\n_2;\n\n<when> _2`hasValueReturn true
+
 async def _1 ( ) : _2 |-->  operation _1()\n  pre: true post: true\n  activity:\n_2;\n\n
 
 def _1 ( ) : _2 |-->  operation _1(_position_ : int) : OclAny\n  pre: true post: true\n  activity:\n    var _yieldCount_ : int := 0;\n_2;\n\n<when> _2`hasYieldStatement true <action> _1 generator
 
-def _1 ( ) : _2 |-->  operation _1() : OclAny\n  pre: true post: true\n  activity:\n_2;\n\n<when> _2`hasValueReturn true
-def _1 ( ) : _2 |-->  operation _1()\n  pre: true post: true\n  activity:\n_2;\n\n
+def _1 ( ) : _2 |-->  static operation _1() : OclAny\n  pre: true post: true\n  activity:\n_2;\n\n<when> _2`hasValueReturn true
+
+def _1 ( ) : _2 |-->  static operation _1()\n  pre: true post: true\n  activity:\n_2;\n\n
 
 _1 |-->
 _* |-->
 
 
+functionName::
+def _1 _* |-->_1
+async def _1 _* |-->_1
+
 
 methodDefinition::
 def __init__ ( _1 ) : _2 |-->_2`attributeDefinitions\n  operation initialise(_1`parametersTail) : _$\n  pre: true post: true\n  activity:\n_2;\n    return self;\n\n
 
-def _1 ( _2 ) -> _3 : _4 |-->\n  operation _1(_2`parametersTail) : _3`indicator2OCL\n  pre: true post: true\n  activity:\n_4;\n\n
+def _1 ( _2 ) -> _3 : _4 |-->\n  operation _1(_2`parametersTail) : _3`indicator2OCL\n  pre: true post: true\n  activity:\n_4;\n\n<action> _77 _1
 
-def _1 ( _2 ) : _3 |-->\n  operation _1(_2`parametersTail) : OclAny\n  pre: true post: true\n  activity:\n_3;\n\n<when> _3`hasValueReturn true
+def _1 ( _2 ) : _3 |-->\n  operation _1(_2`parametersTail) : OclAny\n  pre: true post: true\n  activity:\n_3`methodBody;\n\n<when> _3`hasValueReturn true<action> _77 _1
 
-def _1 ( _2 ) : _3 |-->\n  operation _1(_2`parametersTail)\n  pre: true post: true\n  activity:\n_3;\n\n
+def _1 ( _2 ) : _3 |-->\n  operation _1(_2`parametersTail)\n  pre: true post: true\n  activity:\n_3`methodBody;\n\n<action> _77 _1
 
-def _1 ( ) -> _2 : _3 |-->\n  static operation _1() : _2`indicator2OCL\n  pre: true post: true\n  activity:\n_3;\n\n
+def _1 ( ) -> _2 : _3 |-->\n  static operation _1() : _2`indicator2OCL\n  pre: true post: true\n  activity:\n_3;\n\n<action> _77 _1
 
-def _1 ( ) : _2 |-->\n  static operation _1() : OclAny\n  pre: true post: true\n  activity:\n_2;\n\n<when> _2`hasValueReturn true
+def _1 ( ) : _2 |-->\n  static operation _1() : OclAny\n  pre: true post: true\n  activity:\n_2;\n\n<when> _2`hasValueReturn true<action> _77 _1
 
-def _1 ( ) : _2 |-->\n  static operation _1()\n  pre: true post: true\n  activity:\n_2;\n\n
+def _1 ( ) : _2 |-->\n  static operation _1()\n  pre: true post: true\n  activity:\n_2;\n\n<action> _77 _1
 
 _1 |-->
 _* |-->
@@ -3265,6 +3336,7 @@ _1 _* |-->_1`classcontent_*`classcontent<when> _1 compound_stmt
 _1 |-->_1`classcontent<when> _1 compound_stmt
 
 _1 |-->_1`methodDefinition<when> _1 funcdef
+
 _1 |-->_1`innerclassConstructor<when> _1 classdef
 
 _1 _2 |-->  static attribute _1 : _2`indicator2OCL _2;\n<when> _2 assign_part <action> _1 _2`indicatorType
@@ -3292,6 +3364,12 @@ _* |-->
 
 
 nestedAttributeDefinitions::
+global _1 |-->_1`attributeDecln <action> _1`defined true
+nonlocal _1 |-->_1`attributeDecln <action> _1`defined true
+
+global _* |-->_*`attributeDecln
+nonlocal _* |-->_*`attributeDecln
+
 _1 _* |-->_1`nestedAttributeDefinitions_*`nestedAttributeDefinitions<when> _1 stmt
 _1 |-->_1`nestedAttributeDefinitions<when> _1 stmt
 
@@ -3345,9 +3423,6 @@ except _1 , _2 : _3 |-->_3`nestedAttributeDefinitions
 finally : _1 |-->_1`nestedAttributeDefinitions
 
 with _1 : _2 |-->_2`nestedAttributeDefinitions
-
-global _* |-->_*`attributeDecln
-nonlocal _* |-->_*`attributeDecln
 
 _1 |-->
 _* |-->
