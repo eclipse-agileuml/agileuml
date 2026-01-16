@@ -6,7 +6,7 @@ import javax.swing.JOptionPane;
 
 
 /******************************
-* Copyright (c) 2003--2025 Kevin Lano
+* Copyright (c) 2003--2026 Kevin Lano
 * This program and the accompanying materials are made available under the
 * terms of the Eclipse Public License 2.0 which is available at
 * http://www.eclipse.org/legal/epl-2.0
@@ -552,19 +552,26 @@ public class Type extends ModelElement
   } 
 
   public int complexity() 
-  { if ("Sequence".equals(name) && elementType != null)
+  { if ("Sequence".equals(name) && elementType != this && 
+        elementType != null)
     { return 1 + elementType.complexity(); } 
 
-    if ("Set".equals(name) && elementType != null)
+    if ("Set".equals(name) && elementType != this && 
+        elementType != null)
     { return 1 + elementType.complexity(); } 
 
-    if ("Ref".equals(name) && elementType != null)
+    if ("Ref".equals(name) && elementType != this
+        && elementType != null)
     { return 1 + elementType.complexity(); } 
 
-    if ("Map".equals(name) && elementType != null && keyType != null)
+    if ("Map".equals(name) && elementType != this
+        && elementType != null && keyType != this &&
+        keyType != null)
     { return 1 + elementType.complexity() + keyType.complexity(); } 
 
-    if ("Function".equals(name) && elementType != null && keyType != null)
+    if ("Function".equals(name) && elementType != this && 
+        elementType != null && keyType != this &&
+        keyType != null)
     { return 1 + elementType.complexity() + keyType.complexity(); } 
 
     return 1; 

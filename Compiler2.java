@@ -12148,9 +12148,14 @@ private Vector parseUsingClause(int st, int en, Vector entities, Vector types)
 
     // DateTime.GetDiff(orderedsegments[i + 1].ArrivalDateTime, orderedsegments[i + 1].DepartureDateTime).Minutes
 
-    c.nospacelexicalanalysis("DomainModel.Station.Find(lambda x : OclAny in (x.GTFSId = transportLeg.sname1)).first.ParentStation.GTFSId"); 
+   // c.nospacelexicalanalysis("DomainModel.Station.Find(lambda x : OclAny in (x.GTFSId = transportLeg.sname1)).first.ParentStation.GTFSId"); 
 
-    System.out.println(c.balancedBrackets(0, c.lexicals.size()-1)); 
+   // System.out.println(c.balancedBrackets(0, c.lexicals.size()-1)); 
+
+    // c.nospacelexicalanalysis("op(p1,p2)[ind]"); // ok
+
+    c.nospacelexicalanalysis("op[ind](p1,p2)"); // but same as
+                                                // above.
 
     Expression expr = c.parseExpression(); 
 

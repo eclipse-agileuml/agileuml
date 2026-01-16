@@ -86,6 +86,9 @@ public class SetExpression extends Expression
     type.setElementType(elementType);
   } 
 
+  public Expression get(int i)
+  { return (Expression) elements.get(i); } 
+
   public static SetExpression mergeSetExpressions(
                                 SetExpression left, 
                                 SetExpression right)

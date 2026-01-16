@@ -6481,11 +6481,13 @@ class BasicExpression extends Expression
       if (arrayIndex != null) 
       { adjustTypeForArrayIndex(var); } 
 	  
-      if (parameters != null && 
+      if (parameters != null &&
+          var.getType() != null &&  
           var.getType().isFunctionType()) // application of a Function(S,T)
       { Type ftype = var.getType(); 
         type = ftype.getElementType(); 
-        elementType = type.getElementType(); 
+        if (type != null)
+        { elementType = type.getElementType(); } 
         System.out.println(">>>> TYPE CHECKED: Type of variable expression " + this + " is " + type + " entity: " + entity); 
       }
 	  

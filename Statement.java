@@ -8915,12 +8915,16 @@ class WhileStatement extends Statement
 
     if (loopVar != null) 
     { lv = loopVar + ""; 
+      Vector vv = new Vector(); 
+      vv.add(lv); 
+      Vector uses = body.variablesUsedIn(vv); 
       Expression expr = 
         ModelElement.lookupExpressionByName(lv, res); 
-      if (expr == null) 
-      { System.err.println("! Warning: no use of loop variable " +
+      if (expr == null && uses.size() == 0) 
+      { System.err.println("!! Warning: no use of loop variable " +
                  loopVar + " in loop body: " + body); 
       } 
+
       res = ModelElement.removeExpressionByName(lv,res); 
     } 
 
@@ -16751,20 +16755,13 @@ class AssignStatement extends Statement
   public Vector readFrame()
   { Vector res = new Vector();
     res.addAll(rhs.allReadFrame());  
-    return res;  
-  }  
-
-  public Vector variablesUsedIn(Vector vars)
-  { Vector res = new Vector();
-
-    res = rhs.variablesUsedIn(vars);
 
     if (lhs instanceof BasicExpression)
     { BasicExpression be = (BasicExpression) lhs; 
       Expression indx = be.getArrayIndex(); 
       if (indx != null) 
       { res = VectorUtil.union(res, 
-                             indx.variablesUsedIn(vars)); 
+                               indx.allReadFrame()); 
       } 
     } 
     else if (lhs instanceof BinaryExpression)
@@ -16772,10 +16769,20 @@ class AssignStatement extends Statement
       if (expr.getOperator().equals("->at"))
       { Expression indx = expr.getRight(); 
         res = VectorUtil.union(res, 
-                               indx.variablesUsedIn(vars)); 
+                               indx.allReadFrame()); 
       } 
     }
 
+    return res;  
+  } // and index variables of the lhs.  
+
+  public Vector variablesUsedIn(Vector vars)
+  { Vector res = new Vector();
+
+    res = rhs.variablesUsedIn(vars);
+    res = VectorUtil.union(res, 
+                           lhs.variablesUsedIn(vars)); 
+      
     return res;  
   }  
 
@@ -16799,6 +16806,17 @@ class AssignStatement extends Statement
         { frame = e.getName() + "::" + frame; } 
         res.add(frame); 
       } 
+    }
+    else if (lhs instanceof SetExpression)
+    { SetExpression sexpr = (SetExpression) lhs; 
+      for (int i = 0; i < sexpr.size(); i++) 
+      { Expression lexpr = (Expression) sexpr.get(i); 
+        Entity e = lhs.getEntity(); 
+        String frame = lexpr + ""; 
+        if (e != null) 
+        { frame = e.getName() + "::" + frame; } 
+        res.add(frame);
+      }
     }
 
     // res.add(lhs + "");  // lhs.data if a BasicExpression
