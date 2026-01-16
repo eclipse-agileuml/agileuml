@@ -608,7 +608,7 @@ _1 _2 |-->_2`domainPart->select(_2`variablePart | _2`selectPart)->collect(_2`var
 
 testlist_star_expr::
 _1 |-->_1
-_1 , _* |-->_1,_*`recurse
+_1 , _* |-->Sequence{_1, _*}
 
 
 hasSideEffect::
@@ -2300,6 +2300,7 @@ _1 |-->->at(_1 + 1)
 
 
 subscriptlist::
+: , _1 , : |-->->selectFeature(_1`literalSubscript)
 : |-->->copy()
 _1 |-->_1
 : :-1 |-->->reverse()
