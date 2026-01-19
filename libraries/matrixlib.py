@@ -20,9 +20,9 @@ class MatrixLib :
 
   def subRows(m: list, s: list[int]) -> list:
     result: list = []
-    for integer in s:
-      if 0 <= integer <= len(m) - 1: # OCL starts indexing at 1, Python starts indexing at 0
-        result.append(m[integer])
+    for ind in s:
+      if 0 <= ind <= len(m) - 1: # OCL starts indexing at 1, Python starts indexing at 0
+        result.append(m[ind])
     return result
 
   def subMatrix(m: list[list], rows: list[int], cols: list[int]) -> list:
@@ -58,7 +58,7 @@ class MatrixLib :
     return [m[i]] if isinstance(m[i], list) else m[i]
 
   def shape(x) -> list[int]:
-    result: list = [0]
+    result: list = []
     if isinstance(x, list):
       sq: list = list(x)
       result = [len(x)]
@@ -74,18 +74,27 @@ class MatrixLib :
     else:
       return [MatrixLib.singleValueMatrix(ocl.tail(sh), x) for i in range(1, sh[0], 1)]
 
-  def fillMatrixForm(sq: list, sh: list) -> list:
+  def fillMatrixFrom(sq: list, sh: list) -> list:
     if len(sh) == 0: 
       return []
     elif len(sh) == 1:
-      return [sq[i] for i in range(sh[0])]
+      return sq[0:sh[0]]
     else:
       result = []
       prod: int = ocl.prd(ocl.tail(sh))
       for i in range(sh[0]):
-        rowi: list = MatrixLib.fillMatrixForm(ocl.sequenceSubrange(sq, 1 + prod * (i - 1), (prod * i)), ocl.tail(sh))
+        rowi: list = MatrixLib.fillMatrixFrom(sq[prod * i: (prod * (i+1))], ocl.tail(sh))
         result.append(rowi)
       return result
+
+  def reshape(m, sh) : 
+    fl = MatrixLib.flattenMatrix(m)
+    return MatrixLib.fillMatrixFrom(fl, sh)
+
+  def unsqueeze(m, level) : 
+    sh = MatrixLib.shape(m)
+    newshape = ocl.insertAt(sh, level, 1)
+    return MatrixLib.reshape(m, newshape)
 
   def identityMatrix(n: int) -> list:
     return [[1.0 if i == j else 0.0 for j in range(n)] for i in range(n)]
@@ -95,7 +104,7 @@ class MatrixLib :
       return []
     elif isinstance(m[0], list):
       sq: list = m[0]
-      return [ocl.union(MatrixLib.flattenMatrix(sq), MatrixLib.flattenMatrix(ocl.tail(m)))]
+      return ocl.union(MatrixLib.flattenMatrix(sq), MatrixLib.flattenMatrix(ocl.tail(m)))
     else:
       return m
 
@@ -303,3 +312,14 @@ class MatrixLib :
 
 # if __name__=="__main__":
 #   main()
+
+sq = [1,2,3,4,5,6,7,8,9,10,11,12]
+
+mm = MatrixLib.fillMatrixFrom(sq, [3,4])
+
+print(MatrixLib.shape(mm))
+
+ff = MatrixLib.unsqueeze(mm, 1)
+
+print(ff)
+

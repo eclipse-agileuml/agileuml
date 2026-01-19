@@ -117,6 +117,20 @@ class SortedSequence<T extends Comparable<T>> implements List<T>
   public boolean add(T x) // self->including(x)
   { int insertionPoint = 
            Collections.binarySearch(elements, x); 
+    
+    if (insertionPoint < 0)
+    { int ip = -(insertionPoint + 1); 
+      elements.add(ip,x);  
+    } 
+    else 
+    { elements.add(insertionPoint,x); } 
+    return true;  
+    /* throw new UnsupportedOperationException(); */  
+  } 
+
+  public boolean including(T x) // self->including(x)
+  { int insertionPoint = 
+           Collections.binarySearch(elements, x); 
                // log(elements.size()) time complexity
 
     if (insertionPoint < 0)
