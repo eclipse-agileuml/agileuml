@@ -310,8 +310,11 @@ reversed _1 |-->_1->reverse()
 sorted _1 |-->_1`sortedTrailer
 
 tuple _1 |-->_1`tupleTrailer
+
 range _1 |-->_1`rangeTrailer
 irange _1 |-->_1`rangeTrailer
+xrange _1 |-->_1`rangeTrailer
+
 enumerate _1 |-->Integer.subrange(1, _1->size())->collect( _indx | Sequence{_indx-1, _1->at(_indx)} )
 zip _1 |-->Integer.subrange(1, _1`firstArg->size())->collect( _indx | _1`zipTerms )
 
@@ -415,6 +418,8 @@ _1 _2 |-->MatrixLib.shape(_1)->size()<when> _2 matches .ndim
 _1 _2 |-->MatrixLib.shape(_1)->prd()<when> _2 matches .size
 _1 _2 |-->MatrixLib.flattenMatrix(_1)->first()->oclType()<when> _2 matches .dtype
 _1 _2 |-->_1<when> _1 atom, _2 matches .head\(\)
+_1 _2 |-->MatrixLib.reshape(_1, Sequence{_2`argList})<when> _2`second matches reshape
+_1 _2 |-->MatrixLib.unsqueeze(_1, _2`third+1)<when> _2`second matches unsqueeze
 
 _1 _2 |-->MathLib.frequencyCount(_1)<when> _1 atom, _2 matches .most_common\(\)
 
@@ -535,6 +540,7 @@ r _1 |-->StringLib.rawString(_1)
 b _1 |-->StringLib.rawString(_1)
 f _1 |-->StringLib.formattedString(_1)
 
+_1 _* |-->_1 + _*`recurse<when> _1 String
 _1 |-->_1
 
 
@@ -670,8 +676,11 @@ _1 |-->_1`isSequenceExpression<when> _1 argument
 print _1 |-->false
 del _1 |-->false
 dict _1 |-->false
+
 range _1 |-->true
 irange _1 |-->true
+xrange _1 |-->true
+
 Counter _1 |-->false
 SortedSet _1 |-->false
 SortedList _1 |-->true
@@ -708,8 +717,11 @@ _1 |-->_1`isBagExpression<when> _1 atom
 print _1 |-->false
 del _1 |-->false
 dict _1 |-->false
+
 range _1 |-->false
 irange _1 |-->false
+xrange _1 |-->false
+
 Counter _1 |-->true
 SortedSet _1 |-->false
 SortedList _1 |-->false
@@ -1160,6 +1172,7 @@ trailer::
 . discard _1 |-->->excluding_1
 . clear _1 |-->->intersection(Set{})
 
+
 . items |-->->asSequence()->collect( _mx | Sequence{_mx->keys()->any(), _mx->values()->any()})
 . items _1 |-->->asSequence()->collect( _mx | Sequence{_mx->keys()->any(), _mx->values()->any()})_1
 
@@ -1167,6 +1180,7 @@ trailer::
 . total _1 |-->->size()
 . range _1 |-->_1`rangeArguments
 . irange _1 |-->_1`irangeArgs->asSequence()
+. xrange _1 |-->_1`rangeArguments
 
 . upper _1 |-->->toUpperCase()
 . lower _1 |-->->toLowerCase()
@@ -1354,8 +1368,10 @@ sequenceQueryForm::
 . discard _1 |-->->excluding_1
 . clear _1 |-->->intersection(Set{})
 . items _1 |-->->asSequence()->collect( _mx | Sequence{_mx->keys()->any(), _mx->values()->any()})
+
 . range _1 |-->_1`rangeTrailer
 . irange _1 |-->_1`irangeTrail
+. xrange _1 |-->_1`rangeTrailer
 
 . max _1 |-->->max()
 . min _1 |-->->min()
@@ -1419,6 +1435,7 @@ sequenceTrailerType::
 . items _1 |-->Sequence
 . range _1 |-->Sequence
 . irange _1 |-->Sequence
+. xrange _1 |-->Sequence
 
 . max _1 |-->OclAny
 . min _1 |-->OclAny
@@ -1500,6 +1517,8 @@ _1 |-->_1`argList<when> _1 arguments
 
 ( ) |-->
 ( _1 ) |-->_1
+
+. _1 _2 |-->_2`argList
 
 
 sqliteTrailer::
@@ -2300,11 +2319,12 @@ _1 |-->->at(_1 + 1)
 
 
 subscriptlist::
-: , _1 , : |-->->selectFeature(_1`literalSubscript)
-: |-->->copy()
-_1 |-->_1
-: :-1 |-->->reverse()
+: , _1 , : |-->->collect( _f | _f_1)
 : , _1 |-->->collect( _r | _r_1 )
+: |-->->copy()
+: :-1 |-->->reverse()
+
+_1 |-->_1
 _1 , : |-->_1
 _1 , _* |-->_1_*`recurse
 
@@ -2522,8 +2542,8 @@ _1 , _* |-->    var _1 : OclAny := null;\n_*`recurse
 
 
 small_stmt::
-_1 _2 |-->_1`declareIfNecessary    Sequence{_1} := Sequence{_2`second}<when> _1 multiple, _2`isMultipleAssignPart true
-_1 _2 |-->_1`declareIfNecessary    Sequence{_1} _2<when> _1 multiple
+_1 _2 |-->_1`declareIfNecessary    _1 := _2`second<when> _1 multiple, _2`isMultipleAssignPart true
+_1 _2 |-->_1`declareIfNecessary    _1 _2<when> _1 multiple
 
 _1 _2 |-->    var _1 _2<when> _2`colonAssign true <action> _1`defined true
 
@@ -2987,6 +3007,9 @@ b _1 |-->String
 f _1 |-->String
 
 _1 _2 |-->Sequence<when> _2 matches .shape
+
+_1 _2 |-->Sequence<when> _2`second matches reshape
+_1 _2 |-->Sequence<when> _2`second matches unsqueeze
 
 _1 _2 |-->Sequence<when> _1 atom, _2 matches .most_common\(\)
 _1 _2 |-->double<when> _1`ocltype Sequence, _2 matches .sum\(\)
