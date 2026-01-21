@@ -1654,6 +1654,7 @@ public class Compiler2
     }
     else if ("Map".equals(typ) || "Function".equals(typ)) 
     { Type tt = null; 
+
       if (st == en) 
       { System.out.println("!! Warning, map/function types must have type parameters"); 
         tt = new Type(typ, null);
@@ -1748,6 +1749,7 @@ public class Compiler2
     else if (typ.equals("Set") || typ.equals("Sequence") ||
              "Ref".equals(typ))
     { Type tt = new Type(typ,null);
+
       if (st == en) 
       { return tt; } 
  
@@ -1818,10 +1820,13 @@ public class Compiler2
 
     Entity eex = 
        (Entity) ModelElement.lookupByName(typ,entities);
+
     if (eex == null)  
     { System.out.println("!! ERROR: unknown type: " + typ + " in " + showLexicals(st,en)); 
 
-      // JOptionPane.showInputDialog("Creating new class for " + typ); 
+      Type tt = Type.getTypeFor(typ, types, entities); 
+      if (tt != null)
+      { return tt; } 
 
       Entity ent = new Entity(typ); 
       entities.add(ent);
@@ -7901,9 +7906,11 @@ public Vector parseAttributeDecsInit(Vector entities, Vector types)
           }   
         }
       } 
+
       Type typ = parseType(s+3,e,entities,types);
       if (typ != null) 
-      { CreationStatement cs = new CreationStatement(typ + "", varname); 
+      { CreationStatement cs = 
+           new CreationStatement(typ + "", varname); 
         cs.setType(typ); 
         cs.setKeyType(typ.getKeyType()); 
         cs.setElementType(typ.getElementType());  
@@ -7957,6 +7964,7 @@ public Vector parseAttributeDecsInit(Vector entities, Vector types)
           { 
             return null; 
           } 
+
           System.out.println(">>> Parsed assignment: " + e1 + " := " + e2); 
           AssignStatement res = new AssignStatement(e1,e2);
           res.setOperator(":="); 

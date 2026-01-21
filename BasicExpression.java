@@ -18766,6 +18766,11 @@ public Statement generateDesignSubtract(Expression rhs)
          data.equals("newOclFile_Read") || 
          data.equals("factorial") || 
          data.equals("formattedString") || 
+
+         data.equals("reshape") ||
+         data.equals("unsqueeze") || 
+         data.equals("squeezeAll") || 
+         
          data.equals("executeQuery") ||
          data.equals("executeMany") || 
          data.equals("createStatement")))
@@ -18838,14 +18843,23 @@ public Statement generateDesignSubtract(Expression rhs)
    
     // Also check operation calls for being LCE
 
+    String oref = objectRef + ""; 
+
     if (level > 1 && 
-        (data.equals("newOclFile_Write") || 
-         data.equals("newOclFile_Read") || 
-         data.equals("factorial") ||
-         data.equals("formattedString") ||
-         data.equals("executeQuery") ||
-         data.equals("executeMany") || 
-         data.equals("createStatement")))
+        (("OclFile".equals(oref) && 
+          data.equals("newOclFile_Write")) || 
+         ("OclFile".equals(oref) && 
+          data.equals("newOclFile_Read")) || 
+         ("MathLib".equals(oref) && data.equals("factorial")) ||
+         ("StringLib".equals(oref) &&
+          data.equals("formattedString")) ||
+         ("MatrixLib".equals(oref) && data.equals("reshape")) ||
+         ("MatrixLib".equals(oref) && data.equals("unsqueeze")) || 
+         ("MatrixLib".equals(oref) && data.equals("squeezeAll")) 
+        || 
+          data.equals("executeQuery") ||
+          data.equals("executeMany") || 
+          data.equals("createStatement")))
     { messages.add("!! (OES) flaw: expensive operation " + this + " within loop");
 
       int amberScore = (int) uses.get("amber"); 
