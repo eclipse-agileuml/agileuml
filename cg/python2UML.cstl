@@ -420,6 +420,7 @@ _1 _2 |-->MatrixLib.flattenMatrix(_1)->first()->oclType()<when> _2 matches .dtyp
 _1 _2 |-->_1<when> _1 atom, _2 matches .head\(\)
 _1 _2 |-->MatrixLib.reshape(_1, Sequence{_2`argList})<when> _2`second matches reshape
 _1 _2 |-->MatrixLib.unsqueeze(_1, _2`third+1)<when> _2`second matches unsqueeze
+_1 _2 |-->MatrixLib.squeezeAll(_1)<when> _1 atom, _2 matches .squeeze\(\)
 
 _1 _2 |-->MathLib.frequencyCount(_1)<when> _1 atom, _2 matches .most_common\(\)
 
@@ -3010,6 +3011,7 @@ _1 _2 |-->Sequence<when> _2 matches .shape
 
 _1 _2 |-->Sequence<when> _2`second matches reshape
 _1 _2 |-->Sequence<when> _2`second matches unsqueeze
+_1 _2 |-->Sequence<when> _2 matches .squeeze\(\)
 
 _1 _2 |-->Sequence<when> _1 atom, _2 matches .most_common\(\)
 _1 _2 |-->double<when> _1`ocltype Sequence, _2 matches .sum\(\)
