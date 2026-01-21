@@ -286,5 +286,14 @@ def allInstances_OclIterator():
   return OclIterator.ocliterator_instances
 
 
+# Lazy range iteration: 
+# iter = OclIterator.newOclIterator_Function(lambda x : x+1)
+#
+# v = 0
+# while v < 30 :  
+#   x = iter.nextResult()
+#   v = x.value
+#   print(v)
+
 
 

@@ -106,6 +106,30 @@ class MatrixLib {
  
     return res; 
 
+  static query reshape(m : Sequence, sh : Sequence) : Sequence
+  pre: true 
+  post: true
+  activity: 
+    var fl : Sequence := MatrixLib.flattenMatrix(m); 
+    return MatrixLib.fillMatrixFrom(fl, sh);
+
+  static query unsqueeze(m : Sequence, level : int) : Sequence 
+  pre: true 
+  post: true
+  activity: 
+    var sh : Sequence := MatrixLib.shape(m);
+    var newshape : Sequence := sh.insertAt(level, 1);
+    return MatrixLib.reshape(m, newshape);
+
+  static query squeezeAll(m : Sequence) : Sequence 
+  pre: true 
+  post: true
+  activity: 
+    var sh : Sequence := MatrixLib.shape(m);
+    var newshape : Sequence := sh->excluding(1);
+    return MatrixLib.reshape(m, newshape);
+
+
   static query identityMatrix(n : int) : Sequence(Sequence(double))
   pre: true 
   post: 

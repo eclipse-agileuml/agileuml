@@ -96,6 +96,11 @@ class MatrixLib :
     newshape = ocl.insertAt(sh, level, 1)
     return MatrixLib.reshape(m, newshape)
 
+  def squeezeAll(m) : 
+    sh = MatrixLib.shape(m)
+    newshape = ocl.excludingSequence(sh, 1)
+    return MatrixLib.reshape(m, newshape)
+
   def identityMatrix(n: int) -> list:
     return [[1.0 if i == j else 0.0 for j in range(n)] for i in range(n)]
 
@@ -313,13 +318,16 @@ class MatrixLib :
 # if __name__=="__main__":
 #   main()
 
-sq = [1,2,3,4,5,6,7,8,9,10,11,12]
+# sq = [1,2,3,4,5,6,7,8,9,10,11,12]
 
-mm = MatrixLib.fillMatrixFrom(sq, [3,4])
+# mm = MatrixLib.fillMatrixFrom(sq, [3,4])
 
-print(MatrixLib.shape(mm))
+# print(MatrixLib.shape(mm))
 
-ff = MatrixLib.unsqueeze(mm, 1)
+# ff = MatrixLib.unsqueeze(mm, 3)
 
-print(ff)
+# print(ff)
 
+# nn = MatrixLib.squeezeAll(ff)
+
+# print(nn)
