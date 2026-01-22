@@ -848,6 +848,50 @@ class MatrixLib {
  
      return res; 
 
+   static query rowMinimum(m1 : Sequence, m2 : Sequence) : Sequence
+   pre: true
+   post: true
+   activity:
+     var res : Sequence := Sequence{}; 
+ 
+     if m1->at(1)->oclIsTypeOf(Sequence)
+     then 
+       for i : Integer.subrange(1, m1->size()) 
+       do
+        (var m1i : Sequence := m1->at(i)->oclAsType(Sequence);
+         var m2i : Sequence := m2->at(i)->oclAsType(Sequence);
+         res := res->append(
+           MatrixLib.rowMinimum(m1i, m2i))
+        ) ;
+       return res
+     else skip; 
+
+     for j : Integer.subrange(1, m1->size())
+     do 
+      (var m1j : double := m1->at(j)->oclAsType(double) ; 
+       var m2j : double := m2->at(j)->oclAsType(double) ; 
+       
+       res := res->append(if m1j < m2j then m1j else m2j endif) );
+
+     return res;  
+         
+
+   static query matrixMinimum(m1 : Sequence, m2 : Sequence) : Sequence
+   pre: true
+   post: true
+   activity: 
+     var res : Sequence := Sequence{}; 
+
+     for i : Integer.subrange(1, m1->size()) 
+     do 
+      (var r1 : Sequence := m1->at(i)->oclAsType(Sequence); 
+       var r2 : Sequence := m2->at(i)->oclAsType(Sequence); 
+
+       res := res->append(MatrixLib.rowMinimum(r1, r2))
+      ) ;
+ 
+     return res; 
+
    static query transpose(m : Sequence) : Sequence 
    pre: true
    post: true
