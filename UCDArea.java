@@ -1477,6 +1477,7 @@ public class UCDArea extends JPanel
     Map uses = new Map(); 
     uses.set("red", 0); 
     uses.set("amber", 0); 
+    uses.set("yellow", 0); 
 
     Vector messages = new Vector(); 
 
@@ -1756,7 +1757,9 @@ public class UCDArea extends JPanel
 
     Map uses = new Map(); 
     uses.set("red", 0); 
-    uses.set("amber", 0); 
+    uses.set("amber", 0);
+    uses.set("yellow", 0); 
+ 
     Vector messages = new Vector(); 
 
     boolean tc2 = effect.typeCheck(types,entities,contexts,vars); 
@@ -6866,7 +6869,9 @@ public class UCDArea extends JPanel
 
     Map uses = new Map(); 
     uses.set("red", 0); 
-    uses.set("amber", 0); 
+    uses.set("amber", 0);
+    uses.set("yellow", 0); 
+ 
     Vector messages = new Vector(); 
 
     boolean tc2 = effect.typeCheck(types,entities,contexts,vars); 
@@ -7083,6 +7088,8 @@ public class UCDArea extends JPanel
     Map uses = new Map(); 
     uses.set("red", 0); 
     uses.set("amber", 0); 
+    uses.set("yellow", 0);
+ 
     Vector messages = new Vector(); 
 
     boolean tc2 = effect.typeCheck(types,entities,contexts,vars); 

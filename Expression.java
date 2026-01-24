@@ -1889,6 +1889,12 @@ abstract class Expression
     return res; 
   } 
 
+
+  public static boolean isNumericValue(Object ob) 
+  { return isInteger(ob) || isLong(ob) || 
+           isDoubleValue(ob); 
+  } 
+
   public static boolean isIntegerValue(Object ob) 
   { return isInteger(ob); } 
 
@@ -3813,6 +3819,12 @@ abstract class Expression
       int v2 = convertInteger("" + e2); 
       return new BasicExpression(v1 + v2); 
     }
+
+    if (isLong("" + e1) && isLong("" + e2))
+    { long v1 = convertLong("" + e1); 
+      long v2 = convertLong("" + e2); 
+      return new BasicExpression(v1 + v2); 
+    }
     
     if (isNumber("" + e1) && isNumber("" + e2))
     { double v1 = convertNumber("" + e1); 
@@ -3850,6 +3862,12 @@ abstract class Expression
     if (isInteger("" + e1) && isInteger("" + e2))
     { int v1 = convertInteger("" + e1); 
       int v2 = convertInteger("" + e2); 
+      return new BasicExpression(v1 - v2); 
+    }
+
+    if (isLong("" + e1) && isLong("" + e2))
+    { long v1 = convertLong("" + e1); 
+      long v2 = convertLong("" + e2); 
       return new BasicExpression(v1 - v2); 
     }
     
@@ -6490,6 +6508,12 @@ public static boolean conflictsReverseOp(String op1, String op2)
     BasicExpression s2 = new BasicExpression("1554"); 
 
     System.out.println(Expression.simplify("+", s2, s1, null)); 
+
+
+    Expression n1 = new BasicExpression(1000000); 
+    Expression n2 = new BasicExpression(1); 
+
+    System.out.println(Expression.simplifyMinus(n1, n2)); 
 
   }   
 } 

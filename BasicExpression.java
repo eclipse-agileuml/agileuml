@@ -3001,7 +3001,7 @@ class BasicExpression extends Expression
                          eqe2x); 
           } 
         } 
-
+        
         return res; 
       } 
 
@@ -3011,8 +3011,19 @@ class BasicExpression extends Expression
       UnaryExpression selfsize = new UnaryExpression("->size", newdata); 
       Expression lbnd = new BinaryExpression("<=", new BasicExpression(1), arrayIndex); 
       Expression ubnd = new BinaryExpression("<=", arrayIndex, selfsize); 
-      Expression inrange = new BinaryExpression("&",lbnd,ubnd); 
+      Expression inrange = 
+         Expression.simplifyAnd(lbnd.simplify(),
+                                ubnd.simplify()); 
       return simplify("&",res,inrange,null);
+    } 
+    else if (arrayIndex != null) 
+    { BasicExpression newdata = new BasicExpression(data);
+      newdata.setObjectRef(objectRef); 
+      
+      Expression nonnull = new BinaryExpression("/=", 
+                     newdata, 
+                     new BasicExpression("null")); 
+      res = Expression.simplifyAnd(res, nonnull); 
     } 
 
     if (parameters != null) 
@@ -3060,8 +3071,8 @@ class BasicExpression extends Expression
 
     if (objectRef == null) 
     { return res; }
-    res = objectRef.definedness(uses,messages);
-
+    Expression res2 = objectRef.definedness(uses,messages);
+    res = Expression.simplifyAnd(res, res2); 
 
     if (umlkind == FUNCTION)
     { Expression zero = new BasicExpression(0);
@@ -18687,9 +18698,9 @@ public Statement generateDesignSubtract(Expression rhs)
 
     int mchain = maximumReferenceChain(); 
     if (mchain > TestParameters.referenceChainLimit)
-    { oUses.add("!! (LRC) flaw: The expression " + this + " has too many (" + mchain + ") chained references"); 
-      int ascore = (int) res.get("amber"); 
-      res.set("amber", ascore+1); 
+    { oUses.add("! (LRC) flaw: The expression " + this + " has too many (" + mchain + ") chained references"); 
+      int yscore = (int) res.get("yellow"); 
+      res.set("yellow", yscore+1); 
     } 
 
 
@@ -18787,7 +18798,13 @@ public Statement generateDesignSubtract(Expression rhs)
       if (opers == null) 
       { opers = new Vector(); } 
       opers.add(newbe); 
-      res.put(level, opers); 
+      res.put(level, opers);
+
+      if ((arrayIndex + "").equals(data + "->size() + 1") ||
+          (arrayIndex + "").equals("(" + data + ")->size() + 1"))
+      { System.err.println("!!! Invalid index reference: " + this);
+        System.err.println(); 
+      } 
     } 
 
     return res; 
@@ -18877,6 +18894,16 @@ public Statement generateDesignSubtract(Expression rhs)
       { opers = new Vector(); } 
       opers.add(newbe); 
       res.put(level, opers); 
+
+
+      if ((arrayIndex + "").equals(data + "->size() + 1") ||
+          (arrayIndex + "").equals("(" + data + ")->size() + 1"))
+      { messages.add("!!! Invalid index reference: " + this);
+        int rScore = (int) uses.get("red"); 
+        uses.set("red", rScore+1); 
+        messages.add("");
+      } 
+
     } 
 
     return res; 

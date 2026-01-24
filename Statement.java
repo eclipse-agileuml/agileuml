@@ -1619,8 +1619,7 @@ abstract class Statement implements Cloneable
 
   public abstract Statement optimiseOCL();
 
-  public Expression definedness(Map uses, Vector messages)
-  { return new BasicExpression(true); } 
+  public abstract Expression definedness(Map uses, Vector messages); 
 
   public abstract Map energyUse(Map uses, 
                                 Vector rUses, Vector oUses);
@@ -4698,6 +4697,9 @@ class BreakStatement extends Statement
   public Expression wpc(Expression inv, Expression post)
   { return inv; }  
 
+  public Expression definedness(Map uses, Vector messages) 
+  { return new BasicExpression(true); } 
+
   public Vector dataDependents(Vector allvars, Vector vars)
   { return vars; }  
 
@@ -4914,6 +4916,9 @@ class ContinueStatement extends Statement
   public Expression wpc(Expression inv, Expression post)
   { return inv; }  // goes to the head of the loop again
 
+
+  public Expression definedness(Map uses, Vector messages)
+  { return new BasicExpression(true); } 
 
   public Vector dataDependents(Vector allvars, Vector vars)
   { return vars; }  
@@ -5189,6 +5194,9 @@ class InvocationStatement extends Statement
     res.callExp = expr;
     return res;  
   } 
+
+  public Expression definedness(Map uses, Vector messages) 
+  { return callExp.definedness(uses, messages); } 
 
   public int execute(ModelSpecification sigma, 
                      ModelState beta)
@@ -6187,6 +6195,9 @@ class ImplicitInvocationStatement extends Statement
     return res; 
   } 
 
+  public Expression definedness(Map uses, Vector messages)
+  { return callExp.definedness(uses, messages); } 
+
   public Map energyUse(Map uses, 
                        Vector rUses, Vector oUses)
   { callExp.energyUse(uses, rUses, oUses); 
@@ -6965,6 +6976,17 @@ class WhileStatement extends Statement
      
     Expression bdef = body.definedness(uses, messages); 
 
+    if (loopKind == WHILE)
+    { Expression testpre = body.wpc(loopTest); 
+      Expression canTerminate = 
+           Expression.simplifyNot(
+              new BinaryExpression("=>", loopTest, testpre));
+      bdef.setBrackets(true); 
+      canTerminate.setBrackets(true);  
+      bdef = Expression.simplifyAnd(canTerminate, bdef); 
+    } 
+
+    rtest.setBrackets(true); 
     return Expression.simplify("&", rtest, bdef, null); 
   } 
 
@@ -11968,6 +11990,9 @@ class CaseStatement extends Statement
     return cs; 
   } 
 
+  public Expression definedness(Map uses, Vector messages)
+  { return new BasicExpression(true); } 
+
   public void addCase(Maplet mm)
   { cases.add_element(mm); }
 
@@ -12482,6 +12507,9 @@ class ErrorStatement extends Statement
     return new ErrorStatement(null); 
   } 
 
+  public Expression definedness(Map uses, Vector messages)
+  { return thrownObject.definedness(uses, messages); } 
+
   public Vector variablesUsedIn(Vector vars) 
   { if (thrownObject != null) 
     { return thrownObject.variablesUsedIn(vars); } 
@@ -12870,6 +12898,9 @@ class AssertStatement extends Statement
     { message.energyUse(uses, rUses, aUses); } 
     return uses; 
   } 
+
+  public Expression definedness(Map uses, Vector messages)
+  { return condition.definedness(uses, messages); } 
 
   public java.util.Map collectionOperatorUses(int lev, 
                                     java.util.Map uses, 
@@ -13368,6 +13399,9 @@ class CatchStatement extends Statement
 
     return new CatchStatement(cobj,cact); 
   }
+
+  public Expression definedness(Map uses, Vector messages)
+  { return action.definedness(uses, messages); } 
 
   public Vector variablesUsedIn(Vector vars) 
   { Vector res = new Vector(); 
@@ -13939,6 +13973,9 @@ class TryStatement extends Statement
 
     return uses; 
   } 
+
+  public Expression definedness(Map uses, Vector messages)
+  { return body.definedness(uses, messages); } 
 
   public java.util.Map collectionOperatorUses(int lev, 
                                     java.util.Map uses, 
@@ -14784,6 +14821,9 @@ class IfStatement extends Statement
     res.setEntity(entity); 
     return res; 
   }  // clone the conditions
+
+  public Expression definedness(Map uses, Vector messages)
+  { return new BasicExpression(true); } 
 
   public Statement generateDesign(java.util.Map env, boolean local)
   { Vector newcases = new Vector(); 
@@ -18705,5 +18745,8 @@ class FinalStatement extends Statement
     res.addAll(body.metavariables());  
     return res;  
   }  
+
+  public Expression definedness(Map uses, Vector messages)
+  { return body.definedness(uses, messages); } 
 }
 

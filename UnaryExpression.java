@@ -492,6 +492,13 @@ public class UnaryExpression extends Expression
                                 Vector messages)
   { Expression res = argument.definedness(uses, messages);
 
+    // System.out.println(">> definedness of " + argument + " is " + res); 
+
+    Expression argDefined = 
+         new BinaryExpression("/=", argument, 
+                 new BasicExpression("null"));
+    argDefined.setBrackets(true);  
+      
     if ("->ceil".equals(operator) || 
         "->floor".equals(operator) || 
         "->abs".equals(operator) || 
@@ -524,7 +531,9 @@ public class UnaryExpression extends Expression
     if ("->toLowerCase".equals(operator) ||
         "->toUpperCase".equals(operator) || 
         "->trim".equals(operator))
-    { if (argument.hasStringType()) { } 
+    { res = Expression.simplifyAnd(res, argDefined); 
+      
+      if (argument.hasStringType()) { } 
       else 
       { Expression typeofstring = 
           new BinaryExpression("->oclIsTypeOf",
@@ -540,7 +549,9 @@ public class UnaryExpression extends Expression
 
     if ("->keys".equals(operator) || 
         "->values".equals(operator))
-    { if (argument.hasMapType()) { } 
+    { res = Expression.simplifyAnd(res, argDefined); 
+              
+      if (argument.hasMapType()) { } 
       else 
       { Expression typeofmap = 
           new BinaryExpression("->oclIsTypeOf", argument,
@@ -553,15 +564,24 @@ public class UnaryExpression extends Expression
       } 
     }     
 
-
-    if ("->last".equals(operator) || 
+    if ("->size".equals(operator) ||
+        "->reverse".equals(operator) || 
+        "->sort".equals(operator) || 
+        "->sum".equals(operator) || 
+        "->prd".equals(operator))
+    { res = Expression.simplifyAnd(res, argDefined); 
+      return res; 
+    }
+    else if ("->last".equals(operator) || 
         "->first".equals(operator) ||
         "->front".equals(operator) || 
         "->tail".equals(operator) ||
         "->max".equals(operator) || 
         "->min".equals(operator) ||
         "->any".equals(operator))
-    { Expression zero = new BasicExpression(0);
+    { res = Expression.simplifyAnd(res, argDefined); 
+      
+      Expression zero = new BasicExpression(0);
       UnaryExpression orsize = 
         new UnaryExpression("->size", argument);
       Expression pos = 
@@ -610,6 +630,7 @@ public class UnaryExpression extends Expression
     { Expression checkInt = new UnaryExpression("->isLong",argument); 
       return simplify("&",checkInt,res,null); 
     } 
+
     // if ("->oclAsType".equals(operator))
     // { UnaryExpression iko = new UnaryExpression("->oclIsKindOf",argument); 
     //   return iko; 

@@ -651,10 +651,17 @@ class BinaryExpression extends Expression
     Expression res = simplify("&",dl,dr,null);  
                      // simplifyAnd(dl,dr);
 
+    Expression srcDefined = 
+      new BinaryExpression("/=", left, 
+                new BasicExpression("null")); 
+    srcDefined.setBrackets(true); 
+
     if ("->append".equals(operator) || 
         "->prepend".equals(operator) || 
         "->concatenate".equals(operator))
-    { if (left.hasSequenceType()) { } 
+    { res = Expression.simplifyAnd(res, srcDefined); 
+
+      if (left.hasSequenceType()) { } 
       else 
       { Expression typeofseq = 
           new BinaryExpression("->oclIsTypeOf",left,
@@ -665,12 +672,16 @@ class BinaryExpression extends Expression
         uses.set("amber", oscore+1); 
         messages.add("!! (SEM): Type missing for " + left + " in " + this + " Should be Sequence");  
       } 
+
+      return res; 
     }     
     else if ("->excludingKey".equals(operator) || 
         "->excludingValue".equals(operator) || 
         "->restrict".equals(operator) ||
         "->antirestrict".equals(operator))
-    { if (left.hasMapType()) { } 
+    { res = Expression.simplifyAnd(res, srcDefined); 
+
+      if (left.hasMapType()) { } 
       else 
       { Expression typeofmap = 
           new BinaryExpression("->oclIsTypeOf",left,
@@ -681,6 +692,8 @@ class BinaryExpression extends Expression
         uses.set("amber", oscore+1); 
         messages.add("!! (SEM): Type missing for " + left + " in " + this + " Should be Map");  
       } 
+
+      return res; 
     }     
     else if ("+".equals(operator))
     { if (left.hasStringType() || right.hasStringType()) 
@@ -731,6 +744,8 @@ class BinaryExpression extends Expression
           messages.add("!! (SEM): Type missing for " + left + " in " + this + " Should be numeric or String"); 
         } 
       }  
+
+      return res; 
     }
     else if ("->pow".equals(operator) ||
              "*".equals(operator))
@@ -759,9 +774,12 @@ class BinaryExpression extends Expression
         uses.set("amber", oscore+1); 
         messages.add("!! (SEM): Type missing for " + right + " in " + this + " Should be numeric ");  
       } 
+
+      return res; 
     }  
     else if ("/".equals(operator) || 
-        "mod".equals(operator) || "div".equals(operator)) 
+             "mod".equals(operator) || 
+             "div".equals(operator)) 
     { if ("0".equals(right + "") || 
           "0.0".equals(right + ""))
       { messages.add("!!! (SEM) Error: explicit divide by zero: " + this); 
@@ -804,6 +822,49 @@ class BinaryExpression extends Expression
 
       return simplify("&",res,neqz,null);
     }
+    else if ("<".equals(operator) || "<=".equals(operator) || 
+             ">".equals(operator) || ">=".equals(operator) ||
+             "=".equals(operator) || "/=".equals(operator))
+    { // types should be the same
+ 
+      // System.out.println(">> Types of " + this + " are " + 
+      //                 left.getType() + " " + right.getType()); 
+
+      if (left.hasNumericType())
+      { if (right.hasNumericType()) { } 
+        else 
+        { int oscore = (int) uses.get("amber"); 
+          uses.set("amber", oscore+1); 
+          messages.add("!! (SEM): Type of " + right + " should be numeric in " + this);
+        }    
+      } 
+      else if (right.hasNumericType())
+      { if (left.hasNumericType()) { } 
+        else 
+        { int oscore = (int) uses.get("amber"); 
+          uses.set("amber", oscore+1); 
+          messages.add("!! (SEM): Type of " + left + " should be numeric in " + this);
+        }    
+      } 
+      else if (left.hasStringType())
+      { if (right.hasStringType()) { } 
+        else 
+        { int oscore = (int) uses.get("amber"); 
+          uses.set("amber", oscore+1); 
+          messages.add("!! (SEM): Type of " + right + " should be String in " + this);
+        }    
+      } 
+      else if (right.hasStringType())
+      { if (left.hasStringType()) { } 
+        else 
+        { int oscore = (int) uses.get("amber"); 
+          uses.set("amber", oscore+1); 
+          messages.add("!! (SEM): Type of " + left + " should be String in " + this);
+        }    
+      } 
+
+      return res; 
+    }
 
     // and case for ->pow
     if ("->pow".equals(operator))
@@ -816,7 +877,9 @@ class BinaryExpression extends Expression
     }  // left < 0  =>  right->oclIsTypeOf("int")
 
     if ("->at".equals(operator))
-    { if ("String".equals(right.getType() + "") || 
+    { res = Expression.simplifyAnd(res, srcDefined); 
+
+      if ("String".equals(right.getType() + "") || 
           left.isMap())
       { UnaryExpression kexp = new UnaryExpression("->keys", left); 
         Expression inkeys = new BinaryExpression(":", right, kexp); 
@@ -830,6 +893,16 @@ class BinaryExpression extends Expression
       return simplify("&",res,inrange,null);
     } 
 
+    if ("->exists".equals(operator) || 
+        "->forAll".equals(operator) || 
+        "->any".equals(operator) || 
+        "->select".equals(operator) || 
+        "->reject".equals(operator) || 
+        "->collect".equals(operator) || 
+        "->including".equals(operator) || 
+        "->excluding".equals(operator))
+    { res = Expression.simplifyAnd(res, srcDefined); }
+    
     return res;
   }
 
@@ -6671,11 +6744,14 @@ public void findClones(java.util.Map clones,
       String trname = tright.getName();
       if (tleft.equals(tright))
       { type = new Type("boolean",null); }
-      else if (Type.isNumericType(tlname) && Type.isNumericType(trname))
+      else if (Type.isNumericType(tlname) && 
+               Type.isNumericType(trname))
       { type = new Type("boolean",null); }  // not valid to assign though
-      else if (left.elementType != null && trname.equals("" + left.elementType))
+      else if (left.elementType != null && 
+               trname.equals("" + left.elementType))
       { type = new Type("boolean",null); }  
-      else if (right.elementType != null && tlname.equals("" + right.elementType))
+      else if (right.elementType != null && 
+               tlname.equals("" + right.elementType))
       { type = new Type("boolean",null); } 
       else // or if same element types
       { System.err.println("! WARNING: different " +
@@ -6693,7 +6769,7 @@ public void findClones(java.util.Map clones,
           type = new Type("boolean",null); 
         }
         else   
-        { System.err.println("WARNING: incompatible " +
+        { System.err.println("!! WARNING: incompatible " +
                              "entities in comparison " + this);
           type = new Type("boolean",null);
         }
@@ -6701,13 +6777,13 @@ public void findClones(java.util.Map clones,
     }
     else 
     { if (tleft != null && right.getType() == null)
-      { right.setType(tleft);
-        right.setElementType(left.getElementType());
+      { // right.setType(tleft);
+        // right.setElementType(left.getElementType());
         type = new Type("boolean",null);
       }
       else if (tright != null)
-      { left.setType(tright);
-        left.setElementType(right.getElementType());
+      { // left.setType(tright);
+        // left.setElementType(right.getElementType());
         type = new Type("boolean",null);
       }
       else 
@@ -21826,6 +21902,12 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
 
     if ("->apply".equals(operator)) 
     { return Expression.simplifyApply(lexpr, rexpr); } 
+
+    if ("+".equals(operator)) 
+    { return Expression.simplifyPlus(lexpr, rexpr); } 
+
+    if ("-".equals(operator)) 
+    { return Expression.simplifyMinus(lexpr, rexpr); } 
 
     if ("|C".equals(operator))
     { BinaryExpression beleft = (BinaryExpression) lexpr; 

@@ -4423,7 +4423,7 @@ public class BehaviouralFeature extends ModelElement
       } 
     }
     else 
-    { System.err.println("ERROR: Undefined return type of operation " + this); 
+    { System.err.println("!! ERROR: Undefined return type of operation " + this); 
       ftype = null; 
       return null; 
     } 
@@ -4571,9 +4571,13 @@ public class BehaviouralFeature extends ModelElement
   { // Scan the postcondition/activity for energy expensive
     // expressions/code
 
+    // Also - resource leaks: opening a file/database connection
+    // but not closing it. 
+
     Map res = new Map(); 
     res.set("red", 0); 
     res.set("amber", 0); 
+    res.set("yellow", 0); 
 
     java.util.Map clones = new java.util.HashMap(); 
     java.util.Map defs = new java.util.HashMap(); 
@@ -4597,11 +4601,11 @@ public class BehaviouralFeature extends ModelElement
         } 
 
         if (actualClones.size() > 0)
-        { redUses.add("!!! Cloned expressions could be repeated evaluations: " + actualClones + "\n" + 
-             "!!! Use Extract Local Variable refactoring"); 
+        { /* redUses.add("!! Cloned expressions could be repeated evaluations: " + actualClones + "\n" + 
+             "!! Use Extract Local Variable refactoring"); 
           int rscore = (int) res.get("red");
           rscore = rscore + actualClones.size();
-          res.set("red", rscore);
+          res.set("red", rscore); */ 
         } 
       } // In a postcondition they usually are repeats.
     } 
@@ -4668,8 +4672,43 @@ public class BehaviouralFeature extends ModelElement
 
     Vector opuses = this.operationsUsedIn();
 
-    // System.out.println(">>> Operations " + opuses + 
-    //                    " are used in " + name); 
+    System.out.println(">>> Operations " + opuses + 
+                       " are used in " + name); 
+
+    if (opuses.contains("OclFile::newOclFile_Write") || 
+        opuses.contains("OclFile::newOclFile_Read")) 
+    { if (opuses.contains("OclFile::closeFile"))
+      { } 
+      else 
+      { amberUses.add("!! Possible resource leak! (RL) in " + name);   
+        amberUses.add("!! File opened but not closed"); 
+        int ascore = (int) res.get("amber");
+        ascore = ascore + 1;
+        res.set("amber", ascore);
+      } 
+    } 
+
+    if (opuses.contains("OclProcess::start") || 
+        opuses.contains("OclProcess::run"))
+    { amberUses.add("!! Code smell (INDT): potential indeterminacy in " + name); 
+      amberUses.add("!! Multithreading can reduce execution time but increase energy use!\n");
+int ascore = (int) res.get("amber");
+      ascore = ascore + 1;
+      res.set("amber", ascore); 
+    }
+
+    if (opuses.contains("OclDatasource::getConnection"))
+    { if (opuses.contains("OclDatasource::close") ||
+          opuses.contains("OclDatasource::closeFile")) 
+      { } 
+      else 
+      { amberUses.add("!! Possible resource leak! (RL) in " + name);   
+        amberUses.add("!! Datasource opened but not closed"); 
+        int ascore = (int) res.get("amber");
+        ascore = ascore + 1;
+        res.set("amber", ascore);
+      } 
+    } 
 
     if (opuses.contains(entity + "::" + name) && 
         activity != null)

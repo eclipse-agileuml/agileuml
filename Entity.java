@@ -4998,7 +4998,10 @@ public class Entity extends ModelElement implements Comparable
   } 
 
   public void checkDefinedness() 
-  { String ename = getName(); 
+  { if (isComponent() || isExternal()) 
+    { return; } 
+
+    String ename = getName(); 
 
     for (int i = 0; i < operations.size(); i++)
     { BehaviouralFeature op = (BehaviouralFeature) operations.get(i);
@@ -5010,6 +5013,12 @@ public class Entity extends ModelElement implements Comparable
       { System.err.println("!! Code smell (CBR2): potential self-recursion in " + op); 
         System.err.println("!! Refactor by replacing recursion by iteration, or use caching to optimise.\n"); 
       } 
+
+      if (opuses.contains("OclProcess::start") || 
+          opuses.contains("OclProcess::run"))
+      { System.err.println("!! Code smell (INDT): potential indeterminacy in " + op); 
+        System.err.println("!! Multithreading can reduce execution time but increase energy use!\n"); 
+      }
 
       Vector vuses = new Vector(); 
       Vector newopuses = VectorUtil.union(vuses,opuses); 
@@ -5052,7 +5061,10 @@ public class Entity extends ModelElement implements Comparable
   } 
 
   public void checkDeterminacy()
-  { for (int i = 0; i < operations.size(); i++)
+  { if (isComponent() || isExternal()) 
+    { return; } 
+
+    for (int i = 0; i < operations.size(); i++)
     { BehaviouralFeature op = (BehaviouralFeature) operations.get(i);
     
       Vector args = op.getParameterExpressions(); 
@@ -5884,6 +5896,7 @@ public class Entity extends ModelElement implements Comparable
   { Map res = new Map(); // multimaps - use set not put 
     res.set("red", 0); 
     res.set("amber", 0); 
+    res.set("yellow", 0); 
 
     String ename = getName(); 
 
@@ -5914,8 +5927,8 @@ public class Entity extends ModelElement implements Comparable
       
       if (redop > 0) 
       { messages.add("!!! Attribute " + attr + 
-                           " has " + redop + " energy use " +
-                           " red flags!");
+                     " has " + redop + " energy use " +
+                     " red flags!");
 
         for (int j = 0; j < redDetails.size(); j++) 
         { messages.add(redDetails.get(j)); } 
@@ -5927,9 +5940,9 @@ public class Entity extends ModelElement implements Comparable
      
       if (amberop > 0) 
       { messages.add("!! Attribute " + attr + 
-                           " has " + amberop + 
-                           " energy use " +
-                           " amber flags!"); 
+                     " has " + amberop + 
+                     " energy use " +
+                     " amber flags!"); 
 
         for (int j = 0; j < amberDetails.size(); j++) 
         { messages.add(amberDetails.get(j)); 
