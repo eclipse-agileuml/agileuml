@@ -31,13 +31,22 @@ _1 |-->_1`sequenceFormation<when> _1 trailer
 _1 |-->_1`sequenceFormation<when> _1 arguments
 _1 |-->_1`sequenceFormation<when> _1 arglist
 _1 |-->_1`sequenceFormation<when> _1 argument
+_1 |-->_1`sequenceFormation<when> _1 test
+_1 |-->_1`sequenceFormation<when> _1 logical_test
+_1 |-->_1`sequenceFormation<when> _1 comparison
+_1 |-->_1`sequenceFormation<when> _1 testlist_comp
 
 
 _1 |-->_1<when> _1 star_expr
 _1 |-->Sequence{ _1 }
 _1 , |-->Sequence{ _1 }
 _1 , _* |-->_1->union(_*`recurse)<when> _1 star_expr
+
+_1 , _2 |-->Sequence{ _1, _2 }
+_1 , _2 , _3 |-->Sequence{ _1, _2, _3 }
+
 _1 , _* |-->Sequence{_1}->union(_*`recurse)
+
 _1 _2 |-->_2`domainPart->select(_2`variablePart | _2`selectPart)->collect(_2`variablePart | _2`collectPart(_1))<when> _2 comp_for
 
 comp_for::
@@ -338,6 +347,7 @@ pickle _1 |-->_1`pickleTrailer
 datetime _1 |-->_1`datetimeTrailer
 asyncio _1 |-->_1`asyncioTrailer
 sqlite3 _1 |-->_1`sqliteTrailer
+threading _1 |-->_1`threadingTrailer
 
 np _1 |-->_1`numpyTrailer
 np _1 _2 |-->_2`npRandomTrailer<when> _1 matches .random
@@ -1458,6 +1468,13 @@ asyncioTrailer::
 . run _1 |-->(OclProcess.newOclProcess(_1`createTaskArguments, "")).start()
 
 
+threadingTrailer::
+. Thread _1 |-->OclProcess.newOclProcess(_1`createTaskArguments, "")
+
+threadingType::
+. Thread _1 |-->OclProcess
+
+
 numberOfArguments::
 . _1 |-->0
 . _1 _* |-->0
@@ -2219,8 +2236,11 @@ _1 |-->_1`createTaskArgument<when> _1 logical_test
 _1 |-->_1`createTaskArgument<when> _1 comparison
 _1 |-->_1`createTaskArgument<when> _1 expr
 
+target = _1 |-->_1
+
 _1 _2 |-->Async$_1.newAsync$_1_2
 
+_1 |-->Async$_$.newAsync$_$._1
 
 
 hasTrailer::
@@ -2361,17 +2381,20 @@ _1 : _2 |-->.subrange(_1+1, _2)<when> _2 test
 ~ _1 |-->->restrict(MatrixLib.elementwiseNot(_1))<when> _1`ocltype Sequence
 
 _1 : |-->.subrange(_1+1)<when> _1 test
+
+: |-->->copy()
+
 _1 |-->->at(_1)<when> _1 String
 _1 |-->->selectRows(_1)<when> _1`ocltype boolean
 _1 |-->->restrict(_1)<when> _1`ocltype Sequence
+
+_1 |-->[_1+1]<when> _1`ocltype int
 
 _1 |-->_1`subscript<when> _1 test
 _1 |-->_1`subscript<when> _1 logical_test
 _1 |-->_1`subscript<when> _1 comparison
 _1 |-->_1`subscript<when> _1 expr
 _1 |-->_1`subscript<when> _1 atom
-
-: |-->->copy()
 
 _1 |-->[_1+1]
 
@@ -2382,6 +2405,8 @@ _1 / _2 |-->[(_1 / _2) + 1]
 _1 // _2 |-->[(_1 div _2) + 1]
 _1 ** _2 |-->[(_1->pow(_2)) + 1]
 _1 % _2 |-->[(_1 mod _2) + 1]
+
+len _1 |-->[(_1)->size() + 1]
 
 _1 _2 |-->[_1_2]<when> _1 atom
 _1 _2 _3 |-->[_1_2_3]<when> _1 atom
@@ -2563,7 +2588,7 @@ pass |-->    skip
 break |-->    break
 continue |-->    continue
 
-return _1 |-->    return _1`returnList
+return _1 |-->    return _1
 return |-->    return
 
 raise _1 |-->    error _1`errorToUML
@@ -2917,6 +2942,7 @@ np _1 _2 |-->_2`linalgTrailerType<when> _1 matches .linalg
 numpy _1 |-->_1`numpyType
 numpy _1 _2 |-->_2`npRandomType<when> _1 matches .random
 numpy _1 _2 |-->_2`linalgTrailerType<when> _1 matches .linalg
+threading _1 |-->_1`threadingType
 
 pd _1 |-->_1`pandasType
 pandas _1 |-->_1`pandasType
