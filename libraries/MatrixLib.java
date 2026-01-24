@@ -507,8 +507,24 @@ else {     return res; }
 
   }
 
+  public static ArrayList reshape(ArrayList m, ArrayList<Integer> sh) 
+  { ArrayList fl = MatrixLib.flattenMatrix(m);
+    return MatrixLib.fillMatrixFrom(fl, sh); 
+  } 
 
-    public static ArrayList singleValueMatrix(ArrayList<Integer> sh,Object x)
+  public static ArrayList unsqueeze(ArrayList m, int level) 
+  { ArrayList<Integer> sh = MatrixLib.shape(m); 
+    ArrayList<Integer> newshape = Ocl.insertAt(sh, level, 1); 
+    return MatrixLib.reshape(m, newshape); 
+  } 
+
+  public static ArrayList squeezeAll(ArrayList m)  
+  { ArrayList<Integer> sh = MatrixLib.shape(m); 
+    ArrayList<Integer> newshape = Ocl.excludingSequence(sh, 1); 
+    return MatrixLib.reshape(m, newshape); 
+  } 
+
+  public static ArrayList singleValueMatrix(ArrayList<Integer> sh,Object x)
   { ArrayList result;
 if ((sh).size() == 0)
 {     return (new ArrayList<Object>()); }
@@ -1370,12 +1386,27 @@ else {     return m; }
 
 
 public static void main(String[] args)
- { ArrayList sh = new ArrayList(); 
-   sh.add(2); sh.add(3); 
+ { ArrayList<Integer> sh = new ArrayList<Integer>(); 
+   sh.add(2); sh.add(3); sh.add(2); 
    ArrayList mtrx1 = MatrixLib.singleValueMatrix(sh, 5.0); 
    System.out.println("Single value matrix 5: " + mtrx1);
    
-   ArrayList mtrx2 = MatrixLib.singleValueMatrix(sh, 3.5); 
+   ArrayList<Integer> sh1 = new ArrayList<Integer>(); 
+   sh1.add(4); sh1.add(3); 
+
+   ArrayList m1 = MatrixLib.reshape(mtrx1, sh1); 
+    
+   System.out.println("Single value matrix: " + m1);
+
+   m1 = MatrixLib.unsqueeze(mtrx1, 1); 
+   
+   System.out.println("Single value matrix: " + m1);
+   
+   ArrayList m2 = MatrixLib.squeezeAll(m1); 
+   
+   System.out.println("Single value matrix: " + m2);
+   
+/*    ArrayList mtrx2 = MatrixLib.singleValueMatrix(sh, 3.5); 
    System.out.println("Single value matrix 3.5: " + mtrx2); 
    
    ArrayList gtr = MatrixLib.matrixGreater(mtrx1, mtrx2); 
@@ -1467,7 +1498,7 @@ public static void main(String[] args)
    System.out.println("Matrix determinant " + det);  
 
    ArrayList transp = MatrixLib.transpose(submat); 
-   System.out.println("Matrix transpose " + transp);  
+   System.out.println("Matrix transpose " + transp);  */ 
 
 }
 
