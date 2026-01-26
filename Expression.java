@@ -2163,7 +2163,14 @@ abstract class Expression
   { return type != null && type.isString(); }
 
   public boolean hasStringType()
-  { return type != null && type.isString(); }
+  { return isStringValue(this + "") ||
+       (type != null && type.isString()); 
+  }
+
+  public boolean hasCollectionType()
+  { return (this instanceof SetExpression) || 
+       (type != null && type.isCollection()); 
+  }
 
   public boolean isCollection()
   { return type != null && type.isCollection(); }

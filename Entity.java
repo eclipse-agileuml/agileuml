@@ -5924,6 +5924,7 @@ public class Entity extends ModelElement implements Comparable
       Map resa = attr.energyUse(redDetails, amberDetails); 
       int redop = (int) resa.get("red"); 
       int amberop = (int) resa.get("amber"); 
+      int yellowop = (int) resa.get("yellow"); 
       
       if (redop > 0) 
       { messages.add("!!! Attribute " + attr + 
@@ -5953,11 +5954,24 @@ public class Entity extends ModelElement implements Comparable
         int amberscore = (int) res.get("amber"); 
         res.set("amber", amberscore + amberop); 
       } 
+
+      if (yellowop > 0) 
+      { messages.add("!! Attribute " + attr + 
+                     " has " + yellowop + 
+                     " energy use " +
+                     " yellow flags!"); 
+        int yellowscore = (int) res.get("yellow"); 
+        res.set("yellow", yellowscore + yellowop); 
+      } 
     } 
+
 
     java.util.Map collOps = new java.util.HashMap(); 
       
     int n = operations.size(); 
+
+    java.util.Map clones = new java.util.HashMap(); 
+    java.util.Map cdefs = new java.util.HashMap(); 
 
     for (int i = 0; i < n; i++) 
     { BehaviouralFeature op = 
@@ -5970,9 +5984,7 @@ public class Entity extends ModelElement implements Comparable
 
       int redop = (int) res1.get("red"); 
       int amberop = (int) res1.get("amber"); 
-
-      java.util.Map clones = new java.util.HashMap(); 
-      java.util.Map cdefs = new java.util.HashMap(); 
+      int yellowop = (int) res1.get("yellow"); 
 
       op.findClones(clones,cdefs); 
 
@@ -5983,7 +5995,7 @@ public class Entity extends ModelElement implements Comparable
         if (cs.size() > 1) 
         { actualClones.add(k); } 
         if (cs.size() > 4) 
-        { messages.add("!!! (DC) flaw: Cloned expression/statement with multiple copies: " + k + " in " + op);
+        { messages.add("!!! (DC) flaw: Cloned expression/statement with multiple copies: " + k + " from " + op);
           messages.add(""); 
  
           redop = redop + 1; 
@@ -5993,7 +6005,7 @@ public class Entity extends ModelElement implements Comparable
       } 
 
       if (actualClones.size() > 0)
-      { messages.add("!!! (DEV) flaw: Cloned expressions/statements " + actualClones + " in " + op); 
+      { messages.add("!!! (DEV) flaw: Cloned expressions/statements " + actualClones + " from " + op); 
         messages.add(""); 
         redop = redop + actualClones.size(); 
         res1.set("red", redop); 
@@ -6007,6 +6019,7 @@ public class Entity extends ModelElement implements Comparable
  
       redop = (int) res1.get("red"); 
       amberop = (int) res1.get("amber"); 
+      yellowop = (int) res1.get("yellow"); 
 
       // JOptionPane.showInputDialog(redop + " for " + op); 
       
@@ -6039,6 +6052,17 @@ public class Entity extends ModelElement implements Comparable
 
         int amberscore = (int) res.get("amber"); 
         res.set("amber", amberscore + amberop); 
+      } 
+
+      if (yellowop > 0) 
+      { messages.add("!! Operation " + opname + 
+                           " has " + yellowop + 
+                           " energy use " +
+                           " yellow flags!"); 
+        messages.add(""); 
+
+        int yellowscore = (int) res.get("yellow"); 
+        res.set("yellow", yellowscore + yellowop); 
       } 
     } 
 
@@ -6093,18 +6117,22 @@ public class Entity extends ModelElement implements Comparable
               Expression arg = ue.getArgument(); 
 
               if (Expression.isOclDistributedIteratorOperator(oper))
-              { messages.add("!! Warning: " + maxop + " is a >= O(S) operation\n" + 
-                  "!! in the sum S of sizes of the argument elements. \n"); 
+              { messages.add("! Warning: " + maxop + " is a >= O(S) operation\n" + 
+                  "! in the sum S of sizes of the argument elements. \n"); 
                 messages.add(""); 
-                System.err.println();
+                // System.err.println();
+                int yellowscore = (int) res.get("yellow"); 
+                res.set("yellow", yellowscore + 1); 
               }
               else if ("->max".equals(oper) || 
                        "->min".equals(oper))
               { if (arg.isSequence())
-                { messages.add("!! Warning: " + oper + 
+                { messages.add("! Warning: " + oper + 
                     " is an O(n) operation on Sequence " + arg + "\n" + 
-                    "!! SortedSet or SortedBag can be more efficient if no indexing is needed\n");
-                  messages.add(""); 
+                    "! SortedSet or SortedBag can be more efficient if no indexing is needed\n");
+                  messages.add("");
+                  int yellowscore = (int) res.get("yellow"); 
+                  res.set("yellow", yellowscore + 1); 
                 }
               }
 
@@ -6116,8 +6144,10 @@ public class Entity extends ModelElement implements Comparable
               String oper = be.getOperator(); 
 
               if (Expression.isOclDistributedIteratorOperator(oper))
-              { messages.add("!! Warning: " + maxop + " is a >= O(S) operation\n" + 
-                  "!! in the sum S of sizes of the argument elements. \n"); 
+              { messages.add("! Warning: " + maxop + " is a >= O(S) operation\n" + 
+                  "! in the sum S of sizes of the argument elements. \n"); 
+                int yellowscore = (int) res.get("yellow"); 
+                res.set("yellow", yellowscore + 1); 
               }  
               else if ("|".equals(oper) || 
                   "->select".equals(oper) ||
@@ -6132,33 +6162,47 @@ public class Entity extends ModelElement implements Comparable
                   "<:".equals(oper) ||  
                   "->antirestrict".equals(oper) ||
                   "->iterate".equals(oper))
-              { messages.add("!! Warning: " + maxop + " is a >= O(n) operation in the size of the LHS collection/map. \n"); }  
+              { messages.add("! Warning: " + maxop + " is a >= O(n) operation in the size of the LHS collection/map. \n"); 
+                int yellowscore = (int) res.get("yellow"); 
+                res.set("yellow", yellowscore + 1); 
+              }  
               else if ("->union".equals(oper) || 
                   "->symmetricDifference".equals(oper))
-              { messages.add("!! Warning: " + maxop + " is an O(n) operation in the sum of sizes of the arguments. \n"); }  
+              { messages.add("! Warning: " + maxop + " is an O(n) operation in the sum of sizes of the arguments. \n"); 
+                int yellowscore = (int) res.get("yellow"); 
+                res.set("yellow", yellowscore + 1); 
+              }  
               else if ("->sortedBy".equals(oper) || 
                   "|sortedBy".equals(oper))
-              { messages.add("!! Warning: " + maxop + " is an O(n*log(n)) operation in the size of the LHS. \n"); }  
-
+              { messages.add("! Warning: " + maxop + " is an O(n*log(n)) operation in the size of the LHS. \n"); 
+                int yellowscore = (int) res.get("yellow"); 
+                res.set("yellow", yellowscore + 1); 
+              } 
+ 
               if (be.getLeft().isSequence())
               { if ("->includes".equals(oper) ||
                     "->excludingFirst".equals(oper)) 
-                { messages.add("!! Warning: " + oper + 
+                { messages.add("! Warning: " + oper + 
                     " is an O(n) operation on Sequence " + be.getLeft() + "\n" + 
-                    "!! Set, Bag, SortedSet or SortedBag can be more efficient if no indexing is needed\n"); 
+                    "! Set, Bag, SortedSet or SortedBag can be more efficient if no indexing is needed\n"); 
+                  int yellowscore = (int) res.get("yellow"); 
+                  res.set("yellow", yellowscore + 1); 
                 } 
                 else if ("->including".equals(oper))
-                { messages.add("!! Warning: " + oper + 
+                { messages.add("! Warning: " + oper + 
                     " is an O(log n) operation on Sequence " + be.getLeft() + "\n" + 
-                    "!! Set or Bag can be more efficient if no indexing is needed\n"); 
+                    "! Set or Bag can be more efficient if no indexing is needed\n");
+                  int yellowscore = (int) res.get("yellow"); 
+                  res.set("yellow", yellowscore + 1); 
                 } 
                 else if ("->excluding".equals(oper) ||
                          "->count".equals(oper))
-                { messages.add("!! Warning: " + oper + 
+                { messages.add("! Warning: " + oper + 
                     " is an O(n) operation on Sequence " + be.getLeft() + "\n" + 
-                    "!! Set or SortedSet can be more efficient if no indexing or duplicates are needed\n"); 
-                } 
-                 
+                    "! Set or SortedSet can be more efficient if no indexing or duplicates are needed\n"); 
+                  int yellowscore = (int) res.get("yellow"); 
+                  res.set("yellow", yellowscore + 1); 
+                }              
               }
             } 
           } 
@@ -6177,7 +6221,10 @@ public class Entity extends ModelElement implements Comparable
           attr.hasIndexingOperation(collOps); 
 
         if (indexUse == false)
-        { messages.add("!! No use of indexes with sequence-valued attribute " + attr + "\n! It may be more efficient to use a SortedSet or Bag\n"); } 
+        { messages.add("! No use of indexes with sequence-valued attribute " + attr + "\n! It may be more efficient to use a SortedSet or Bag\n"); 
+          int yellowscore = (int) res.get("yellow"); 
+          res.set("yellow", yellowscore + 1); 
+        } 
       } 
     }       
 

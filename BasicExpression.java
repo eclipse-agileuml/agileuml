@@ -3032,6 +3032,15 @@ class BasicExpression extends Expression
         Expression pdef = par.definedness(uses,messages); 
         res = simplify("&", res, pdef, null); 
       } 
+
+      if ("OclRandom".equals(objectRef + "") && 
+          "randomElement".equals(data))
+      { Expression par1 = (Expression) parameters.get(0); 
+        res =  
+          Expression.simplifyAnd(res, 
+              new UnaryExpression("->notEmpty", par1)); 
+        return res; 
+      } 
   
       if ("subrange".equals(data) && 
           parameters.size() > 0)
@@ -3061,7 +3070,8 @@ class BasicExpression extends Expression
 
     if ((umlkind == UPDATEOP || umlkind == QUERY) && 
         entity != null) 
-    { BehaviouralFeature bf = entity.getDefinedOperation(data);
+    { 
+      BehaviouralFeature bf = entity.getDefinedOperation(data);
 
       if (bf != null) 
       { Expression spre = bf.definedness(parameters); 

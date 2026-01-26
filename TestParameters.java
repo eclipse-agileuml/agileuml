@@ -35,7 +35,7 @@ public class TestParameters
   public static int syntacticComplexityLimit = 20; /* for MEL */ 
 
   public static int cloneSizeLimit = 7;            /* for DC  */
-  public static int energyCloneSizeLimit = 4; 
+  public static int energyCloneSizeLimit = 2; 
 
   public static int statementNestingLimit = 5;  
   public static int cyclomaticComplexityLimit = 10; 

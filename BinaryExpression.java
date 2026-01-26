@@ -747,6 +747,24 @@ class BinaryExpression extends Expression
 
       return res; 
     }
+    else if ("-".equals(operator))
+    { if (left.hasStringType() && right.hasStringType()) 
+      { } // result is a string 
+      else if (left.hasNumericType() && right.hasNumericType())
+      { } // result is numeric
+      else if (left.hasCollectionType() && 
+               right.hasCollectionType())
+      { } 
+      else if (left.hasMapType() && right.hasMapType())
+      { } 
+      else  
+      { int oscore = (int) uses.get("amber"); 
+        uses.set("amber", oscore+1); 
+        messages.add("!! (SEM): Types missing for " + this + " Arguments should be both numeric, both String, both Collections or both Maps");  
+      }  
+
+      return res; 
+    }
     else if ("->pow".equals(operator) ||
              "*".equals(operator))
     { if (left.hasNumericType()) { } 
