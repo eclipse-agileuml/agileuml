@@ -28,6 +28,10 @@ if _1 then _2 else _2 |-->_2
  
 if _1 then _2 else skip |-->if _1 then _2 else skip  
 if _1 then _2 else _3 |-->if _1 then _2 else skip; _3<when> _2`endsWithReturn true
+
+if _1 then return true else return false |-->return _1
+if _1 then return false else return true |-->return not(_1)
+
 if _1 then _2 else _3 |-->if _1 then _2 else _3  
   
 while false do _1 |-->skip
