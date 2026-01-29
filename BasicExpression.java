@@ -389,18 +389,40 @@ class BasicExpression extends Expression
     if (arrayIndex != null)
     { arrayIndex.setBrackets(false); } 
 
-    if (arrayType != null && arrayType.isSequence())
-    { return (var + "").equals(arrayIndex + ""); } 
- 
-    return false; 
+    // if (arrayType != null && arrayType.isSequence())
+    // { 
+    return (var + "").equals(arrayIndex + ""); 
+    // } 
   } 
 
   public boolean isSequenceApplicationIncrement(Expression var)
   { // It is data[var+1]
 
+    if (arrayIndex instanceof BinaryExpression && 
+        "+".equals(
+          ((BinaryExpression) arrayIndex).getOperator())
+       )
+    { BinaryExpression bexpr = (BinaryExpression) arrayIndex; 
+      Expression bleft = bexpr.getLeft(); 
+      Expression bright = bexpr.getRight(); 
+      bleft.setBrackets(false); 
+      bright.setBrackets(false); 
+
+      // System.out.println(bleft + " " + bright); 
+ 
+      return (var + "").equals(bleft + "") && 
+             "1".equals(bright + "");  
+    } 
+
+    return false; 
+  } 
+
+  public boolean isSequenceApplicationDecrement(Expression var)
+  { // It is data[var+1]
+
     if (arrayType != null && arrayType.isSequence() && 
         arrayIndex instanceof BinaryExpression && 
-        "+".equals(
+        "-".equals(
           ((BinaryExpression) arrayIndex).getOperator())
        )
     { BinaryExpression bexpr = (BinaryExpression) arrayIndex; 
@@ -411,7 +433,8 @@ class BasicExpression extends Expression
 
       // System.out.println(arrayIndex + ""); 
  
-      return (var + " + 1").equals(arrayIndex + "");  
+      return (var + "").equals(bleft + "") && 
+             "1".equals(bright + "");  
     } 
 
     return false; 
@@ -18648,14 +18671,12 @@ public Statement generateDesignSubtract(Expression rhs)
 
     if ("subrange".equals(data) &&
         arrayIndex == null && 
-        pars != null &&  
-        (objectRef.isSequence() || 
-         objectRef.isString()))
+        pars != null)
     { if (pars.size() == 2)
       { Expression res = 
           Expression.simplifySubrange(objR, 
-                                    (Expression) pars.get(0), 
-                                    (Expression) pars.get(1)); 
+                             (Expression) pars.get(0), 
+                             (Expression) pars.get(1)); 
         return res;
       } 
       else if (pars.size() == 1)

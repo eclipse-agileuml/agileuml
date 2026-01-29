@@ -3759,6 +3759,7 @@ public class UCDArea extends JPanel
 
     int redFlags = 0; 
     int amberFlags = 0; 
+    int yellowFlags = 0; 
 
     for (int j = 0; j < entities.size(); j++) 
     { Entity ent = (Entity) entities.get(j); 
@@ -3771,6 +3772,8 @@ public class UCDArea extends JPanel
       redFlags = redFlags + (int) scores.get("red"); 
       amberFlags = 
         amberFlags + (int) scores.get("amber"); 
+      yellowFlags = 
+        yellowFlags + (int) scores.get("yellow"); 
 
       Map cg = ent.getCallGraph(); 
       if (cg.size() > 0) 
@@ -3788,6 +3791,8 @@ public class UCDArea extends JPanel
       redFlags = redFlags + (int) scores.get("red"); 
       amberFlags = 
         amberFlags + (int) scores.get("amber"); 
+      yellowFlags = 
+        yellowFlags + (int) scores.get("yellow"); 
     } 
 
     // compute transitive closure of this
@@ -3823,6 +3828,7 @@ public class UCDArea extends JPanel
 
     messages.add(">> Red flag score: " + redFlags); 
     messages.add(">> Amber flag score: " + amberFlags); 
+    messages.add(">> Yellow flag score: " + yellowFlags); 
 
     return res;  
   }

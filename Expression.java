@@ -4540,12 +4540,14 @@ abstract class Expression
   } 
 
   public static Expression simplifyCollect(Expression var, 
-                       Expression src, Expression expr)
+                              Expression src, Expression expr)
   { // sq->collect(x|x) is sq for sequence sq
     // Integer.subrange(a,b)->collect(x | sq[x]) is 
     //    sq.subrange(a,b)
     // Integer.subrange(a,b)->collect(x | sq[x+1]) is 
     //    sq.subrange(a+1,b+1)
+    // Integer.subrange(a,b)->collect(x | sq[x+n]) is 
+    //    sq.subrange(a+n,b+n)
     // Likewise for sq->at(i)
 
     if (src.isSequence() && 
@@ -4568,6 +4570,8 @@ abstract class Expression
                   arr.getData(), pars); 
         return res; 
       }
+
+      // JOptionPane.showInputDialog("Simplify collect: " + var + " " + arr + " " + arr.isSequenceApplicationIncrement(var)); 
       
       if (arr.isSequenceApplicationIncrement(var))
       { Expression par1 = (Expression) pars.get(0); 
@@ -4630,6 +4634,7 @@ abstract class Expression
 
   public static Expression simplifySum(Expression src)
   { // Integer.subrange(1,n)->sum() is (n*(n+1))/2
+    // Integer.subrange(a,b)->sum() is ((b-a+1)*(a+b))/2
     // Integer.subrange(1,n)->collect( x | x*x )->sum() is
     //    (n*(n+1)*(2*n + 1))/6
     // Integer.subrange(1,n)->collect( x | x*x*x )->sum() is
@@ -4647,43 +4652,47 @@ abstract class Expression
     { BasicExpression lcol = (BasicExpression) src; 
       Vector pars = lcol.getParameters(); 
   
-      Expression par1 = (Expression) pars.get(0); 
-      par1.setBrackets(false); 
-      Expression par2 = (Expression) pars.get(1); 
+      if (pars != null && pars.size() >= 2)
+      { Expression par1 = (Expression) pars.get(0); 
+        par1.setBrackets(false); 
+        Expression par2 = (Expression) pars.get(1); 
 
-      if ("1".equals(par1 + ""))
-      { // par2*(par2+1)/2
-        Expression sum1 = new BinaryExpression("+", par2, 
-                                new BasicExpression(1)); 
-        sum1.setBrackets(true); 
-        Expression prd1 = new BinaryExpression("*", 
-                                               par2, sum1); 
-        prd1.setBrackets(true); 
+        if ("1".equals(par1 + ""))
+        { // par2*(par2+1)/2
+          Expression sum1 = new BinaryExpression("+", par2, 
+                                    new BasicExpression(1)); 
+          sum1.setBrackets(true);
+          par2.setBrackets(true);  
+          Expression prd1 = new BinaryExpression("*", 
+                                                 par2, sum1); 
+          prd1.setBrackets(true); 
 
-        Expression res = 
-           new BinaryExpression("/", prd1, 
-             new BasicExpression(2)); 
-        return res; 
-      }
-      else 
-      { // (par2 - par1 + 1)*(par1 + par2)/2
-        Expression sum1 = new BinaryExpression("+", par1, 
-                                               par2); 
-        sum1.setBrackets(true); 
-        Expression sum2 = 
-          new BinaryExpression("+", par2, 
-            new BinaryExpression("-", par1, 
-              new BasicExpression(1))); 
-        sum2.setBrackets(true); 
+          Expression res = 
+             new BinaryExpression("div", prd1, 
+               new BasicExpression(2)); 
+          return res; 
+        }
+        else 
+        { // (par2 - par1 + 1)*(par1 + par2)/2
+          Expression suma = 
+            Expression.simplifyMinus(par2, par1); 
+          Expression sumb = 
+            Expression.simplifyPlus(par1, par2); 
+          sumb.setBrackets(true); 
+          Expression sum2 = 
+            Expression.simplifyPlus(suma, 
+                             new BasicExpression(1)); 
+          sum2.setBrackets(true); 
 
-        Expression prd1 =             
-          new BinaryExpression("*", sum1, sum2); 
-        prd1.setBrackets(true); 
+          Expression prd1 =             
+            new BinaryExpression("*", sum2, suma); 
+          prd1.setBrackets(true); 
 
-        Expression res = 
-          new BinaryExpression("/", prd1, 
-            new BasicExpression(2)); 
-        return res; 
+          Expression res = 
+            Expression.simplifyDiv(prd1, 
+                          new BasicExpression(2)); 
+          return res;
+        }  
       } 
     }     
   
@@ -4723,37 +4732,41 @@ abstract class Expression
              ((BasicExpression) col).getObjectRef() + ""))
       { BasicExpression lcol = (BasicExpression) col; 
         Vector pars = lcol.getParameters(); 
-  
-        Expression par1 = (Expression) pars.get(0); 
-        par1.setBrackets(false); 
-        Expression par2 = (Expression) pars.get(1); 
 
-        if ("1".equals(par1 + ""))
-        { // (par2*(par2+1)*(2*par2 + 1))/6
+        if (pars != null && 
+            pars.size() >= 2)
+        { Expression par1 = (Expression) pars.get(0); 
+          par1.setBrackets(false); 
+          Expression par2 = (Expression) pars.get(1); 
+          
+          if ("1".equals(par1 + ""))
+          { // (par2*(par2+1)*(2*par2 + 1))/6
 
-          Expression sum1 = new BinaryExpression("+", par2, 
+            Expression sum1 = new BinaryExpression("+", par2, 
+                                    new BasicExpression(1)); 
+            sum1.setBrackets(true); 
+
+            par2.setBrackets(true); 
+            Expression prd2 = new BinaryExpression("*", par2,
+                                      new BasicExpression(2));
+            prd2.setBrackets(true); 
+
+            Expression sum2 = 
+                new BinaryExpression("+", prd2,  
                                 new BasicExpression(1)); 
-          sum1.setBrackets(true); 
+            sum2.setBrackets(true); 
 
-          Expression prd2 = new BinaryExpression("*", par2,
-                           new BasicExpression(2));
-          prd2.setBrackets(true); 
-
-          Expression sum2 = 
-              new BinaryExpression("+", prd2,  
-                                new BasicExpression(1)); 
-          sum2.setBrackets(true); 
-
-          Expression prd1 = 
+            Expression prd1 = 
                new BinaryExpression("*", par2, 
-                 new BinaryExpression("*", sum1, sum2)); 
-          prd1.setBrackets(true); 
+                   new BinaryExpression("*", sum1, sum2)); 
+            prd1.setBrackets(true); 
 
-          Expression res = 
-             new BinaryExpression("/", prd1, 
-               new BasicExpression(6)); 
-          return res; 
-        }
+            Expression res = 
+               new BinaryExpression("div", prd1, 
+                      new BasicExpression(6)); 
+            return res; 
+          }
+        } 
       }
     } 
 
@@ -4796,6 +4809,8 @@ abstract class Expression
     //    sq.subrange(a,b)->prd()
     // Integer.subrange(a,b)->collect(x | sq[x+1])->prd() is 
     //    sq.subrange(a+1,b+1)->prd()
+    // Integer.subrange(a,b)->prd() is 
+    //    MathLib.factorial(b) div MathLib.factorial(a-1)
     // sq->collect(x|e)->prd() is (e)->pow(sq->size()) when e
     //    independent of x
 
@@ -4860,8 +4875,43 @@ abstract class Expression
       } 
     } 
 
+    if (src instanceof BasicExpression &&
+        ((BasicExpression) src).getData().equals("subrange") &&
+        "Integer".equals(
+           ((BasicExpression) src).getObjectRef() + ""))
+    { BasicExpression lcol = (BasicExpression) src; 
+      Vector pars = lcol.getParameters(); 
+  
+      if (pars != null && pars.size() >= 2)
+      { Expression par1 = (Expression) pars.get(0); 
+        par1.setBrackets(false); 
+        Expression par2 = (Expression) pars.get(1); 
+
+        if ("1".equals(par1 + ""))
+        { BasicExpression res = 
+            BasicExpression.newStaticCallBasicExpression(
+                      "factorial", "MathLib", par2); 
+          return res; 
+        } 
+
+        Expression denom = 
+            BasicExpression.newStaticCallBasicExpression(
+                      "factorial", "MathLib", 
+                         new BinaryExpression("-", par1, 
+                           new BasicExpression(1))); 
+        BasicExpression numer = 
+            BasicExpression.newStaticCallBasicExpression(
+                      "factorial", "MathLib", par2); 
+        Expression res =
+           new BinaryExpression("div", numer, denom);
+        res.setBrackets(true); 
+        return res;  
+      } 
+    }  
+
     return new UnaryExpression("->prd", src); 
   } 
+
 
   public static Expression simplifyAny(Expression src)
   { // sq->select(x | P)->any()  is  sq->any(x | P)
@@ -5203,15 +5253,15 @@ abstract class Expression
   } 
 
   public static Expression simplifySubrange(Expression src, 
-                                      Expression arg1, 
-                                      Expression arg2)
+                                            Expression arg1, 
+                                            Expression arg2)
   { // sq.subrange(i,j)  for j < 0  is  
     //      sq.subrange(i, sq->size() + j)
     // sq.subrange(i,j)  for i < 0  is  
     //      sq.subrange(sq->size() + i, j)
     // sq->collect(x|e).subrange(a,b) is 
     //      sq.subrange(a,b)->collect(x|e)
-    // sq.subrange(2) is sq->front()
+    // sq.subrange(1, sq->size()) is sq
   
     arg1.setBrackets(false); 
     arg2.setBrackets(false); 
@@ -5323,6 +5373,14 @@ abstract class Expression
       } 
     } 
 
+    if ("1".equals(par1 + "") && 
+        (src + "->size()").equals(par2 + "")) 
+    { return src; } 
+
+    if ("1".equals(par1 + "") && 
+        (src + "->size() - 1 + 1").equals(par2 + "")) 
+    { return src; } 
+
     if (Expression.isIntegerValue("" + par1) && 
         Expression.isIntegerValue("" + par2) && 
         Expression.isStringValue("" + src)) 
@@ -5358,6 +5416,7 @@ abstract class Expression
     // sq->collect(x|e).subrange(a) is 
     //      sq.subrange(a)->collect(x|e)
     // sq.subrange(2) is sq->front()
+    // sq.subrange(1) is sq
   
     arg1.setBrackets(false); 
 
@@ -5371,6 +5430,9 @@ abstract class Expression
 
       if (val1 == 2)
       { return Expression.simplifyFront(src); } 
+
+      if (val1 == 1)
+      { return src; } 
  
       if (val1 < 0) 
       { par1 = 
@@ -5438,7 +5500,7 @@ abstract class Expression
             Expression.simplifySize(src);
           par1 = 
                 new BinaryExpression("-", sze, 
-                             new BasicExpression(actualValue)); 
+                       new BasicExpression(actualValue)); 
         }
       }  
     } 

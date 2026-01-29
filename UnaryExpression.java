@@ -1323,6 +1323,11 @@ public void findClones(java.util.Map clones,
       }
     } 
 
+    if (operator.equals("->display") && level > 1)
+    { System.err.println("! (OES): I/O within loop can be inefficient: " + this); 
+      System.err.println(); 
+    } 
+ 
     return res; 
   } // also any in the argument. 
 
@@ -1391,6 +1396,13 @@ public void findClones(java.util.Map clones,
         uses.set("amber", aScore + 1);
       }
     }
+
+    if (operator.equals("->display") && level > 1)
+    { messages.add("! (OES): I/O within loop can be inefficient: " + this); 
+      messages.add("");
+      int yScore = (int) uses.get("yellow"); 
+      uses.set("yellow", yScore + 1); 
+    } 
 
     return res; 
   } // also any in the argument. 
