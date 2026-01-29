@@ -455,6 +455,8 @@ _1 _2 |-->StringLib.padLeftWithInto(_1,_2`justificationArguments)<when> _1 atom,
 _1 _2 |-->StringLib.padRightWithInto(_1,_2`justificationArguments)<when> _1 atom, _2`second ljust
 _1 _2 |-->StringLib.interpolateStrings(_1, _2`formatArguments)<when> _1 atom, _2`second format
 
+_1 _2 |-->_1.isAlive()<when> _1 OclProcess, _2 matches .is_alive\(\)
+
 _1 _* |-->_1->apply_*<when> _1 Function
 
 _1 _2 |-->_1_2`mapQueryForm<when> _1 Map
@@ -1470,9 +1472,21 @@ asyncioTrailer::
 
 threadingTrailer::
 . Thread _1 |-->OclProcess.newOclProcess(_1`createTaskArguments, "")
+. active_count _1 |-->OclProcess.activeCount()
+. current_thread _1 |-->OclProcess.currentThread()
+. enumerate _1 |-->OclProcess.allActiveThreads()
+. main_thread _1 |-->OclProcess.allActiveThreads()->any(name = "main")
+
 
 threadingType::
 . Thread _1 |-->OclProcess
+. active_count _1 |-->int
+. current_thread _1 |-->OclProcess
+. enumerate _1 |-->Sequence
+. main_thread _1 |-->OclProcess
+
+
+
 
 
 numberOfArguments::
