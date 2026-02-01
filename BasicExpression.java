@@ -2970,6 +2970,7 @@ class BasicExpression extends Expression
     { String arrayid = arrayIndex.saveModelData(out); 
       out.println(arrayid + " : " + res + ".arrayIndex"); 
     } 
+
     return res; 
   }
 
@@ -18831,9 +18832,10 @@ public Statement generateDesignSubtract(Expression rhs)
       opers.add(newbe); 
       res.put(level, opers);
 
-      if ((arrayIndex + "").equals(data + "->size() + 1") ||
+      if ((arrayIndex + "").equals("0") ||
+          (arrayIndex + "").equals(data + "->size() + 1") ||
           (arrayIndex + "").equals("(" + data + ")->size() + 1"))
-      { System.err.println("!!! Invalid index reference: " + this);
+      { System.err.println("!!! Invalid index reference for sequence/string: " + this);
         System.err.println(); 
       } 
     } 
@@ -18927,11 +18929,12 @@ public Statement generateDesignSubtract(Expression rhs)
       res.put(level, opers); 
 
 
-      if ((arrayIndex + "").equals(data + "->size() + 1") ||
+      if ((arrayIndex + "").equals("0") ||
+          (arrayIndex + "").equals(data + "->size() + 1") ||
           (arrayIndex + "").equals("(" + data + ")->size() + 1"))
-      { messages.add("!!! Invalid index reference: " + this);
-        int rScore = (int) uses.get("red"); 
-        uses.set("red", rScore+1); 
+      { messages.add("!! Invalid index reference for sequence/string: " + this);
+        int aScore = (int) uses.get("amber"); 
+        uses.set("amber", aScore+1); 
         messages.add("");
       } 
 

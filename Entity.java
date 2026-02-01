@@ -5479,7 +5479,7 @@ public class Entity extends ModelElement implements Comparable
 
             bf.setOwner(this); 
             this.addOperation(bf); 
-            System.out.println(">>> Extracted operation " + fname);  
+            System.out.println(">>> Extracted operation: " + fname);  
           }
         }
       } 
@@ -5978,6 +5978,9 @@ public class Entity extends ModelElement implements Comparable
           (BehaviouralFeature) operations.get(i); 
       String opname = op.getName(); 
 
+      java.util.Map opclones = new java.util.HashMap(); 
+      java.util.Map opcdefs = new java.util.HashMap(); 
+
       Vector redDetails = new Vector(); 
       Vector amberDetails = new Vector(); 
       Map res1 = op.energyAnalysis(redDetails, amberDetails);
@@ -5988,10 +5991,12 @@ public class Entity extends ModelElement implements Comparable
 
       op.findClones(clones,cdefs); 
 
-      java.util.Set ks = clones.keySet(); 
+      op.findClones(opclones,opcdefs); 
+
+      java.util.Set ks = opclones.keySet(); 
       Vector actualClones = new Vector(); 
       for (Object k : ks) 
-      { Vector cs = (Vector) clones.get(k); 
+      { Vector cs = (Vector) opclones.get(k); 
         if (cs.size() > 1) 
         { actualClones.add(k); } 
         if (cs.size() > 4) 
@@ -6230,6 +6235,29 @@ public class Entity extends ModelElement implements Comparable
 
     messages.add(""); 
       
+    java.util.Set ks = clones.keySet(); 
+    Vector entityClones = new Vector(); 
+    for (Object k : ks) 
+    { Vector cs = (Vector) clones.get(k); 
+      if (cs.size() > 1) 
+      { entityClones.add(k); } 
+      if (cs.size() > 4) 
+      { messages.add("!!! (DC) flaw: Cloned expression/statement with multiple copies: " + k + " from " + name);
+        messages.add(""); 
+ 
+        int redcount = (int) res.get("red"); 
+        res.set("red", redcount + 1); 
+      } 
+    } 
+
+    if (entityClones.size() > 0)
+    { messages.add("!!! (DEV) flaw: Cloned expressions/statements " + entityClones + " from " + name); 
+      messages.add(""); 
+      int redcount = (int) res.get("red"); 
+      redcount = redcount + entityClones.size(); 
+      res.set("red", redcount); 
+    }  
+
        messages.add("++++++++++++++++++++++++++++++++++++++++++++++++++++++++"); 
     messages.add(""); 
 

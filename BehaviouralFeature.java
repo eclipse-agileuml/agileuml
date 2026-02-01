@@ -3544,7 +3544,12 @@ public class BehaviouralFeature extends ModelElement
     } 
 
     if (activity != null) 
-    { Statement newact = 
+    { if (("" + oldName).equals("" + activity))
+      { this.setActivity(new InvocationStatement(newExpr)); 
+        return; 
+      }  
+
+      Statement newact = 
            activity.substituteEq(oldName, newExpr); 
       this.setActivity(newact); 
     }

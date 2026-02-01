@@ -238,6 +238,13 @@ public class ConditionalExpression extends Expression
     if ((testexpr + "").equals("false"))
     { return elsestat; } 
  
+    String ifstr = "" + ifstat; 
+    String elsestr = "" + elsestat; 
+
+    if (ifstr.equals(elsestr) || 
+        ("(" + ifstr + ")").equals(elsestr)) 
+    { return ifstat; } 
+
     if (testexpr instanceof BinaryExpression && 
         elsestat instanceof BinaryExpression)
     { BinaryExpression testbe = (BinaryExpression) testexpr; 
@@ -295,6 +302,34 @@ public class ConditionalExpression extends Expression
             ifbe.getOperator().equals("->append"))
         { return ifbe; } 
       } 
+    } 
+
+    
+
+    if (("true".equals(ifstr) || "(true)".equals(ifstr)) && 
+        ("false".equals(elsestr) || "(false)".equals(elsestr)))
+    { return testexpr; } 
+
+    if (("false".equals(ifstr) || "(false)".equals(ifstr)) && 
+        ("true".equals(elsestr) || "(true)".equals(elsestr)))
+    { return new UnaryExpression("not", testexpr); } 
+
+    if ("false".equals(elsestr) || "(false)".equals(elsestr))
+    { Expression res = new BinaryExpression("&", testexpr, ifstat); 
+      res.setBrackets(true); 
+      return res; 
+    } 
+
+    if ("true".equals(elsestr) || "(true)".equals(elsestr))
+    { Expression res = new BinaryExpression("=>", testexpr, ifstat); 
+      res.setBrackets(true); 
+      return res; 
+    } 
+
+    if ("true".equals(ifstr) || "(true)".equals(ifstr))
+    { Expression res = new BinaryExpression("or", testexpr, elsestat); 
+      res.setBrackets(true); 
+      return res; 
     } 
 
     return new ConditionalExpression(testexpr, ifstat, elsestat); 

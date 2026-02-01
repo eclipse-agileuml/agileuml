@@ -1390,7 +1390,34 @@ abstract class Statement implements Cloneable
       } 
       return false;  
     } 
+
     return (st instanceof ReturnStatement); 
+  } 
+
+  public static boolean isSingleValueReturn(Statement st)
+  { if (st == null) 
+    { return false; } 
+
+    if (st instanceof SequenceStatement) 
+    { SequenceStatement sq = (SequenceStatement) st; 
+
+      if (sq.size() == 1) 
+      { Statement stat = sq.getStatement(0); 
+        if (stat instanceof ReturnStatement && 
+            ((ReturnStatement) stat).hasValue())
+        { return true; } 
+
+        if (Statement.isSingleValueReturn(stat)) 
+        { return true; }
+      } 
+
+      return false;  
+    } 
+
+    if (st instanceof ReturnStatement)
+    { return ((ReturnStatement) st).hasValue(); }
+
+    return false;  
   } 
 
   public static boolean isSingleBreakStatement(Statement st)
@@ -1430,6 +1457,7 @@ abstract class Statement implements Cloneable
       { return new BasicExpression("null"); }
       return res; 
     } 
+
     return new BasicExpression("null");
   } 
 
@@ -1866,7 +1894,8 @@ abstract class Statement implements Cloneable
       
       Expression expr = retstat.getReturnValue();
 
-      if (expr == null) { return true; } 
+      if (expr == null) 
+      { return true; } 
 
       Vector vars1 =
         expr.variablesUsedIn(names);
@@ -17558,6 +17587,18 @@ class ConditionalStatement extends Statement
     { if (elsec == null) 
       { return new InvocationStatement("skip"); } 
       return elsec; 
+    } 
+
+    if (Statement.isSingleValueReturn(ifc) && 
+        Statement.isSingleValueReturn(elsec))
+    { // rewrite as return (if testc then v1 else v2 endif)
+
+      Expression v1 = Statement.getReturnExpression(ifc); 
+      Expression v2 = Statement.getReturnExpression(elsec); 
+      Expression cond = 
+          new ConditionalExpression(testc, v1, v2);
+      cond.setBrackets(true);  
+      return new ReturnStatement(cond); 
     } 
 
     Statement elseStat = 
