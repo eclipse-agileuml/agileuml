@@ -27,10 +27,10 @@ if false then _1 else _2 |-->_2
 if _1 then _2 else _2 |-->_2
  
 if _1 then _2 else skip |-->if _1 then _2 else skip  
-if _1 then _2 else _3 |-->if _1 then _2 else skip; _3<when> _2`endsWithReturn true
 
-if _1 then return true else return false |-->return _1
-if _1 then return false else return true |-->return not(_1)
+if _1 then _2 else _3 |-->return (if _1 then _2`returnedValue else _3`returnedValue endif)<when> _2`isValueReturn true, _3`isValueReturn true
+
+if _1 then _2 else _3 |-->if _1 then _2 else skip; _3<when> _2`endsWithReturn true
 
 if _1 then _2 else _3 |-->if _1 then _2 else _3  
   
@@ -128,8 +128,51 @@ _1 ; _2 |-->_2`endsWithReturn
   
 execute _1 |-->false
 call _1 |-->false 
-( _1 ) |-->(_1`endsWithReturn)
+( _1 ) |-->_1`endsWithReturn
  
+
+isValueReturn::
+skip |-->false
+return |-->false
+return _1 |-->true
+
+continue |-->false
+break |-->false
+var _1 : _2 |-->false 
+
+if _1 then _2 else skip |-->false
+if _1 then _2 else _3 |-->false
+
+while _1 do _2 |-->false
+for _1 : _2 do _3 |-->false
+_1 := _2 |-->false
+_1 ; _2 |-->false
+  
+execute _1 |-->false
+call _1 |-->false 
+( _1 ) |-->_1`isValueReturn 
+
+
+returnedValue::
+skip |-->null
+return |-->null
+return _1 |-->_1
+
+continue |-->null
+break |-->null
+var _1 : _2 |-->null 
+
+if _1 then _2 else skip |-->null
+if _1 then _2 else _3 |-->null
+
+while _1 do _2 |-->null
+for _1 : _2 do _3 |-->null
+_1 := _2 |-->null
+_1 ; _2 |-->null
+  
+execute _1 |-->null
+call _1 |-->null
+( _1 ) |-->_1`returnedValue 
 
 
 identifier::
@@ -140,6 +183,21 @@ _1 |-->_1
 
 expression::
 _1 |-->_1
+
+
+conditionalExpression::
+if true then _1 else _2 endif |-->_1
+if false then _1 else _2 endif |-->_2
+if _1 then true else false endif |-->_1
+if _1 then false else true endif |-->not(_1)
+
+if _1 then _2 else false endif |-->(_1 & _2)
+if _1 then _2 else true endif |-->(_1 => _2)
+if _1 then true else _2 endif |-->(_1 or _2)
+
+if _1 then _2 else _3 endif |-->if _1 then _2 else _3 endif
+
+
 
 
 logicalExpression::
@@ -153,6 +211,11 @@ _1 _2 |-->_1 _2
 _1 |-->_1
 
 additiveExpression::
+_1 _2 _3 |-->_1 _2 _3
+_1 _2 |-->_1 _2
+_1 |-->_1
+
+arrowExpression::
 _1 _2 _3 |-->_1 _2 _3
 _1 _2 |-->_1 _2
 _1 |-->_1

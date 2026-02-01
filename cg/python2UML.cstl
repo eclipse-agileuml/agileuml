@@ -113,8 +113,11 @@ _1 |-->_1
 
 
 logical_test::
-not _1 |-->not(_1 = 0)<when> _1 double
-not _1 |-->not(_1 = "")<when> _1 String
+not _1 |-->(_1 = 0.0)<when> _1`ocltype double
+not _1 |-->(_1 = 0)<when> _1`ocltype int
+not _1 |-->(_1 = null or _1 = "")<when> _1`ocltype String
+not _1 |-->(_1 = null or _1->isEmpty())<when> _1`ocltype Sequence
+not _1 |-->(_1 = null or _1->isEmpty())<when> _1`ocltype Map
 not _1 |-->not(_1)
 
 _1 and _2 |-->if _1 = 0 then _1 else _2 endif<when> _1 double
