@@ -19704,6 +19704,8 @@ public void produceCUI(PrintWriter out)
       { addGeneralUseCase((UseCase) hx); } 
     } 
 
+    System.out.println(">> There are " + entities.size() + " classes, " + associations.size() + " associations, and " + generalisations.size() + " generalisations in the model"); 
+
     repaint(); 
   }
 
