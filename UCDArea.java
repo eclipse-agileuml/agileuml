@@ -17868,7 +17868,9 @@ public void produceCUI(PrintWriter out)
     { System.out.println("!! Errors with files: " + infile + " " + outfile);
       return; 
     }
+
     String xmlstring = ""; 
+    int linecount = 0; 
 
     while (!eof)
     { try { s = br.readLine(); }
@@ -17876,18 +17878,23 @@ public void produceCUI(PrintWriter out)
       { System.out.println("!! Reading failed.");
         return; 
       }
+
       if (s == null) 
       { eof = true; 
         break; 
       }
       else 
-      { xmlstring = xmlstring + s + " "; } 
+      { xmlstring = xmlstring + s + " "; 
+        linecount++; 
+      } 
     }
+
+    System.out.println(">> Read " + linecount + " lines"); 
 
     Compiler2 comp = new Compiler2();  
     comp.nospacelexicalanalysisxml(xmlstring); 
     XMLNode xml = comp.parseXML(); 
-    System.out.println(">> Parsed XMI: " + xml); 
+    System.out.println(">> Parsed Xsi: " + xml); 
 
     java.util.Map instancemap = new java.util.HashMap(); // String --> Vector 
     java.util.Map idmap = new java.util.HashMap();       // String --> String
@@ -17964,7 +17971,8 @@ public void produceCUI(PrintWriter out)
         Vector atts = enode.getAttributes();
         for (int p = 0; p < atts.size(); p++) 
         { XMLAttribute patt = (XMLAttribute) atts.get(p); 
-          if (patt.getName().equals("xsi:type") || patt.getName().equals("xmi:id")) { } 
+          if (patt.getName().equals("xsi:type") || 
+              patt.getName().equals("xmi:id")) { } 
           else 
           { patt.getDataDeclaration(pwout,ename + k, et, idmap); } 
         } 
@@ -18635,6 +18643,337 @@ public void produceCUI(PrintWriter out)
         } 
       }
     }
+
+    repaint(); 
+  }
+
+  public void loadXmiFromFile()
+  { BufferedReader br = null;
+    Vector res = new Vector();
+    String s;
+    boolean eof = false;
+
+    File file = new File("output/mm.xmi");  /* default */ 
+
+    File startingpoint = new File("output");
+    JFileChooser fc = new JFileChooser();
+    fc.setCurrentDirectory(startingpoint);
+    fc.setDialogTitle("Load .xmi file");
+    fc.addChoosableFileFilter(new XmiFileFilter()); 
+    int returnVal = fc.showOpenDialog(this);
+    if (returnVal == JFileChooser.APPROVE_OPTION)
+    { file = fc.getSelectedFile(); }
+    else
+    { System.err.println("!! Load aborted");
+      return; 
+    }
+    String componentName = file.getName();  
+
+    try
+    { br = new BufferedReader(new FileReader(file)); }
+    catch (FileNotFoundException e)
+    { System.err.println("!! File not found: " + file);
+      return; 
+    }
+
+    Vector preentities = new Vector(); 
+    Vector preassociations = new Vector(); 
+    Vector pregeneralisations = new Vector();
+    Vector preconstraints = new Vector(); 
+    Vector preassertions = new Vector(); 
+    Vector preops = new Vector(); 
+    Vector pucs = new Vector(); 
+    Vector preactivities = new Vector(); 
+    Vector preucinvs = new Vector(); 
+
+    java.util.Map idmap = new java.util.HashMap(); 
+
+    String xmlstring = ""; 
+
+    while (!eof)
+    { try { s = br.readLine(); }
+      catch (IOException e)
+      { System.out.println("!! Reading XMI file failed.");
+        return; 
+      }
+
+      if (s == null) 
+      { eof = true; 
+        break; 
+      }
+      else 
+      { xmlstring = xmlstring + s + " "; } 
+    }
+
+    Compiler2 comp = new Compiler2();  
+    comp.nospacelexicalanalysisxml(xmlstring); 
+    XMLNode xml = comp.parseXML(); 
+    System.out.println(">>> Parsed XMI data: " + xml); 
+
+    Vector enodes = xml.getSubnodes(); // entities and types
+    int delta = 200; // visual displacement 
+    int classcount = 0; 
+    int typecount = 0; 
+    int gencount = 0; 
+    int attcount = 0; 
+    int assoccount = 0; 
+	
+    Vector modelnodes = new Vector(); 
+    Vector allnodes = new Vector(); 
+
+    for (int i = 0; i < enodes.size(); i++) 
+    { XMLNode enode = (XMLNode) enodes.get(i); 
+	  
+      if ("uml:Model".equals(enode.getTag()))
+      { System.out.println(">>>> Package subnode: " + enode.getAttributeValue("name")); 
+        allnodes.addAll(enode.getSubnodes()); 
+      }  
+      else 
+      { allnodes.add(enode); }
+    } // and recursively
+
+
+ /*   for (int i = 0; i < modelnodes.size(); i++) 
+    { XMLNode enode = (XMLNode) modelnodes.get(i); 
+	  
+      if ("uml:Model".equals(enode.getTag()))
+      { System.out.println(">>>> Package subnode: " + enode.getAttributeValue("name")); 
+        allnodes.addAll(enode.getSubnodes()); 
+      }  
+      else 
+      { allnodes.add(enode); }
+    } */  
+
+    for (int i = 0; i < allnodes.size(); i++) 
+    { XMLNode enode = (XMLNode) allnodes.get(i); 
+	  
+      if ("uml:Model".equals(enode.getTag()))
+      { System.out.println(">>>> Package subnode: " + enode.getAttributeValue("name")); }  
+      else if ("packagedElement".equals(enode.getTag()))
+      { String xsitype = enode.getAttributeValue("xmi:type"); 
+        String ename = enode.getAttributeValue("name");
+        String classid = 
+                    enode.getAttributeValue("xmi:id"); 
+
+        System.out.println(">>>> Packaged element: " + ename + " " + xsitype + " " + classid); 
+		 
+        if ("uml:Class".equals(xsitype) && ename != null)  
+        { Entity ent = 
+            reconstructEntity(ename, 
+              40 + (classcount/3)*delta + 
+              ((classcount % 3)*delta)/2, 
+              100 + (classcount % 7)*delta, "", "*", 
+              new Vector());
+          classcount++; 
+          idmap.put(classid, ent); 
+        } 
+        else if ("uml:DataType".equals(xsitype) && 
+                 ename != null) 
+        { Type dt = new Type(ename, null); 
+          dt.setAlias(new Type("String", null)); 
+          types.add(dt); 
+          RectData rdt = 
+            new RectData(100 + 120*types.size(),
+                         20,getForeground(),
+                                 componentMode,
+                                 typecount);
+          rectcount++;
+          typecount++; 
+          rdt.setLabel(ename);
+          rdt.setModelElement(dt); 
+          visuals.add(rdt);
+        } 
+        else if ("uml:Enumeration".equals(xsitype) && 
+                 ename != null)
+        { Vector eliterals = new Vector(); 
+          Vector esubs = enode.getSubnodes(); 
+          for (int k = 0; k < esubs.size(); k++) 
+          { XMLNode esb = (XMLNode) esubs.get(k); 
+            if ("ownedAttribute".equals(esb.getTag()))
+            { eliterals.add(esb.getAttributeValue("name")); } 
+          } 
+          Type tt = new Type(ename,eliterals); 
+          types.add(tt); 
+          RectData rd = new RectData(
+            100 + 120*types.size(),20,getForeground(),
+                                 componentMode,
+                                 typecount);
+          rectcount++;
+          typecount++; 
+          rd.setLabel(ename);
+          rd.setModelElement(tt); 
+          visuals.add(rd); 
+        } 
+      } 
+    } 
+
+    for (int i = 0; i < allnodes.size(); i++) 
+    { XMLNode enode = (XMLNode) allnodes.get(i); 
+      if ("packagedElement".equals(enode.getTag()))
+      { String xsitype = enode.getAttributeValue("xmi:type"); 
+        String ename = enode.getAttributeValue("name");
+ 
+        if ("uml:Class".equals(xsitype) && ename != null)  
+        { Entity ent = 
+            (Entity) ModelElement.lookupByName(ename, 
+                                               entities);
+          if (ent == null) { continue; } 
+
+          Vector edata = enode.getSubnodes(); 
+          for (int j = 0; j < edata.size(); j++) 
+          { XMLNode ed = (XMLNode) edata.get(j); 
+         
+            if ("generalization".equals(ed.getTag()))
+            { String superid = 
+                ed.getAttributeValue("general"); 
+            
+              Entity supent = (Entity) idmap.get(superid);
+              if (supent != null) 
+              { Entity[] subents = new Entity[1]; 
+                subents[0] = ent; 
+                addInheritances(supent,subents); 
+                System.out.println(">>> Added inheritance: " + ename + " --|> " + supent.getName()); 
+                supent.setAbstract(true);
+                gencount++; 
+              } 
+            } 
+            else if ("ownedAttribute".equals(ed.getTag()))
+            { String dataname = ed.getAttributeValue("name"); 
+              if ("uml:Property".equals(
+                       ed.getAttributeValue("xmi:type")))
+              { Vector etypes = ed.getSubnodes();
+                if (etypes.size() > 0) 
+                { XMLNode tn = (XMLNode) etypes.get(0); 
+                  Type typ = 
+                     Type.getXMIType(
+                       tn.getAttributeValue("xmi:idref"), 
+                       types); 
+
+                  Attribute att = 
+                    new Attribute(dataname,typ,
+                                ModelElement.INTERNAL); 
+                  ent.addAttribute(att); 
+                  att.setEntity(ent);
+                  attcount++; 
+
+                  if (typ != null && 
+                      "String".equals(typ.getName()))
+                  { Expression expr = 
+                      BasicExpression.newValueBasicExpression(
+                                         "\"\"");
+                    expr.setType(typ); 
+                    expr.setElementType(typ);  
+                    att.setInitialExpression(expr); 
+                  }
+                }   
+              }
+            } 
+            else if ("ownedMember".equals(ed.getTag()) &&
+                       "uml:Association".equals(
+                            ed.getAttributeValue("xmi:type")))
+            { Vector eends = ed.getSubnodes();
+              if (eends.size() > 1) 
+              { XMLNode end1 = (XMLNode) eends.get(0);
+                XMLNode end2 = (XMLNode) eends.get(1);
+ 
+                String role1 = 
+                    end1.getAttributeValue("name");   
+                String role2 = 
+                    end2.getAttributeValue("name");
+
+                System.out.println(">> Association: " + role2 + " from " + end1 + " to " + end2); 
+
+                Entity ent1 = null; 
+                Entity ent2 = null; 
+
+                String lower1 = "0"; 
+                String upper1 = "*"; 
+
+                String lower2 = "0"; 
+                String upper2 = "*"; 
+   
+                Vector end1types = end1.getSubnodes();
+                for (int q = 0; q < end1types.size(); q++)
+                { XMLNode end1nd = 
+                     (XMLNode) end1types.get(q); 
+                  if ("type".equals(end1nd.getTag()))
+                  { String class1id = 
+                      end1nd.getAttributeValue("xmi:idref");
+ 
+                    ent1 = 
+                      (Entity) idmap.get(class1id);
+                  } 
+                  else if ("lowerValue".equals(end1nd.getTag()))
+                  { lower1 = end1nd.getAttributeValue("value"); } 
+                  else if ("upperValue".equals(end1nd.getTag()))
+                  { upper1 = end1nd.getAttributeValue("value"); } 
+                } 
+
+                Vector end2types = end2.getSubnodes();
+                for (int q = 0; q < end2types.size(); q++)
+                { XMLNode end2nd = 
+                     (XMLNode) end2types.get(q); 
+                  if ("type".equals(end2nd.getTag()))
+                  { String class2id = 
+                      end2nd.getAttributeValue("xmi:idref");
+ 
+                    ent2 = 
+                      (Entity) idmap.get(class2id);
+                  } 
+                  else if ("lowerValue".equals(end2nd.getTag()))
+                  { lower2 = end2nd.getAttributeValue("value"); } 
+                  else if ("upperValue".equals(end2nd.getTag()))
+                  { upper2 = end2nd.getAttributeValue("value"); } 
+                } 
+                   
+                if (ent == null || ent1 == null ||
+                    ent2 == null) 
+                { continue; } 
+
+                System.out.println(">> Association: " + role2 + " from " + ent1 + " to " + ent2); 
+
+                if (ent1 == ent)
+                { Association ast = 
+                      new Association(ent,ent2,lower1,upper1,
+                                      lower2,upper2,role1,role2);
+    
+                  associations.add(ast);  
+                  ent.addAssociation(ast); 
+                  ast.setName("r" + associations.size());
+                  int xs = 0, ys = 0, xe = 100, ye = 100;  
+                  for (int m = 0; m < visuals.size(); m++)
+                  { VisualData vd = (VisualData) visuals.get(m); 
+                    ModelElement me = 
+                       (ModelElement) vd.getModelElement(); 
+                    if (me == ent) // Entity1
+                    { xs = vd.getx(); ys = vd.gety(); } 
+                    else if (me == ent2) // Entity2
+                    { xe = vd.getx(); ye = vd.gety(); }  
+                  }
+
+                  int featuresize = ent.featureCount(); 
+                  int efeaturesize = ent2.featureCount(); 
+
+                  LineData sline = 
+                        new LineData(xs + featuresize*4, 
+                                ys+50, xe + efeaturesize*4,
+                                ye,linecount,SOLID);
+                  sline.setModelElement(ast); 
+                  visuals.add(sline);
+                  assoccount++; 
+                }
+              }  
+            } 
+          }
+        } 
+      }
+    } 
+
+    System.out.println(">>> Read " + classcount + " classes"); 
+    System.out.println(">>> Read " + typecount + " types"); 
+    System.out.println(">>> Read " + gencount + " generalisations"); 
+    System.out.println(">>> Read " + attcount + " attributes"); 
+    System.out.println(">>> Read " + assoccount + " associations"); 
 
     repaint(); 
   }
@@ -28873,7 +29212,9 @@ public void produceCUI(PrintWriter out)
     for (int i = 0; i < entities.size(); i++) 
     { Entity ent = (Entity) entities.get(i); 
 
-      if (ent.isDerived()) { continue; } 
+      if (ent.isDerived() || ent.isComponent() ||
+          ent.isExternal()) 
+      { continue; } 
 
       String ename = ent.getName(); 
 
@@ -28959,7 +29300,10 @@ public void produceCUI(PrintWriter out)
   { for (int i = 0; i < entities.size(); i++) 
     { Entity ent = (Entity) entities.get(i); 
 
-      if (ent.isDerived()) { continue; } 
+      if (ent.isDerived() || 
+          ent.isComponent() || 
+          ent.isExternal()) 
+      { continue; } 
 
       ent.checkDeterminacy(); 
     } 
@@ -30343,6 +30687,20 @@ class EcoreFileFilter extends javax.swing.filechooser.FileFilter
 
   public String getDescription()
   { return "Select a .ecore file"; } 
+}
+
+class XmiFileFilter extends javax.swing.filechooser.FileFilter
+{ public boolean accept(File f) 
+  { if (f.isDirectory()) { return true; } 
+
+    if (f.getName().endsWith(".xmi")) 
+    { return true; } 
+
+    return false; 
+  } 
+
+  public String getDescription()
+  { return "Select a .xmi file"; } 
 }
 
 class BusinessObjectFilter extends javax.swing.filechooser.FileFilter

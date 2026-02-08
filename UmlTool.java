@@ -221,6 +221,12 @@ public void findPlugins()
     // loadEcoreMI.setMnemonic(KeyEvent.VK_L);
     loadMetamodelMenu.add(loadEcoreMI);
 
+    JMenuItem loadXMI = 
+      new JMenuItem("Load XMI",openIcon);
+    loadXMI.addActionListener(this);
+    // loadEcoreMI.setMnemonic(KeyEvent.VK_L);
+    loadMetamodelMenu.add(loadXMI);
+
     JMenuItem loadZAppDevMI = 
       new JMenuItem("Load zAppDev",openIcon);
     loadZAppDevMI.addActionListener(this);
@@ -1891,6 +1897,10 @@ public void findPlugins()
       }
       else if (label.equals("Load Ecore")) 
       { ucdArea.loadEcoreFromFile();
+        saved = true; 
+      }
+      else if (label.equals("Load XMI")) 
+      { ucdArea.loadXmiFromFile();
         saved = true; 
       }
       else if (label.equals("Load zAppDev")) 

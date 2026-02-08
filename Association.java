@@ -3,7 +3,7 @@ import java.io.*;
 import java.util.List; 
 
 /******************************
-* Copyright (c) 2003--2025 Kevin Lano
+* Copyright (c) 2003--2026 Kevin Lano
 * This program and the accompanying materials are made available under the
 * terms of the Eclipse Public License 2.0 which is available at
 * http://www.eclipse.org/legal/epl-2.0
@@ -137,6 +137,39 @@ public class Association extends ModelElement
     else 
     { card2 = MANY; } // a..b with b > 1
     card1 = MANY;  // default - depends on the opposite
+
+    role1 = r1;
+    role2 = r2;
+  }
+
+  public Association(Entity e1, Entity e2, String c1L,
+                     String c1U, String c2L, String c2U,
+                     String r1, String r2)
+  { super(e1.getName() + "_" + e2.getName());
+    entity1 = e1;
+    entity2 = e2;
+
+    if ("*".equals(c2U))
+    { card2 = MANY; } 
+    else if ("1".equals(c2U)) 
+    { if ("1".equals(c2L))
+      { card2 = ONE; } 
+      else 
+      { card2 = ZEROONE; } 
+    } 
+    else 
+    { card2 = MANY; } // a..b with b > 1
+
+    if ("*".equals(c1U))
+    { card1 = MANY; } 
+    else if ("1".equals(c1U)) 
+    { if ("1".equals(c1L))
+      { card1 = ONE; } 
+      else 
+      { card1 = ZEROONE; } 
+    } 
+    else 
+    { card1 = MANY; } // a..b with b > 1
 
     role1 = r1;
     role2 = r2;
@@ -741,6 +774,37 @@ public class Association extends ModelElement
     if (stereo.length() > 6 && "subsets".equals(stereo.substring(0,7)))
     { System.out.println(stereo.substring(7,stereo.length())); } 
   }
+
+  public void generateMambaXML(PrintWriter out, String sname)
+  { out.print("<Association ModelName=\"" + sname + "\" "); 
+    out.print("Class1=\"" + entity1.getName() + "\" "); 
+    out.print("Class2=\"" + entity2.getName() + "\" "); 
+    out.print("Role1=\"" + role1 + "\" "); 
+    out.print("Role2=\"" + role2 + "\" ");
+
+    String mult1 = "Many"; 
+    if (card1 == ONE) 
+    { mult1 = "One"; } 
+    else if (card1 == ZEROONE)
+    { mult1 = "ZeroOrOne"; } 
+
+    String mult2 = "Many"; 
+    if (card2 == ONE) 
+    { mult2 = "One"; } 
+    else if (card2 == ZEROONE)
+    { mult2 = "ZeroOrOne"; } 
+  
+    out.print("Multiplicity1=\"" + mult1 + "\" Multiplicity2=\"" + mult2 + "\" ");  
+
+    out.print("Navigable1=\"true\" Navigable2=\"true\" IsExternal=\"true\" Persisted=\"true\" OrderByProperty1=\"\" OrderByDirection1=\"Asc\" OrderByProperty2=\"\" OrderByDirection2=\"Asc\" "); 
+
+    if (isComposition())
+    { out.print("OnDelete1=\"CascadeDelete\" "); } 
+    else 
+    { out.print("OnDelete1=\"Dissasociate\" "); } 
+    out.println("OnDelete2=\"Dissasociate\" IsShadow=\"false\" IsInherited=\"false\">");
+    out.println("    </Association>");  
+  } 
 
   public void generateJava(PrintWriter out)
   { String qual = ""; 

@@ -2752,6 +2752,36 @@ public class Type extends ModelElement
     return t;  
   } 
 
+  public static Type getXMIType(String etype, Vector types)  // long?? 
+  { if (etype == null) 
+    { return null; } 
+
+    if (etype.endsWith("String") || 
+        etype.equals("string"))
+    { return new Type("String",null); } 
+    if (etype.endsWith("EInt") || etype.endsWith("Integer") ||
+        etype.equals("int"))
+    { return new Type("int",null); } 
+    if (etype.endsWith("ELong") || 
+        etype.equals("long"))
+    { return new Type("long",null); } 
+    if (etype.endsWith("EDouble") || etype.endsWith("Real") ||
+        etype.equals("float") || etype.equals("double"))
+    { return new Type("double",null); } 
+    if (etype.endsWith("Boolean") || 
+        etype.equals("bool") || 
+        etype.equals("boolean"))
+    { return new Type("boolean",null); }
+
+    Type t =
+       (Type) ModelElement.lookupByName(etype,types);
+
+    if (t == null) 
+    { return new Type("String",null); } 
+
+    return t;  
+  } 
+
   public static Type typeFromMamba(String etype, 
                                    Vector entities, Vector types)   
   { if (etype == null) 

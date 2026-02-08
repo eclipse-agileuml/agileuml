@@ -2225,13 +2225,21 @@ public class Entity extends ModelElement implements Comparable
       if (opname.length() > 40)
       { System.err.println("! Warning: operation names should not be longer than 40 characters: " + opname); } 
 
-      op.checkParameterNames(); 
+      op.checkParameterNames();
+
+      Vector messages = new Vector(); 
+
+      op.checkVariableNameConflicts(messages);  
+
+      for (Object m : messages)
+      { System.err.println(m + ""); } 
 
       if (opnames.contains(opname))
       { dups.add(op); } 
       else 
       { opnames.add(opname); } 
     } 
+
     return dups; 
   } 
 
@@ -6924,6 +6932,12 @@ public class Entity extends ModelElement implements Comparable
   public void addSuperclass(Entity e) 
   { if (e == null) 
     { return; } 
+
+    String sname = e.getName(); 
+    if ("OclAny".equals(sname)) 
+    { System.err.println("!! Redundant inheritance: " + name + " already inherits from OclAny"); 
+      return; 
+    } 
 
     if (e.isInterface())
     { addInterface(e);

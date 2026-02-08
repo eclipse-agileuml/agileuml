@@ -4181,10 +4181,12 @@ public class BehaviouralFeature extends ModelElement
     
   public Vector getParameterNames()
   { Vector res = new Vector();
+
     for (int i = 0; i < parameters.size(); i++)
     { Attribute att = (Attribute) parameters.get(i);
       res.add(att.getName());
     }
+
     return res;
   }
 
@@ -4839,7 +4841,7 @@ int ascore = (int) res.get("amber");
     out.println("*** Number of parameters of operation " + nme + " = " + pars); 
     if (pars > TestParameters.numberOfParametersLimit) 
     { System.err.println("!!! Code smell (EPL): too many parameters (" + pars + ") for " + nme); 
-      System.err.println(">>> Recommend refactoring by introducing value object for parameters or splitting operation into parts"); 
+      System.err.println(">>> Recommend refactoring by introducing value object for parameters or splitting operation into parts\n"); 
       System.err.println(); 
     }  
 
@@ -4878,17 +4880,17 @@ int ascore = (int) res.get("amber");
 
     if (cyc > TestParameters.cyclomaticComplexityLimit) 
     { System.err.println("!!! Code smell (CC): high cyclomatic complexity (" + cyc + ") for " + nme);
-      System.err.println(">>> Recommend refactoring by splitting operation"); 
+      System.err.println("!!! Recommend refactoring by splitting operation"); 
       System.err.println(); 
     }  
 
     if (complexity > TestParameters.operationSizeLimit) 
     { System.err.println("!!! Code smell (EHS): too high complexity (" + complexity + ") for " + nme); 
-      System.err.println(">>> Recommend refactoring by splitting operation"); 
+      System.err.println("!!! Recommend refactoring by splitting operation"); 
       System.err.println(); 
     }  
     else if (complexity > TestParameters.operationSizeWarning) 
-    { System.err.println("*** Warning: high complexity (" + complexity + ") for " + nme); 
+    { System.err.println("!! Warning: high complexity (" + complexity + ") for " + nme); 
       System.err.println(); 
     }  
 
@@ -5009,9 +5011,12 @@ int ascore = (int) res.get("amber");
     if (resultType != null)
     { pars++; } 
 
-    System.out.println("*** Number of parameters of operation " + nme + " = " + pars); 
-    if (pars > 10) 
-    { System.err.println("!!! Code smell (EPL): too many parameters (" + pars + ") for " + nme); }  
+    // System.out.println("*** Number of parameters of operation " + nme + " = " + pars); 
+
+    if (pars > TestParameters.numberOfParametersLimit) 
+    { System.err.println("!! Code smell (EPL): too many parameters (" + pars + ") for " + nme); 
+      System.err.println(); 
+    }  
 
     int complexity = 0; 
     int cyc = 0; 
@@ -5033,10 +5038,15 @@ int ascore = (int) res.get("amber");
     
     System.out.println("*** Total complexity of operation " + nme + " = " + complexity); 
     System.out.println(); 
-    if (cyc > 10) 
-    { System.err.println("!!! Code smell (CC): high cyclomatic complexity (" + cyc + ") for " + nme); }  
-    if (complexity > 100) 
-    { System.err.println("!!! Code smell (EHS): too high complexity (" + complexity + ") for " + nme); }  
+    if (cyc > TestParameters.cyclomaticComplexityLimit) 
+    { System.err.println("!!! Code smell (CC): high cyclomatic complexity (" + cyc + ") for " + nme); 
+      System.err.println(); 
+    }
+  
+    if (complexity > TestParameters.operationSizeLimit) 
+    { System.err.println("!!! Code smell (EHS): too high complexity (" + complexity + ") for " + nme); 
+      System.err.println(); 
+    }  
 
     return cyc; 
   } 
@@ -8417,6 +8427,63 @@ int ascore = (int) res.get("amber");
                                   nontailReturns);  
     } 
   } 
+
+  public boolean checkVariableNameConflicts(Vector messages)
+  { boolean res = false; 
+
+    Vector parnames = getParameterNames(); 
+    Vector attnames = new Vector(); 
+    Vector varnames = new Vector(); 
+
+    if (entity != null) 
+    { attnames = entity.allAttributeNames(); } 
+
+    if (activity != null) 
+    { Vector localDecs = 
+        Statement.getLocalDeclarations(activity);
+      
+      for (int c = 0; c < localDecs.size(); c++)
+      { CreationStatement cs = 
+            (CreationStatement) localDecs.get(c); 
+        varnames.add(cs.getDeclaredVariable()); 
+      }
+    } 
+
+    if (entity != null && parameters != null && 
+        parameters.size() > 0) 
+    {  
+      for (int p = 0; p < parnames.size(); p++) 
+      { String par = (String) parnames.get(p); 
+        if (attnames.contains(par))
+        { messages.add("! Warning: same-named parameter and class attribute: " + par + " in " + this);
+          res = true; 
+        }
+      } 
+    }
+
+    if (activity != null && parameters != null && 
+        parameters.size() > 0)
+    { 
+      for (int p = 0; p < parnames.size(); p++) 
+      { String par = (String) parnames.get(p); 
+        if (varnames.contains(par))
+        { messages.add("! Warning: same-named parameter and local variable: " + par + " in " + this);
+          res = true; 
+        }
+      }
+    } 
+   
+    for (int i = 0; i < varnames.size(); i++) 
+    { String var = (String) varnames.get(i); 
+      if (attnames.contains(var))
+      { messages.add("! Warning: same-named attribute and local variable: " + var + " in " + this);
+        res = true; 
+      }
+    }
+     
+    return res;   
+  }   
+      
 
   public boolean isSemiTailRecursive(Vector postconds)
   { // All recursive calls are either tail or semitail

@@ -2525,6 +2525,7 @@ abstract class Statement implements Cloneable
           res.addAll(Statement.getLocalDeclarations(stat));
         }  
       } 
+
       return res;
     } 
     

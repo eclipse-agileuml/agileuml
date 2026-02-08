@@ -4,7 +4,7 @@ import java.io.*;
 import javax.swing.JOptionPane; 
 
 /******************************
-* Copyright (c) 2003--2025 Kevin Lano
+* Copyright (c) 2003--2026 Kevin Lano
 * This program and the accompanying materials are made available under the
 * terms of the Eclipse Public License 2.0 which is available at
 * http://www.eclipse.org/legal/epl-2.0
@@ -1748,6 +1748,7 @@ public class Attribute extends ModelElement
     Map res = new Map(); 
     res.set("red", 0); 
     res.set("amber", 0); 
+    res.set("yellow", 0); 
 
     if (type != null)  
     { int tcomp = type.complexity();
@@ -1902,7 +1903,7 @@ public class Attribute extends ModelElement
     out.println("      {"); 
     out.println("        \"Name\": \"" + nme + "\","); 
     out.println("        \"Description\": \"\",");
-    out.println("        \"Datatype\": \"" + type.getCSharp() + "\",");
+    out.println("        \"DataType\": \"" + type.getCSharp() + "\",");
     out.println("        \"Readonly\": " + isFrozen() + ","); 
     out.println("        \"IsRequired\": true,");
     out.println("        \"IsPersisted\": true,");
@@ -1936,6 +1937,50 @@ public class Attribute extends ModelElement
     out.println("        \"CanWrite\": null,");
     out.println("        \"MaskOperation\": null");
     out.print("      }"); 
+  }
+
+  public void generateMambaXML(PrintWriter out)
+  { String nme = getName();
+    String initVal; 
+
+    Expression expr = getInitialExpression(); 
+    if (expr == null) 
+    { initVal = ""; } 
+
+    String exprString = expr + ""; 
+
+    if (exprString.startsWith("\"") && 
+        exprString.endsWith("\""))
+    { initVal = exprString.substring(1, exprString.length()-1); }
+    else 
+    { initVal = exprString; }  
+    
+
+    out.print("      <Attribute"); 
+    out.print(" Name = \"" + nme + "\" IsValueClass = \"false\""); 
+    out.print(" Description = \"\"");
+    out.print(" DataType = \"" + type.getCSharp() + "\"");
+    out.print(" ReadOnly = \"" + isFrozen() + "\""); 
+    out.print(" IsRequired = \"true\"");
+    out.print(" IsPersisted = \"true\"");
+    out.print(" BaseInfo = \"\"");
+    out.print(" IsInherited = \"false\"");
+    out.print(" IsEncrypted = \"false\"");
+    out.print(" IsStatic = \"" + isStatic() + "\"");
+    out.print(" MinLength = \"0\"");
+    out.print(" MaxLength = \"100\"");
+    out.print(" MinValue = \"\"");
+    out.print(" MaxValue = \"\"");
+    out.print(" CustomValidation = \"\"");
+    out.print(" IsCreditCard = \"false\"");
+    out.print(" IsEmail = \"false\"");
+    out.print(" IsURL = \"false\"");
+    out.print(" Scale = \"2\"");
+    out.print(" InitValue = \"" + initVal + "\"");
+    out.print(" Precision = \"2\"");
+    out.print(" Length = \"100\"");
+    out.print(" IsExternal = \"false\"");
+    out.println(" />"); 
   }
 
     
