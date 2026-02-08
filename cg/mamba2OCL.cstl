@@ -168,6 +168,12 @@ _1 as _2 |-->_2`typeAsOcl
 
 Length |-->int
 
+RuntimeType . _1 |-->OclType<when> _1 id_or_function_call, _1`functionName GetTypeOf
+
+GetTypeOf ( _1 ) |-->OclType
+GetProperty ( _1 ) |-->OclAttribute
+GetProperties ( ) |-->Sequence
+
 Get ( _1 ) |-->OclAny
 First ( _1 ) |-->OclAny
 First ( ) |-->OclAny
@@ -427,6 +433,7 @@ this . _1 |-->self_1`queryForm
 _1 . Length |-->_1->size()
 
 RuntimeType . _1 |-->((_1`functionArguments)->oclType())<when> _1 id_or_function_call, _1`functionName GetTypeOf
+RuntimeType . _1 |-->(_1`functionArguments).newInstance()<when> _1 id_or_function_call, _1`functionName CreateInstance
 
 BusinessException . _2 |-->OclException.newOclException(_2`functionArguments)<when> _2 id_or_function_call, _2`functionName Create
 
@@ -684,6 +691,9 @@ _1 != _2 |-->_1`queryForm /= _2`queryForm
 Create ( ) |-->.newInstance()
 
 Get ( _1 ) |-->[_1 + 1]
+GetType ( ) |-->->oclType()
+GetProperty ( _1 ) |-->.getDeclaredField(_1)
+GetProperties ( ) |-->.getDeclaredFields()
 
 Contains ( _1 ) |-->->includes(_1)
 ToCollection ( ) |-->

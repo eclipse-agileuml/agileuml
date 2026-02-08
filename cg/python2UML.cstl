@@ -539,6 +539,7 @@ nan |-->Math_NaN
 print |-->print
 exec |-->exec
 
+object |-->OclAny
 int |-->OclType["int"]
 float |-->OclType["double"]
 str |-->OclType["String"]
@@ -904,6 +905,8 @@ inf |-->Math_PINFINITY
 Infinity |-->Math_PINFINITY
 nan |-->Math_NaN
 
+object |-->OclAny
+
 ValueError |-->IncorrectElementException
 BaseException |-->OclException
 Exception |-->ProgramException
@@ -1099,6 +1102,8 @@ bool |-->boolean
 float |-->double
 int |-->int
 
+= _1 |-->_1`ocltype
+
 _1 , _2 |-->_1`indicator2OCL, _2`indicator2OCL
 
 [ _1 ] |-->_1`indicator2OCL
@@ -1110,6 +1115,7 @@ _1 |-->_1`indicator2OCL<when> _1 expr
 _1 |-->_1`indicator2OCL<when> _1 arguments
 _1 |-->_1`indicator2OCL<when> _1 subscriptlist
 _1 |-->_1`indicator2OCL<when> _1 subscript
+_1 |-->_1`indicator2OCL<when> _1 assign_part
 
 _1 |-->_1
 
@@ -1126,6 +1132,8 @@ int |-->int
 
 [ _1 ] |-->_1`indicatorType
 
+= _1 |-->_1`ocltype
+
 _1 |-->_1`indicatorType<when> _1 test
 _1 |-->_1`indicatorType<when> _1 logical_test
 _1 |-->_1`indicatorType<when> _1 comparison
@@ -1133,6 +1141,7 @@ _1 |-->_1`indicatorType<when> _1 expr
 _1 |-->_1`indicatorType<when> _1 arguments
 _1 |-->_1`indicatorType<when> _1 subscriptlist
 _1 |-->_1`indicatorType<when> _1 subscript
+_1 |-->_1`indicatorType<when> _1 assign_part
 
 _1 |-->_1
 
