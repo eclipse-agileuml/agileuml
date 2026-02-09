@@ -1026,9 +1026,9 @@ excel_OclType.instance = createExcel()
 excel_OclType.actualMetatype = type(excel_OclType.instance)
 
 
-cell1 = SpreadsheetCell.newSpreadsheetCell("A1", 100)
-cell2 = SpreadsheetCell.newSpreadsheetCell("A2", 200)
-cell3 = SpreadsheetCell.newSpreadsheetCell("A3", 300)
+# cell1 = SpreadsheetCell.newSpreadsheetCell("A1", 100)
+# cell2 = SpreadsheetCell.newSpreadsheetCell("A2", 200)
+# cell3 = SpreadsheetCell.newSpreadsheetCell("A3", 300)
 # cell4 = SpreadsheetCell.newSpreadsheetCell("A4", 400)
 # cell5 = SpreadsheetCell.newSpreadsheetCell("B1", 100)
 # cell6 = SpreadsheetCell.newSpreadsheetCell("B2", 200)
@@ -1061,6 +1061,10 @@ cell3 = SpreadsheetCell.newSpreadsheetCell("A3", 300)
 # print(cs[1].Value)
 # print(cs[2].Value)
 # print(cs[3].Value)
+
+# print(Excel.NormalDist(0, 0, 1.0))
+# print(Excel.NormalDist(3.0, 0, 1.0))
+# print(Excel.NormalDist(-3.0, 0, 1.0))
 
 
 # print(Excel.Norm_S_Dist(0,False))

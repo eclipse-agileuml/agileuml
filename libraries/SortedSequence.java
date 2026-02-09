@@ -345,10 +345,33 @@ class SortedSequence<T extends Comparable<T>> implements List<T>
     Collections.sort(elements);
     return res;  
   } // No: merge the sorted sequence version of col
+
+  public boolean containsAll(SortedSequence<T> col)
+  { int i = 0; 
+    int j = 0; 
+    ArrayList<T> olems = col.elements; 
+
+    while (j < olems.size() && i < elements.size())
+    { T y = olems.get(j);  
+      T x = elements.get(i); 
+
+      if (x.compareTo(y) < 0) 
+      { i++; } // find matching element of y
+      else if (y.compareTo(x) < 0) // y not found 
+      { return false; } 
+      else 
+      { j++; } // found y
+    } 
+
+    if (j >= olems.size()) // found all olems
+    { return true; } 
+
+    return false; 
+  }    
    
   public boolean containsAll(Collection col)
   { return elements.containsAll(col); }   
-  // can be optimised using binarySearch repeatedly
+  // or can be optimised using binarySearch repeatedly
 
   public SortedSequence<T> front()
   { int n = elements.size(); 
@@ -389,22 +412,19 @@ class SortedSequence<T extends Comparable<T>> implements List<T>
   public int getCount(T x)
   { int insertionPoint = 
            this.lastIndexOf(x); 
-               // log(elements.size()) time complexity
-
-    // System.out.println(">>> Insertion point for " + x + " is " + insertionPoint); 
+    // log(elements.size()) time complexity
 	
     if (insertionPoint < 0)
     { return 0; } 
-    else 
-    { int cnt = 0; 
-      for (int i = insertionPoint; i >= 0; i--) 
-      { if (x.equals(elements.get(i)))
-        { cnt++; }
-        else 
-        { break; }
-      } 
-      return cnt; 
-    }  
+
+    int cnt = 0; 
+    for (int i = insertionPoint; i >= 0; i--) 
+    { if (x.equals(elements.get(i)))
+      { cnt++; }
+      else 
+      { break; }
+    } 
+    return cnt;   
   } 
   
   public boolean equals(Object col)
@@ -435,7 +455,7 @@ class SortedSequence<T extends Comparable<T>> implements List<T>
     return splt; 
   } 
 
-/* 
+
   public static void main(String[] args)
   { SortedSequence<String> ss = new SortedSequence<String>(); 
      
@@ -456,8 +476,11 @@ class SortedSequence<T extends Comparable<T>> implements List<T>
 
     SortedSequence<String> qq = ss.intersection(tt); 
     System.out.println(qq); 
+
+    boolean bb = ss.containsAll(ss); 
+    System.out.println(bb); 
 	
-     SortedSequence<Person> pers = new SortedSequence<Person>(); 
+    /* SortedSequence<Person> pers = new SortedSequence<Person>(); 
 	Person p1 = new Person(); 
 	p1.name = "Tom"; p1.age = 55; 
 	Person p2 = new Person(); 
@@ -467,8 +490,8 @@ class SortedSequence<T extends Comparable<T>> implements List<T>
 	
 	SortedSequence<Person> pers1 = new SortedSequence<Person>(); 
 	pers1.add(p2); pers1.add(p1); 
-	System.out.println(pers1);    
-  } */   
+	System.out.println(pers1); */     
+  }    
 }
 
 /* class Person implements Comparable<Person>
