@@ -111,7 +111,7 @@ _1.subrange(_2,_3) |-->_1.Skip(_2 - 1).Take(_3 - _2 + 1)<when> _1 Sequence
 _1.subrange(_2,_3) |-->_1.Substring(_2 - 1, _3 - _2 + 1)<when> _1 String
 
 _1[_2] |-->(_1.charAt(_2 - 1) + "")<when> _1 String
-/*   $$$   _1[_2] |-->_1._1_index.get(_2)<when> _1 classId   */
+_1[_2] |-->_1.GetByKey(_2)<when> _1 classId
 
 _1[_2] |-->(_1).Get(_2 - 1)<when> _1 Sequence
 _1[_2] |-->(_1).Get(_2)<when> _1 Map
@@ -412,22 +412,22 @@ _1->oclIsTypeOf(_2) |-->(_1.GetType() == _2.GetType())
 _1->oclAsType(_2) |-->_1<when> _1 Ref
 _1->oclAsType(_2) |-->_1 as _2
 
-/* let _1 : _2 = _3 in _4 |-->(new Object() { public _4`type call(_2 _1) { return _4; } }).call(_3) */
+let _1 : _2 = _3 in _4 |-->((_2 _1) => _4).Invoke(_3)
 
 
 
 SetExpression::
 Set{} |-->Collection.Create()
-Set{_1} |-->Domain.MambaHelper.InitialiseSet(_1)
+Set{_1} |-->{_1}.ToCollection().Distinct()
 SortedSet{} |-->Collection.Create()
-SortedSet{_1} |-->Domain.MambaHelper.InitialiseSortedSet(_1)
+SortedSet{_1} |-->{_1}.ToCollection().Distinct().OrderBy(x => x)
 Sequence{} |-->Collection.Create()
-Sequence{_1} |-->Domain.MambaHelper.InitialiseSequence(_1)
+Sequence{_1} |-->{_1}.ToCollection()
 Map{} |-->Dictionary.Create()
 /*   $$$   Map{_1} |-->Ocl.initialiseMap(_1)   */
 
-/* Ref(_1){_2} |-->(new _1[_2]) */
-/* Ref{_1} |-->(new Object[_1]) */
+Ref(_1){_2} |-->{_2}
+Ref{_1} |-->{_1}
 
 
 
