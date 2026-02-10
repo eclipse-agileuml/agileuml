@@ -2688,6 +2688,29 @@ public class UCDArea extends JPanel
     repaint(); 
   } 
 
+  public void convertAttribute2Association()
+  { JOptionPane.showMessageDialog(null, 
+       "Select entity, then attribute",
+       "Convert attribute to association", 
+       JOptionPane.INFORMATION_MESSAGE); 
+    Vector ents = selectEntity(); 
+    if (ents.size() == 0) 
+    { return; } 
+    Entity src = (Entity) ents.get(0);
+    Vector ops = selectAttribute(src); 
+    if (ops.size() == 0) { return; } 
+    Attribute att = (Attribute) ops.get(0); 
+    src.removeAttribute(att.getName());
+    Association ast = new Association(src,att);  
+    src.addAssociation(ast);
+    Vector assocs = new Vector(); 
+    assocs.add(ast);  
+    addAssociations(assocs); 
+
+    System.out.println("Moved attribute " + att + " to association"); 
+    repaint(); 
+  } 
+
   public void displayActivities()
   { for (int i = 0; i < activities.size(); i++)
     { Behaviour bh = (Behaviour) activities.get(i); 

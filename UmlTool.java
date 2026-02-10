@@ -1015,6 +1015,11 @@ public void findPlugins()
     moveatt.addActionListener(this);
     qualityMenu.add(moveatt);
 
+    JMenuItem convertatt = 
+      new JMenuItem("Convert attribute to association"); 
+    convertatt.addActionListener(this);
+    qualityMenu.add(convertatt);
+
     JMenuItem moveop = 
       new JMenuItem("Move operation"); 
     moveop.addActionListener(this);
@@ -2944,6 +2949,10 @@ public void findPlugins()
       } 
       else if (label.equals("Move attribute"))
       { ucdArea.moveAttribute(); 
+        repaint(); 
+      } 
+      else if (label.equals("Convert attribute to association"))
+      { ucdArea.convertAttribute2Association(); 
         repaint(); 
       } 
       else if (label.equals("Replace call by definition"))
