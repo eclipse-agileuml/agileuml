@@ -984,9 +984,11 @@ _1 , |-->_1`asSettings
 _1 , _* |-->_1`asSettings_*`recurse
 
 parametersTail::
+_1 |-->_1`parametersTail<when>typedargslist
+_1 |-->_1`parametersTail<when> _1 def_parameters
+
 self |-->
 _1 |-->_1
-_1 |-->_1`parametersTail<when> _1 def_parameters
 self , |-->
 _1 , |-->_1
 self , _* |-->_*
