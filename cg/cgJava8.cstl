@@ -546,6 +546,8 @@ while _1 do _2 |-->    while (_1)\n    {\n  _2    }\n
 
 repeat _1 until _2 |-->    do {\n  _1\n    } while (!(_2))\n
 
+for _1 : Integer.subrange(_2, _3) do _4 |-->    for (int _1 = _2; _1 <= _3; _1++)\n    {\n  _4    }\n
+
 for _1 : _2 do _3 |-->    for (_2`elementType _1 : _2)\n    {\n  _3    }\n
 
 if _1 then _2 else skip |-->    if (_1)\n    {\n  _2    }\n

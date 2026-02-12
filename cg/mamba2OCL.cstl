@@ -7,15 +7,19 @@ _* |-->class FromMamba {\n_* }
 
 function_declaration::
 static function _1 _2 ( ) { } |-->static operation _2() : _1\n  pre: true post: true;\n\n
+
 function _1 _2 ( ) { } |-->operation _2() : _1\n  pre: true post: true;\n\n
 
 static function _1 _2 ( _3 ) { } |-->static operation _2(_3) : _1\n  pre: true post: true;\n\n
+
 function _1 _2 ( _3 ) { } |-->operation _2(_3) : _1\n  pre: true post: true;\n\n
 
 static function _1 _2 ( ) { _3 } |-->static operation _2() : _1\n  pre: true post: true\n  activity: _3`statementList;\n\n
+
 function _1 _2 ( ) { _3 } |-->operation _2() : _1\n  pre: true post: true\n  activity: _3`statementList;\n\n
 
 static function _1 _2 ( _3 ) { _4 } |-->static operation _2(_3) : _1\n  pre: true post: true\n  activity: _4`statementList;\n\n
+
 function _1 _2 ( _3 ) { _4 } |-->operation _2(_3) : _1\n  pre: true post: true\n  activity: _4`statementList;\n\n
 
 

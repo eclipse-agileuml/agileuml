@@ -304,7 +304,11 @@ _1->compareTo(_2) |-->((_1 < _2) ? -1 : ((_1 > _2) ? 1 : 0 ))
 
 _1->pow(_2) |-->CommonLib.Math.Pow(_1, _2)
 _1->gcd(_2) |-->Domain.MambaHelper.Gcd(_1,_2)
-_1->truncateTo(_2) |-->Domain.MambaHelper.TruncateTo(_1,_2)
+
+_1->truncateTo(_2) |-->((_1) as int)<when> _2 0
+
+_1->truncateTo(_2) |-->((_1*CommonLib.Math.Pow(10,_2)) as int)/CommonLib.Math.Pow(10,_2)
+
 _1->roundTo(_2) |-->CommonLib.Math.Round(_1, _2)
 
 _1^_2 |-->_1.Concat(_2)
@@ -336,7 +340,7 @@ _1->split(_2) |-->_1.Split(_2).ToCollection()
 _1->allMatches(_2) |-->Domain.MambaHelper.AllMatches(_1,_2)
 _1->firstMatch(_2) |-->Domain.MambaHelper.FirstMatch(_1,_2)
 
-_1->apply(_2) |-->_1(_2)
+_1->apply(_2) |-->_1.Invoke(_2)
 
 _1->subrange(_2) |-->_1.Substring(_2-1)<when> _1 String
 _1->subrange(_2) |-->_1.Skip(_2-1)
@@ -346,7 +350,7 @@ _1->at(_2) |-->(_1.CharAt(_2 - 1).ToString())<when> _1 String
 _1->at(_2) |-->_1.Get(_2 - 1)<when> _1 Sequence
 _1->at(_2) |-->_1.Get(_2 - 1)<when> _1 Ref
 _1->at(_2) |-->_1.Get(_2 - 1)<when> _2 numeric
-_1->at(_2) |-->((_1`elementType) _1.Get(_2))
+_1->at(_2) |-->_1.Get(_2)
 
 _1->restrict(_2) |-->Domain.MambaHelper.RestrictMap(_1,_2)
 _1->antirestrict(_2) |-->Domain.MambaHelper.AntirestrictMap(_1,_2)
@@ -410,7 +414,7 @@ _1->hasMatch(_2) |-->Domain.MambaHelper.HasMatch(_1,_2)
 _1->oclIsTypeOf(_2) |-->(_1.GetType() == _2.GetType())
 
 _1->oclAsType(_2) |-->_1<when> _1 Ref
-_1->oclAsType(_2) |-->_1 as _2
+_1->oclAsType(_2) |-->((_1) as _2)
 
 let _1 : _2 = _3 in _4 |-->((_2 _1) => _4).Invoke(_3)
 
@@ -511,6 +515,9 @@ _1[_2] := _3 |-->    _1.Set(_2 - 1, _3);\n
 _1 := _2 |-->    _1 = _2;\n
 
 while _1 do _2 |-->    while (_1)    {\n  _2    }\n
+
+for _1 : Integer.subrange(_2, _3) do _4 |-->    for (int _1 = _2; _1 <= _3; _1+1)\n    {\n  _4    }\n
+
 for _1 : _2 do _3 |-->   foreach _1 in _2    {\n  _3    }\n
 
 if _1 then _2 else _3 |-->    if (_1)    {\n  _2    }\n    else {\n  _3    }\n
