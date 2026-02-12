@@ -1,0 +1,22 @@
+abstract class Statement { } 
+
+class Expression { } 
+
+class ConditionalStatement extends Statement
+{ Expression test;
+  Statement ifPart;
+  Statement elsePart;
+
+  ConditionalStatement(Expression e, Statement s)
+  { test = e;
+    ifPart = s;
+    elsePart = null;
+  }
+
+  ConditionalStatement(Expression e, Statement s1, Statement s2)
+  { test = e;
+    ifPart = s1;
+    elsePart = s2;
+  }
+}
+
