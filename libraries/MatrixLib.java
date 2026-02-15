@@ -1386,25 +1386,21 @@ else {     return m; }
 
 
 public static void main(String[] args)
- { ArrayList<Integer> sh = new ArrayList<Integer>(); 
-   sh.add(2); sh.add(3); sh.add(2); 
-   ArrayList mtrx1 = MatrixLib.singleValueMatrix(sh, 5.0); 
-   System.out.println("Single value matrix 5: " + mtrx1);
-   
-   ArrayList<Integer> sh1 = new ArrayList<Integer>(); 
-   sh1.add(4); sh1.add(3); 
+ { int sze = 80; 
 
-   ArrayList m1 = MatrixLib.reshape(mtrx1, sh1); 
-    
-   System.out.println("Single value matrix: " + m1);
+   ArrayList<Integer> sh = new ArrayList<Integer>(); 
+   sh.add(sze); sh.add(sze);  
+   ArrayList m1 = MatrixLib.singleValueMatrix(sh, 25.0); 
+   ArrayList m2 = MatrixLib.singleValueMatrix(sh, 25.0); 
+   
+	java.util.Date d1 = new java.util.Date(); 
+	long t1 = d1.getTime(); 
 
-   m1 = MatrixLib.unsqueeze(mtrx1, 1); 
+   ArrayList mult1 = MatrixLib.matrixMultiplication(m1,m2); 
    
-   System.out.println("Single value matrix: " + m1);
-   
-   ArrayList m2 = MatrixLib.squeezeAll(m1); 
-   
-   System.out.println("Single value matrix: " + m2);
+	java.util.Date d2 = new java.util.Date(); 
+	long t2 = d2.getTime(); 
+	System.out.println(t2 - t1); 
    
 /*    ArrayList mtrx2 = MatrixLib.singleValueMatrix(sh, 3.5); 
    System.out.println("Single value matrix 3.5: " + mtrx2); 

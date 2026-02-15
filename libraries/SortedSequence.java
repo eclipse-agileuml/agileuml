@@ -351,7 +351,10 @@ class SortedSequence<T extends Comparable<T>> implements List<T>
     int j = 0; 
     ArrayList<T> olems = col.elements; 
 
-    while (j < olems.size() && i < elements.size())
+    int n = elements.size(); 
+    int m = olems.size(); 
+
+    while (j < m && i < n)
     { T y = olems.get(j);  
       T x = elements.get(i); 
 
@@ -363,7 +366,7 @@ class SortedSequence<T extends Comparable<T>> implements List<T>
       { j++; } // found y
     } 
 
-    if (j >= olems.size()) // found all olems
+    if (j >= m) // found all olems
     { return true; } 
 
     return false; 
@@ -458,27 +461,34 @@ class SortedSequence<T extends Comparable<T>> implements List<T>
 
   public static void main(String[] args)
   { SortedSequence<String> ss = new SortedSequence<String>(); 
-     
-    ss.add("bb", 2); ss.add("aa", 3); 
-    ss.add("cc", 1);  ss.add("bb", 6);
- 
-    System.out.println(ss); 
+  
+    for (int i = 0; i < 80000; i++)
+	{ ss.add("a" + i); }
+      
+    // System.out.println(ss); 
 	// System.out.println(ss.indexOf("aa")); 
 	// System.out.println(ss.indexOf("cc"));
 	// System.out.println(ss.getCount("aa")); 
 	// System.out.println(ss.getCount("bb"));
 
-    SortedSequence<String> tt = new SortedSequence<String>(); 
-    tt.add("aa", 2); tt.add("cc", 4); tt.add("ee", 2);  
+    // SortedSequence<String> tt = new SortedSequence<String>(); 
+    // for (int i = 0; i < 1000; i++) 
+	// { tt.add("b" + i); }   
 
-    SortedSequence<String> pp = ss.unionSortedSequence(tt); 
-    System.out.println(pp); 
+    // SortedSequence<String> pp = ss.unionSortedSequence(tt); 
+    // System.out.println(pp); 
 
-    SortedSequence<String> qq = ss.intersection(tt); 
-    System.out.println(qq); 
+    // SortedSequence<String> qq = ss.intersection(tt); 
+    
+	java.util.Date d1 = new java.util.Date(); 
+	long t1 = d1.getTime(); 
 
     boolean bb = ss.containsAll(ss); 
-    System.out.println(bb); 
+
+	java.util.Date d2 = new java.util.Date(); 
+	long t2 = d2.getTime(); 
+
+    System.out.println(bb + " " + (t2-t1)); 
 	
     /* SortedSequence<Person> pers = new SortedSequence<Person>(); 
 	Person p1 = new Person(); 

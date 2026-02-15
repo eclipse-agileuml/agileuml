@@ -1,0 +1,843 @@
+/* Convert Mamba3 code/expressions to OCL */
+
+program::
+_1 |-->class FromMamba { _1 }
+_* |-->class FromMamba {\n_* }
+
+
+function_declaration::
+static function _1 _2 ( ) { } |-->static operation _2() : _1\n  pre: true post: true;\n\n
+
+function _1 _2 ( ) { } |-->operation _2() : _1\n  pre: true post: true;\n\n
+
+static function _1 _2 ( _3 ) { } |-->static operation _2(_3) : _1\n  pre: true post: true;\n\n
+
+function _1 _2 ( _3 ) { } |-->operation _2(_3) : _1\n  pre: true post: true;\n\n
+
+static function _1 _2 ( ) { _3 } |-->static operation _2() : _1\n  pre: true post: true\n  activity: _3`statementList;\n\n
+
+function _1 _2 ( ) { _3 } |-->operation _2() : _1\n  pre: true post: true\n  activity: _3`statementList;\n\n
+
+static function _1 _2 ( _3 ) { _4 } |-->static operation _2(_3) : _1\n  pre: true post: true\n  activity: _4`statementList;\n\n
+
+function _1 _2 ( _3 ) { _4 } |-->operation _2(_3) : _1\n  pre: true post: true\n  activity: _4`statementList;\n\n
+
+
+statementList::
+; |-->
+_1 |-->    _1\n
+_1 ; |-->    _1\n
+_1 _2 |-->    _1;\n_2`statementList
+
+
+stmt::
+_1 = _2 ; |-->_1 := _2
+return ; |-->return
+return _1 ; |-->return _1
+break ; |-->break
+continue ; |-->continue
+throw _1 ; |-->error _1
+_1 ; |-->_1`updateForm<when> _1 expr
+
+var _1 _2 ; |-->var _1 : _2`ocltype _2
+_1 _2 ; |-->var _2 : _1<when> _1 datatype<action> _2 _1`typeAsOcl
+_1 _2 _3 ; |-->var _2 : _1 _3<when> _1 datatype<action> _2 _1`typeAsOcl
+
+if _1 { } |-->if _1 then skip else skip
+
+if _1 { _2 } |-->if _1 then (_2`statementList) else skip
+
+if _1 { } _2 |-->if _1 then skip _2<when> _2 elsestat
+if _1 { _2 } _3 |-->if _1 then (_2`statementList) _3<when> _3 elsestat
+
+if _1 { } _2 |-->if _1 then skip _2 else skip<when> _2 elseif
+if _1 { _2 } _3 |-->if _1 then (_2`statementList) _3 else skip <when> _3 elseif
+if _1 { _2 } _3 _4 |-->if _1 then (_2`statementList) _3 _4 else skip <when> _4 elseif
+if _1 { _2 } _3 _4 _5 |-->if _1 then (_2`statementList) _3 _4 _5 else skip <when> _5 elseif
+if _1 { _2 } _3 _4 _5 _6 |-->if _1 then (_2`statementList) _3 _4 _5 _6 else skip <when> _6 elseif
+
+if _1 { _2 } _* |-->if _1 then (_2`statementList) _* else skip<when> _* lastIs elseif
+
+if _1 { } _* |-->if _1 then skip _*
+if _1 { _2 } _* |-->if _1 then (_2`statementList) _*
+
+switch _1 { _* } |-->(var _case : _1`ocltype := _1;\n_* skip)
+
+foreach ( _1 : _2 in _3 ) { } |-->for _2 : _3 do skip
+foreach ( _1 : _2 in _3 ) { _4 } |-->for _2 : _3 do (_4`statementList)
+
+foreach ( _1 _2 in _3 ) { } |-->for _2 : _3 do skip
+foreach ( _1 _2 in _3 ) { _4 } |-->for _2 : _3 do (_4`statementList)
+
+foreach ( _2 in _3 ) { } |-->for _2 : _3 do skip
+foreach ( _2 in _3 ) { _4 } |-->for _2 : _3 do (_4`statementList)
+
+foreach _1 : _2 in _3 { } |-->for _2 : _3 do skip
+foreach _1 : _2 in _3 { _4 } |-->for _2 : _3 do (_4`statementList)
+
+foreach _1 _2 in _3 { } |-->for _2 : _3 do skip
+foreach _1 _2 in _3 { _4 } |-->for _2 : _3 do (_4`statementList)
+
+foreach _2 in _3 { } |-->for _2 : _3 do skip
+foreach _2 in _3 { _4 } |-->for _2 : _3 do (_4`statementList)
+
+while _1 { } |-->while _1 do skip
+while _1 { _2 } |-->while _1 do ( _2`statementList)
+
+
+for ( int _2 = _3 ; _4 ; _5 ) { _6 } |-->for _2 : Integer.subrange(_3, _4`upperBound) do (_6`statementList)<when> _4`hasLowerBound _2, _5`isUnitIncrement true
+
+for ( int _2 = _3 ; _4 ; _5 ) { } |-->for _2 : Integer.subrange(_3, _4`upperBound) do skip<when> _4`hasLowerBound _2, _5`isUnitIncrement true
+ 
+for int _2 = _3 ; _4 ; _5 { _6 } |-->for _2 : Integer.subrange(_3, _4`upperBound) do (_6`statementList)<when> _4`hasLowerBound _2, _5`isUnitIncrement true
+
+for int _2 = _3 ; _4 ; _5 { } |-->for _2 : Integer.subrange(_3, _4`upperBound) do skip<when> _4`hasLowerBound _2, _5`isUnitIncrement true
+
+for ( _1 _2 = _3 ; _4 ; _5 ) { _6 } |-->(var _2 : _1 := _3;\n    while _4 do (_6`statementList; _2 := _5))
+
+for ( _1 _2 = _3 ; _4 ; _5 ) { } |-->(var _2 : _1 := _3;\n    while _4 do (_2 := _5))
+
+for _1 _2 = _3 ; _4 ; _5 { _6 } |-->(var _2 : _1 := _3;\n    while _4 do (_6`statementList; _2 := _5))
+
+for _1 _2 = _3 ; _4 ; _5 { } |-->(var _2 : _1 := _3;\n    while _4 do (_2 := _5))
+
+try { } _* |-->try ( skip ) _*
+try { _1 } _* |-->try (_1`statementList) _*
+
+
+catch_statement::
+catch _1 _2 { _3 } |-->catch (_2 : _1) do (_3`statementList)
+catch _1 _2 { } |-->catch (_2 : _1) do skip
+
+
+finally_statement:: 
+finally { _1 } |--> finally (_1`statementList)
+finally { } |-->finally skip
+
+
+
+
+elseif:: 
+elseif _1 { _2 } |-->else if _1 then (_2`statementList)
+elseif _1 { } |-->else if _1 then skip
+
+
+elsestat:: 
+else { _1 } |-->else (_1`statementList)
+else { } |-->else skip
+
+
+case_statement::
+case _1 : _2 |-->      if _case = _1 then\n      (_2`statementList      ) else \n
+
+default : _1 |-->      (_1`statementList      ) ;
+
+
+variable_decl_assigment::
+= _1 |--> := _1
+
+
+ocltype::
+= _1 |-->_1`ocltype
+{ } |-->Sequence
+{ _1 } |-->Sequence
+
+_1 => _2 |-->Function
+_1 => { _2 } |-->Function
+
+_1 + _2 |-->String<when> _1`ocltype String
+_1 + _2 |-->String<when> _2`ocltype String
+_1 + _2 |-->double<when> _1`ocltype double
+_1 + _2 |-->double<when> _2`ocltype double
+_1 + _2 |-->_1`ocltype
+
+_1 - _2 |-->_1`ocltype
+
+_1 * _2 |-->double<when> _1`ocltype double
+_1 * _2 |-->double<when> _2`ocltype double
+_1 * _2 |-->_1`ocltype
+
+_1 / _2 |-->double<when> _1`ocltype double
+_1 / _2 |-->double<when> _2`ocltype double
+_1 / _2 |-->int
+
+_1 < _2 |-->boolean
+_1 <= _2 |-->boolean
+_1 > _2 |-->boolean
+_1 >= _2 |-->boolean
+_1 == _2 |-->boolean
+_1 != _2 |-->boolean
+
+_1 as _2 |-->_2`typeAsOcl
+
+Length |-->int
+
+RuntimeType . _1 |-->OclType<when> _1 id_or_function_call, _1`functionName GetTypeOf
+
+GetTypeOf ( _1 ) |-->OclType
+GetProperty ( _1 ) |-->OclAttribute
+GetProperties ( ) |-->Sequence
+
+Get ( _1 ) |-->OclAny
+First ( _1 ) |-->OclAny
+First ( ) |-->OclAny
+Last ( ) |-->OclAny
+Last ( _1 ) |-->OclAny
+Min ( _1 ) |-->OclAny
+Max ( _1 ) |-->OclAny
+Single ( _1 ) |-->OclAny
+
+Contains ( _1 ) |-->boolean
+ToCollection ( ) |-->Sequence
+IndexOf ( _1 ) |-->int
+FindIndex ( _1 ) |-->int
+FindLastIndex ( _1 ) |-->int
+
+GetKeys ( ) |-->Set
+GetValues ( ) |-->Sequence
+OrderByKey ( ) |-->Map
+OrderByValue ( ) |-->Map
+
+And ( _1 ) |-->Function
+Or ( _1 ) |-->Function
+Create ( ) |-->OclAny
+Create ( _1 ) |-->Function
+
+ContainsValue ( _1 ) |-->boolean
+ContainsKey ( _1 ) |-->boolean
+GetItems ( ) |-->Sequence
+Invoke ( _1 ) |-->OclAny
+Reverse ( ) |-->Sequence
+Sort ( _1 ) |-->Sequence
+Distinct ( _1 ) |-->Set
+ToArray ( ) |-->Sequence
+OrderByDescending ( _1 ) |-->Sequence
+OrderBy ( _1 ) |-->Sequence
+ThenBy ( _1 ) |-->Sequence
+Average ( _1 ) |-->double
+Sum ( _1 ) |-->int
+Count ( _1 ) |-->int
+
+Any ( _1 ) |-->boolean
+Any ( ) |-->boolean
+All ( _1 ) |-->boolean
+Except ( _1 ) |-->Sequence
+Where ( _1 ) |-->Sequence
+Take ( _1 ) |-->Sequence
+Skip ( _1 ) |-->Sequence
+Intersect ( _1 ) |-->Sequence
+Concat ( _1 ) |-->Sequence
+SelectMany ( _1 ) |-->Sequence
+Select ( _1 ) |-->Sequence
+
+_1 |-->String<when> _1 String
+_1 |-->int<when> _1 int
+_1 |-->double<when> _1 double
+_1 |-->long<when> _1 long
+_1 |-->Sequence<when> _1 Sequence
+
+
+
+_1 |-->_1`ocltype<when> _1 factor_level6
+_1 |-->_1`ocltype<when> _1 factor_level5
+_1 |-->_1`ocltype<when> _1 factor_level4
+_1 |-->_1`ocltype<when> _1 factor_level3
+_1 |-->_1`ocltype<when> _1 factor_level2
+_1 |-->_1`ocltype<when> _1 factor_level1
+_1 |-->_1`ocltype<when> _1 factor_level0
+_1 |-->_1`ocltype<when> _1 operand
+_1 |-->_1`ocltype<when> _1 member
+_1 |-->_1`ocltype<when> _1 function_call
+
+_1 . _2 |-->_2`ocltype
+
+
+_1 |-->int<when> _1 integer
+_1 |-->double<when> _1 decimal
+_1 |-->String<when> _1 string_literal
+_1 |-->String<when> _1 char_literal
+_1 |-->OclAny
+_* |-->OclAny
+
+
+hasLowerBound::
+_1 < _2 |-->_1
+_1 <= _2 |-->_1
+_1 _2 _3 |-->null
+_1 _2 |-->null
+
+_1 |-->_1`hasLowerBound<when> _1 factor_level6
+_1 |-->_1`hasLowerBound<when> _1 factor_level5
+_1 |-->_1`hasLowerBound<when> _1 factor_level4
+_1 |-->_1`hasLowerBound<when> _1 factor_level3
+_1 |-->_1`hasLowerBound<when> _1 factor_level2
+_1 |-->_1`hasLowerBound<when> _1 factor_level1
+_1 |-->_1`hasLowerBound<when> _1 factor_level0
+
+_1 |-->null
+
+
+upperBound::
+_1 < _2 |-->_2-1
+_1 <= _2 |-->_2
+_1 _2 _3 |-->null
+_1 _2 |-->null
+
+_1 |-->_1`upperBound<when> _1 factor_level6
+_1 |-->_1`upperBound<when> _1 factor_level5
+_1 |-->_1`upperBound<when> _1 factor_level4
+_1 |-->_1`upperBound<when> _1 factor_level3
+_1 |-->_1`upperBound<when> _1 factor_level2
+_1 |-->_1`upperBound<when> _1 factor_level1
+_1 |-->_1`upperBound<when> _1 factor_level0
+
+_1 |-->null
+
+
+isUnitIncrement::
+_1 + 1 |-->true
+1 + _1 |-->true
+
+_1 _2 _3 |-->false
+_1 _2 |-->false
+
+_1 |-->_1`isUnitIncrement<when> _1 factor_level6
+_1 |-->_1`isUnitIncrement<when> _1 factor_level5
+_1 |-->_1`isUnitIncrement<when> _1 factor_level4
+_1 |-->_1`isUnitIncrement<when> _1 factor_level3
+_1 |-->_1`isUnitIncrement<when> _1 factor_level2
+_1 |-->_1`isUnitIncrement<when> _1 factor_level1
+_1 |-->_1`isUnitIncrement<when> _1 factor_level0
+
+_1 |-->false
+ 
+
+lamda_parameter_with_datatype:: 
+_1 _2 |-->_2 : _1 
+_1 _2 , _3 |-->_2 : _1 in lambda _3
+		
+lamda_parameter_without_datatype:: 
+_1 , _2 |-->_1 : OclAny in lambda _2 : OclAny<when> _2 identifier
+_1 , _2 |-->_1 : OclAny in lambda _2 
+		
+lamda_parameters:: 
+_1 |-->_1 : OclAny 
+( _1 ) |-->_1 
+
+parameterNames::
+_1 _2 |-->_2
+_1 , _2 |-->_1
+( _1 ) |-->_1
+_1 |-->_1
+
+
+
+isDirectLambda::
+_1 => _2 |-->true
+_1 => { _2 } |-->true
+
+_1 |-->_1`isDirectLambda<when> _1 expr
+_1 |-->false
+_* |-->false
+
+
+directLambdaTranslation::
+_1 => _2 |-->_1`parameterNames | _2
+_1 => { _2 } |-->_1`parameterNames | _2
+
+_1 |-->_1`directLambdaTranslation<when> _1 expr
+
+
+expr::
+_1 |-->_1
+{ } |-->Sequence{}
+{ _1 } |-->Sequence{ _1 }
+_1 => _2 |-->lambda _1 in (_2)
+_1 => { _2 }  |-->lambda _1 in (_2`statementList)
+
+
+factor_level6::
+_1 |-->_1
+_1 ? _2 : _3 |-->if _1 then _2 else _3 endif
+_1 || _2 |-->_1 or _2
+
+
+factor_level5::
+_1 |-->_1
+_1 && _2 |-->_1 & _2
+
+
+factor_level4::
+_1 |-->_1
+_1 != _2 |-->_1 /= _2
+_1 == _2 |-->_1 = _2
+
+
+factor_level3::
+_1 |-->_1
+_1 <= _3  |-->_1 <= _3 
+_1 < _3  |-->_1 < _3 
+_1 >= _3  |-->_1 >= _3 
+_1 > _3  |-->_1 > _3 
+
+
+factor_level2::
+_1 |-->_1
+_1 + _3  |-->_1 + _3 
+_1 - _3  |-->_1 - _3 
+
+
+factor_level1::
+_1 |-->_1
+_1 * _3  |-->_1 * _3 
+_1 / _3  |-->_1 / _3 
+_1 % _3  |-->_1 mod _3 
+_1 ^ _3  |-->MathLib.intPower(_1, _3) 
+_1 as _3  |-->(_1->oclAsType(_3)) 
+
+
+factor_level0::
+_1 |-->_1
+! _1 |-->not(_1)
+- _1 |-->-(_1)
+
+
+operand::
+_1 |-->_1
+
+
+inline_init_items::
+_1 |-->_1
+
+
+constructor_type::
+_1 : |-->
+
+
+constructor_assignment::
+_1 = _2 |-->_1 = _2
+_1 = _2 , _3 |-->_1 = _2, _3
+
+
+member_with_expression::
+_1 . _2 |-->_1._2
+
+
+objectRef::
+_1 . _2 |-->_1
+
+property::
+_1 . _2 |-->_2
+
+
+member::
+_1 |-->_1`member<when> _1 id_or_function_call
+_1 |-->_1`member<when> _1 function_call
+
+this . _1 |-->self_1`queryForm
+_1 . Length |-->_1->size()
+
+RuntimeType . _1 |-->((_1`functionArguments)->oclType())<when> _1 id_or_function_call, _1`functionName GetTypeOf
+RuntimeType . _1 |-->(_1`functionArguments).newInstance()<when> _1 id_or_function_call, _1`functionName CreateInstance
+
+BusinessException . _2 |-->OclException.newOclException(_2`functionArguments)<when> _2 id_or_function_call, _2`functionName Create
+
+_1 . _2 |-->_2`functionArguments<when> _1 Function, _2 id_or_function_call, _2`functionName Create
+
+_1 . _2 |-->_1_2`mapQueryForm<when> _1 Map, _2 id_or_function_call
+_1 . _2 |-->_1_2`mapQueryForm<when> _1 Map, _2 function_call
+_1 . _2 |-->_1_2`mapQueryForm<when> _1 Map, _2 member
+
+_1 . _2 |-->_1`member_2`queryForm<when> _2 id_or_function_call
+_1 . _2 |-->_1`member_2`queryForm<when> _2 function_call
+_1 . _2 |-->_1`member_2`queryForm<when> _2 member
+
+_1 . _2 |-->_1._2
+
+_1 |-->_1
+
+
+parenthesis_expression::
+( _1 ) |-->(_1)
+
+
+id_or_function_call::
+this |-->self
+_1 |-->_1
+
+
+function_call::
+_1 ( _2 ) |-->_1(_2)
+_1 ( ) |-->_1()
+
+
+param_list::
+out _1 _2 , _3 |-->_2 : _1, _3
+_1 _2 , _3 |-->_2 : _1, _3
+out _1 _2 |-->_2 : _1
+_1 _2 |-->_2 : _1
+
+
+argument_list::
+_1 |-->_1
+_1 , _2 |-->_1, _2
+
+
+logic_operand::
+_1 |-->_1
+
+
+identifier_or_member::
+_1 |-->_1
+
+
+datatype::
+decimal |-->double
+float |-->double
+bool |-->boolean
+string  |-->String
+char |-->String
+byte |-->int
+int |-->int
+long |-->long
+
+Collection |-->Sequence
+CollectionBase |-->Sequence
+Array |-->Sequence
+Dictionary |-->Map
+
+Exception |-->OclException
+BusinessException |-->OclException
+
+RuntimeType |-->OclType
+DateTime |-->OclDate
+
+_1 |-->_1
+
+CollectionBase [ _1 ] |-->Sequence(_1)
+Collection [ _1 ] |-->Sequence(_1)
+Array [ _1 ] |-->Sequence(_1)
+Func [ _1 ] |-->Function(_1)
+Predicate [ _1 ] |-->Function(_1, boolean)
+Dictionary [ _1 ] |-->Map(_1)
+
+_1 [ _2 ] |-->_1(_2)
+
+
+typeAsOcl::
+decimal |-->double
+float |-->double
+bool |-->boolean
+string  |-->String
+char |-->String
+byte |-->int
+int |-->int
+long |-->long
+
+Collection |-->Sequence
+CollectionBase |-->Sequence
+Array |-->Sequence
+Dictionary |-->Map
+
+Exception |-->OclException
+BusinessException |-->OclException
+RuntimeType |-->OclType
+DateTime |-->OclDate
+
+_1 |-->_1
+
+CollectionBase [ _1 ] |-->Sequence
+Collection [ _1 ] |-->Sequence
+Array [ _1 ] |-->Sequence
+Func [ _1 ] |-->Function
+Predicate [ _1 ] |-->Function
+Dictionary [ _1 ] |-->Map
+
+_1 [ _2 ] |-->_1(_2)
+
+
+generic_parameters::
+_1 |-->_1
+_1 , _2 |-->_1, _2
+
+
+inner_datatype::
+_1 |-->_1
+_1 . _2 |-->_2
+
+
+identifier::
+this |-->self
+_1 |-->_1
+
+
+integer::
+_1 |-->_1
+
+decimal::
+_1 |-->_1
+
+string_literal::
+_1 |-->_1
+
+character_literal::
+_1 |-->_1
+
+
+
+updateForm::
+_1 |-->_1`updateForm<when> _1 factor_level6
+_1 |-->_1`updateForm<when> _1 factor_level5
+_1 |-->_1`updateForm<when> _1 factor_level4
+_1 |-->_1`updateForm<when> _1 factor_level3
+_1 |-->_1`updateForm<when> _1 factor_level2
+_1 |-->_1`updateForm<when> _1 factor_level1
+_1 |-->_1`updateForm<when> _1 factor_level0
+_1 |-->_1`updateForm<when> _1 operand
+_1 |-->_1`updateForm<when> _1 member
+_1 |-->_1`updateForm<when> _1 id_or_function_call
+_1 |-->_1`updateForm<when> _1 function_call
+
+
+DebugLib . _1 |-->_1`updateForm
+Logger . _1 |-->_1`updateForm
+WriteErrorLine ( _1 ) |-->execute (_1)->display()
+WriteWarnLine ( _1 ) |-->execute (_1)->display()
+WriteInfoLine ( _1 ) |-->execute (StringLib.formatString_1)->display()<when> _1 multiple
+WriteInfoLine ( _1 ) |-->execute (_1)->display()
+
+_1 ( _2 ) |-->execute _1(_2)
+_1 ( ) |-->execute _1()
+
+_1 . _2 |-->execute (_1.new_1(_2`functionArguments))<when> _2 id_or_function_call, _2`functionName Create
+
+_1 . _2 |-->execute _1.persist()<when> _2 id_or_function_call, _2`functionName Save
+
+_1 . _2 |-->_1 := lambda _x : OclAny in (_1->apply(_x) & (_2`functionArguments)->apply(_x))<when> _1 Function, _2 id_or_function_call, _2`functionName And
+_1 . _2 |-->_1 := lambda _x : OclAny in (_1->apply(_x) or (_2`functionArguments)->apply(_x))<when> _1 Function, _2 id_or_function_call, _2`functionName Or
+
+_1 . _2 |-->_1 := _1_2`mapUpdateFunctionCall<when> _1 Map, _2 id_or_function_call
+_1 . _2 |-->_1 := _1_2`updateFunctionCall<when> _2 id_or_function_call
+_1 . _2 |-->_1 := _1_2`updateFunctionCall<when> _2 function_call
+
+_1 . _2 |-->_1._2`objectRef := _1._2`objectRef_2`updateProperty<when> _2 member
+
+_1 . _2 |-->_1._2
+
+
+updateProperty::
+_1 . _2 |-->_2`updateFunctionCall
+
+
+updateFunctionCall::
+_1 |-->_1`updateFunctionCall<when> _1 function_call
+_1 |-->_1`updateFunctionCall<when> _1 id_or_function_call
+
+Add ( _1 ) |-->->including(_1)
+Set ( _1 ) |-->.setAt(_1`first + 1, _1`last)
+
+AddRange ( _1 ) |-->->union(_1)
+AddAt ( _1 ) |-->.insertAt(_1`first+1, _1`last)
+Clear ( ) |-->->intersection(Sequence{})
+Remove ( _1 ) |-->->excluding(_1)
+Reverse ( ) |-->->reverse()
+
+Invoke ( _1 ) |-->->apply(_1)
+
+_1 . _2 |-->_1._2
+
+_1 |-->._1
+_1 ( ) |-->._1()
+_1 ( _2 ) |-->._1(_2)
+
+
+mapUpdateFunctionCall::
+_1 |-->_1`mapUpdateFunctionCall<when> _1 function_call
+
+Add ( _1 ) |-->->union(Map{_1`first |-> _1`last})<when> _1 multiple
+Add ( _1 ) |-->->union(Map{ _1 |-> _1 })
+AddRange( _1 ) |-->->union(_1->collect(_x | Map{_x |-> _x})->unionAll())
+
+Set ( _1 ) |-->->union(Map{_1`first |-> _1`last})
+
+Clear ( ) |-->->intersection(Map{})
+Remove ( _1 ) |-->->excludingKey(_1)
+
+_1 |-->._1
+_1 ( ) |-->._1()
+_1 ( _2) |-->._1(_2)
+
+ 
+queryForm::
+this |-->self
+Length |-->->size()
+
+_1 |-->_1`queryForm<when> _1 id_or_function_call
+_1 |-->_1`queryForm<when> _1 function_call
+_1 |-->_1`queryForm<when> _1 member
+_1 |-->_1`queryForm<when> _1 operand
+
+! _1 |-->not(_1`queryForm)
+_1 && _2 |-->_1`queryForm & _2`queryForm
+_1 || _2 |-->_1`queryForm or _2`queryForm
+
+_1 * _2 |-->_1`queryForm * _2`queryForm
+_1 / _2 |-->_1`queryForm / _2`queryForm
+_1 + _2 |-->_1`queryForm + _2`queryForm
+_1 - _2 |-->_1`queryForm - _2`queryForm
+
+_1 < _2 |-->_1`queryForm < _2`queryForm
+_1 > _2 |-->_1`queryForm > _2`queryForm
+_1 <= _2 |-->_1`queryForm <= _2`queryForm
+_1 >= _2 |-->_1`queryForm >= _2`queryForm
+_1 == _2 |-->_1`queryForm = _2`queryForm
+_1 != _2 |-->_1`queryForm /= _2`queryForm
+
+Create ( ) |-->.newInstance()
+
+Get ( _1 ) |-->[_1 + 1]
+GetType ( ) |-->->oclType()
+GetProperty ( _1 ) |-->.getDeclaredField(_1)
+GetProperties ( ) |-->.getDeclaredFields()
+
+Contains ( _1 ) |-->->includes(_1)
+ToCollection ( ) |-->
+ToArray ( ) |-->
+Distinct ( ) |-->->oclAsSet()
+
+IndexOf ( _1 ) |-->->indexOf(_1)-1
+
+Single ( _1 ) |-->->any( _1`directLambdaTranslation )<when> _1`isDirectLambda true
+Single ( _1 ) |-->->any( _x | _1->apply(_x) )
+
+Select ( _1 ) |-->->collect( _1`directLambdaTranslation )<when> _1`isDirectLambda true
+Select ( _1 ) |-->->collect( _x | _1->apply(_x) )
+
+SelectMany ( _1 ) |-->->collect( _1`directLambdaTranslation )->unionAll()<when> _1`isDirectLambda true
+SelectMany ( _1 ) |-->->collect( _x | _1->apply(_x))->unionAll()
+
+Min ( _1 ) |-->->collect( _1`directLambdaTranslation )->min()<when> _1`isDirectLambda true
+Min ( _1 ) |-->->collect( _x | _1->apply(_x))->min()
+
+Max ( _1 ) |-->->collect( _1`directLambdaTranslation )->max()<when> _1`isDirectLambda true
+Max ( _1 ) |-->->collect( _x | _1->apply(_x))->max()
+
+Count ( _1 ) |-->->select( _x | _1->apply(_x))->size()
+Concat ( _1 ) |-->->union(_1)
+Intersect ( _1 ) |-->->intersection(_1)
+
+FindIndex ( _1 ) |-->.subrange(_1`first+1)->firstIndexOf(_1`last) + _1`first<when> _1 multiple
+FindIndex ( _1 ) |-->->firstIndexOf(_1)
+ 
+FindLastIndex ( _1 ) |-->.subrange(_1`first+1)->lastIndexOf(_1`last) + _1`first<when> _1 multiple
+FindLastIndex ( _1 ) |-->->lastIndexOf(_1)
+
+Skip ( _1 ) |-->.subrange(_1 + 1)
+Take ( _1 ) |-->.subrange(1, _1)
+
+Where ( _1 ) |-->->select( _1`directLambdaTranslation )<when> _1`isDirectLambda true
+Where ( _1 ) |-->->select( _x | _1->apply(_x) )
+
+Except ( _1 ) |--> - _1
+
+First ( ) |-->.first
+First ( _1 ) |-->->any( _1`directLambdaTranslation )<when> _1`isDirectLambda true
+First ( _1 ) |-->->any( _x | _1->apply(_x) )
+
+Last ( ) |-->.last
+Last ( _1 ) |-->->reverse()->any( _1`directLambdaTranslation )<when> _1`isDirectLambda true
+Last ( _1 ) |-->->reverse()->any( _x | _1->apply(_x) )
+
+All ( _1 ) |-->->forAll( _1`directLambdaTranslation )<when> _1`isDirectLambda true 
+All ( _1 ) |-->->forAll( _x | _1->apply(_x) )
+
+Any ( ) |-->->notEmpty()
+Any ( _1 ) |-->->exists( _1`directLambdaTranslation )<when> _1`isDirectLambda true 
+Any ( _1 ) |-->->exists( _x | _1->apply(_x) )
+
+Sum ( _1 ) |-->->collect( _x | _1->apply(_x) )->sum()
+Average ( _1 ) |-->->collect( _x | _1->apply(_x) )->average()
+
+OrderBy ( _1 ) |-->->sortedBy( _1`directLambdaTranslation )<when> _1`isDirectLambda true
+OrderBy ( _1 ) |-->->sortedBy( _x | _1->apply(_x))
+
+OrderByDescending ( _1 ) |-->->sortedBy( _x | _1->apply(_x))->reverse()
+
+GetAll ( ) |-->.allInstances()
+
+Invoke ( _1 ) |-->->apply(_1)
+Create ( _1 ) |-->.newInstance(_1)
+
+ContainsKey ( _1 ) |-->->includesKey(_1)
+HasKey ( _1 ) |-->->includesKey(_1)
+GetKeys ( ) |-->->keys()
+GetValues ( ) |-->->values()
+OrderByKey ( ) |-->->sort()
+OrderByValue ( ) |-->->sortedBy(_x | _x)
+
+_1 . Length |-->_1`queryForm->size()
+
+
+_1 . _2 |-->_2`functionArguments<when> _1 Function, _2 id_or_function_call, _2`functionName Create
+
+_1 . _2 |-->_1_2`mapQueryForm<when> _1 Map, _2 id_or_function_call
+_1 . _2 |-->_1_2`mapQueryForm<when> _1 Map, _2 function_call
+_1 . _2 |-->_1_2`mapQueryForm<when> _1 Map, _2 member
+
+_1 . _2 |-->_1`queryForm_2`queryForm<when> _2 id_or_function_call
+_1 . _2 |-->_1`queryForm_2`queryForm<when> _2 function_call
+_1 . _2 |-->_1`queryForm_2`queryForm<when> _2 member
+_1 . _2 |-->_1`queryForm_2`queryForm<when> _2 operand
+ 
+_1 ( _2 ) |-->._1(_2)
+_1 ( ) |-->._1()
+_1 |-->._1
+
+
+mapQueryForm::
+_1 |-->_1`mapQueryForm<when> _1 id_or_function_call
+_1 |-->_1`mapQueryForm<when> _1 member
+_1 |-->_1`mapQueryForm<when> _1 operand
+_1 |-->_1`mapQueryForm<when> _1 function_call
+
+Get ( _1 ) |-->->at(_1)
+ContainsValue ( _1 ) |-->->includesValue(_1)
+
+ContainsKey ( _1 ) |-->->includesKey(_1)
+HasKey ( _1 ) |-->->includesKey(_1)
+GetKeys ( ) |-->->keys()
+GetValues ( ) |-->->values()
+GetItems ( ) |-->->values()
+
+OrderByKey ( ) |-->->sort()
+OrderByValue ( ) |-->->sortedBy(_x | _x)
+
+_1 . _2 |-->_2`functionArguments<when> _1 Function, _2 id_or_function_call, _2`functionName Create
+
+_1 . _2 |-->_1_2`mapQueryForm<when> _1 Map, _2 id_or_function_call
+_1 . _2 |-->_1_2`mapQueryForm<when> _1 Map, _2 function_call
+_1 . _2 |-->_1_2`mapQueryForm<when> _1 Map, _2 member
+
+_1 . _2 |-->_1`queryForm_2`queryForm<when> _2 id_or_function_call
+_1 . _2 |-->_1`queryForm_2`queryForm<when> _2 function_call
+_1 . _2 |-->_1`queryForm_2`queryForm<when> _2 member
+_1 . _2 |-->_1`queryForm_2`queryForm<when> _2 operand
+ 
+_1 ( _2 ) |-->._1(_2)
+_1 ( ) |-->._1()
+_1 |-->._1
+
+
+functionName::
+_1 ( _2 ) |-->_1
+_1 ( ) |-->_1
+
+_1 |-->_1`functionName
+
+
+functionArguments::
+_1 ( _2 ) |-->_2
+_1 ( ) |-->
+
+_1 |-->_1`functionArguments
+

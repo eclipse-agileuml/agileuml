@@ -201,6 +201,29 @@ def includesAll(supset,subset) :
       return False
   return True
 
+def includesAllSortedSequence(s,t) : 
+  # both s and t are sorted sequences
+  n = len(s)
+  m = len(t)
+  j = 0
+  i = 0
+
+  while i < n and j < m : 
+    x = s[i]
+    y = t[j]
+
+    if x < y : 
+      i = i+1
+    elif y < x : 
+      return False
+    else : 
+      j = j+1
+
+  if j >= m : 
+    return True
+
+  return False
+
 
 def excludesAll(supset,subset) :
   for x in subset :
@@ -743,6 +766,33 @@ def unionSequence(s,t) :
   res.extend(t)
   return res
 
+def unionSortedSequence(s,t) : 
+  # both s and t are sorted sequences
+  n = len(s)
+  m = len(t)
+  res = []
+  reached = 0
+  index = 0
+
+  while index < n and reached < m : 
+    obj = s[index]
+    sqelem = t[reached]
+
+    if obj < sqelem : 
+      res.append(obj)
+      index = index+1
+    else : 
+      res.append(sqelem)
+      reached = reached + 1
+
+  for j in range(index, n) : 
+    res.append(s[j])
+
+  for k in range(reached, m) : 
+    res.append(t[k])
+
+  return SortedList(res)
+
 
 def unionSet(s,t) :
   res = s.copy()
@@ -763,6 +813,29 @@ def concatenate(s,t) :
 def intersectionSequence(s,t) :
   res = [x for x in s if x in t]
   return res
+
+def intersectionSortedSequence(s,t) : 
+  # both s and t are sorted sequences
+  n = len(s)
+  m = len(t)
+  res = []
+  reached = 0
+  index = 0
+
+  while index < n and reached < m : 
+    obj = s[index]
+    sqelem = t[reached]
+
+    if obj == sqelem : 
+      res.append(obj)
+      index = index+1
+      reached = reached + 1
+    elif obj < sqelem : 
+      index = index + 1
+    else : 
+      reached = reached + 1
+
+  return SortedList(res)
 
 
 def intersectionSet(s,t) :
@@ -1192,8 +1265,8 @@ def values(m) :
 # pp = reverseString(ss)
 # print(pp)
 
-# ss = [1, 4, 6, 7, 2]
-# print(sequenceSubrange(ss, 2, -1))
+# ss = SortedList([1, 1, 2, 3, 4, 5, 6, 7])
+# print(listSubrange(ss, 2, -1))
 
 # mp = dict({"a": 1, "b": 2})
 
@@ -1206,6 +1279,11 @@ def values(m) :
 
 # bg = mapAsBag(mp)
 # print(bg)
+
+# tt = SortedList([2,3,5,6,6])
+
+# print(includesAllSortedSequence(ss,tt))
+
 
 
 

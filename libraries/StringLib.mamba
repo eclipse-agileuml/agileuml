@@ -1,0 +1,110 @@
+static function string newString(object s)
+{ return "" + s; }  
+
+static function string leftTrim(string s)
+{ return s.TrimStart(); } 
+
+static function string leftTrimWith(string str, string ch)
+{ if (str == null || str.Length == 0) 
+  { return str; }
+  for (int i = 0; i < str.Length; i+1)  
+  { if (ch.Equals("" + str.CharAt(i)))
+    { } 
+    else 
+    { string trm = str.Substring(i); 
+      return trm;
+    }
+  } 
+} 
+
+static function string rightTrim(string s)
+{ return s.TrimEnd(); }
+
+static function string sumStringsWithSeparator(Collection[string] lst, string sep)
+{ string res = "";
+  for (int i = 0; i < lst.Length; i+1)
+  { string xx = lst.Get(i);
+    res = res + xx;
+    if (i < lst.Length - 1)
+    { res = res + sep; }
+  }
+  return res; 
+} 
+
+static function string nCopies(string s, int n)
+{ string result = "";
+  for (int _i = 0; _i < n; _i+1)
+  {
+    result = result + s;
+  }
+
+  return result;
+}
+
+static function string pad(int n, string c)
+{ string res = ""; 
+  for (int _i = 0; _i < n; _i+1)
+  { res = res + c; }
+  return res;
+}
+
+static function string padLeftWithInto(string s, string c, int n)
+{ string result = "";
+
+  result = Domain.StringLib.pad(n - s.Length, c) + s;
+  return result;
+}
+
+static function string padRightWithInto(string s, string c, int n)
+{ string result = "";
+  result = s + Domain.StringLib.pad(n - s.Length, c);
+  return result;
+}
+
+static function string leftAlignInto(string s, int n)
+{ string result = "";
+
+  if (n <= s.Length)
+  { result = s.Substring(0, n); }
+  else 
+  { result = s + Domain.StringLib.pad(n - s.Length, " "); }
+  return result;
+}
+
+static function string rightAlignInto(string s, int n)
+{ string result = "";
+
+  if (n <= s.Length)
+  { result = s.Substring(0, n); }
+  else
+  { result = Domain.StringLib.pad(n - s.Length, " ") + s; }
+  return result;
+}
+
+static function string capitalise(string str)
+{ if (str.Length > 0)
+  { String s1 = str.CharAt(0) + "";
+    return s1.ToUpper() + str.Substring(1, str.Length - 1);
+  }
+  return str;
+}
+
+static function string toTitleCase(string s)
+{ return s.ToTitleCase(); }
+
+static function string swapCase(string s)
+{ int ind = 1;
+  string res = "";
+
+  while (ind <= s.Length)
+  { string chr = "" + s.CharAt(ind - 1);
+    if (chr.Equals(chr.ToUpper()))
+    { res = res + chr.ToLower(); }
+    else
+    { res = res + chr.ToUpper(); }
+    ind = ind + 1;
+  }
+
+  return res;
+}
+
