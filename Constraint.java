@@ -5,7 +5,7 @@ import java.io.*;
 import javax.swing.*; 
 
 /******************************
-* Copyright (c) 2003--2024 Kevin Lano
+* Copyright (c) 2003--2026 Kevin Lano
 * This program and the accompanying materials are made available under the
 * terms of the Eclipse Public License 2.0 which is available at
 * http://www.eclipse.org/legal/epl-2.0
@@ -541,7 +541,11 @@ public class Constraint extends ConstraintOrGroup
   } 
 
   public Expression definedness()
-  { return new BinaryExpression("=>", antecedent(), succ.definedness()); } 
+  { Map mm = new Map(); 
+    Vector vv = new Vector(); 
+    Expression def = succ.definedness(mm,vv); 
+    return new BinaryExpression("=>", antecedent(), def); 
+  } 
 
   public void addAntecedent(Expression e)
   { Expression newante = Expression.simplifyAnd(e,antecedent()); 

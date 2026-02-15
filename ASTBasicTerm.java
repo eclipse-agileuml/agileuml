@@ -1075,8 +1075,22 @@ public class ASTBasicTerm extends ASTTerm
       return "String"; 
     }
  
-    if ("CharSequence".equals(value) || 
-        "Segment".equals(value) || 
+    if ("Segment".equals(value))
+    { Entity ent = (Entity) ModelElement.lookupByName(
+                          "Segment", ASTTerm.entities);
+      if (ent != null) 
+      { modelElement = new Type(ent); 
+        expression = new BasicExpression((Type) modelElement); 
+        return "Segment"; 
+      } 
+      else 
+      { modelElement = new Type("String", null); 
+        expression = new BasicExpression((Type) modelElement); 
+        return "String"; 
+      }
+    }
+
+    if ("CharSequence".equals(value) ||  
         "JsonString".equals(value))
     { modelElement = new Type("String", null); 
       expression = new BasicExpression((Type) modelElement); 
@@ -1748,6 +1762,21 @@ public class ASTBasicTerm extends ASTTerm
       return "OclIterator"; 
     }
  
+    if ("Cursor".equals(value))
+    { Entity ent = (Entity) ModelElement.lookupByName(
+                          "Cursor", ASTTerm.entities);
+      if (ent != null) 
+      { modelElement = new Type(ent); 
+        expression = new BasicExpression((Type) modelElement); 
+        return "Cursor"; 
+      } 
+      else 
+      { modelElement = new Type("OclIterator", null); 
+        expression = new BasicExpression((Type) modelElement); 
+        return "OclIterator"; 
+      }
+    }
+
     if ("ResultSet".equals(value) ||
         "ResultSetMetaData".equals(value) ||
         "CachedRowSet".equals(value) ||
@@ -1755,8 +1784,7 @@ public class ASTBasicTerm extends ASTTerm
         "JdbcRowSet".equals(value) ||
         "JoinRowSet".equals(value) ||
         "RowSet".equals(value) ||
-        "WebRowSet".equals(value) ||
-        "Cursor".equals(value))
+        "WebRowSet".equals(value))
     { modelElement = new Type("OclIterator", null); 
       expression = new BasicExpression((Type) modelElement); 
       return "OclIterator"; 
@@ -1884,14 +1912,31 @@ public class ASTBasicTerm extends ASTTerm
       return "OclFile"; 
     }
 
+    if ("Channel".equals(value))
+    { Entity ent = (Entity) ModelElement.lookupByName(
+                          "Channel", ASTTerm.entities);
+      if (ent != null) 
+      { modelElement = new Type(ent); 
+        expression = new BasicExpression((Type) modelElement); 
+        return "Channel"; 
+      } 
+      else 
+      { modelElement = new Type("OclFile", null); 
+        expression = new BasicExpression((Type) modelElement); 
+        return "OclFile"; 
+      }
+    }
+
     if ("FileStore".equals(value) || 
         "ByteChannel".equals(value) ||
-        "Channel".equals(value) ||
         "ReadableByteChannel".equals(value) ||
         "WritableByteChannel".equals(value) ||
         "SeekableByteChannel".equals(value) ||
         "FileChannel".equals(value))
-    { return "OclFile"; } 
+    { modelElement = new Type("OclFile", null); 
+      expression = new BasicExpression((Type) modelElement); 
+      return "OclFile"; 
+    } 
 
  
     if ("InputStreamReader".equals(value))
@@ -1929,9 +1974,23 @@ public class ASTBasicTerm extends ASTTerm
       return "OclDatasource"; 
     } 
 
+    if ("Statement".equals(value))
+    { Entity ent = (Entity) ModelElement.lookupByName(
+                          "Statement", ASTTerm.entities);
+      if (ent != null) 
+      { modelElement = new Type(ent); 
+        expression = new BasicExpression((Type) modelElement); 
+        return "Statement"; 
+      } 
+      else 
+      { modelElement = new Type("SQLStatement", null); 
+        expression = new BasicExpression((Type) modelElement); 
+        return "SQLStatement"; 
+      }
+    }
+
     if ("PreparedStatement".equals(value) || 
         "CachedStatement".equals(value) ||
-        "Statement".equals(value) || 
         "CallableStatement".equals(value))
     { modelElement = new Type("SQLStatement", null); 
       expression = new BasicExpression((Type) modelElement); 
@@ -2192,13 +2251,31 @@ public class ASTBasicTerm extends ASTTerm
         "InetAddress".equals(value))
     { modelElement = new Type("String", null); 
       expression = new BasicExpression((Type) modelElement); 
-      return "String"; } 
+      return "String"; 
+    }
+
+    if ("Segment".equals(value))
+    { Entity ent = (Entity) ModelElement.lookupByName(
+                          "Segment", ASTTerm.entities);
+      if (ent != null) 
+      { modelElement = new Type(ent); 
+        expression = new BasicExpression((Type) modelElement); 
+        return "Segment"; 
+      } 
+      else 
+      { modelElement = new Type("String", null); 
+        expression = new BasicExpression((Type) modelElement); 
+        return "String"; 
+      }
+    }
+ 
     if ("CharSequence".equals(value) || 
-        "Segment".equals(value) || 
         "JsonString".equals(value))
     { modelElement = new Type("String", null); 
       expression = new BasicExpression((Type) modelElement); 
-      return "String"; } 
+      return "String"; 
+    }
+ 
     if ("StringBuffer".equals(value) || "Path".equals(value))
     { modelElement = new Type("String", null); 
       expression = new BasicExpression((Type) modelElement); 
@@ -2945,14 +3022,31 @@ public class ASTBasicTerm extends ASTTerm
       return "OclFile"; 
     }
  
+    if ("Channel".equals(value))
+    { Entity ent = (Entity) ModelElement.lookupByName(
+                          "Channel", ASTTerm.entities);
+      if (ent != null) 
+      { modelElement = new Type(ent); 
+        expression = new BasicExpression((Type) modelElement); 
+        return "Channel"; 
+      } 
+      else 
+      { modelElement = new Type("OclFile", null); 
+        expression = new BasicExpression((Type) modelElement); 
+        return "OclFile"; 
+      }
+    }
+
     if ("FileStore".equals(value) || 
         "ByteChannel".equals(value) ||
-        "Channel".equals(value) ||
         "ReadableByteChannel".equals(value) ||
         "WritableByteChannel".equals(value) ||
         "SeekableByteChannel".equals(value) ||
         "FileChannel".equals(value))
-    { return "OclFile"; } 
+    { modelElement = new Type("OclFile", null); 
+      expression = new BasicExpression((Type) modelElement); 
+      return "OclFile"; 
+    } 
 
     if ("Reader".equals(value) || "FileReader".equals(value))
     { modelElement = new Type("OclFile", null); 
@@ -3023,9 +3117,23 @@ public class ASTBasicTerm extends ASTTerm
       return "OclDatasource"; 
     } 
 
+    if ("Statement".equals(value))
+    { Entity ent = (Entity) ModelElement.lookupByName(
+                          "Statement", ASTTerm.entities);
+      if (ent != null) 
+      { modelElement = new Type(ent); 
+        expression = new BasicExpression((Type) modelElement); 
+        return "Statement"; 
+      }  
+      else 
+      { modelElement = new Type("SQLStatement", null); 
+        expression = new BasicExpression((Type) modelElement); 
+        return "SQLStatement"; 
+      }
+    }
+
     if ("PreparedStatement".equals(value) || 
         "CachedStatement".equals(value) ||
-        "Statement".equals(value) || 
         "CallableStatement".equals(value))
     { modelElement = new Type("SQLStatement", null); 
       expression = new BasicExpression((Type) modelElement); 

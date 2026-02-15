@@ -903,6 +903,19 @@ class BinaryExpression extends Expression
         Expression inkeys = new BinaryExpression(":", right, kexp); 
         return simplify("&",res,inkeys,null); 
       } 
+      else if (left.isSequence() && 
+               "0".equals(right + ""))
+      { int rscore = (int) uses.get("red"); 
+        uses.set("red", rscore+1); 
+        messages.add("!!! (SEM): Invalid index 0 for sequence " + left);
+      }    
+      else if (left.isString() && 
+               "0".equals(right + ""))
+      { int rscore = (int) uses.get("red"); 
+        uses.set("red", rscore+1); 
+        messages.add("!!! (SEM): Invalid index 0 for string " + left);
+      }    
+
 
       UnaryExpression selfsize = new UnaryExpression("->size", left); 
       Expression lbnd = new BinaryExpression("<=", new BasicExpression(1), right); 

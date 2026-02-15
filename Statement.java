@@ -8326,6 +8326,21 @@ class WhileStatement extends Statement
     return result; 
   }  
 
+  public boolean hasIndexedRange()
+  { if (loopRange != null && 
+        loopRange instanceof BasicExpression) 
+    { BasicExpression bexpr = (BasicExpression) loopRange; 
+
+      if ("Integer".equals(bexpr.getObjectRef() + "") && 
+          "subrange".equals(bexpr.getData()) && 
+          bexpr.getParameters() != null && 
+          bexpr.getParameters().size() == 2)
+      { return true; } 
+    }
+ 
+    return false; 
+  } 
+
   public String updateForm(java.util.Map env, 
                            boolean local, Vector types, 
                            Vector entities, Vector vars)
@@ -9080,13 +9095,28 @@ class WhileStatement extends Statement
       eargs.add(body); 
       eargs.add(ltest); 
     } 
+    else if (this.hasIndexedRange()) // FOR
+    { args.add(loopVar + "");
+      BasicExpression bexpr = (BasicExpression) loopRange; 
+      Expression par1 = bexpr.getParameter(1); 
+      Expression par2 = bexpr.getParameter(2); 
+      args.add(par1.cg(cgs)); 
+      args.add(par2.cg(cgs)); 
+      args.add(bodyText); 
+
+      eargs.add(loopVar); 
+      eargs.add(par1);
+      eargs.add(par2);  
+      eargs.add(body); 
+    } 
     else 
-    { args.add(loopVar + ""); 
+    { args.add(loopVar + "");
       if (loopRange != null) 
       { args.add(loopRange.cg(cgs)); } 
       else 
       { args.add(""); }  
-      args.add(bodyText); 
+      args.add(bodyText);
+ 
       eargs.add(loopVar); 
       eargs.add(loopRange); 
       eargs.add(body); 

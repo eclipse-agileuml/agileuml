@@ -2718,7 +2718,7 @@ public class Compiler2
   public Expression parse_expression(int bcount, int pstart, int pend, Vector entities, Vector types)
   { Expression ee = null; 
 
-    if (lexicals.size() == 0) 
+    if (lexicals.size() == 0 || pstart > pend || pend >= lexicals.size()) 
     { return ee; } 
     
     if ("if".equals(lexicals.get(pstart) + "") && "endif".equals(lexicals.get(pend) + ""))

@@ -836,7 +836,12 @@ public class CGSpec
       else if (op.equals("repeat") && trimmedlhs.startsWith(op))
       { return r; }
       else if (op.equals("for") && trimmedlhs.startsWith(op))
-      { return r; }
+      { if (((WhileStatement) e).hasIndexedRange() && 
+            trimmedlhs.startsWith("for _1 : Integer.subrange(_2, _3) do _4"))
+        { return r; } 
+        else if (trimmedlhs.startsWith("for _1 : _2 do _3"))
+        { return r; } 
+      } 
       else if (op.equals("return") && trimmedlhs.startsWith(op))
       { if (((ReturnStatement) e).hasValue() && 
             r.hasVariables())
