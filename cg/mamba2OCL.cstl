@@ -200,6 +200,7 @@ OrderByValue ( ) |-->Map
 
 And ( _1 ) |-->Function
 Or ( _1 ) |-->Function
+Create ( ) |-->OclAny
 Create ( _1 ) |-->Function
 
 ContainsValue ( _1 ) |-->boolean

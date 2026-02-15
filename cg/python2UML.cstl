@@ -1103,6 +1103,7 @@ str |-->String
 bool |-->boolean
 float |-->double
 int |-->int
+Any |-->OclAny
 
 = _1 |-->_1`ocltype
 
@@ -1131,6 +1132,7 @@ str |-->String
 bool |-->boolean
 float |-->double
 int |-->int
+Any |-->OclAny
 
 [ _1 ] |-->_1`indicatorType
 
