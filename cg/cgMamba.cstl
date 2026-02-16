@@ -223,8 +223,8 @@ _1->asSequence() |-->_1
 _1->asOrderedSet() |-->_1.Distinct()
 _1->asBag() |-->_1
 
-_1->flatten() |-->Domain.MambaHelper.UnionAll(_1)<when> _1 Set
-_1->flatten() |-->Domain.MambaHelper.ConcatenateAll(_1)<when> _1 Sequence
+_1->flatten() |-->Domain.MambaHelper.UnionAllSet(_1)<when> _1 Set
+_1->flatten() |-->_1.SelectMany(x => x)<when> _1 Sequence
 /* Recursive Ocl.flatten is missing */
 
 _1->values() |-->_1.GetValues()
@@ -233,7 +233,7 @@ _1->keys() |-->_1.GetKeys()
 not(_1) |-->!(_1)
 _1->display() |-->DebugLib.Logger.WriteInfoLine(_1 + "");
 
-/*   $$$   lambda _1 : _2 in _3 |-->(_1) -> { return _3; }   */
+lambda _1 : _2 in _3 |-->((_2 _1) => _3)
 
 /*   $$$   _1->unionAll() |-->Ocl.unionAllMap(_1)<when> _1 MapCollection   */
 _1->unionAll() |-->Domain.MambaHelper.UnionAll(_1)
