@@ -179,10 +179,12 @@ abstract class Type
   implements SystemTypes
 {
   protected String typeId = ""; // internal
+  protected boolean isSorted = false; // internal
 
   public Type()
   {
     this.typeId = "";
+    this.isSorted = false;
 
   }
 
@@ -190,7 +192,8 @@ abstract class Type
 
   public String toString()
   { String _res_ = "(Type) ";
-    _res_ = _res_ + typeId;
+    _res_ = _res_ + typeId + ",";
+    _res_ = _res_ + isSorted;
     return _res_ + super.toString();
   }
 
@@ -203,6 +206,15 @@ abstract class Type
   { for (int i = 0; i < types.size(); i++)
     { Type typex = (Type) types.get(i);
       Controller.inst().settypeId(typex,val); } }
+
+
+  public void setisSorted(boolean isSorted_x) { isSorted = isSorted_x;  }
+
+
+    public static void setAllisSorted(List types,boolean val)
+  { for (int i = 0; i < types.size(); i++)
+    { Type typex = (Type) types.get(i);
+      Controller.inst().setisSorted(typex,val); } }
 
 
     public String gettypeId() { return typeId; }
@@ -220,6 +232,23 @@ abstract class Type
     for (int i = 0; i < types.size(); i++)
     { Type typex = (Type) types.get(i);
       result.add(typex.gettypeId()); } 
+    return result; }
+
+    public boolean getisSorted() { return isSorted; }
+
+    public static List getAllisSorted(List types)
+  { List result = new Vector();
+    for (int i = 0; i < types.size(); i++)
+    { Type typex = (Type) types.get(i);
+      if (result.contains(new Boolean(typex.getisSorted()))) { }
+      else { result.add(new Boolean(typex.getisSorted())); } }
+    return result; }
+
+    public static List getAllOrderedisSorted(List types)
+  { List result = new Vector();
+    for (int i = 0; i < types.size(); i++)
+    { Type typex = (Type) types.get(i);
+      result.add(new Boolean(typex.getisSorted())); } 
     return result; }
 
     public abstract String defaultInitialValue();
@@ -778,10 +807,15 @@ class PrimitiveType
   {   result = true;
  
   }  else
-      if (((String) s).equals("OclVoid")) 
+      {   if (((String) s).equals("OclVoid")) 
+  {   result = true;
+ 
+  }  else
+      if (((String) s).equals("OclAny")) 
   {   result = true;
  
   }   
+   } 
    } 
    } 
    } 
@@ -871,6 +905,10 @@ class PrimitiveType
   {   result = "type";
  
   }  else
+      {   if (((String) name).equals("OclAny")) 
+  {   result = "Any";
+ 
+  }  else
       {   if (((String) name).equals("OclVoid")) 
   {   result = "None";
  
@@ -883,6 +921,7 @@ class PrimitiveType
   {   result = name;
  
   }   
+   } 
    } 
    } 
    } 
@@ -1475,6 +1514,14 @@ class Entity
   }
 
 
+    public String toPython()
+  {   String result = "";
+ 
+  result = name;
+    return result;
+  }
+
+
     public String initialisations()
   {   String result = "";
  
@@ -1535,7 +1582,7 @@ class Entity
     public String staticAttributes()
   {   String result = "";
  
-  result = "  " + name.toLowerCase() + "_instances = []\n" + "  " + name.toLowerCase() + "_index = dict({})\n" + Set.sumString(Set.collect_15(Set.select_14(this.allProperties()))) + this.allStaticCaches();
+  result = "  " + name.toLowerCase() + "_instances : list[" + name + "] = []\n" + "  " + name.toLowerCase() + "_index = dict({})\n" + Set.sumString(Set.collect_15(Set.select_14(this.allProperties()))) + this.allStaticCaches();
     return result;
   }
 
@@ -1818,22 +1865,86 @@ class CollectionType
     public String defaultInitialValue()
   {   String result = "";
  
-  if (((String) name).equals("Sequence")) 
+  if (((String) name).equals("Sequence") && isSorted == false) 
   {   result = "[]";
+ 
+  }  else
+      {   if (((String) name).equals("Sequence") && isSorted == true) 
+  {   result = "SortedList([])";
+ 
+  }  else
+      {   if (((String) name).equals("Set") && isSorted == true) 
+  {   result = "SortedSet({})";
  
   }  else
       {   if (((String) name).equals("Set")) 
   {   result = "set({})";
  
   }  else
+      {   if (((String) name).equals("Map") && isSorted == true) 
+  {   result = "SortedDict({})";
+ 
+  }  else
       {   if (((String) name).equals("Map")) 
   {   result = "dict({})";
  
   }  else
-      if (((String) name).equals("Function")) 
+      {   if (((String) name).equals("Function")) 
   {   result = "None";
  
+  }  else
+      if (((String) name).equals("Ref")) 
+  {   result = "[" + elementType.defaultInitialValue() + "]";
+ 
   }   
+   } 
+   } 
+   } 
+   } 
+   } 
+   }     return result;
+  }
+
+
+    public String toPython()
+  {   String result = "";
+ 
+  if (((String) name).equals("Sequence") && isSorted == false) 
+  {   result = "list[" + elementType.toPython() + "]";
+ 
+  }  else
+      {   if (((String) name).equals("Sequence") && isSorted == true) 
+  {   result = "SortedList";
+ 
+  }  else
+      {   if (((String) name).equals("Set") && isSorted == true) 
+  {   result = "SortedSet";
+ 
+  }  else
+      {   if (((String) name).equals("Set")) 
+  {   result = "set[" + elementType.toPython() + "]";
+ 
+  }  else
+      {   if (((String) name).equals("Map") && isSorted == true) 
+  {   result = "SortedDict";
+ 
+  }  else
+      {   if (((String) name).equals("Map")) 
+  {   result = "dict";
+ 
+  }  else
+      {   if (((String) name).equals("Function")) 
+  {   result = "function";
+ 
+  }  else
+      if (((String) name).equals("Ref")) 
+  {   result = "object";
+ 
+  }   
+   } 
+   } 
+   } 
+   } 
    } 
    }     return result;
   }
@@ -2058,6 +2169,25 @@ abstract class Expression
   }
 
 
+    public static String toLambdaListStrings(String vbl,List s)
+  {   String result = "";
+ 
+  if (s.size() == 0) 
+  {   result = "";
+ 
+  }  else
+      {   if (s.size() == 1) 
+  {   result = "lambda " + vbl + " : " + ((String) Set.first(s));
+ 
+  }  else
+      if (s.size() > 1) 
+  {   result = "lambda " + vbl + " : " + ((String) Set.first(s)) + ", " + Expression.toLambdaListStrings(vbl,Set.tail(s));
+ 
+  }   
+   }     return result;
+  }
+
+
     public static String maptolist(List s)
   {   String result = "";
  
@@ -2084,10 +2214,15 @@ abstract class Expression
   {   result = "";
  
   }  else
-      if (true) 
+      {   if (type.getisSorted() == true) 
+  {   result = "Sorted" + type.getname();
+ 
+  }  else
+      if (type.getisSorted() == false) 
   {   result = type.getname();
  
-  }       return result;
+  }   
+   }     return result;
   }
 
 
@@ -2136,14 +2271,24 @@ abstract class Expression
   {   result = "set({";
  
   }  else
+      {   if (((String) tn).equals("SortedSet")) 
+  {   result = "SortedSet({";
+ 
+  }  else
       {   if (((String) tn).equals("Sequence")) 
   {   result = "[";
  
   }  else
-      if (((String) tn).equals("Map")) 
+      {   if (((String) tn).equals("Map")) 
   {   result = "dict({";
  
+  }  else
+      if (((String) tn).equals("SortedMap")) 
+  {   result = "SortedDict({";
+ 
   }   
+   } 
+   } 
    }     return result;
   }
 
@@ -2155,14 +2300,24 @@ abstract class Expression
   {   result = "})";
  
   }  else
+      {   if (((String) tn).equals("SortedSet")) 
+  {   result = "})";
+ 
+  }  else
       {   if (((String) tn).equals("Sequence")) 
   {   result = "]";
  
   }  else
-      if (((String) tn).equals("Map")) 
+      {   if (((String) tn).equals("Map")) 
+  {   result = "})";
+ 
+  }  else
+      if (((String) tn).equals("SortedMap")) 
   {   result = "})";
  
   }   
+   } 
+   } 
    }     return result;
   }
 
@@ -2187,6 +2342,20 @@ abstract class Expression
  
   }   
    }     return result;
+  }
+
+
+    public boolean isSet()
+  {   boolean result = false;
+ 
+  if ((type == null)) 
+  {   result = false;
+ 
+  }  else
+      if (((String) type.getname()).equals("Set")) 
+  {   result = true;
+ 
+  }       return result;
   }
 
 
@@ -2232,6 +2401,20 @@ abstract class Expression
   }
 
 
+    public boolean isRef()
+  {   boolean result = false;
+ 
+  if ((type == null)) 
+  {   result = false;
+ 
+  }  else
+      if (((String) type.getname()).equals("Ref")) 
+  {   result = true;
+ 
+  }       return result;
+  }
+
+
     public boolean isEnumeration()
   {   boolean result = false;
  
@@ -2257,6 +2440,10 @@ abstract class Expression
 
 
     public abstract String toPython();
+
+
+
+    public abstract String updateForm();
 
 
 
@@ -2463,7 +2650,7 @@ class BinaryExpression
     public static boolean isInclusion(String fname)
   {   boolean result = false;
  
-  if (((String) fname).equals(":") || ((String) fname).equals("->includes") || ((String) fname).equals("<:") || ((String) fname).equals("->includesAll")) 
+  if (((String) fname).equals(":") || ((String) fname).equals("->includes") || ((String) fname).equals("<:") || ((String) fname).equals("->includesAll") || ((String) fname).equals("->includesKey") || ((String) fname).equals("->includesValue")) 
   {   result = true;
  
   }    return result;
@@ -2473,7 +2660,7 @@ class BinaryExpression
     public static boolean isExclusion(String fname)
   {   boolean result = false;
  
-  if (((String) fname).equals("/:") || ((String) fname).equals("/<:") || ((String) fname).equals("->excludes") || ((String) fname).equals("->excludesAll")) 
+  if (((String) fname).equals("/:") || ((String) fname).equals("/<:") || ((String) fname).equals("->excludes") || ((String) fname).equals("->excludesAll") || ((String) fname).equals("->excludesKey") || ((String) fname).equals("->excludesValue")) 
   {   result = true;
  
   }    return result;
@@ -2579,8 +2766,16 @@ class BinaryExpression
   {   result = "ocl.gcd(" + ls + ", " + rs + ")";
  
   }  else
+      {   if (((String) operator).equals("->truncateTo") && ((String) left.gettype().getname()).equals("int")) 
+  {   result = ls;
+ 
+  }  else
       {   if (((String) operator).equals("->truncateTo")) 
   {   result = "ocl.truncateTo(" + ls + ", " + rs + ")";
+ 
+  }  else
+      {   if (((String) operator).equals("->roundTo") && ((String) left.gettype().getname()).equals("int")) 
+  {   result = ls;
  
   }  else
       {   if (((String) operator).equals("->roundTo")) 
@@ -2591,6 +2786,8 @@ class BinaryExpression
   {   result = ls + " " + operator + " " + rs;
  
   }   
+   } 
+   } 
    } 
    } 
    } 
@@ -2762,6 +2959,14 @@ class BinaryExpression
   {   result = "str(" + ls + ") + " + rs;
  
   }       return result;
+  }
+
+
+    public String mapRefPlus(String ls,String rs)
+  {   String result = "";
+ 
+  result = "(" + ls + ")[" + rs + ":]";
+    return result;
   }
 
 
@@ -2959,6 +3164,14 @@ class BinaryExpression
   {   result = rs + " in " + ls;
  
   }  else
+      {   if (((String) operator).equals("->includesKey")) 
+  {   result = rs + " in " + ls;
+ 
+  }  else
+      {   if (((String) operator).equals("->includesValue")) 
+  {   result = "ocl.includesValue(" + ls + "," + rs + ")";
+ 
+  }  else
       {   if (((String) operator).equals("=")) 
   {   result = ls + " == " + rs;
  
@@ -2977,6 +3190,14 @@ class BinaryExpression
   }  else
       {   if (((String) operator).equals("->excludes")) 
   {   result = rs + " not in " + ls;
+ 
+  }  else
+      {   if (((String) operator).equals("->excludesKey")) 
+  {   result = rs + " not in " + ls;
+ 
+  }  else
+      {   if (((String) operator).equals("->excludesValue")) 
+  {   result = "ocl.excludesValue(" + ls + "," + rs + ")";
  
   }  else
       {   if (((String) operator).equals("<:")) 
@@ -3000,6 +3221,14 @@ class BinaryExpression
  
   }  else
       {   if (((String) operator).equals("->excluding")) 
+  {   result = "ocl.excludingMapValue(" + ls + ", " + rs + ")";
+ 
+  }  else
+      {   if (((String) operator).equals("->excludingKey")) 
+  {   result = "ocl.excludingMapKey(" + ls + ", " + rs + ")";
+ 
+  }  else
+      {   if (((String) operator).equals("->excludingValue")) 
   {   result = "ocl.excludingMapValue(" + ls + ", " + rs + ")";
  
   }  else
@@ -3053,6 +3282,12 @@ class BinaryExpression
    } 
    } 
    } 
+   } 
+   } 
+   } 
+   } 
+   } 
+   } 
    }     return result;
   }
 
@@ -3060,7 +3295,11 @@ class BinaryExpression
     public String mapDistributedIteratorExpression(String ls,String rs,Expression rexp)
   {   String result = "";
  
-  if (((String) operator).equals("->sortedBy")) 
+  if (((String) operator).equals("->sortedBy") && (rexp instanceof CollectionExpression)) 
+  {   result = "ocl.sortedBy(" + ls + ", [" + ((CollectionExpression) rexp).toLambdaList(variable) + "])";
+ 
+  }  else
+      {   if (((String) operator).equals("->sortedBy")) 
   {   result = "sorted(" + ls + ", key = lambda " + variable + " : " + rs + ")";
  
   }  else
@@ -3092,6 +3331,7 @@ class BinaryExpression
   {   result = "ocl.selectMinimals" + left.gettype().getname() + "(" + ls + ", lambda " + expId + " : " + rexp.toPython() + ")";
  
   }   
+   } 
    } 
    } 
    } 
@@ -3209,6 +3449,16 @@ class BinaryExpression
   }
 
 
+    public boolean isRefPlus()
+  {   boolean result = false;
+ 
+  if (((String) operator).equals("+") && left.isRef()) 
+  {   result = true;
+ 
+  }    return result;
+  }
+
+
     public String mapBinaryExpression(String ls,String rs)
   {   String result = "";
  
@@ -3250,6 +3500,10 @@ class BinaryExpression
   }  else
       {   if (((String) operator).equals("->antirestrict")) 
   {   result = "ocl.antirestrict(" + ls + "," + rs + ")";
+ 
+  }  else
+      {   if (((String) operator).equals("->append")) 
+  {   result = "ocl.append(" + ls + ", " + rs + ")";
  
   }  else
       {   if (BinaryExpression.isComparitor(operator)) 
@@ -3295,6 +3549,10 @@ class BinaryExpression
   {   result = this.mapStringPlus(ls,rs);
  
   }  else
+      {   if (this.isRefPlus()) 
+  {   result = this.mapRefPlus(ls,rs);
+ 
+  }  else
       {   if (( left.isCollection() || right.isCollection() )) 
   {   result = this.mapBinaryCollectionExpression(ls,rs,left.typeName(),right.typeName());
  
@@ -3335,6 +3593,8 @@ class BinaryExpression
    } 
    } 
    } 
+   } 
+   } 
    }     return result;
   }
 
@@ -3350,6 +3610,58 @@ class BinaryExpression
   {   result = this.mapBinaryExpression(left.toPython(),right.toPython());
  
   }       return result;
+  }
+
+
+    public String updateFormBinaryExpression(String ls,String rs)
+  {   String result = "";
+ 
+  if (((String) operator).equals(":") && right.isSet()) 
+  {   result = rs + ".add(" + ls + ")";
+ 
+  }  else
+      {   if (((String) operator).equals(":") && right.isCollection()) 
+  {   result = rs + ".append(" + ls + ")";
+ 
+  }  else
+      {   if (((String) operator).equals("/:") && right.isSet()) 
+  {   result = rs + ".discard(" + ls + ")";
+ 
+  }  else
+      {   if (((String) operator).equals("/:") && right.isCollection()) 
+  {   result = rs + ".remove(" + ls + ")";
+ 
+  }  else
+      {   if (((String) operator).equals("<:") && right.isSet()) 
+  {   result = rs + ".update(" + ls + ")";
+ 
+  }  else
+      {   if (((String) operator).equals(":") && right.isCollection()) 
+  {   result = rs + ".extend(" + ls + ")";
+ 
+  }  else
+      {   if (((String) operator).equals("/<:") && right.isSet()) 
+  {   result = rs + ".difference_update(" + ls + ")";
+ 
+  }  else
+      if (true) 
+  {   result = "pass";
+ 
+  }   
+   } 
+   } 
+   } 
+   } 
+   } 
+   }     return result;
+  }
+
+
+    public String updateForm()
+  {   String result = "";
+ 
+  result = this.updateFormBinaryExpression(left.toPython(),right.toPython());
+    return result;
   }
 
 
@@ -3519,6 +3831,22 @@ class ConditionalExpression
   {   String result = "";
  
   result = this.mapConditionalExpression(test.toPython(),ifExp.toPython(),elseExp.toPython());
+    return result;
+  }
+
+
+    public String updateFormConditionalExpression(String ts,String ls,String rs)
+  {   String result = "";
+ 
+  result = "  if " + ts + ":\n" + "    " + ls + "\n  else:\n    " + rs;
+    return result;
+  }
+
+
+    public String updateForm()
+  {   String result = "";
+ 
+  result = this.updateFormConditionalExpression(test.toPython(),ifExp.updateForm(),elseExp.updateForm());
     return result;
   }
 
@@ -4076,7 +4404,7 @@ class UnaryExpression
  
   }  else
       {   if (((String) operator).equals("->asBag")) 
-  {   result = "ocl.sortSequence(" + arg + ")";
+  {   result = "ocl.mapAsBag(" + arg + ")";
  
   }  else
       {   if (((String) operator).equals("->unionAll") && ((String) type.getname()).equals("Sequence")) 
@@ -4120,19 +4448,19 @@ class UnaryExpression
  
   }  else
       {   if (((String) operator).equals("->front")) 
-  {   result = "(" + arg + ")[0:-1]";
+  {   result = "ocl.frontSortedMap(" + arg + ")";
  
   }  else
       {   if (((String) operator).equals("->tail")) 
-  {   result = "(" + arg + ")[1:]";
+  {   result = "ocl.tailSortedMap(" + arg + ")";
  
   }  else
       {   if (((String) operator).equals("->first")) 
-  {   result = "(" + arg + ")[0]";
+  {   result = "ocl.firstSortedMap(" + arg + ")";
  
   }  else
       {   if (((String) operator).equals("->last")) 
-  {   result = "(" + arg + ")[-1]";
+  {   result = "ocl.lastSortedMap(" + arg + ")";
  
   }  else
       {   if (((String) operator).equals("->sort")) 
@@ -4175,7 +4503,11 @@ class UnaryExpression
  
   }  else
       {   if (((String) operator).equals("?")) 
-  {   result = "id(" + arg + ")";
+  {   result = "[" + arg + "]";
+ 
+  }  else
+      {   if (((String) operator).equals("!")) 
+  {   result = "(" + arg + ")[0]";
  
   }  else
       {   if (((String) operator).equals("not")) 
@@ -4317,6 +4649,7 @@ class UnaryExpression
    } 
    } 
    } 
+   } 
    }     return result;
   }
 
@@ -4332,6 +4665,33 @@ class UnaryExpression
   {   result = this.mapUnaryExpression(argument.toPython());
  
   }       return result;
+  }
+
+
+    public String updateFormUnaryExpression(String arg)
+  {   String result = "";
+ 
+  if (((String) operator).equals("->isDeleted")) 
+  {   result = "del " + arg;
+ 
+  }  else
+      {   if (((String) operator).equals("->display")) 
+  {   result = "print(" + arg + ")";
+ 
+  }  else
+      if (true) 
+  {   result = "pass";
+ 
+  }   
+   }     return result;
+  }
+
+
+    public String updateForm()
+  {   String result = "";
+ 
+  result = this.updateFormUnaryExpression(argument.toPython());
+    return result;
   }
 
 
@@ -4366,11 +4726,13 @@ class CollectionExpression
   implements SystemTypes
 {
   private boolean isOrdered = false; // internal
+  private boolean isSorted = false; // internal
   private List elements = new Vector(); // of Expression
 
   public CollectionExpression()
   {
     this.isOrdered = false;
+    this.isSorted = false;
 
   }
 
@@ -4378,7 +4740,8 @@ class CollectionExpression
 
   public String toString()
   { String _res_ = "(CollectionExpression) ";
-    _res_ = _res_ + isOrdered;
+    _res_ = _res_ + isOrdered + ",";
+    _res_ = _res_ + isSorted;
     return _res_ + super.toString();
   }
 
@@ -4387,6 +4750,7 @@ class CollectionExpression
     Vector _line1vals = Set.tokeniseCSV(_line);
     CollectionExpression collectionexpressionx = new CollectionExpression();
     collectionexpressionx.isOrdered = Boolean.parseBoolean((String) _line1vals.get(0));
+    collectionexpressionx.isSorted = Boolean.parseBoolean((String) _line1vals.get(1));
     return collectionexpressionx;
   }
 
@@ -4394,6 +4758,8 @@ class CollectionExpression
   public void writeCSV(PrintWriter _out)
   { CollectionExpression collectionexpressionx = this;
     _out.print("" + collectionexpressionx.isOrdered);
+    _out.print(" , ");
+    _out.print("" + collectionexpressionx.isSorted);
     _out.println();
   }
 
@@ -4405,6 +4771,15 @@ class CollectionExpression
   { for (int i = 0; i < collectionexpressions.size(); i++)
     { CollectionExpression collectionexpressionx = (CollectionExpression) collectionexpressions.get(i);
       Controller.inst().setisOrdered(collectionexpressionx,val); } }
+
+
+  public void setisSorted(boolean isSorted_x) { isSorted = isSorted_x;  }
+
+
+    public static void setAllisSorted(List collectionexpressions,boolean val)
+  { for (int i = 0; i < collectionexpressions.size(); i++)
+    { CollectionExpression collectionexpressionx = (CollectionExpression) collectionexpressions.get(i);
+      Controller.inst().setisSorted(collectionexpressionx,val); } }
 
 
   public void setelements(List elements_xx) { elements = elements_xx;
@@ -4464,6 +4839,23 @@ class CollectionExpression
       result.add(new Boolean(collectionexpressionx.getisOrdered())); } 
     return result; }
 
+    public boolean getisSorted() { return isSorted; }
+
+    public static List getAllisSorted(List collectionexpressions)
+  { List result = new Vector();
+    for (int i = 0; i < collectionexpressions.size(); i++)
+    { CollectionExpression collectionexpressionx = (CollectionExpression) collectionexpressions.get(i);
+      if (result.contains(new Boolean(collectionexpressionx.getisSorted()))) { }
+      else { result.add(new Boolean(collectionexpressionx.getisSorted())); } }
+    return result; }
+
+    public static List getAllOrderedisSorted(List collectionexpressions)
+  { List result = new Vector();
+    for (int i = 0; i < collectionexpressions.size(); i++)
+    { CollectionExpression collectionexpressionx = (CollectionExpression) collectionexpressions.get(i);
+      result.add(new Boolean(collectionexpressionx.getisSorted())); } 
+    return result; }
+
   public List getelements() { return (Vector) ((Vector) elements).clone(); }
 
   public static List getAllelements(List collectionexpressions)
@@ -4483,12 +4875,24 @@ class CollectionExpression
     public String mapCollectionExpression(List elems,String tn)
   {   String result = "";
  
-  if (((String) tn).equals("Set")) 
+  if (((String) tn).equals("Set") && isSorted == true) 
+  {   result = "SortedSet({" + Expression.tolist(elems) + "})";
+ 
+  }  else
+      {   if (((String) tn).equals("Set")) 
   {   result = "set({" + Expression.tolist(elems) + "})";
+ 
+  }  else
+      {   if (((String) tn).equals("Sequence") && isSorted == true) 
+  {   result = "SortedList([" + Expression.tolist(elems) + "])";
  
   }  else
       {   if (((String) tn).equals("Sequence")) 
   {   result = "[" + Expression.tolist(elems) + "]";
+ 
+  }  else
+      {   if (((String) tn).equals("Map") && isSorted == true) 
+  {   result = "SortedDict({" + Expression.maptolist(elems) + "})";
  
   }  else
       {   if (((String) tn).equals("Map")) 
@@ -4500,6 +4904,9 @@ class CollectionExpression
  
   }   
    } 
+   } 
+   } 
+   } 
    }     return result;
   }
 
@@ -4508,6 +4915,14 @@ class CollectionExpression
   {   String result = "";
  
   result = this.mapCollectionExpression(  Controller.inst().AllExpressiontoPython(elements),type.getname());
+    return result;
+  }
+
+
+    public String updateForm()
+  {   String result = "";
+ 
+  result = "pass";
     return result;
   }
 
@@ -4533,6 +4948,14 @@ class CollectionExpression
   return result;
 
   }
+
+    public String toLambdaList(String vbl)
+  {   String result = "";
+ 
+  result = Expression.toLambdaListStrings(vbl,  Controller.inst().AllExpressiontoPython(elements));
+    return result;
+  }
+
 
 
 }
@@ -5403,6 +5826,14 @@ class BasicExpression
   {   result = "ocl.insertInto(" + arg + ", " + pars.get(0) + ", " + pars.get(1) + ")";
  
   }  else
+      {   if (((String) data).equals("excludingSubrange")) 
+  {   result = "ocl.excludingSubrange(" + arg + ", " + pars.get(0) + ", " + pars.get(1) + ")";
+ 
+  }  else
+      {   if (((String) data).equals("setSubrange")) 
+  {   result = "ocl.setSubrange(" + arg + ", " + pars.get(0) + ", " + pars.get(1) + ", " + pars.get(2) + ")";
+ 
+  }  else
       {   if (((String) data).equals("setAt")) 
   {   result = this.mapSetAtFunctionExpression(obs,aind,pars);
  
@@ -5475,6 +5906,8 @@ class BasicExpression
   {   result = "ocl." + data + "(" + arg + ")";
  
   }   
+   } 
+   } 
    } 
    } 
    } 
@@ -5588,6 +6021,14 @@ class BasicExpression
   {   String result = "";
  
   result = this.mapBasicExpression(  Controller.inst().AllExpressiontoPython(objectRef),  Controller.inst().AllExpressiontoPython(arrayIndex),  Controller.inst().AllExpressiontoPython(parameters));
+    return result;
+  }
+
+
+    public String updateForm()
+  {   String result = "";
+ 
+  result = "exec(\"" + this.toPython() + "\")";
     return result;
   }
 
@@ -6163,11 +6604,11 @@ class Property
  
   }  else
       {   if (qualifier.size() == 0 && (initialValue == null)) 
-  {   result = "    self." + name + " = " + type.defaultInitialValue() + "\n";
+  {   result = "    self." + name + " : " + type.toPython() + " = " + type.defaultInitialValue() + "\n";
  
   }  else
       if (qualifier.size() == 0) 
-  {   result = "    self." + name + " = " + initialValue.toPython() + "\n";
+  {   result = "    self." + name + " : " + type.toPython() + " = " + initialValue.toPython() + "\n";
  
   }   
    } 
@@ -7068,10 +7509,19 @@ class Operation
 }
   }
 
+    public void displayNullOperation(int indent)
+  {   System.out.println("" + ( Statement.tab(indent) + "def " + this.getname() + "(self" + Set.sumString(Set.collect_21(this.getparameters())) + ") :" ));
+
+      System.out.println("" + "    pass\n");
+
+  }
+
     public void displayOperation(int indent)
-  {   if (this.getisStatic() == true) 
+  {   if ((this.getactivity() == null)) 
+  { this.displayNullOperation(indent);}
+      if (this.getactivity() != null && this.getisStatic() == true) 
   { this.displayStaticOperation(indent);}
-      if (this.getisStatic() == false) 
+      if (this.getactivity() != null && this.getisStatic() == false) 
   { this.displayInstanceOperation(indent);}
   }
 
@@ -7596,7 +8046,7 @@ class ImplicitCallStatement
     public String toPython(int indent)
   {   String result = "";
  
-  result = Statement.tab(indent) + callExp.toPython() + "\n";
+  result = Statement.tab(indent) + callExp.updateForm() + "\n";
     return result;
   }
 
@@ -7993,8 +8443,24 @@ class AssignStatement
     public String toPython(int indent)
   {   String result = "";
  
-  result = Statement.tab(indent) + left.toPython() + " = " + right.toPython() + "\n";
-    return result;
+  if (((String) left.gettype().getname()).equals("int") && ((String) right.gettype().getname()).equals("String")) 
+  {   result = Statement.tab(indent) + left.toPython() + " = ocl.toInteger(" + right.toPython() + ")\n";
+ 
+  }  else
+      {   if (((String) left.gettype().getname()).equals("long") && ((String) right.gettype().getname()).equals("String")) 
+  {   result = Statement.tab(indent) + left.toPython() + " = ocl.toInteger(" + right.toPython() + ")\n";
+ 
+  }  else
+      {   if (((String) left.gettype().getname()).equals("String") && !(right.gettype().getname().equals("String"))) 
+  {   result = Statement.tab(indent) + left.toPython() + " = str(" + right.toPython() + ")\n";
+ 
+  }  else
+      if (true) 
+  {   result = Statement.tab(indent) + left.toPython() + " = " + right.toPython() + "\n";
+ 
+  }   
+   } 
+   }     return result;
   }
 
 
@@ -8744,16 +9210,16 @@ class CreationStatement
     public String toPython(int indent)
   {   String result = "";
  
-  if ((type instanceof Entity)) 
-  {   result = Statement.tab(indent) + assignsTo + " = None\n";
- 
-  }  else
-      {   if ((type == null)) 
+  if ((type == null)) 
   {   result = Statement.tab(indent) + assignsTo + " = None\n";
  
   }  else
       {   if ((initialExpression).size() > 0) 
   {   result = Statement.tab(indent) + assignsTo + " = " + ((Expression) Set.any(initialExpression)).toPython() + "\n";
+ 
+  }  else
+      {   if ((type instanceof Entity)) 
+  {   result = Statement.tab(indent) + assignsTo + " = None\n";
  
   }  else
       if (true) 
@@ -9944,6 +10410,7 @@ public class Controller implements SystemTypes, ControllerInterface
   { Enumeration enumerationx_ = (Enumeration) enumerations.get(_i);
     out.println("enumerationx_" + _i + " : Enumeration");
     out.println("enumerationx_" + _i + ".typeId = \"" + enumerationx_.gettypeId() + "\"");
+    out.println("enumerationx_" + _i + ".isSorted = " + enumerationx_.getisSorted());
     out.println("enumerationx_" + _i + ".name = \"" + enumerationx_.getname() + "\"");
   }
 
@@ -9957,6 +10424,7 @@ public class Controller implements SystemTypes, ControllerInterface
   { PrimitiveType primitivetypex_ = (PrimitiveType) primitivetypes.get(_i);
     out.println("primitivetypex_" + _i + " : PrimitiveType");
     out.println("primitivetypex_" + _i + ".typeId = \"" + primitivetypex_.gettypeId() + "\"");
+    out.println("primitivetypex_" + _i + ".isSorted = " + primitivetypex_.getisSorted());
     out.println("primitivetypex_" + _i + ".name = \"" + primitivetypex_.getname() + "\"");
   }
 
@@ -9970,6 +10438,7 @@ public class Controller implements SystemTypes, ControllerInterface
     { out.println("\"" + entity_stereotypes.get(_j) + "\" : entityx_" + _i + ".stereotypes");
     }
     out.println("entityx_" + _i + ".typeId = \"" + entityx_.gettypeId() + "\"");
+    out.println("entityx_" + _i + ".isSorted = " + entityx_.getisSorted());
     out.println("entityx_" + _i + ".name = \"" + entityx_.getname() + "\"");
   }
 
@@ -9977,6 +10446,7 @@ public class Controller implements SystemTypes, ControllerInterface
   { CollectionType collectiontypex_ = (CollectionType) collectiontypes.get(_i);
     out.println("collectiontypex_" + _i + " : CollectionType");
     out.println("collectiontypex_" + _i + ".typeId = \"" + collectiontypex_.gettypeId() + "\"");
+    out.println("collectiontypex_" + _i + ".isSorted = " + collectiontypex_.getisSorted());
     out.println("collectiontypex_" + _i + ".name = \"" + collectiontypex_.getname() + "\"");
   }
 
@@ -10015,6 +10485,7 @@ public class Controller implements SystemTypes, ControllerInterface
   { CollectionExpression collectionexpressionx_ = (CollectionExpression) collectionexpressions.get(_i);
     out.println("collectionexpressionx_" + _i + " : CollectionExpression");
     out.println("collectionexpressionx_" + _i + ".isOrdered = " + collectionexpressionx_.getisOrdered());
+    out.println("collectionexpressionx_" + _i + ".isSorted = " + collectionexpressionx_.getisSorted());
     out.println("collectionexpressionx_" + _i + ".needsBracket = " + collectionexpressionx_.getneedsBracket());
     out.println("collectionexpressionx_" + _i + ".umlKind = " + collectionexpressionx_.getumlKind());
     out.println("collectionexpressionx_" + _i + ".expId = \"" + collectionexpressionx_.getexpId() + "\"");
@@ -11143,14 +11614,14 @@ public class Controller implements SystemTypes, ControllerInterface
       __br.close();
     } 
     catch (Exception _x) { }
-    Vector res = convertXsiToVector(xmlstring);
+    List res = convertXsiToVector(xmlstring);
     File outfile = new File("_in.txt");
     PrintWriter out; 
     try { out = new PrintWriter(new BufferedWriter(new FileWriter(outfile))); }
     catch (Exception e) { return; } 
     for (int i = 0; i < res.size(); i++)
-    { String r = (String) res.get(i); 
-      out.println(r);
+    { 
+      out.println(res.get(i));
     } 
     out.close();
     loadModel("_in.txt");
@@ -11222,6 +11693,7 @@ public class Controller implements SystemTypes, ControllerInterface
     entmap.put("type","Type");
     eallatts = new Vector();
     eallatts.add("typeId");
+    eallatts.add("isSorted");
     eallatts.add("name");
     allattsmap.put("Type", eallatts);
     eallatts = new Vector();
@@ -11270,6 +11742,7 @@ public class Controller implements SystemTypes, ControllerInterface
     entmap.put("classifier","Classifier");
     eallatts = new Vector();
     eallatts.add("typeId");
+    eallatts.add("isSorted");
     eallatts.add("name");
     allattsmap.put("Classifier", eallatts);
     eallatts = new Vector();
@@ -11286,6 +11759,7 @@ public class Controller implements SystemTypes, ControllerInterface
     entmap.put("datatype","DataType");
     eallatts = new Vector();
     eallatts.add("typeId");
+    eallatts.add("isSorted");
     eallatts.add("name");
     allattsmap.put("DataType", eallatts);
     eallatts = new Vector();
@@ -11302,6 +11776,7 @@ public class Controller implements SystemTypes, ControllerInterface
     entmap.put("enumeration","Enumeration");
     eallatts = new Vector();
     eallatts.add("typeId");
+    eallatts.add("isSorted");
     eallatts.add("name");
     allattsmap.put("Enumeration", eallatts);
     eallatts = new Vector();
@@ -11332,6 +11807,7 @@ public class Controller implements SystemTypes, ControllerInterface
     entmap.put("primitivetype","PrimitiveType");
     eallatts = new Vector();
     eallatts.add("typeId");
+    eallatts.add("isSorted");
     eallatts.add("name");
     allattsmap.put("PrimitiveType", eallatts);
     eallatts = new Vector();
@@ -11351,6 +11827,7 @@ public class Controller implements SystemTypes, ControllerInterface
     eallatts.add("isInterface");
     eallatts.add("stereotypes");
     eallatts.add("typeId");
+    eallatts.add("isSorted");
     eallatts.add("name");
     allattsmap.put("Entity", eallatts);
     eallatts = new Vector();
@@ -11367,6 +11844,7 @@ public class Controller implements SystemTypes, ControllerInterface
     entmap.put("collectiontype","CollectionType");
     eallatts = new Vector();
     eallatts.add("typeId");
+    eallatts.add("isSorted");
     eallatts.add("name");
     allattsmap.put("CollectionType", eallatts);
     eallatts = new Vector();
@@ -11476,6 +11954,7 @@ public class Controller implements SystemTypes, ControllerInterface
     entmap.put("collectionexpression","CollectionExpression");
     eallatts = new Vector();
     eallatts.add("isOrdered");
+    eallatts.add("isSorted");
     eallatts.add("needsBracket");
     eallatts.add("umlKind");
     eallatts.add("expId");
@@ -11970,6 +12449,7 @@ public class Controller implements SystemTypes, ControllerInterface
     { Enumeration enumerationx_ = (Enumeration) enumerations.get(_i);
        out.print("<enumerations xsi:type=\"My:Enumeration\"");
     out.print(" typeId=\"" + enumerationx_.gettypeId() + "\" ");
+    out.print(" isSorted=\"" + enumerationx_.getisSorted() + "\" ");
     out.print(" name=\"" + enumerationx_.getname() + "\" ");
     out.print(" ownedLiteral = \"");
     List enumeration_ownedLiteral = enumerationx_.getownedLiteral();
@@ -11991,6 +12471,7 @@ public class Controller implements SystemTypes, ControllerInterface
     { PrimitiveType primitivetypex_ = (PrimitiveType) primitivetypes.get(_i);
        out.print("<primitivetypes xsi:type=\"My:PrimitiveType\"");
     out.print(" typeId=\"" + primitivetypex_.gettypeId() + "\" ");
+    out.print(" isSorted=\"" + primitivetypex_.getisSorted() + "\" ");
     out.print(" name=\"" + primitivetypex_.getname() + "\" ");
     out.println(" />");
   }
@@ -12001,6 +12482,7 @@ public class Controller implements SystemTypes, ControllerInterface
     out.print(" isAbstract=\"" + entityx_.getisAbstract() + "\" ");
     out.print(" isInterface=\"" + entityx_.getisInterface() + "\" ");
     out.print(" typeId=\"" + entityx_.gettypeId() + "\" ");
+    out.print(" isSorted=\"" + entityx_.getisSorted() + "\" ");
     out.print(" name=\"" + entityx_.getname() + "\" ");
     out.print(" generalization = \"");
     List entity_generalization = entityx_.getgeneralization();
@@ -12045,6 +12527,7 @@ public class Controller implements SystemTypes, ControllerInterface
     { CollectionType collectiontypex_ = (CollectionType) collectiontypes.get(_i);
        out.print("<collectiontypes xsi:type=\"My:CollectionType\"");
     out.print(" typeId=\"" + collectiontypex_.gettypeId() + "\" ");
+    out.print(" isSorted=\"" + collectiontypex_.getisSorted() + "\" ");
     out.print(" name=\"" + collectiontypex_.getname() + "\" ");
     if (collectiontypex_.getelementType() instanceof Entity)
     {   out.print(" elementType=\"");
@@ -12338,6 +12821,7 @@ public class Controller implements SystemTypes, ControllerInterface
     { CollectionExpression collectionexpressionx_ = (CollectionExpression) collectionexpressions.get(_i);
        out.print("<collectionexpressions xsi:type=\"My:CollectionExpression\"");
     out.print(" isOrdered=\"" + collectionexpressionx_.getisOrdered() + "\" ");
+    out.print(" isSorted=\"" + collectionexpressionx_.getisSorted() + "\" ");
     out.print(" needsBracket=\"" + collectionexpressionx_.getneedsBracket() + "\" ");
     out.print(" umlKind=\"" + collectionexpressionx_.getumlKind() + "\" ");
     out.print(" expId=\"" + collectionexpressionx_.getexpId() + "\" ");
@@ -14738,6 +15222,11 @@ public void settypeId(Type typex, String typeId_x)
     }
 
 
+public void setisSorted(Type typex, boolean isSorted_x) 
+  { typex.setisSorted(isSorted_x);
+    }
+
+
 public void setaddOnly(Association associationx, boolean addOnly_x) 
   { associationx.setaddOnly(addOnly_x);
     }
@@ -15266,6 +15755,11 @@ public void setvariable(UnaryExpression unaryexpressionx, String variable_x)
 
 public void setisOrdered(CollectionExpression collectionexpressionx, boolean isOrdered_x) 
   { collectionexpressionx.setisOrdered(isOrdered_x);
+    }
+
+
+public void setisSorted(CollectionExpression collectionexpressionx, boolean isSorted_x) 
+  { collectionexpressionx.setisSorted(isSorted_x);
     }
 
 
@@ -16362,7 +16856,8 @@ public void setisStatic(BehaviouralFeature behaviouralfeaturex, boolean isStatic
     List result = new Vector();
     for (int _i = 0; _i < entityxs.size(); _i++)
     { Entity entityx = (Entity) entityxs.get(_i);
-      result.addAll(entityx.allLeafSubclasses());
+      if (entityx.allLeafSubclasses() != null)
+      { result.addAll(entityx.allLeafSubclasses()); }
     }
     return result; 
   }
@@ -16372,7 +16867,8 @@ public void setisStatic(BehaviouralFeature behaviouralfeaturex, boolean isStatic
     List result = new Vector();
     for (int _i = 0; _i < entityxs.size(); _i++)
     { Entity entityx = (Entity) entityxs.get(_i);
-      result.addAll(entityx.allProperties());
+      if (entityx.allProperties() != null)
+      { result.addAll(entityx.allProperties()); }
     }
     return result; 
   }
@@ -16382,7 +16878,8 @@ public void setisStatic(BehaviouralFeature behaviouralfeaturex, boolean isStatic
     List result = new Vector();
     for (int _i = 0; _i < entityxs.size(); _i++)
     { Entity entityx = (Entity) entityxs.get(_i);
-      result.addAll(entityx.allOperations());
+      if (entityx.allOperations() != null)
+      { result.addAll(entityx.allOperations()); }
     }
     return result; 
   }
@@ -16443,6 +16940,16 @@ public void setisStatic(BehaviouralFeature behaviouralfeaturex, boolean isStatic
     for (int _i = 0; _i < entityxs.size(); _i++)
     { Entity entityx = (Entity) entityxs.get(_i);
       result.add(entityx.defaultInitialValue());
+    }
+    return result; 
+  }
+
+  public  List AllEntitytoPython(List entityxs)
+  { 
+    List result = new Vector();
+    for (int _i = 0; _i < entityxs.size(); _i++)
+    { Entity entityx = (Entity) entityxs.get(_i);
+      result.add(entityx.toPython());
     }
     return result; 
   }
@@ -16611,6 +17118,16 @@ public void setisStatic(BehaviouralFeature behaviouralfeaturex, boolean isStatic
     return result; 
   }
 
+  public  List AllCollectionTypetoPython(List collectiontypexs)
+  { 
+    List result = new Vector();
+    for (int _i = 0; _i < collectiontypexs.size(); _i++)
+    { CollectionType collectiontypex = (CollectionType) collectiontypexs.get(_i);
+      result.add(collectiontypex.toPython());
+    }
+    return result; 
+  }
+
   public  List AllExpressiontypeName(List expressionxs)
   { 
     List result = new Vector();
@@ -16647,6 +17164,16 @@ public void setisStatic(BehaviouralFeature behaviouralfeaturex, boolean isStatic
     return result; 
   }
 
+  public  List AllExpressionisSet(List expressionxs)
+  { 
+    List result = new Vector();
+    for (int _i = 0; _i < expressionxs.size(); _i++)
+    { Expression expressionx = (Expression) expressionxs.get(_i);
+      result.add(new Boolean(expressionx.isSet()));
+    }
+    return result; 
+  }
+
   public  List AllExpressionisMap(List expressionxs)
   { 
     List result = new Vector();
@@ -16677,6 +17204,16 @@ public void setisStatic(BehaviouralFeature behaviouralfeaturex, boolean isStatic
     return result; 
   }
 
+  public  List AllExpressionisRef(List expressionxs)
+  { 
+    List result = new Vector();
+    for (int _i = 0; _i < expressionxs.size(); _i++)
+    { Expression expressionx = (Expression) expressionxs.get(_i);
+      result.add(new Boolean(expressionx.isRef()));
+    }
+    return result; 
+  }
+
   public  List AllExpressionisEnumeration(List expressionxs)
   { 
     List result = new Vector();
@@ -16693,6 +17230,16 @@ public void setisStatic(BehaviouralFeature behaviouralfeaturex, boolean isStatic
     for (int _i = 0; _i < expressionxs.size(); _i++)
     { Expression expressionx = (Expression) expressionxs.get(_i);
       result.add(expressionx.toPython());
+    }
+    return result; 
+  }
+
+  public  List AllExpressionupdateForm(List expressionxs)
+  { 
+    List result = new Vector();
+    for (int _i = 0; _i < expressionxs.size(); _i++)
+    { Expression expressionx = (Expression) expressionxs.get(_i);
+      result.add(expressionx.updateForm());
     }
     return result; 
   }
@@ -16743,6 +17290,16 @@ public void setisStatic(BehaviouralFeature behaviouralfeaturex, boolean isStatic
     for (int _i = 0; _i < binaryexpressionxs.size(); _i++)
     { BinaryExpression binaryexpressionx = (BinaryExpression) binaryexpressionxs.get(_i);
       result.add(binaryexpressionx.mapStringPlus(ls, rs));
+    }
+    return result; 
+  }
+
+  public  List AllBinaryExpressionmapRefPlus(List binaryexpressionxs,String ls,String rs)
+  { 
+    List result = new Vector();
+    for (int _i = 0; _i < binaryexpressionxs.size(); _i++)
+    { BinaryExpression binaryexpressionx = (BinaryExpression) binaryexpressionxs.get(_i);
+      result.add(binaryexpressionx.mapRefPlus(ls, rs));
     }
     return result; 
   }
@@ -16857,6 +17414,16 @@ public void setisStatic(BehaviouralFeature behaviouralfeaturex, boolean isStatic
     return result; 
   }
 
+  public  List AllBinaryExpressionisRefPlus(List binaryexpressionxs)
+  { 
+    List result = new Vector();
+    for (int _i = 0; _i < binaryexpressionxs.size(); _i++)
+    { BinaryExpression binaryexpressionx = (BinaryExpression) binaryexpressionxs.get(_i);
+      result.add(new Boolean(binaryexpressionx.isRefPlus()));
+    }
+    return result; 
+  }
+
   public  List AllBinaryExpressionmapBinaryExpression(List binaryexpressionxs,String ls,String rs)
   { 
     List result = new Vector();
@@ -16873,6 +17440,26 @@ public void setisStatic(BehaviouralFeature behaviouralfeaturex, boolean isStatic
     for (int _i = 0; _i < binaryexpressionxs.size(); _i++)
     { BinaryExpression binaryexpressionx = (BinaryExpression) binaryexpressionxs.get(_i);
       result.add(binaryexpressionx.toPython());
+    }
+    return result; 
+  }
+
+  public  List AllBinaryExpressionupdateFormBinaryExpression(List binaryexpressionxs,String ls,String rs)
+  { 
+    List result = new Vector();
+    for (int _i = 0; _i < binaryexpressionxs.size(); _i++)
+    { BinaryExpression binaryexpressionx = (BinaryExpression) binaryexpressionxs.get(_i);
+      result.add(binaryexpressionx.updateFormBinaryExpression(ls, rs));
+    }
+    return result; 
+  }
+
+  public  List AllBinaryExpressionupdateForm(List binaryexpressionxs)
+  { 
+    List result = new Vector();
+    for (int _i = 0; _i < binaryexpressionxs.size(); _i++)
+    { BinaryExpression binaryexpressionx = (BinaryExpression) binaryexpressionxs.get(_i);
+      result.add(binaryexpressionx.updateForm());
     }
     return result; 
   }
@@ -16910,6 +17497,26 @@ public void setisStatic(BehaviouralFeature behaviouralfeaturex, boolean isStatic
     for (int _i = 0; _i < conditionalexpressionxs.size(); _i++)
     { ConditionalExpression conditionalexpressionx = (ConditionalExpression) conditionalexpressionxs.get(_i);
       result.add(conditionalexpressionx.toPython());
+    }
+    return result; 
+  }
+
+  public  List AllConditionalExpressionupdateFormConditionalExpression(List conditionalexpressionxs,String ts,String ls,String rs)
+  { 
+    List result = new Vector();
+    for (int _i = 0; _i < conditionalexpressionxs.size(); _i++)
+    { ConditionalExpression conditionalexpressionx = (ConditionalExpression) conditionalexpressionxs.get(_i);
+      result.add(conditionalexpressionx.updateFormConditionalExpression(ts, ls, rs));
+    }
+    return result; 
+  }
+
+  public  List AllConditionalExpressionupdateForm(List conditionalexpressionxs)
+  { 
+    List result = new Vector();
+    for (int _i = 0; _i < conditionalexpressionxs.size(); _i++)
+    { ConditionalExpression conditionalexpressionx = (ConditionalExpression) conditionalexpressionxs.get(_i);
+      result.add(conditionalexpressionx.updateForm());
     }
     return result; 
   }
@@ -17000,6 +17607,26 @@ public void setisStatic(BehaviouralFeature behaviouralfeaturex, boolean isStatic
     return result; 
   }
 
+  public  List AllUnaryExpressionupdateFormUnaryExpression(List unaryexpressionxs,String arg)
+  { 
+    List result = new Vector();
+    for (int _i = 0; _i < unaryexpressionxs.size(); _i++)
+    { UnaryExpression unaryexpressionx = (UnaryExpression) unaryexpressionxs.get(_i);
+      result.add(unaryexpressionx.updateFormUnaryExpression(arg));
+    }
+    return result; 
+  }
+
+  public  List AllUnaryExpressionupdateForm(List unaryexpressionxs)
+  { 
+    List result = new Vector();
+    for (int _i = 0; _i < unaryexpressionxs.size(); _i++)
+    { UnaryExpression unaryexpressionx = (UnaryExpression) unaryexpressionxs.get(_i);
+      result.add(unaryexpressionx.updateForm());
+    }
+    return result; 
+  }
+
   public Expression addReference(UnaryExpression unaryexpressionx,BasicExpression x)
   { 
    Expression result = null;
@@ -17036,6 +17663,16 @@ public void setisStatic(BehaviouralFeature behaviouralfeaturex, boolean isStatic
     return result; 
   }
 
+  public  List AllCollectionExpressionupdateForm(List collectionexpressionxs)
+  { 
+    List result = new Vector();
+    for (int _i = 0; _i < collectionexpressionxs.size(); _i++)
+    { CollectionExpression collectionexpressionx = (CollectionExpression) collectionexpressionxs.get(_i);
+      result.add(collectionexpressionx.updateForm());
+    }
+    return result; 
+  }
+
   public Expression addReference(CollectionExpression collectionexpressionx,BasicExpression x)
   { 
    Expression result = null;
@@ -17048,6 +17685,16 @@ public void setisStatic(BehaviouralFeature behaviouralfeaturex, boolean isStatic
     for (int _i = 0; _i < collectionexpressionxs.size(); _i++)
     { CollectionExpression collectionexpressionx = (CollectionExpression) collectionexpressionxs.get(_i);
       result.add(addReference(collectionexpressionx,x));
+    }
+    return result; 
+  }
+
+  public  List AllCollectionExpressiontoLambdaList(List collectionexpressionxs,String vbl)
+  { 
+    List result = new Vector();
+    for (int _i = 0; _i < collectionexpressionxs.size(); _i++)
+    { CollectionExpression collectionexpressionx = (CollectionExpression) collectionexpressionxs.get(_i);
+      result.add(collectionexpressionx.toLambdaList(vbl));
     }
     return result; 
   }
@@ -17272,6 +17919,16 @@ public void setisStatic(BehaviouralFeature behaviouralfeaturex, boolean isStatic
     return result; 
   }
 
+  public  List AllBasicExpressionupdateForm(List basicexpressionxs)
+  { 
+    List result = new Vector();
+    for (int _i = 0; _i < basicexpressionxs.size(); _i++)
+    { BasicExpression basicexpressionx = (BasicExpression) basicexpressionxs.get(_i);
+      result.add(basicexpressionx.updateForm());
+    }
+    return result; 
+  }
+
   public Expression addClassIdReference(BasicExpression basicexpressionx,BasicExpression x)
   { 
    Expression result = null;
@@ -17443,7 +18100,7 @@ public void setisStatic(BehaviouralFeature behaviouralfeaturex, boolean isStatic
   }
 
   public void displayStaticCachedOperation(Operation operationx,int indent,String p,String obj)
-  {   operationx.displayStaticCachedOperation(indent, p, obj);
+  {   operationx.displayStaticCachedOperation(indent,p,obj);
    }
 
   public  List AllOperationdisplayStaticCachedOperation(List operationxs,int indent,String p,String obj)
@@ -17457,7 +18114,7 @@ public void setisStatic(BehaviouralFeature behaviouralfeaturex, boolean isStatic
   }
 
   public void displayInstanceCachedOperation(Operation operationx,int indent,String p,String obj)
-  {   operationx.displayInstanceCachedOperation(indent, p, obj);
+  {   operationx.displayInstanceCachedOperation(indent,p,obj);
    }
 
   public  List AllOperationdisplayInstanceCachedOperation(List operationxs,int indent,String p,String obj)
@@ -17494,6 +18151,20 @@ public void setisStatic(BehaviouralFeature behaviouralfeaturex, boolean isStatic
     for (int _i = 0; _i < operationxs.size(); _i++)
     { Operation operationx = (Operation) operationxs.get(_i);
       displayInstanceOperation(operationx,indent);
+    }
+    return result; 
+  }
+
+  public void displayNullOperation(Operation operationx,int indent)
+  {   operationx.displayNullOperation(indent);
+   }
+
+  public  List AllOperationdisplayNullOperation(List operationxs,int indent)
+  { 
+    List result = new Vector();
+    for (int _i = 0; _i < operationxs.size(); _i++)
+    { Operation operationx = (Operation) operationxs.get(_i);
+      displayNullOperation(operationx,indent);
     }
     return result; 
   }
@@ -19094,6 +19765,8 @@ public void setisStatic(BehaviouralFeature behaviouralfeaturex, boolean isStatic
 
       System.out.println("" + "from mathlib import *");
 
+      System.out.println("" + "from stringlib import *");
+
       System.out.println("" + "from oclfile import *");
 
       System.out.println("" + "from ocltype import *");
@@ -19104,7 +19777,11 @@ public void setisStatic(BehaviouralFeature behaviouralfeaturex, boolean isStatic
 
       System.out.println("" + "from ocliterator import *");
 
+      System.out.println("" + "from oclrandom import *");
+
       System.out.println("" + "from ocldatasource import *");
+
+      System.out.println("" + "from sortedcontainers import *");
 
       System.out.println("" + "from enum import Enum");
 
@@ -19165,13 +19842,26 @@ public void setisStatic(BehaviouralFeature behaviouralfeaturex, boolean isStatic
 
   }
 
-  public static void main(String[] args)
+   public static void main(String[] args)
   { Controller c = Controller.inst();
+
+    java.util.Date d0 = new java.util.Date(); 
+    long t0 = d0.getTime(); 
+
     c.loadModel("output/model.txt");  
     c.checkCompleteness(); 
+
+    java.util.Date d1 = new java.util.Date(); 
+    long t1 = d1.getTime(); 
   
     c.printcode(); 
+
+    java.util.Date d2 = new java.util.Date(); 
+    long t2 = d2.getTime();
+
+    System.err.println(">>> Time for model load = " + (t1-t0) + " Time for transformation: " + (t2-t1));  
   }  
+
 
  
 }

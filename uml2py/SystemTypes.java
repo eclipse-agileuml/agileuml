@@ -6,6 +6,10 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Vector;
 
+import java.util.function.Predicate;
+import java.util.function.Function;
+
+
 public interface SystemTypes
 {
   public static final int value = 0;
@@ -68,9 +72,9 @@ public interface SystemTypes
     return _results_3;
   }
 
-  public static Map select_3(Map _l,List oonames)
+  public static HashMap select_3(Map _l,List oonames)
   { // Implements: generalization.general.allOperations()->select(op | op.name /: oonames)
-    Map _results_3 = new java.util.HashMap();
+    HashMap _results_3 = new HashMap();
     java.util.Set _keys = _l.keySet();
     for (Object _i : _keys)
     { Operation op = (Operation) _l.get(_i);
@@ -92,9 +96,9 @@ public interface SystemTypes
     return _results_7;
   }
 
-  public static Map select_7(Map _l)
+  public static HashMap select_7(Map _l)
   { // Implements: allProperties()->select(a | a.isStatic = false)
-    Map _results_7 = new java.util.HashMap();
+    HashMap _results_7 = new HashMap();
     java.util.Set _keys = _l.keySet();
     for (Object _i : _keys)
     { Property a = (Property) _l.get(_i);
@@ -116,9 +120,9 @@ public interface SystemTypes
     return _results_10;
   }
 
-  public static Map select_10(Map _l)
+  public static HashMap select_10(Map _l)
   { // Implements: ownedOperation->select(x | x.isStatic & x.isCached & x.parameters.size = 1)
-    Map _results_10 = new java.util.HashMap();
+    HashMap _results_10 = new HashMap();
     java.util.Set _keys = _l.keySet();
     for (Object _i : _keys)
     { Operation x = (Operation) _l.get(_i);
@@ -140,9 +144,9 @@ public interface SystemTypes
     return _results_12;
   }
 
-  public static Map select_12(Map _l)
+  public static HashMap select_12(Map _l)
   { // Implements: ownedOperation->select(x | x.isStatic = false & x.isCached & x.parameters.size = 1)
-    Map _results_12 = new java.util.HashMap();
+    HashMap _results_12 = new HashMap();
     java.util.Set _keys = _l.keySet();
     for (Object _i : _keys)
     { Operation x = (Operation) _l.get(_i);
@@ -164,9 +168,9 @@ public interface SystemTypes
     return _results_14;
   }
 
-  public static Map select_14(Map _l)
+  public static HashMap select_14(Map _l)
   { // Implements: allProperties()->select(x | x.isStatic)
-    Map _results_14 = new java.util.HashMap();
+    HashMap _results_14 = new HashMap();
     java.util.Set _keys = _l.keySet();
     for (Object _i : _keys)
     { Property x = (Property) _l.get(_i);
@@ -188,9 +192,9 @@ public interface SystemTypes
     return _results_17;
   }
 
-  public static Map select_17(Map _l)
+  public static HashMap select_17(Map _l)
   { // Implements: allProperties()->select(property_17_xx | isUnique)
-    Map _results_17 = new java.util.HashMap();
+    HashMap _results_17 = new HashMap();
     java.util.Set _keys = _l.keySet();
     for (Object _i : _keys)
     { Property property_17_xx = (Property) _l.get(_i);
@@ -262,9 +266,9 @@ public interface SystemTypes
     return _results_0;
   }
 
-  public static Map collect_0(Map _l,Enumeration enumerationx)
+  public static HashMap collect_0(Map _l,Enumeration enumerationx)
   { // implements: ownedLiteral->collect( lt | "  " + lt.name + " = " + ownedLiteral->indexOf(lt) + "\n" )
-    Map _results_0 = new HashMap();
+    HashMap _results_0 = new HashMap();
     java.util.Set _keys = _l.keySet();
     for (Object _i : _keys)
     { EnumerationLiteral lt = (EnumerationLiteral) _l.get(_i);
@@ -285,9 +289,9 @@ public interface SystemTypes
     return _results_1;
   }
 
-  public static Map collect_1(Map _l)
+  public static HashMap collect_1(Map _l)
   { // implements: specialization->collect( generalization_1_xx | specific.allLeafSubclasses() )
-    Map _results_1 = new HashMap();
+    HashMap _results_1 = new HashMap();
     java.util.Set _keys = _l.keySet();
     for (Object _i : _keys)
     { Generalization generalization_1_xx = (Generalization) _l.get(_i);
@@ -308,9 +312,9 @@ public interface SystemTypes
     return _results_2;
   }
 
-  public static Map collect_2(Map _l)
+  public static HashMap collect_2(Map _l)
   { // implements: self.ownedOperation->collect( operation_2_xx | name )
-    Map _results_2 = new HashMap();
+    HashMap _results_2 = new HashMap();
     java.util.Set _keys = _l.keySet();
     for (Object _i : _keys)
     { Operation operation_2_xx = (Operation) _l.get(_i);
@@ -331,9 +335,9 @@ public interface SystemTypes
     return _results_8;
   }
 
-  public static Map collect_8(Map _l)
+  public static HashMap collect_8(Map _l)
   { // implements: allProperties()->select( a | a.isStatic = false )->collect( x | x.initialisation() )
-    Map _results_8 = new HashMap();
+    HashMap _results_8 = new HashMap();
     java.util.Set _keys = _l.keySet();
     for (Object _i : _keys)
     { Property x = (Property) _l.get(_i);
@@ -354,9 +358,9 @@ public interface SystemTypes
     return _results_11;
   }
 
-  public static Map collect_11(Map _l)
+  public static HashMap collect_11(Map _l)
   { // implements: ownedOperation->select( x | x.isStatic & x.isCached & x.parameters.size = 1 )->collect( y | "  " + y.name + "_cache = dict({})" + "\n" )
-    Map _results_11 = new HashMap();
+    HashMap _results_11 = new HashMap();
     java.util.Set _keys = _l.keySet();
     for (Object _i : _keys)
     { Operation y = (Operation) _l.get(_i);
@@ -377,9 +381,9 @@ public interface SystemTypes
     return _results_13;
   }
 
-  public static Map collect_13(Map _l)
+  public static HashMap collect_13(Map _l)
   { // implements: ownedOperation->select( x | x.isStatic = false & x.isCached & x.parameters.size = 1 )->collect( y | "    self." + y.name + "_cache = dict({})" + "\n" )
-    Map _results_13 = new HashMap();
+    HashMap _results_13 = new HashMap();
     java.util.Set _keys = _l.keySet();
     for (Object _i : _keys)
     { Operation y = (Operation) _l.get(_i);
@@ -390,23 +394,23 @@ public interface SystemTypes
   }
 
   public static List collect_15(List _l)
-  { // implements: allProperties()->select( x | x.isStatic )->collect( y | "  " + y.name + " = " + y.type.defaultInitialValue() + "\n" )
+  { // implements: allProperties()->select( x | x.isStatic )->collect( y | "  " + y.name + " : " + y.type.toPython() + " = " + y.type.defaultInitialValue() + "\n" )
     List _results_15 = new Vector();
     for (int _i = 0; _i < _l.size(); _i++)
     { Property y = (Property) _l.get(_i);
-      String collect_x = "  " + y.getname() + " = " + y.gettype().defaultInitialValue() + "\n";
+      String collect_x = "  " + y.getname() + " : " + y.gettype().toPython() + " = " + y.gettype().defaultInitialValue() + "\n";
       if (collect_x != null) { _results_15.add(collect_x); }
     }
     return _results_15;
   }
 
-  public static Map collect_15(Map _l)
-  { // implements: allProperties()->select( x | x.isStatic )->collect( y | "  " + y.name + " = " + y.type.defaultInitialValue() + "\n" )
-    Map _results_15 = new HashMap();
+  public static HashMap collect_15(Map _l)
+  { // implements: allProperties()->select( x | x.isStatic )->collect( y | "  " + y.name + " : " + y.type.toPython() + " = " + y.type.defaultInitialValue() + "\n" )
+    HashMap _results_15 = new HashMap();
     java.util.Set _keys = _l.keySet();
     for (Object _i : _keys)
     { Property y = (Property) _l.get(_i);
-      String collect_x = "  " + y.getname() + " = " + y.gettype().defaultInitialValue() + "\n";
+      String collect_x = "  " + y.getname() + " : " + y.gettype().toPython() + " = " + y.gettype().defaultInitialValue() + "\n";
       if (collect_x != null) { _results_15.put(_i,collect_x); }
     }
     return _results_15;
@@ -423,9 +427,9 @@ public interface SystemTypes
     return _results_18;
   }
 
-  public static Map collect_18(Map _l)
+  public static HashMap collect_18(Map _l)
   { // implements: pars->tail()->collect( p | ", " + p )
-    Map _results_18 = new HashMap();
+    HashMap _results_18 = new HashMap();
     java.util.Set _keys = _l.keySet();
     for (Object _i : _keys)
     { String p = (String) _l.get(_i);
@@ -446,9 +450,9 @@ public interface SystemTypes
     return _results_19;
   }
 
-  public static Map collect_19(Map _l)
+  public static HashMap collect_19(Map _l)
   { // implements: Enumeration->collect( enumeration_19_xx | name )
-    Map _results_19 = new HashMap();
+    HashMap _results_19 = new HashMap();
     java.util.Set _keys = _l.keySet();
     for (Object _i : _keys)
     { Enumeration enumeration_19_xx = (Enumeration) _l.get(_i);
@@ -469,9 +473,9 @@ public interface SystemTypes
     return _results_20;
   }
 
-  public static Map collect_20(Map _l)
+  public static HashMap collect_20(Map _l)
   { // implements: arrayIndex->collect( expr | expr.type.name )
-    Map _results_20 = new HashMap();
+    HashMap _results_20 = new HashMap();
     java.util.Set _keys = _l.keySet();
     for (Object _i : _keys)
     { Expression expr = (Expression) _l.get(_i);
@@ -482,23 +486,23 @@ public interface SystemTypes
   }
 
   public static List collect_21(List _l)
-  { // implements: parameters->collect( p | ", " + p.name )
+  { // implements: parameters->collect( p | ", " + p.name + " : " + p.type.toPython() )
     List _results_21 = new Vector();
     for (int _i = 0; _i < _l.size(); _i++)
     { Property p = (Property) _l.get(_i);
-      String collect_x = ", " + p.getname();
+      String collect_x = ", " + p.getname() + " : " + p.gettype().toPython();
       if (collect_x != null) { _results_21.add(collect_x); }
     }
     return _results_21;
   }
 
-  public static Map collect_21(Map _l)
-  { // implements: parameters->collect( p | ", " + p.name )
-    Map _results_21 = new HashMap();
+  public static HashMap collect_21(Map _l)
+  { // implements: parameters->collect( p | ", " + p.name + " : " + p.type.toPython() )
+    HashMap _results_21 = new HashMap();
     java.util.Set _keys = _l.keySet();
     for (Object _i : _keys)
     { Property p = (Property) _l.get(_i);
-      String collect_x = ", " + p.getname();
+      String collect_x = ", " + p.getname() + " : " + p.gettype().toPython();
       if (collect_x != null) { _results_21.put(_i,collect_x); }
     }
     return _results_21;
@@ -515,9 +519,9 @@ public interface SystemTypes
     return _results_22;
   }
 
-  public static Map collect_22(Map _l,int indent)
+  public static HashMap collect_22(Map _l,int indent)
   { // implements: statements->collect( s | s.toPython(indent) )
-    Map _results_22 = new HashMap();
+    HashMap _results_22 = new HashMap();
     java.util.Set _keys = _l.keySet();
     for (Object _i : _keys)
     { Statement s = (Statement) _l.get(_i);
@@ -553,7 +557,7 @@ public interface SystemTypes
     { elements.add(new Boolean(x));
       return this; }
 
-    public List getElements() { return elements; }
+    public Vector getElements() { return elements; }
 
 
   public static Vector copyCollection(Vector s)
@@ -844,6 +848,29 @@ public interface SystemTypes
     return res;
   }
 
+  public static Vector singleValueMatrix(Vector sh, Object x)
+  { Vector result;
+    if ((sh).size() == 0)
+    { return (new Vector()); }
+    int n = (int) sh.get(0);
+   
+    if ((sh).size() == 1)
+    { Vector _results_0 = new Vector();
+      for (int _i = 0; _i < n; _i++)
+      { _results_0.add(x); }
+      return _results_0;
+    }
+
+    Vector tl = (Vector) Set.tail(sh);
+    Vector res = (new Vector());
+    Vector _results_1 = new Vector();
+    for (int _i = 0; _i < n; _i++)
+    { _results_1.add(Set.singleValueMatrix(tl,x)); }
+    res = (Vector) Set.concatenate(res, _results_1);
+    return res;
+  }
+
+
 
   public static List closurePropertyqualifier(List _r)
   { Vector _path = new Vector();
@@ -1058,7 +1085,7 @@ public interface SystemTypes
 
 
   public static List asSet(List a)
-  { List res = new Vector(); 
+  { Vector res = new Vector(); 
     for (int i = 0; i < a.size(); i++)
     { Object obj = a.get(i);
       if (res.contains(obj)) { } 
@@ -1071,13 +1098,13 @@ public interface SystemTypes
   { return asSet(a); }
 
   public static List asSet(Map m)
-  { List range = new Vector();
+  { Vector range = new Vector();
     range.addAll(m.values());
     return asSet(range);
   }
 
-  public static List mapAsSequence(Map m)
-  { List range = new Vector();
+  public static Vector mapAsSequence(Map m)
+  { Vector range = new Vector();
     java.util.Set ss = m.entrySet();
     for (Object x : ss)
     { Map.Entry ee = (Map.Entry) x;
@@ -1088,9 +1115,9 @@ public interface SystemTypes
     return range;
   }
 
-  public static List mapAsSet(Map m)
-  { List range = mapAsSequence(m); 
-    return asSet(range); 
+  public static Vector mapAsSet(Map m)
+  { Vector range = mapAsSequence(m); 
+    return (Vector) asSet(range); 
   }
 
 
@@ -1122,7 +1149,8 @@ public interface SystemTypes
   { List res = new Vector(); 
     for (int i = 1; i < a.size(); i++)
     { res.add(a.get(i)); } 
-    return res; }
+    return res;
+  }
 
 
     public static Object first(List v)
@@ -1278,6 +1306,8 @@ public interface SystemTypes
 
   public static List subrange(List l, int i, int j)
   { List tmp = new Vector(); 
+    if (i < 0) { i = l.size() + i; }
+    if (j < 0) { j = l.size() + j; }
     for (int k = i-1; k < j; k++)
     { tmp.add(l.get(k)); } 
     return tmp; 
@@ -1486,6 +1516,56 @@ public interface SystemTypes
   }
 
 
+  public static List insertInto(List l, int ind, List ob)
+  { List res = new Vector();
+    for (int i = 0; i < ind-1 && i < l.size(); i++)
+    { res.add(l.get(i)); }
+    for (int j = 0; j < ob.size(); j++)
+    { res.add(ob.get(j)); }
+    for (int i = ind-1; i < l.size(); i++)
+    { res.add(l.get(i)); }
+    return res;
+  }
+
+  public static List excludingSubrange(List l, int startIndex, int endIndex)
+  { List res = new Vector();
+    for (int i = 0; i < startIndex-1 && i < l.size(); i++)
+    { res.add(l.get(i)); }
+    for (int i = endIndex; i < l.size(); i++)
+    { res.add(l.get(i)); }
+    return res;
+  }
+
+  public static String setSubrange(String ss, int startIndex, int endIndex, String v)
+  { String res = ss;
+    if (ss.length() < endIndex)
+    { for (int i = ss.length()-1; i < endIndex; i++)
+      { res = res + " "; }
+    }
+    return res.substring(0,startIndex-1) + v +
+           res.substring(endIndex);  
+  }
+
+  public static String insertInto(String l, int ind, Object ob)
+  { String res = "";
+    for (int i = 0; i < ind-1 && i < l.length(); i++)
+    { res = res + l.charAt(i); }
+    res = res + ob; 
+    for (int i = ind-1; i < l.length(); i++)
+    { res = res + l.charAt(i); }
+    return res;
+  }
+  public static String excludingSubrange(String l, int startIndex, int endIndex)
+  { String res = "";
+    for (int i = 0; i < startIndex-1 && i < l.length(); i++)
+    { res = res + l.charAt(i); }
+    for (int i = endIndex; i < l.length(); i++)
+    { res = res + l.charAt(i); }
+    return res;
+  }
+
+
+
   public static List removeAt(List l, int ind)
   { List res = new Vector();
     res.addAll(l); 
@@ -1531,7 +1611,15 @@ public interface SystemTypes
   }
 
  public static int toInt(String str)
-  { try { int x = Integer.parseInt(str.trim());
+  { /* Trim leading 0's */
+    if (str == null || str.length() == 0)
+    { return 0; }
+    String trm = str.trim();
+    while (trm.length() > 0 && trm.charAt(0) == '0')
+    { trm = trm.substring(1); }
+    if (trm.indexOf(".") > 0)
+    { trm = trm.substring(0,trm.indexOf(".")); }
+    try { int x = Integer.parseInt(trm.trim());
           return x; }
     catch (Exception _e) { return 0; }
   }
@@ -1542,6 +1630,8 @@ public interface SystemTypes
     String trm = str.trim();
     while (trm.length() > 0 && trm.charAt(0) == '0')
     { trm = trm.substring(1); }
+    if (trm.indexOf(".") > 0)
+    { trm = trm.substring(0,trm.indexOf(".")); }
     try { int x = Integer.decode(trm).intValue();
       return x; 
     }
@@ -1710,14 +1800,16 @@ public interface SystemTypes
 
 
   public static String replaceAll(String str, String regex, String rep)
-  { java.util.regex.Pattern patt = java.util.regex.Pattern.compile(regex);
+  { if (str == null) { return null; }
+    java.util.regex.Pattern patt = java.util.regex.Pattern.compile(regex);
     java.util.regex.Matcher matcher = patt.matcher(str);
     return matcher.replaceAll(rep);
   }
 
 
   public static String replaceFirstMatch(String str, String regex, String rep)
-  { java.util.regex.Pattern patt = java.util.regex.Pattern.compile(regex);
+  { if (str == null) { return null; }
+    java.util.regex.Pattern patt = java.util.regex.Pattern.compile(regex);
     java.util.regex.Matcher matcher = patt.matcher(str);
     return matcher.replaceFirst(rep);
   }
@@ -1865,20 +1957,23 @@ public interface SystemTypes
     for (int x = 0; x < keys.size(); x++)
     { Object key = keys.get(x);
       if (ks.contains(key)) { }
-      else { res.put(key,m1.get(key)); }
+      else
+      { res.put(key,m1.get(key)); }
     }    
     return res;
   }
 
   public static boolean includesKey(Map m, Object key) 
   { Object val = m.get(key); 
-    if (val == null) { return false; }
+    if (val == null)
+    { return false; }
     return true;
   }
 
   public static boolean excludesKey(Map m, Object key) 
   { Object val = m.get(key); 
-    if (val == null) { return true; }
+    if (val == null)
+    { return true; }
     return false;
   }
 
@@ -1888,7 +1983,7 @@ public interface SystemTypes
     for (int x = 0; x < keys.size(); x++)
     { Object v = m.get(x);
       if (v != null && v.equals(val))
-      { return true;  }
+      { return true; }
     }    
     return false;
   }
@@ -1899,7 +1994,7 @@ public interface SystemTypes
     for (int x = 0; x < keys.size(); x++)
     { Object v = m.get(x);
       if (v != null && v.equals(val))
-      { return false;  }
+      { return false; }
     }    
     return true;
   }
