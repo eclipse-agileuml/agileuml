@@ -2174,7 +2174,7 @@ String
 indent int 
  query
 true
-( type->oclIsUndefined() => result = Statement.tab(indent) + assignsTo + " = None\n" ) & ( initialExpression->size() > 0 => result = Statement.tab(indent) + assignsTo + " = " + initialExpression.any.toPython() + "\n" ) & ( type : Entity => result = Statement.tab(indent) + assignsTo + " = None\n" ) &  ( true => result = Statement.tab(indent) + assignsTo + " = " + type.defaultInitialValue() + "\n" )
+( type->oclIsUndefined() => result = Statement.tab(indent) + assignsTo + " = None\n" ) & ( initialExpression->size() > 0 => result = Statement.tab(indent) + assignsTo + " : " + type.toPython() + " = " + initialExpression.any.toPython() + "\n" ) & ( type : Entity => result = Statement.tab(indent) + assignsTo + " : " + type.name + " = None\n" ) &  ( true => result = Statement.tab(indent) + assignsTo + " : " + type.toPython() + " = " + type.defaultInitialValue() + "\n" )
 
 
 

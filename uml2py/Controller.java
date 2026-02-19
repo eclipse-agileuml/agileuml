@@ -1694,10 +1694,10 @@ class Entity
 
       System.out.println("" + this.abstractClassConstructor());
 
-        List _operation_list8 = new Vector();
-    _operation_list8.addAll(this.allOperations());
-    for (int _ind9 = 0; _ind9 < _operation_list8.size(); _ind9++)
-    { Operation op = (Operation) _operation_list8.get(_ind9);
+        List _operation_list28 = new Vector();
+    _operation_list28.addAll(this.allOperations());
+    for (int _ind29 = 0; _ind29 < _operation_list28.size(); _ind29++)
+    { Operation op = (Operation) _operation_list28.get(_ind29);
       Controller.inst().displayOperation(op,2);
     }
 }
@@ -1713,10 +1713,10 @@ class Entity
 
       System.out.println("" + this.callOp());
 
-        List _operation_list10 = new Vector();
-    _operation_list10.addAll(this.allOperations());
-    for (int _ind11 = 0; _ind11 < _operation_list10.size(); _ind11++)
-    { Operation op = (Operation) _operation_list10.get(_ind11);
+        List _operation_list30 = new Vector();
+    _operation_list30.addAll(this.allOperations());
+    for (int _ind31 = 0; _ind31 < _operation_list30.size(); _ind31++)
+    { Operation op = (Operation) _operation_list30.get(_ind31);
       Controller.inst().displayOperation(op,2);
     }
 }
@@ -9215,15 +9215,15 @@ class CreationStatement
  
   }  else
       {   if ((initialExpression).size() > 0) 
-  {   result = Statement.tab(indent) + assignsTo + " = " + ((Expression) Set.any(initialExpression)).toPython() + "\n";
+  {   result = Statement.tab(indent) + assignsTo + " : " + type.toPython() + " = " + ((Expression) Set.any(initialExpression)).toPython() + "\n";
  
   }  else
       {   if ((type instanceof Entity)) 
-  {   result = Statement.tab(indent) + assignsTo + " = None\n";
+  {   result = Statement.tab(indent) + assignsTo + " : " + type.getname() + " = None\n";
  
   }  else
       if (true) 
-  {   result = Statement.tab(indent) + assignsTo + " = " + type.defaultInitialValue() + "\n";
+  {   result = Statement.tab(indent) + assignsTo + " : " + type.toPython() + " = " + type.defaultInitialValue() + "\n";
  
   }   
    } 
@@ -19791,58 +19791,58 @@ public void setisStatic(BehaviouralFeature behaviouralfeaturex, boolean isStatic
 
       System.out.println("" + Entity.displayOps());
 
-    List _range13 = new Vector();
-  _range13.addAll(Controller.inst().enumerations);
-  for (int _i12 = 0; _i12 < _range13.size(); _i12++)
-  { Enumeration loopvar$0 = (Enumeration) _range13.get(_i12);
+    List _range33 = new Vector();
+  _range33.addAll(Controller.inst().enumerations);
+  for (int _i32 = 0; _i32 < _range33.size(); _i32++)
+  { Enumeration loopvar$0 = (Enumeration) _range33.get(_i32);
         Controller.inst().printcode2(loopvar$0);
   }
-    List _range15 = new Vector();
-  _range15.addAll(Controller.inst().entitys);
-  for (int _i14 = 0; _i14 < _range15.size(); _i14++)
-  { Entity loopvar$1 = (Entity) _range15.get(_i14);
+    List _range35 = new Vector();
+  _range35.addAll(Controller.inst().entitys);
+  for (int _i34 = 0; _i34 < _range35.size(); _i34++)
+  { Entity loopvar$1 = (Entity) _range35.get(_i34);
         Controller.inst().printcode3(loopvar$1);
   }
-    List _range17 = new Vector();
-  _range17.addAll(Controller.inst().entitys);
-  for (int _i16 = 0; _i16 < _range17.size(); _i16++)
-  { Entity loopvar$2 = (Entity) _range17.get(_i16);
+    List _range37 = new Vector();
+  _range37.addAll(Controller.inst().entitys);
+  for (int _i36 = 0; _i36 < _range37.size(); _i36++)
+  { Entity loopvar$2 = (Entity) _range37.get(_i36);
         Controller.inst().printcode4(loopvar$2);
   }
-    List _range19 = new Vector();
-  _range19.addAll(Controller.inst().entitys);
-  for (int _i18 = 0; _i18 < _range19.size(); _i18++)
-  { Entity loopvar$3 = (Entity) _range19.get(_i18);
+    List _range39 = new Vector();
+  _range39.addAll(Controller.inst().entitys);
+  for (int _i38 = 0; _i38 < _range39.size(); _i38++)
+  { Entity loopvar$3 = (Entity) _range39.get(_i38);
         Controller.inst().printcode5(loopvar$3);
   }
-    List _range21 = new Vector();
-  _range21.addAll(Controller.inst().entitys);
-  for (int _i20 = 0; _i20 < _range21.size(); _i20++)
-  { Entity loopvar$4 = (Entity) _range21.get(_i20);
+    List _range41 = new Vector();
+  _range41.addAll(Controller.inst().entitys);
+  for (int _i40 = 0; _i40 < _range41.size(); _i40++)
+  { Entity loopvar$4 = (Entity) _range41.get(_i40);
         Controller.inst().printcode6(loopvar$4);
   }
-    List _range23 = new Vector();
-  _range23.addAll(Controller.inst().entitys);
-  for (int _i22 = 0; _i22 < _range23.size(); _i22++)
-  { Entity loopvar$5 = (Entity) _range23.get(_i22);
+    List _range43 = new Vector();
+  _range43.addAll(Controller.inst().entitys);
+  for (int _i42 = 0; _i42 < _range43.size(); _i42++)
+  { Entity loopvar$5 = (Entity) _range43.get(_i42);
         Controller.inst().printcode7outer(loopvar$5);
   }
-    List _range25 = new Vector();
-  _range25.addAll(Controller.inst().operations);
-  for (int _i24 = 0; _i24 < _range25.size(); _i24++)
-  { Operation loopvar$6 = (Operation) _range25.get(_i24);
+    List _range45 = new Vector();
+  _range45.addAll(Controller.inst().operations);
+  for (int _i44 = 0; _i44 < _range45.size(); _i44++)
+  { Operation loopvar$6 = (Operation) _range45.get(_i44);
         Controller.inst().printcode8(loopvar$6);
   }
-    List _range27 = new Vector();
-  _range27.addAll(Controller.inst().usecases);
-  for (int _i26 = 0; _i26 < _range27.size(); _i26++)
-  { UseCase loopvar$7 = (UseCase) _range27.get(_i26);
+    List _range47 = new Vector();
+  _range47.addAll(Controller.inst().usecases);
+  for (int _i46 = 0; _i46 < _range47.size(); _i46++)
+  { UseCase loopvar$7 = (UseCase) _range47.get(_i46);
         Controller.inst().printcode9(loopvar$7);
   }
 
   }
 
-   public static void main(String[] args)
+  public static void main(String[] args)
   { Controller c = Controller.inst();
 
     java.util.Date d0 = new java.util.Date(); 
@@ -19861,7 +19861,6 @@ public void setisStatic(BehaviouralFeature behaviouralfeaturex, boolean isStatic
 
     System.err.println(">>> Time for model load = " + (t1-t0) + " Time for transformation: " + (t2-t1));  
   }  
-
 
  
 }
