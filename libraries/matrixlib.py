@@ -1,6 +1,8 @@
 import numpy as np
 import ocl
 
+import time
+
 class MatrixLib :
 
   def rowMult(s: list[float], m: list[list[float]]) -> list[float]:   
@@ -310,6 +312,31 @@ class MatrixLib :
     if not isinstance(m[0], list):
       return m
     return [MatrixLib.column(m, i) for i, _ in enumerate(m)]
+
+
+
+
+# sze = 80
+
+# m1 = MatrixLib.singleValueMatrix([sze,sze], 25.0) 
+# m2 = MatrixLib.singleValueMatrix([sze,sze], 25.0)
+   
+# t1 = time.time()
+
+# mult1 = MatrixLib.matrixMultiplication(m1,m2) 
+   
+# t2 = time.time() 
+# print(str(1000*(t2 - t1)))
+
+# sze = 80
+# t1 = time.time()
+
+# m1 = MatrixLib.singleValueMatrix([sze,sze,sze], 10.0)
+# m2 = MatrixLib.reshape(m1, [sze//2, 2, sze//2, 2, sze])
+
+# t2 = time.time() 
+# print(str(1000*(t2 - t1)))
+
 
 # def main():
 #   print(MatrixLib.matrixMultiplication([[1,2], [3,4]], [[5,6], [7,8]]))

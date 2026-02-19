@@ -526,22 +526,16 @@ else {     return res; }
 
   public static ArrayList singleValueMatrix(ArrayList<Integer> sh,Object x)
   { ArrayList result;
-if ((sh).size() == 0)
-{     return (new ArrayList<Object>()); }
-else {      }
+    if (sh.size() == 0)
+    { return new ArrayList<Object>(); }
 
-  if ((sh).size() == 1)
-{     return MatrixLib_Aux.collect_11(Ocl.integerSubrange(1,sh.get(1 - 1)),x); }
-else {      }
+    if (sh.size() == 1)
+    { return MatrixLib_Aux.collect_11( Ocl.integerSubrange(1,sh.get(1 - 1)), x ); }
 
     ArrayList res = (new ArrayList<Object>());
 
     res = MatrixLib_Aux.collect_12(Ocl.integerSubrange(1,sh.get(1 - 1)),sh,x);
-      return res;
-
-
-
-
+    return res;
   }
 
 
@@ -1386,7 +1380,7 @@ else {     return m; }
 
 
 public static void main(String[] args)
- { int sze = 80; 
+ { /* int sze = 80; 
 
    ArrayList<Integer> sh = new ArrayList<Integer>(); 
    sh.add(sze); sh.add(sze);  
@@ -1400,8 +1394,26 @@ public static void main(String[] args)
    
 	java.util.Date d2 = new java.util.Date(); 
 	long t2 = d2.getTime(); 
-	System.out.println(t2 - t1); 
+	System.out.println(t2 - t1); */ 
    
+    int sze = 80; 
+
+	java.util.Date d1 = new java.util.Date(); 
+	long t1 = d1.getTime(); 
+
+    ArrayList<Integer> sh = new ArrayList<Integer>(); 
+	sh.add(sze); sh.add(sze); sh.add(sze); 
+    ArrayList m1 = MatrixLib.singleValueMatrix(sh, 10.0); 
+	
+	ArrayList<Integer> rsh = new ArrayList<Integer>(); 
+	rsh.add(sze/2); rsh.add(2); rsh.add(sze/2); rsh.add(2); rsh.add(sze); 
+    
+    ArrayList m2 = MatrixLib.reshape(m1,rsh); 
+
+	java.util.Date d2 = new java.util.Date(); 
+	long t2 = d2.getTime(); 
+	System.out.println(t2 - t1); 
+	
 /*    ArrayList mtrx2 = MatrixLib.singleValueMatrix(sh, 3.5); 
    System.out.println("Single value matrix 3.5: " + mtrx2); 
    
