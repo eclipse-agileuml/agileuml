@@ -1,4 +1,4 @@
-static function string newString(object s)
+static function string newString(Object s)
 { return "" + s; }  
 
 static function string leftTrim(string s)
@@ -15,6 +15,7 @@ static function string leftTrimWith(string str, string ch)
       return trm;
     }
   } 
+  return ""; 
 } 
 
 static function string rightTrim(string s)
@@ -33,7 +34,7 @@ static function string sumStringsWithSeparator(Collection[string] lst, string se
 
 static function string nCopies(string s, int n)
 { string result = "";
-  for (int _i = 0; _i < n; _i+1)
+  for (int i = 0; i < n; i+1)
   {
     result = result + s;
   }
@@ -43,7 +44,7 @@ static function string nCopies(string s, int n)
 
 static function string pad(int n, string c)
 { string res = ""; 
-  for (int _i = 0; _i < n; _i+1)
+  for (int i = 0; i < n; i+1)
   { res = res + c; }
   return res;
 }
@@ -51,13 +52,13 @@ static function string pad(int n, string c)
 static function string padLeftWithInto(string s, string c, int n)
 { string result = "";
 
-  result = Domain.StringLib.pad(n - s.Length, c) + s;
+  result = pad(n - s.Length, c) + s;
   return result;
 }
 
 static function string padRightWithInto(string s, string c, int n)
 { string result = "";
-  result = s + Domain.StringLib.pad(n - s.Length, c);
+  result = s + pad(n - s.Length, c);
   return result;
 }
 
@@ -67,7 +68,7 @@ static function string leftAlignInto(string s, int n)
   if (n <= s.Length)
   { result = s.Substring(0, n); }
   else 
-  { result = s + Domain.StringLib.pad(n - s.Length, " "); }
+  { result = s + pad(n - s.Length, " "); }
   return result;
 }
 
@@ -77,13 +78,13 @@ static function string rightAlignInto(string s, int n)
   if (n <= s.Length)
   { result = s.Substring(0, n); }
   else
-  { result = Domain.StringLib.pad(n - s.Length, " ") + s; }
+  { result = pad(n - s.Length, " ") + s; }
   return result;
 }
 
 static function string capitalise(string str)
 { if (str.Length > 0)
-  { String s1 = str.CharAt(0) + "";
+  { string s1 = str.CharAt(0) + "";
     return s1.ToUpper() + str.Substring(1, str.Length - 1);
   }
   return str;
