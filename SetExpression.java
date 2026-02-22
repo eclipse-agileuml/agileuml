@@ -2757,7 +2757,7 @@ public class SetExpression extends Expression
 
     res.setOrdered(isOrdered());
     return res;
-  } 
+  } // special case for Ref{n}
 
   public Expression evaluateIterator(String op, 
                              ModelSpecification sigma, 
@@ -2794,11 +2794,11 @@ public class SetExpression extends Expression
     SetExpression res = new SetExpression(true); 
         
     beta.addNewEnvironment(); 
-    beta.addVariable(var, new BasicExpression("null")); 
+    beta.addVariable(sigma, var, new BasicExpression("null")); 
 
     for (int i = 0; i < elements.size(); i++) 
     { Expression elem = (Expression) elements.get(i);
-      beta.setVariableValue(var, elem); 
+      beta.setVariableValue(sigma, var, elem); 
       Expression val = expr.evaluate(sigma, beta); 
       res.addElement(val); 
     } 
@@ -2822,11 +2822,11 @@ public class SetExpression extends Expression
     SetExpression res = new SetExpression(); 
         
     beta.addNewEnvironment(); 
-    beta.addVariable(var, new BasicExpression("null")); 
+    beta.addVariable(sigma, var, new BasicExpression("null")); 
 
     for (int i = 0; i < elements.size(); i++) 
     { Expression elem = (Expression) elements.get(i);
-      beta.setVariableValue(var, elem); 
+      beta.setVariableValue(sigma, var, elem); 
       Expression val = expr.evaluate(sigma, beta); 
       if ("true".equals(val + ""))
       { res.addElement(elem); }  
@@ -2850,11 +2850,11 @@ public class SetExpression extends Expression
     SetExpression res = new SetExpression(); 
         
     beta.addNewEnvironment(); 
-    beta.addVariable(var, new BasicExpression("null")); 
+    beta.addVariable(sigma, var, new BasicExpression("null")); 
 
     for (int i = 0; i < elements.size(); i++) 
     { Expression elem = (Expression) elements.get(i);
-      beta.setVariableValue(var, elem); 
+      beta.setVariableValue(sigma, var, elem); 
       Expression val = expr.evaluate(sigma, beta); 
       if ("true".equals(val + "")) {} 
       else 
@@ -2877,11 +2877,11 @@ public class SetExpression extends Expression
   { // evaluate expr in each environment with var |-> elem
         
     beta.addNewEnvironment(); 
-    beta.addVariable(var, new BasicExpression("null")); 
+    beta.addVariable(sigma, var, new BasicExpression("null")); 
 
     for (int i = 0; i < elements.size(); i++) 
     { Expression elem = (Expression) elements.get(i);
-      beta.setVariableValue(var, elem); 
+      beta.setVariableValue(sigma, var, elem); 
       Expression val = expr.evaluate(sigma, beta); 
       if ("true".equals(val + "")) { }
       else  
@@ -2902,11 +2902,11 @@ public class SetExpression extends Expression
   { // evaluate expr in each environment with var |-> elem
         
     beta.addNewEnvironment(); 
-    beta.addVariable(var, new BasicExpression("null")); 
+    beta.addVariable(sigma, var, new BasicExpression("null")); 
 
     for (int i = 0; i < elements.size(); i++) 
     { Expression elem = (Expression) elements.get(i);
-      beta.setVariableValue(var, elem); 
+      beta.setVariableValue(sigma, var, elem); 
       Expression val = expr.evaluate(sigma, beta); 
       if ("true".equals(val + "")) 
       { beta.removeLastEnvironment();
@@ -2928,11 +2928,11 @@ public class SetExpression extends Expression
     int count = 0; 
 
     beta.addNewEnvironment(); 
-    beta.addVariable(var, new BasicExpression("null")); 
+    beta.addVariable(sigma, var, new BasicExpression("null")); 
 
     for (int i = 0; i < elements.size(); i++) 
     { Expression elem = (Expression) elements.get(i);
-      beta.setVariableValue(var, elem);
+      beta.setVariableValue(sigma, var, elem);
  
       Expression val = expr.evaluate(sigma, beta); 
       if ("true".equals(val + "")) 

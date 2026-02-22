@@ -14901,7 +14901,7 @@ public boolean conflictsWithIn(String op, Expression el,
     return res; 
   } // what about comparitors? 
     
-  public void execute(ModelSpecification sigma, 
+  public int execute(ModelSpecification sigma, 
                       ModelState beta)
   { if ("->includes".equals(operator))
     { Expression eval = left.evaluate(sigma, beta); 
@@ -14909,7 +14909,8 @@ public boolean conflictsWithIn(String op, Expression el,
       if (eval instanceof SetExpression)
       { SetExpression se = (SetExpression) eval; 
         se.addElement(elem);
-        beta.updateState(sigma, left, se);  
+        beta.updateState(sigma, left, se);
+        return Statement.NORMAL;   
       } 
     }
     else if (":".equals(operator))
@@ -14918,7 +14919,8 @@ public boolean conflictsWithIn(String op, Expression el,
       if (eval instanceof SetExpression)
       { SetExpression se = (SetExpression) eval; 
         se.addElement(elem); 
-        beta.updateState(sigma, right, se);  
+        beta.updateState(sigma, right, se);
+        return Statement.NORMAL;   
       } 
     }
     else if ("->includesAll".equals(operator))
@@ -14931,6 +14933,7 @@ public boolean conflictsWithIn(String op, Expression el,
         Vector newelems = ses.getElements();  
         se.addElements(newelems); 
         beta.updateState(sigma, left, se);  
+        return Statement.NORMAL; 
       } 
     }
     else if ("<:".equals(operator))
@@ -14943,6 +14946,7 @@ public boolean conflictsWithIn(String op, Expression el,
         Vector newelems = ses.getElements();  
         se.addElements(newelems); 
         beta.updateState(sigma, right, se);  
+        return Statement.NORMAL; 
       } 
     }
     else if ("->excludes".equals(operator))
@@ -14952,6 +14956,7 @@ public boolean conflictsWithIn(String op, Expression el,
       { SetExpression se = (SetExpression) eval; 
         se.removeElement(elem); 
         beta.updateState(sigma, left, se);  
+        return Statement.NORMAL; 
       } 
     }
     else if ("/:".equals(operator))
@@ -14961,6 +14966,7 @@ public boolean conflictsWithIn(String op, Expression el,
       { SetExpression se = (SetExpression) eval; 
         se.removeElement(elem); 
         beta.updateState(sigma, right, se);  
+        return Statement.NORMAL; 
       } 
     }
     else if ("->excludesAll".equals(operator))
@@ -14973,6 +14979,7 @@ public boolean conflictsWithIn(String op, Expression el,
         Vector newelems = ses.getElements();  
         se.removeElements(newelems);
         beta.updateState(sigma, left, se);   
+        return Statement.NORMAL; 
       } 
     }
     else if ("/<:".equals(operator))
@@ -14985,9 +14992,10 @@ public boolean conflictsWithIn(String op, Expression el,
         Vector newelems = ses.getElements();  
         se.removeElements(newelems); 
         beta.updateState(sigma, right, se);  
+        return Statement.NORMAL; 
       } 
     }
-    
+    return Statement.NORMAL; 
   } 
   
   public String updateForm(java.util.Map env, boolean local)
@@ -19457,7 +19465,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       if (acc != null) 
       { String nme = acc.getName(); 
         beta.addNewEnvironment(); 
-        beta.addVariable(nme, rgt); 
+        beta.addVariable(sigma, nme, rgt); 
 
         // JOptionPane.showInputDialog("Evaluating " + arg + " in environment " + beta); 
 

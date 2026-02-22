@@ -70,6 +70,34 @@ public class ConditionalExpression extends Expression
     return false; 
   }  
 
+  public Expression evaluate(
+                ModelSpecification sigma, ModelState beta)
+  { Expression cond = test.evaluate(sigma, beta);
+    if (cond == null) 
+    { return new BasicExpression("invalid"); } 
+ 
+    Expression scond = cond.simplify();
+    scond.setBrackets(false); 
+ 
+    if ("true".equals(scond+""))
+    { return ifExp.evaluate(sigma, beta); } 
+    return elseExp.evaluate(sigma, beta); 
+  } 
+
+  public int execute(
+                ModelSpecification sigma, ModelState beta)
+  { Expression cond = test.evaluate(sigma, beta);
+    if (cond == null) 
+    { return Statement.EXCEPTION; } 
+ 
+    Expression scond = cond.simplify();
+    scond.setBrackets(false); 
+ 
+    if ("true".equals(scond+""))
+    { return ifExp.execute(sigma, beta); } 
+    return elseExp.execute(sigma, beta); 
+  } 
+
   public Expression transformPythonSelectExpressions()
   { Expression tqf = test.transformPythonSelectExpressions();
     Expression lqf = ifExp.transformPythonSelectExpressions();

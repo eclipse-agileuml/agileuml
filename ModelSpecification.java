@@ -3,7 +3,7 @@ import java.io.*;
 import javax.swing.JOptionPane; 
 
 /******************************
-* Copyright (c) 2003--2025 Kevin Lano
+* Copyright (c) 2003--2026 Kevin Lano
 * This program and the accompanying materials are made available under the
 * terms of the Eclipse Public License 2.0 which is available at
 * http://www.eclipse.org/legal/epl-2.0
@@ -14,6 +14,8 @@ import javax.swing.JOptionPane;
 public class ModelSpecification 
 { Vector objects = new Vector(); // all objects
   Vector allocated = new Vector(); // all references
+  java.util.Map memory = new java.util.HashMap(); 
+                                   // references -> Expression
 
   Map correspondence = new Map();
 
@@ -83,6 +85,12 @@ public class ModelSpecification
       objectsOfClass.put(ename, res);  
     } 
   } 
+
+  public Expression getMemoryValue(String ref)
+  { return (Expression) memory.get(ref); } 
+
+  public void setMemoryValue(String ref, Expression val)
+  { memory.put(ref, val); } 
 
   public void setStaticAttributeValue(String cls, String att,
                                       Expression val)
@@ -188,14 +196,16 @@ public class ModelSpecification
 		  
   public String toString()
   { String res = ""; 
+
     for (int i = 0; i < objects.size(); i++) 
     { ObjectSpecification spec = (ObjectSpecification) objects.get(i); 
       res = res + spec.details() + "\n"; 
     } 
 
-    res = res + objectsOfClass + "\n"; 
+    res = res + ">> Objects: " + objectsOfClass + "\n"; 
 
-    res = res + staticAttributesOfClass + "\n"; 
+    res = res + ">> Static attributes: " + 
+          staticAttributesOfClass + "\n"; 
 	
     for (int j = 0; j < correspondence.elements.size(); j++)
     { Maplet mm = (Maplet) correspondence.elements.get(j); 
@@ -203,6 +213,8 @@ public class ModelSpecification
       ObjectSpecification tobj = (ObjectSpecification) mm.dest; 
       res = res + sobj.getName() + " |-> " + tobj.getName() + "\n"; 
     } 
+
+    res = res + ">> Memory state: " + memory + "\n"; 
 
     return res; 
   }

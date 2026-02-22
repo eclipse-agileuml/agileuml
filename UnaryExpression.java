@@ -2083,7 +2083,7 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
 
     if (operator.equals("?"))
     { // find the address of the argument
-      return beta.getVariableValue("?" + argument); 
+      return beta.getVariableValue("" + argument); 
     } // for simple variable name
 
     if (operator.equals("!"))
@@ -2092,7 +2092,11 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
       // a pointer id
       String pid = ptr + ""; 
 
-      ObjectSpecification obj = 
+      // Get the memory value of it: 
+      if (ptr != null) 
+      { return sigma.getMemoryValue(pid); } 
+
+      /* ObjectSpecification obj = 
                    sigma.getReferredVariable(pid);
 
       if (obj != null) 
@@ -2105,7 +2109,7 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
         { Expression res = (Expression) env.get(nme); 
           return res;
         }  
-      } 
+      } */ 
 
       return new BasicExpression("invalid");  
     } 
@@ -2164,13 +2168,15 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
     return Expression.simplify(operator, pre); 
   } 
 
-  public void execute(ModelSpecification sigma, 
-                      ModelState beta)
+  public int execute(ModelSpecification sigma, 
+                     ModelState beta)
   { if ("->display".equals(operator))
     { Expression val = argument.evaluate(sigma, beta); 
-      System.out.println("DISPLAY: " + val);  
+      System.out.println("DISPLAY: " + val);
+      return Statement.NORMAL;   
     }  
-    else if ("->isDeleted".equals(operator))
+    
+    if ("->isDeleted".equals(operator))
     { if (argument instanceof BasicExpression && 
           ((BasicExpression) argument).arrayIndex == null) 
       { // remove the object from its class, and set the 
@@ -2181,6 +2187,7 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
         beta.updateState(sigma, argument, 
                          new BasicExpression("null")); 
         System.out.println("DELETED: " + obj);  
+        return Statement.NORMAL; 
       } 
     } 
     else if ("->oclIsNew".equals(operator) && 
@@ -2196,9 +2203,12 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
                  argent.initialisedObject(oid);
           sigma.addObject(newobj); 
           beta.updateState(sigma, argument, new BasicExpression(oid));  
+          return Statement.NORMAL;
         } 
       } 
     }
+
+    return Statement.NORMAL;
   }  
 
   public String updateForm(java.util.Map env, boolean local)

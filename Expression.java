@@ -3034,9 +3034,9 @@ abstract class Expression
                              ModelState beta)
   { return this; }  
 
-  public void execute(ModelSpecification sigma, 
-                      ModelState beta)
-  { } // for execute expr;   
+  public int execute(ModelSpecification sigma, 
+                     ModelState beta)
+  { return Statement.NORMAL; } // for execute expr;   
 
 
   public Expression simplifyOCL()

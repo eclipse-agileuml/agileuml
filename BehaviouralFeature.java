@@ -245,18 +245,21 @@ public class BehaviouralFeature extends ModelElement
       String pname = par.getName(); 
       if (i < parValues.size())
       { Expression pval = (Expression) parValues.get(i); 
-        beta.addVariable(pname, pval); 
+        String pid = Identifier.nextIdentifier("&_"); 
+        beta.addVariable(sigma, pname, pid, pval); 
       } 
       else if (typ != null) 
       { Expression def = Type.defaultInitialValueExpression(typ); 
-        beta.addVariable(pname, def); 
+        String pid = Identifier.nextIdentifier("&_"); 
+        beta.addVariable(sigma, pname, pid, def); 
       }    
     } 
 
-    if (resultType != null) 
+    if (resultType != null && 
+        !("void".equals(resultType + ""))) 
     { Expression res = 
          Type.defaultInitialValueExpression(resultType);
-      beta.addVariable("result", res); 
+      beta.addVariable(sigma, "result", res); 
     } 
 
     int status = activity.execute(sigma, beta); 
@@ -264,8 +267,9 @@ public class BehaviouralFeature extends ModelElement
     /* JOptionPane.showInputDialog(">> Operation result is " + 
                       beta.getVariableValue("result")); */ 
  
-    if (resultType != null) 
-    { return beta.getVariableValue("result"); } 
+    if (resultType != null && 
+        !("void".equals(resultType + ""))) 
+    { return beta.getVariableValue(sigma, "result"); } 
 
     return null; 
   } 
@@ -1823,6 +1827,9 @@ public class BehaviouralFeature extends ModelElement
   } 
 
   public boolean hasResultType()
+  { return hasResult(); } 
+
+  public boolean returnsValue()
   { return hasResult(); } 
 
   public void setResultType(Type t)
@@ -3640,6 +3647,18 @@ public class BehaviouralFeature extends ModelElement
 
     return unusedVars; 
   }
+
+  public boolean checkHasReturn()
+  { if (this.returnsValue() && activity != null) 
+    { if (Statement.endsWithReturn(activity)) { } 
+      else 
+      { System.err.println("!! Warning: operation " + name + " activity has control flow paths not ending in return: " + activity); 
+        return false; 
+      } 
+    }
+ 
+    return true; 
+  } 
 
   public void removeUnusedParameters()
   { Vector unusedVars = checkParameterNames(); 

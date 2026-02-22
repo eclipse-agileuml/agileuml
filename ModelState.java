@@ -2,7 +2,7 @@ import java.util.HashMap;
 import java.util.Vector;  
 
 /******************************
-* Copyright (c) 2003--2025 Kevin Lano
+* Copyright (c) 2003--2026 Kevin Lano
 * This program and the accompanying materials are made available under the
 * terms of the Eclipse Public License 2.0 which is available at
 * http://www.eclipse.org/legal/epl-2.0
@@ -56,6 +56,29 @@ public class ModelState
     return null; 
   } // else - error
 
+  public java.util.HashMap addVariable(
+            ModelSpecification sigma, 
+            String var, Expression expr)
+  { String pid = Identifier.nextIdentifier("&_"); 
+    return addVariable(sigma, var, pid, expr); 
+  } 
+
+  public java.util.HashMap addVariable(
+            ModelSpecification sigma, 
+            String var, String pid, Expression expr)
+  { int n = variableValues.size(); 
+
+    if (n > 0)
+    { java.util.HashMap env = 
+           (java.util.HashMap) variableValues.get(n-1); 
+      env.put(var, new BasicExpression(pid));
+      sigma.setMemoryValue(pid, expr);  
+      return env; 
+    } 
+
+    return null; 
+  } // else - error
+
   public void 
      setVariableValue(String var, Expression expr)
   { Expression res = null; 
@@ -71,8 +94,15 @@ public class ModelState
     } 
   }         
 
-  public Expression 
-     getVariableValue(String var)
+  public void 
+     setVariableValue(ModelSpecification sigma, 
+                      String var, Expression expr)
+  { Expression ref = getVariableValue(var); 
+    if (ref != null) 
+    { sigma.setMemoryValue(ref + "", expr); } 
+  }         
+
+  public Expression getVariableValue(String var)
   { Expression res = null; 
     int n = variableValues.size(); 
 
@@ -87,6 +117,15 @@ public class ModelState
 
     return res; 
   }         
+
+  public Expression 
+     getVariableValue(ModelSpecification sigma, String var)
+  { Expression ref = getVariableValue(var); 
+    if (ref == null) 
+    { return null; } 
+
+    return sigma.getMemoryValue(ref + ""); 
+  } // get the address then look up address in memory        
 
   public java.util.HashMap 
                    getEnvironment(String var)
@@ -123,19 +162,20 @@ public class ModelState
       { // simple variable or attribute
 
         if (lhs.isAttribute()) // of "self"
-        { Expression oid = this.getVariableValue("self"); 
+        { Expression oid = 
+                 this.getVariableValue(sigma, "self"); 
           ObjectSpecification ref = 
                 sigma.getObjectSpec("" + oid); 
           if (ref != null)
           { ref.setOCLValue(var, rhsValue); }
         }   
         else 
-        { this.setVariableValue(var, rhsValue); } 
+        { this.setVariableValue(sigma, var, rhsValue); } 
       } 
       else if (obj == null)
       { // simple array variable 
         Expression indv = indx.evaluate(sigma, this); 
-        Expression arr = this.getVariableValue(var); 
+        Expression arr = this.getVariableValue(sigma, var); 
 
         if (arr instanceof SetExpression)
         { int indval = Integer.parseInt("" + indv); 

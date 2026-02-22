@@ -5014,6 +5014,8 @@ public class Entity extends ModelElement implements Comparable
     for (int i = 0; i < operations.size(); i++)
     { BehaviouralFeature op = (BehaviouralFeature) operations.get(i);
 
+      op.checkHasReturn(); 
+
       String nme = op.getName(); 
       Vector opuses = op.operationsUsedIn();
 

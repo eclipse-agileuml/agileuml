@@ -17077,7 +17077,7 @@ public Statement generateDesignSubtract(Expression rhs)
                 ModelSpecification sigma, ModelState beta)
   { if (umlkind == VARIABLE)
     { String nme = getData();
-      Expression expr = beta.getVariableValue(nme); 
+      Expression expr = beta.getVariableValue(sigma,nme); 
 
       if (expr != null) 
       { if (arrayIndex != null && 
@@ -17120,7 +17120,7 @@ public Statement generateDesignSubtract(Expression rhs)
         return expr; 
       } 
 
-      Expression obj = beta.getVariableValue("self");
+      Expression obj = beta.getVariableValue(sigma, "self");
  
       if (obj != null) 
       { return sigma.getObjectAttributeValue(obj + "", nme); }       
@@ -17146,7 +17146,7 @@ public Statement generateDesignSubtract(Expression rhs)
       { if (obj != null) 
         { selfobject = obj.evaluate(sigma, beta); } 
         else 
-        { selfobject = beta.getVariableValue("self"); } 
+        { selfobject = beta.getVariableValue(sigma, "self"); } 
 
         if (selfobject == null) // error
         { return this; } 
@@ -17169,7 +17169,8 @@ public Statement generateDesignSubtract(Expression rhs)
       { return this; } 
  
       beta.addNewEnvironment(); 
-      beta.addVariable("self", selfobject); 
+      String pid = Identifier.nextIdentifier("&_"); 
+      beta.addVariable(sigma, "self", pid, selfobject); 
 
       Vector parValues = new Vector(); 
       for (int i = 0; i < actualPars.size(); i++) 
@@ -17399,6 +17400,72 @@ public Statement generateDesignSubtract(Expression rhs)
 
     return this;  
   } 
+
+  public int execute(
+                ModelSpecification sigma, ModelState beta)
+  { if (umlkind != QUERY && 
+        umlkind != UPDATEOP)
+    { return Statement.NORMAL; } 
+
+    // update call possibly returning a value 
+    Expression obj = this.getObjectRef(); 
+      // if null, it is a call on self. 
+    String op = this.getData(); 
+    Vector actualPars = this.getParameters(); 
+    int npars = actualPars.size(); 
+      
+    BehaviouralFeature bf = null; 
+    Expression selfobject = null; 
+
+    if (this.isStatic() && entity != null)
+    { bf = entity.getOperation(op, npars); 
+      selfobject = new BasicExpression("null"); 
+    } 
+    else 
+    { if (obj != null) 
+      { selfobject = obj.evaluate(sigma, beta); } 
+      else 
+      { selfobject = beta.getVariableValue(sigma, "self"); } 
+
+      if (selfobject == null) // error
+      { return Statement.EXCEPTION; } 
+
+      ObjectSpecification ospec = 
+                 sigma.getObjectSpec("" + selfobject);
+
+      if (ospec == null) // static case
+      { return Statement.EXCEPTION; } 
+ 
+      Entity ent = ospec.getEntity(); 
+
+      if (ent == null) 
+      { return Statement.EXCEPTION; } 
+
+      bf = ent.getOperation(op, npars);
+    }
+
+    if (bf == null) 
+    { return Statement.EXCEPTION; } 
+ 
+    beta.addNewEnvironment(); 
+    String pid = Identifier.nextIdentifier("&_"); 
+    beta.addVariable(sigma, "self", pid, selfobject); 
+
+    Vector parValues = new Vector(); 
+    for (int i = 0; i < actualPars.size(); i++) 
+    { Expression pval = (Expression) actualPars.get(i); 
+      Expression parval = pval.evaluate(sigma, beta); 
+      parValues.add(parval); // could be null; 
+    } 
+
+    Expression res = 
+       bf.execute(sigma, beta, parValues);
+
+    beta.removeLastEnvironment(); 
+  
+    return Statement.NORMAL; 
+  } 
+
 
   public Expression simplify() 
   { if (umlkind == FUNCTION)

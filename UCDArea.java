@@ -2259,6 +2259,18 @@ public class UCDArea extends JPanel
      */ 
   }
 
+  public void generateJavaScript()
+  { File cgtlfile = new File("./cg/uml2JavaScript.cstl");
+    if (cgtlfile == null) 
+    { System.err.println("!! Could not find " + 
+                         "./cg/uml2JavaScript.cstl");
+      return; 
+    }
+ 
+    applyCGTL(cgtlfile); 
+  } 
+        
+    
   public void applyCGTL()
   { // cgbePreProcess(); 
 
@@ -2268,7 +2280,34 @@ public class UCDArea extends JPanel
     // for use by a CSTL file that processes OclAttribute 
     // and OclExpression items. 
 
-    System.out.println(">>> ASTs of types, classes and use cases: "); 
+    File cgtlfile = null; 
+    try 
+    { JFileChooser fc = new JFileChooser();
+      File startingpoint = new File("./cg");
+      fc.setCurrentDirectory(startingpoint);
+      fc.setDialogTitle("Select a *.cgtl file");
+      // fc.addChoosableFileFilter(new TextFileFilter()); 
+
+	  
+      int returnVal = fc.showOpenDialog(null);
+      if (returnVal == JFileChooser.APPROVE_OPTION)
+      { cgtlfile = fc.getSelectedFile(); }
+      else
+      { System.err.println("!! Load aborted");
+        return; 
+      }
+
+      if (cgtlfile == null) 
+      { System.err.println("!! invalid file");
+        return; 
+      }
+    } catch (Exception e) { return; } 
+
+    applyCGTL(cgtlfile); 
+  } 
+
+  public void applyCGTL(File cgtlfile)
+  { System.out.println(">>> ASTs of types, classes and use cases: "); 
     System.out.println(); 
 
     Vector typasts = new Vector(); 
@@ -2302,25 +2341,6 @@ public class UCDArea extends JPanel
     System.out.println(); 
     System.out.println(); 
 
-    File cgtlfile = null; 
-    try 
-    { JFileChooser fc = new JFileChooser();
-      File startingpoint = new File("./cg");
-      fc.setCurrentDirectory(startingpoint);
-      fc.setDialogTitle("Select a *.cgtl file");
-      // fc.addChoosableFileFilter(new TextFileFilter()); 
-
-	  
-      int returnVal = fc.showOpenDialog(null);
-      if (returnVal == JFileChooser.APPROVE_OPTION)
-      { cgtlfile = fc.getSelectedFile(); }
-      else
-      { System.err.println("!! Load aborted");
-        return; 
-      }
-
-      if (cgtlfile == null) { return; }
-    } catch (Exception e) { return; } 
 
     Vector vs = new Vector(); 
     CGSpec spec = loadCSTL(cgtlfile,vs); 
@@ -2699,7 +2719,18 @@ public class UCDArea extends JPanel
     Entity src = (Entity) ents.get(0);
     Vector ops = selectAttribute(src); 
     if (ops.size() == 0) { return; } 
+
     Attribute att = (Attribute) ops.get(0); 
+    Type tt = att.getType(); 
+    if (tt != null && 
+        (tt.isEntity() || Type.isEntityCollection(tt)))
+    { } 
+    else 
+    { System.err.println("!! Cannot convert " + att + " : " + tt 
+                         + " to an association"); 
+      return; 
+    } 
+
     src.removeAttribute(att.getName());
     Association ast = new Association(src,att);  
     src.addAssociation(ast);
@@ -3719,7 +3750,7 @@ public class UCDArea extends JPanel
       String oid = Identifier.newIdentifier("oid_");  
       ObjectSpecification obj = cls.initialisedObject(oid); 
       ms.addObject(obj);
-      beta.addVariable("self", new BasicExpression(obj));
+      beta.addVariable(ms, "self", new BasicExpression(obj));
                                // new BasicExpression(oid)   
       System.out.println(">> Initial global state = " + ms); 
       System.out.println(">> Initial local state = " + beta); 
@@ -3770,7 +3801,7 @@ public class UCDArea extends JPanel
       else if (mess.startsWith("!!"))
       { System.err.println("<p style=\"color: orange;\">" + mess + "</p>"); }  
       else if (mess.startsWith("!"))
-      { System.err.println("<p style=\"color: blue;\">" + mess + "</p>"); }  
+      { System.err.println("<p style=\"color: yellow;\">" + mess + "</p>"); }  
       else 
       { System.err.println("<p style=\"color: green;\">" + mess + "</p>"); }  
     }  

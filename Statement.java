@@ -2081,7 +2081,9 @@ abstract class Statement implements Cloneable
       }
       else 
       { return false; }  
+
       if (ts.getEndStatement() == null) { return false; } 
+
       return Statement.endsWithReturn(ts.getEndStatement()); 
     } 
 
@@ -4160,7 +4162,7 @@ class ReturnStatement extends Statement
                       ModelState beta)
   { if (value != null)
     { Expression expr = value.evaluate(sigma, beta); 
-      beta.setVariableValue("result", expr); 
+      beta.setVariableValue(sigma, "result", expr); 
     } 
 
     return Statement.RETURN; 
@@ -5261,18 +5263,18 @@ class InvocationStatement extends Statement
       { if (obj != null) 
         { selfobject = obj.evaluate(sigma, beta); } 
         else 
-        { selfobject = beta.getVariableValue("self"); } 
+        { selfobject = beta.getVariableValue(sigma, "self"); } 
 
       // JOptionPane.showInputDialog(selfobject); 
 
         if (selfobject == null) // error 
-        { return res; } 
+        { return Statement.EXCEPTION; } 
 
         ObjectSpecification ospec = 
                  sigma.getObjectSpec("" + selfobject);
 
         if (ospec == null) 
-        { return res; }
+        { return Statement.EXCEPTION; }
 
         Entity ent = ospec.getEntity(); 
 
@@ -5283,10 +5285,10 @@ class InvocationStatement extends Statement
       } 
 
       if (bf == null) 
-      { return res; } 
+      { return Statement.EXCEPTION; } 
 
       beta.addNewEnvironment(); 
-      beta.addVariable("self", selfobject); 
+      beta.addVariable(sigma, "self", selfobject); 
 
       Vector parValues = new Vector(); 
       for (int i = 0; i < actualPars.size(); i++) 
@@ -6280,8 +6282,8 @@ class ImplicitInvocationStatement extends Statement
   } 
 
   public int execute(ModelSpecification sigma, ModelState beta)
-  { callExp.execute(sigma, beta); 
-    return Statement.NORMAL; 
+  { int status = callExp.execute(sigma, beta); 
+    return status; 
   }
  
   public Statement substituteEq(String oldE, Expression newE)
@@ -6842,6 +6844,8 @@ class WhileStatement extends Statement
     { Expression testvalue = 
          loopTest.evaluate(sigma, beta); 
 
+      testvalue.setBrackets(false); 
+
       while ("true".equals(testvalue + ""))
       { res = body.execute(sigma, beta);
         // System.out.println("---> iteration of while loop: " + sigma + ", " + beta + " " + res);
@@ -6869,6 +6873,8 @@ class WhileStatement extends Statement
       Expression testvalue = 
          loopTest.evaluate(sigma, beta);
  
+      testvalue.setBrackets(false); 
+
       while ("false".equals(testvalue + ""))
       { res = body.execute(sigma, beta);
         // System.out.println("---> iteration of repeat loop: " + sigma + ", " + beta + " " + res);
@@ -6895,11 +6901,11 @@ class WhileStatement extends Statement
 
         String lv = "" + loopVar; 
         beta.addNewEnvironment(); 
-        beta.addVariable(lv, new BasicExpression("null")); 
+        beta.addVariable(sigma, lv, new BasicExpression("null")); 
    
         for (int i = 0; i < n; i++) 
         { Expression val = serange.getElement(i); 
-          beta.setVariableValue(lv, val); 
+          beta.setVariableValue(sigma, lv, val); 
           res = body.execute(sigma, beta); 
           // System.out.println("---> iteration of for loop: " + sigma + ", " + beta + " " + res);
 
@@ -9307,29 +9313,27 @@ class CreationStatement extends Statement
   public int execute(ModelSpecification sigma, 
                      ModelState beta)
   { // add assignsTo as new variable, set to initialExpression
-    // Also allocate a new reference for the variable
+    // Also allocate a new reference ref for the variable
+    // add  ref |-> initialExpression to memory and 
+    // var |-> ref in the last beta environment.
 
     java.util.HashMap env = null; 
 
     if (initialExpression != null) 
     { Expression val = initialExpression.evaluate(sigma, beta); 
-      env = beta.addVariable(assignsTo, val);
+      String pid = Identifier.newIdentifier("&_");
+      env = beta.addVariable(sigma, assignsTo, pid, val);
     } // else use default value 
     else if (instanceType != null)  
     { Expression defaultInit = 
         Type.defaultInitialValueExpression(instanceType);
       Expression val = defaultInit.evaluate(sigma, beta); 
-      env = beta.addVariable(assignsTo, val);
+      String pid = Identifier.newIdentifier("&_");
+      env = beta.addVariable(sigma, assignsTo, pid, val);
     }
 
     if (env != null) // success
-    { String pid = Identifier.newIdentifier("&_");
-      sigma.addReferenceTo(pid, assignsTo, 
-                           createsInstanceOf, env);   
-      beta.addVariable("?" + assignsTo, 
-                       new BasicExpression(pid));     
-      return Statement.NORMAL;
-    } 
+    { return Statement.NORMAL; } 
 
     return Statement.EXCEPTION;  
   } 
@@ -15924,23 +15928,17 @@ class AssignStatement extends Statement
       Expression arg = uexpr.getArgument(); 
       Expression ptr = arg.evaluate(sigma, beta);
 
-      String pid = ptr + ""; 
+      String pid = ptr + ""; // a reference
 
-      ObjectSpecification obj = 
-                   sigma.getReferredVariable(pid);
-      if (obj != null) 
-      { // evaluate the name in the specific environment
-        String nme = (String) obj.getRawValue("name"); 
-        java.util.Map env = 
-               (java.util.Map) obj.getRawValue("environment"); 
-        
-        if (env != null && nme != null)
-        { env.put(nme, rhsValue); 
-          System.out.println(">> Updated state after assignment: " + beta);
-          return Statement.NORMAL; 
-        }  
-      } 
-
+      if (ptr != null && !("invalid".equals(pid)) && 
+          !("null".equals(pid)))  // 0 pointer is null
+      { sigma.setMemoryValue(pid, rhsValue);
+        System.out.println();   
+        System.out.println(">> Updated states after " + this + 
+                       ": " + sigma + ">> Local state: " + beta);
+        return Statement.NORMAL; 
+      }
+  
       return Statement.EXCEPTION; 
     } 
 
@@ -15965,7 +15963,8 @@ class AssignStatement extends Statement
             return Statement.NORMAL;  
           } 
 
-          Expression oid = beta.getVariableValue("self"); 
+          Expression oid = 
+                 beta.getVariableValue(sigma, "self"); 
           ObjectSpecification ref = 
                 sigma.getObjectSpec("" + oid); 
 
@@ -15973,13 +15972,13 @@ class AssignStatement extends Statement
           { ref.setOCLValue(var, rhsValue); }
         }   
         else 
-        { beta.setVariableValue(var, rhsValue); } 
+        { beta.setVariableValue(sigma, var, rhsValue); } 
       } 
       else if (obj == null)
       { // simple array variable, or array-valued attribute
  
         Expression indv = indx.evaluate(sigma, beta); 
-        Expression arr = beta.getVariableValue(var); 
+        Expression arr = beta.getVariableValue(sigma, var); 
 
         if (arr instanceof SetExpression)
         { int indval = Integer.parseInt("" + indv); 
@@ -16010,7 +16009,9 @@ class AssignStatement extends Statement
       } 
     } 
 
-    System.out.println(">> Updated state after assignment: " + beta);
+    System.out.println(); 
+    System.out.println(">> Updated state after " + this + ": " + sigma + ">> Local state: " + beta);
+
     return Statement.NORMAL;  
   } 
 
@@ -17505,7 +17506,12 @@ class ConditionalStatement extends Statement
 
   public int execute(ModelSpecification sigma, ModelState beta)
   { Expression tval = test.evaluate(sigma, beta);
+
+    if (tval == null) 
+    { return Statement.EXCEPTION; } 
  
+    tval.setBrackets(false); 
+
     if ("true".equals(tval + ""))
     { int res = ifPart.execute(sigma, beta); 
       return res; 
