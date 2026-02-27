@@ -7922,7 +7922,8 @@ public boolean conflictsWithIn(String op, Expression el,
       return "Set.intersectAll(" + col + ")"; 
     } 
 
-    if (operator.equals("->unionAll") || operator.equals("|unionAll"))
+    if (operator.equals("->unionAll") || 
+        operator.equals("|unionAll"))
     { String col = collectQueryForm(lqf,rqf,rprim,env,local); 
       if (left.isOrdered() && (right.isOrdered() || "self".equals(right + "")))
       { return "Set.concatenateAll(" + col + ")"; } 
@@ -7940,11 +7941,13 @@ public boolean conflictsWithIn(String op, Expression el,
     } 
 
     if (right.umlkind == CLASSID && 
-        ((BasicExpression) right).arrayIndex == null && operator.equals(":"))  
+        ((BasicExpression) right).arrayIndex == null && 
+        operator.equals(":"))  
     { return "(" + lqf + " instanceof " + right + ")"; } 
 
     if (right.umlkind == CLASSID && 
-        ((BasicExpression) right).arrayIndex == null && operator.equals("->oclIsKindOf"))  
+        ((BasicExpression) right).arrayIndex == null && 
+        operator.equals("->oclIsKindOf"))  
     { return "(" + lqf + " instanceof " + right + ")"; } 
 
     if (operator.equals("->oclIsKindOf"))  
@@ -7955,7 +7958,8 @@ public boolean conflictsWithIn(String op, Expression el,
     // ->oclIsTypeOf (in the exact class)
 	
     if (right.umlkind == CLASSID && 
-        ((BasicExpression) right).arrayIndex == null && operator.equals("->oclIsTypeOf"))  
+        ((BasicExpression) right).arrayIndex == null && 
+        operator.equals("->oclIsTypeOf"))  
     { return "(" + lqf + ".getClass() == " + right + ".class)"; } 
 
     if (operator.equals("->oclIsTypeOf"))  
@@ -7964,23 +7968,27 @@ public boolean conflictsWithIn(String op, Expression el,
     } 
 
     if (right.umlkind == CLASSID && 
-        ((BasicExpression) right).arrayIndex == null && operator.equals("<:"))  
+        ((BasicExpression) right).arrayIndex == null && 
+        operator.equals("<:"))  
     { rqf = ((BasicExpression) right).classExtentQueryForm(env,local);
       return "(" + rqf + ".containsAll(" + lqf + "))"; 
     } 
 
     if (left.umlkind == CLASSID && 
-        ((BasicExpression) left).arrayIndex == null && operator.equals("->includes"))  
+        ((BasicExpression) left).arrayIndex == null && 
+        operator.equals("->includes"))  
     { return "(" + rqf + " instanceof " + left + ")"; } 
 
     if (left.umlkind == CLASSID && 
-        ((BasicExpression) left).arrayIndex == null && operator.equals("->includesAll"))  
+        ((BasicExpression) left).arrayIndex == null && 
+        operator.equals("->includesAll"))  
     { lqf = ((BasicExpression) left).classExtentQueryForm(env,local);
       return "(" + lqf + ".containsAll(" + rqf + "))"; 
     } 
 
     if (right.umlkind == CLASSID && 
-        ((BasicExpression) right).arrayIndex == null && operator.equals("/:")) 
+        ((BasicExpression) right).arrayIndex == null && 
+        operator.equals("/:")) 
     { return "!(" + lqf + " instanceof " + right + ")"; } 
 
     if (left.umlkind == CLASSID && 
@@ -12750,7 +12758,8 @@ public boolean conflictsWithIn(String op, Expression el,
       lqf = beleft.right.queryForm(env,local); 
       collectleft = beleft.right; 
       collectvar = beleft.left + ""; 
-      if (beleft.right == null || beleft.right.elementType == null)
+      if (beleft.right == null || 
+          beleft.right.elementType == null)
       { System.err.println("!! DESIGN ERROR: no element type for: " + beleft);
         /* JOptionPane.showMessageDialog(null, "no element type for " + beleft + " in " + this, 
              "Design error", JOptionPane.ERROR_MESSAGE); */
@@ -12849,7 +12858,8 @@ public boolean conflictsWithIn(String op, Expression el,
       lqf = beleft.right.queryFormJava6(env,local); 
       collectleft = beleft.right; 
       collectvar = beleft.left + ""; 
-      if (beleft.right == null || beleft.right.elementType == null)
+      if (beleft.right == null || 
+          beleft.right.elementType == null)
       { System.err.println("!! TYPE ERROR: no element type of: " + beleft);
         /* JOptionPane.showMessageDialog(null, "no element type for " + beleft + " in " + this, 
              "Design error", JOptionPane.ERROR_MESSAGE); */ 
@@ -12957,7 +12967,8 @@ public boolean conflictsWithIn(String op, Expression el,
       lqf = beleft.right.queryFormJava7(env,local); 
       collectleft = beleft.right; 
       collectvar = beleft.left + ""; 
-      if (beleft.right == null || beleft.right.elementType == null)
+      if (beleft.right == null || 
+          beleft.right.elementType == null)
       { System.err.println("!! TYPE ERROR: no element type of: " + beleft); }
       else  
       { localentity = beleft.right.elementType.getEntity(); } // May be null if primitive, String, etc
@@ -13070,7 +13081,8 @@ public boolean conflictsWithIn(String op, Expression el,
       lqf = beleft.right.queryFormCSharp(env,local); 
       collectleft = beleft.right; 
       collectvar = beleft.left + ""; 
-      if (beleft.right == null || beleft.right.elementType == null)
+      if (beleft.right == null || 
+          beleft.right.elementType == null)
       { System.err.println("!! TYPE ERROR: no element type of: " + beleft);
         /* JOptionPane.showMessageDialog(null, "no element type for " + beleft + " in " + this, 
               "Design error", JOptionPane.ERROR_MESSAGE); */ 
@@ -13134,7 +13146,8 @@ public boolean conflictsWithIn(String op, Expression el,
 
       // System.out.println(">> Variable use: " + use + " " + use.getType() + " " + use.arrayType + " " + use.getElementType()); 
  
-      if (parnames.contains(use.data) || (use.data + "").equals(collectvar) || 
+      if (parnames.contains(use.data) || 
+          (use.data + "").equals(collectvar) || 
           (collectvar == null && (use.data + "").equals("self"))) 
       {}  
       else if (collectvar != null && (use.data + "").equals("self") && use.getType() != null)
@@ -14901,7 +14914,7 @@ public boolean conflictsWithIn(String op, Expression el,
     return res; 
   } // what about comparitors? 
     
-  public void execute(ModelSpecification sigma, 
+  public int execute(ModelSpecification sigma, 
                       ModelState beta)
   { if ("->includes".equals(operator))
     { Expression eval = left.evaluate(sigma, beta); 
@@ -14909,7 +14922,8 @@ public boolean conflictsWithIn(String op, Expression el,
       if (eval instanceof SetExpression)
       { SetExpression se = (SetExpression) eval; 
         se.addElement(elem);
-        beta.updateState(sigma, left, se);  
+        beta.updateState(sigma, left, se);
+        return Statement.NORMAL;   
       } 
     }
     else if (":".equals(operator))
@@ -14918,7 +14932,8 @@ public boolean conflictsWithIn(String op, Expression el,
       if (eval instanceof SetExpression)
       { SetExpression se = (SetExpression) eval; 
         se.addElement(elem); 
-        beta.updateState(sigma, right, se);  
+        beta.updateState(sigma, right, se);
+        return Statement.NORMAL;   
       } 
     }
     else if ("->includesAll".equals(operator))
@@ -14931,6 +14946,7 @@ public boolean conflictsWithIn(String op, Expression el,
         Vector newelems = ses.getElements();  
         se.addElements(newelems); 
         beta.updateState(sigma, left, se);  
+        return Statement.NORMAL; 
       } 
     }
     else if ("<:".equals(operator))
@@ -14943,6 +14959,7 @@ public boolean conflictsWithIn(String op, Expression el,
         Vector newelems = ses.getElements();  
         se.addElements(newelems); 
         beta.updateState(sigma, right, se);  
+        return Statement.NORMAL; 
       } 
     }
     else if ("->excludes".equals(operator))
@@ -14952,6 +14969,7 @@ public boolean conflictsWithIn(String op, Expression el,
       { SetExpression se = (SetExpression) eval; 
         se.removeElement(elem); 
         beta.updateState(sigma, left, se);  
+        return Statement.NORMAL; 
       } 
     }
     else if ("/:".equals(operator))
@@ -14961,6 +14979,7 @@ public boolean conflictsWithIn(String op, Expression el,
       { SetExpression se = (SetExpression) eval; 
         se.removeElement(elem); 
         beta.updateState(sigma, right, se);  
+        return Statement.NORMAL; 
       } 
     }
     else if ("->excludesAll".equals(operator))
@@ -14973,6 +14992,7 @@ public boolean conflictsWithIn(String op, Expression el,
         Vector newelems = ses.getElements();  
         se.removeElements(newelems);
         beta.updateState(sigma, left, se);   
+        return Statement.NORMAL; 
       } 
     }
     else if ("/<:".equals(operator))
@@ -14985,9 +15005,10 @@ public boolean conflictsWithIn(String op, Expression el,
         Vector newelems = ses.getElements();  
         se.removeElements(newelems); 
         beta.updateState(sigma, right, se);  
+        return Statement.NORMAL; 
       } 
     }
-    
+    return Statement.NORMAL; 
   } 
   
   public String updateForm(java.util.Map env, boolean local)
@@ -19426,12 +19447,20 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
   { if (operator.equals("#") || operator.equals("#1") || 
         operator.equals("!") || operator.equals("|A") ||
         operator.equals("#LC") || operator.equals("|") || 
-        operator.equals("|C") || operator.equals("|R"))
+        operator.equals("|C") || operator.equals("|R") ||
+        operator.equals("|selectMinimals") || 
+        operator.equals("|selectMaximals") ||
+        "|sortedBy".equals(operator) ||
+        "|intersectAll".equals(operator) || 
+        "|unionAll".equals(operator) ||
+        "|concatenateAll".equals(operator) || 
+        "|isUnique".equals(operator))
     { Expression var = ((BinaryExpression) left).left; 
       Expression col = ((BinaryExpression) left).right; 
       String vbl = var + ""; 
 
-      Expression se = col.evaluate(sigma, beta); 
+      Expression se = col.evaluate(sigma, beta);
+ 
       if (se instanceof SetExpression)
       { Expression res = 
           ((SetExpression) se).evaluateIterator(operator,
@@ -19456,13 +19485,15 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
 
       if (acc != null) 
       { String nme = acc.getName(); 
-        beta.addNewEnvironment(); 
-        beta.addVariable(nme, rgt); 
+        beta.addNewEnvironment();
+        String pid = Identifier.nextIdentifier("&_");  
+        beta.addVariable(sigma, nme, pid, rgt); 
 
         // JOptionPane.showInputDialog("Evaluating " + arg + " in environment " + beta); 
 
         Expression res = arg.evaluate(sigma, beta); 
         beta.removeLastEnvironment();
+        sigma.freeMemory(pid); 
         return res.simplify();
       } 
 
@@ -22021,15 +22052,15 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
           return res; 
         } 
       }
-      else if ("->size".equals(leftop))
-      { // col->size() = 0 is col->isEmpty()
-        System.err.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
+      /* else if ("->size".equals(leftop))
+      { // col->size() = 0 better as col->isEmpty()
+        // System.err.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
           
         Expression col = arg.getArgument(); 
         UnaryExpression res = 
           new UnaryExpression("->isEmpty", col); 
         return res; 
-      } 
+      } */ 
     }
 
     if (operator.equals("=") && "0".equals(right + "") && 
@@ -22160,7 +22191,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
           return res; 
         } 
       }
-      else if ("->size".equals(leftop)) 
+      /* else if ("->size".equals(leftop)) 
       { // col->size() > 0
 
         System.err.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
@@ -22168,7 +22199,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         UnaryExpression res = 
           new UnaryExpression("->notEmpty", col); 
         return res; 
-      } 
+      } */ 
     }
 
     if (((operator.equals(">") && "0".equals(right + "")) ||
@@ -22887,10 +22918,15 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
   }
 
 
-  public Map energyUse(Map res, Vector rUses, Vector aUses) 
+  public Map energyUse(Map res, Vector rUses, 
+                       Vector aUses, Vector yUses) 
   { // Double iterations ->select(...)->select(...)
     // are amber flags.
-    // ->select(...)->any() is a red flag, likewise 
+    // ->select(...)->at(1) is a red flag, likewise 
+    // ->reject(...)->at(1) is a red flag, likewise 
+    // ->sort()->at(1) is a red flag, likewise 
+    // ->sortedBy(...)->at(1) is a red flag, likewise 
+    // ->collect(...)->at(1) is a red flag, likewise 
     // s->select(...)->size() = 0
     // s->count(x)->size() = 0
     // mp->keys()->includes(x)
@@ -22899,6 +22935,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
     int synLeft = left.syntacticComplexity();
     int synRight = right.syntacticComplexity();
     int syn = synLeft + synRight + 1; 
+
     if (syn > TestParameters.syntacticComplexityLimit)
     { aUses.add("!! Excessive expression size (MEL) in " + this + " : try to simplify OCL expression");
       int ascore = (int) res.get("amber"); 
@@ -22912,8 +22949,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       res.set("amber", ascore+1); 
     } */ 
 
-    left.energyUse(res, rUses, aUses); 
-    right.energyUse(res, rUses, aUses); 
+    left.energyUse(res, rUses, aUses, yUses); 
+    right.energyUse(res, rUses, aUses, yUses); 
 
     if ("let".equals(operator))
     { if (accumulator == null) 
@@ -22937,9 +22974,9 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
        
     if (("&".equals(operator) || "or".equals(operator)) && 
         synLeft > synRight)
-    { aUses.add("!! OCL efficiency smell (OES): Possibly inefficient execution order: " + this + "\n!! c(left) = " + synLeft + ", c(right) = " + synRight);
-      int ascore = (int) res.get("amber"); 
-      res.set("amber", ascore+1);
+    { yUses.add("! OCL efficiency smell (OES): Possibly inefficient execution order: " + this + "\n! c(left) = " + synLeft + ", c(right) = " + synRight);
+      int yscore = (int) res.get("yellow"); 
+      res.set("yellow", yscore+1);
     } 
 
     if (operator.equals("=") && "0".equals(right + "") && 
@@ -22963,13 +23000,13 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
           res.set("amber", ascore+1);
         } 
       }
-      else if ("->size".equals(leftop))
+      /* else if ("->size".equals(leftop))
       { // col->size() = 0 is col->isEmpty()
 
         aUses.add("!! OCL efficiency smell (OES): Inefficient comparison: " + this + "\n!! More efficient to use ->isEmpty");
         int ascore = (int) res.get("amber"); 
         res.set("amber", ascore+1);
-      }
+      } */ 
     }
     else if (operator.equals("=") && "0".equals(right + "") && 
         left instanceof BinaryExpression)
@@ -23027,13 +23064,13 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
           res.set("amber", ascore+1);
         } 
       }
-      else if ("->size".equals(leftop)) 
+      /* else if ("->size".equals(leftop)) 
       { // col->size() > 0
 
         aUses.add("!! OCL efficiency smell (OES): Inefficient comparison: " + this + "\n!! More efficient to use ->notEmpty");
         int ascore = (int) res.get("amber"); 
         res.set("amber", ascore+1);
-      } 
+      } */ 
     }
     else if (((operator.equals(">") && "0".equals(right + "")) ||
               (operator.equals(">=") && "1".equals(right + ""))
@@ -23158,6 +23195,46 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       rUses.add("!!! Energy-use flaw (UOR): Redundant results computation in: " + this);
       int rscore = (int) res.get("red"); 
       res.set("red", rscore+1); 
+    } 
+    else if ("->at".equals(operator) && 
+             left instanceof BinaryExpression)
+    { right.setBrackets(false); 
+      BinaryExpression beleft = (BinaryExpression) left;
+      String leftop = beleft.getOperator();
+
+      if ("1".equals(right + "") &&  
+          ("|".equals(leftop) || 
+           "->select".equals(leftop) || 
+           "|R".equals(leftop) || 
+           "->reject".equals(leftop) ||
+           "->collect".equals(leftop) || 
+           "|C".equals(leftop) ||
+           "|sortedBy".equals(leftop) ||
+           "->sortedBy".equals(leftop)))
+      { // Inefficient expression
+
+        aUses.add("!! Energy-use flaw (OES/UOR): Redundant results computation in: " + this);
+        int ascore = (int) res.get("amber"); 
+        res.set("amber", ascore+1); 
+      } 
+    } 
+    else if ("->at".equals(operator) && 
+             left instanceof UnaryExpression)
+    { right.setBrackets(false); 
+      UnaryExpression ueleft = (UnaryExpression) left;
+      String leftop = ueleft.getOperator();
+
+      if ("1".equals(right + "") &&  
+          ("->sort".equals(leftop) || 
+           "->reverse".equals(leftop) || 
+           "->front".equals(leftop) || 
+           "->tail".equals(leftop)))
+      { // Inefficient expression
+
+        aUses.add("!! Energy-use flaw (OES/UOR): Redundant results computation in: " + this);
+        int ascore = (int) res.get("amber"); 
+        res.set("amber", ascore+1); 
+      } 
     } 
 
     return res; 
@@ -23772,9 +23849,12 @@ private BExpression seqselectBinvariantForm(String var, BExpression bsimp, BExpr
     if ("|C".equals(operator) || "|R".equals(operator) || 
         "|".equals(operator) || "#".equals(operator) || 
         "#1".equals(operator) || "|sortedBy".equals(operator) ||
-        "|intersectAll".equals(operator) || "|unionAll".equals(operator) ||
-        "|concatenateAll".equals(operator) || "|isUnique".equals(operator) ||
-        "|selectMaximals".equals(operator) || "|selectMinimals".equals(operator) || 
+        "|intersectAll".equals(operator) || 
+        "|unionAll".equals(operator) ||
+        "|concatenateAll".equals(operator) || 
+        "|isUnique".equals(operator) ||
+        "|selectMaximals".equals(operator) || 
+        "|selectMinimals".equals(operator) || 
         "!".equals(operator) || "|A".equals(operator))
     { BinaryExpression beleft = (BinaryExpression) getLeft();  
       args.add(beleft.getRight().cg(cgs)); 

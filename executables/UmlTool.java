@@ -185,7 +185,7 @@ public void findPlugins()
     fileMenu.add(saveMI);
 
     JMenu loadMetamodelMenu = 
-      new JMenu("Load Metamodel");
+      new JMenu("Load Metamodel/model");
     fileMenu.add(loadMetamodelMenu);
 
     JMenuItem loadDataMI = 
@@ -829,6 +829,15 @@ public void findPlugins()
     // desMenuItem.setMnemonic(KeyEvent.VK_D);
     analyseMenu.add(tinferenceMenuItem); 
 
+    ((JMenu) analyseMenu).addSeparator(); 
+
+    JMenuItem setThresholds = 
+      new JMenuItem("Set thresholds"); 
+    setThresholds.setToolTipText(
+      "Loads thresholds from analysisConfig.txt");
+    setThresholds.addActionListener(this);
+    analyseMenu.add(setThresholds);
+
     JMenuItem qualCheck = 
       new JMenuItem("Quality check"); 
     qualCheck.setToolTipText(
@@ -853,6 +862,8 @@ public void findPlugins()
       "Checks for energy use flaws");
     analyseMenu.add(energyAnal);
 
+    ((JMenu) analyseMenu).addSeparator(); 
+
     JMenuItem carchItem = new JMenuItem("Clean architecture properties"); 
     carchItem.addActionListener(this);
     analyseMenu.add(carchItem);
@@ -860,6 +871,8 @@ public void findPlugins()
     JMenuItem ddepsItem = new JMenuItem("Data dependencies"); 
     ddepsItem.addActionListener(this);
     analyseMenu.add(ddepsItem);
+
+    ((JMenu) analyseMenu).addSeparator(); 
 
     JMenuItem simulate = new JMenuItem("Simulate"); 
     simulate.addActionListener(this);
@@ -953,7 +966,7 @@ public void findPlugins()
     /* Transformation Menu */ 
     JMenu transMenu = new JMenu("Transform"); 
     transMenu.setMnemonic(KeyEvent.VK_T);
-    transMenu.setToolTipText("Transform UML Models"); 
+    transMenu.setToolTipText("Transform UML/OCL Models"); 
     menuBar.add(transMenu); 
 
     JMenuItem qualityMenu = new JMenu("Refactoring"); 
@@ -973,19 +986,19 @@ public void findPlugins()
     extractOper.addActionListener(this);
     qualityMenu.add(extractOper);
 
-    JMenuItem extractLocalVar = 
-      new JMenuItem("Extract Local Variable"); 
-    extractLocalVar.setToolTipText(
-      "Defines new local variable for cloned expressions");
-    extractLocalVar.addActionListener(this);
-    qualityMenu.add(extractLocalVar);
-
     JMenuItem extractComponent = 
       new JMenuItem("Split class"); 
     extractComponent.setToolTipText(
       "Splits class into client/supplier components");
     extractComponent.addActionListener(this);
     qualityMenu.add(extractComponent);
+
+    JMenuItem splitSegmentsop = 
+      new JMenuItem("Split operation"); 
+    splitSegmentsop.addActionListener(this);
+    splitSegmentsop.setToolTipText(
+      "Splits operation code into segments where possible");
+    qualityMenu.add(splitSegmentsop);
 
     JMenuItem remredin = 
       new JMenuItem("Remove Redundant Inheritance"); 
@@ -1008,17 +1021,10 @@ public void findPlugins()
     pushdownatt.addActionListener(this);
     qualityMenu.add(pushdownatt);
 
-    // qualityMenu.addSeparator(); 
-
     JMenuItem moveatt = 
       new JMenuItem("Move attribute"); 
     moveatt.addActionListener(this);
     qualityMenu.add(moveatt);
-
-    JMenuItem convertatt = 
-      new JMenuItem("Convert attribute to association"); 
-    convertatt.addActionListener(this);
-    qualityMenu.add(convertatt);
 
     JMenuItem moveop = 
       new JMenuItem("Move operation"); 
@@ -1026,6 +1032,20 @@ public void findPlugins()
     moveop.setToolTipText(
       "Moves operation from one class to another");
     qualityMenu.add(moveop);
+
+    JMenuItem convertatt = 
+      new JMenuItem("Convert attribute to association"); 
+    convertatt.addActionListener(this);
+    qualityMenu.add(convertatt);
+
+    ((JMenu) qualityMenu).addSeparator(); 
+
+    JMenuItem extractLocalVar = 
+      new JMenuItem("Extract Local Variable"); 
+    extractLocalVar.setToolTipText(
+      "Defines new local variable for cloned expressions");
+    extractLocalVar.addActionListener(this);
+    qualityMenu.add(extractLocalVar);
 
     JMenuItem moveopto = 
       new JMenuItem("Move operation to parameter class"); 
@@ -1061,13 +1081,6 @@ public void findPlugins()
     removeUnusedPars.setToolTipText(
       "Removes unused operation parameters");
     qualityMenu.add(removeUnusedPars);
-
-    JMenuItem splitSegmentsop = 
-      new JMenuItem("Split operation"); 
-    splitSegmentsop.addActionListener(this);
-    splitSegmentsop.setToolTipText(
-      "Splits operation code into segments where possible");
-    qualityMenu.add(splitSegmentsop);
 
     JMenuItem hoistDecsop = 
       new JMenuItem("Hoist local declarations"); 
@@ -1451,17 +1464,21 @@ public void findPlugins()
     // javaMenu.setEnabled(false); 
     buildMenu.add(ccMenu); 
 
-    JMenuItem pyMenu = new JMenuItem("Generate Python 3.8"); 
+    JMenuItem pyMenu = new JMenuItem("Generate Typed Python3"); 
     pyMenu.addActionListener(this);
     pyMenu.setToolTipText(
-      "Python 3.8"); 
+      "Python 3 with type annotations"); 
     buildMenu.add(pyMenu); 
 
-    JMenuItem py3Menu = new JMenuItem("Generate Python 3.10"); 
+    JMenuItem py3Menu = new JMenuItem("Generate Untyped Python3"); 
     py3Menu.addActionListener(this);
     py3Menu.setToolTipText(
-      "Python 3.10"); 
+      "Untyped Python 3"); 
     buildMenu.add(py3Menu);
+
+    JMenuItem jsMenu = new JMenuItem("Generate JavaScript"); 
+    jsMenu.addActionListener(this);
+    buildMenu.add(jsMenu); 
 
     JMenuItem goMenu = new JMenuItem("Generate Go"); 
     goMenu.addActionListener(this);
@@ -1489,7 +1506,7 @@ public void findPlugins()
     JMenuItem cgtlGenerator = new JMenuItem("Use CGTL specification"); 
     cgtlGenerator.addActionListener(this);
     cgtlGenerator.setToolTipText(
-      "For code generators in general CSTL format for OCL source"); 
+      "For code generators in general CSTL format for UML/OCL source, e.g., uml2JavaScript.cstl"); 
     buildMenu.add(cgtlGenerator); 
 
     JMenuItem cstl4ast = new JMenuItem("Apply CSTL/CGTL to AST"); 
@@ -2276,7 +2293,7 @@ public void findPlugins()
       { ucdArea.applyCGTL(); } 
       else if (label.equals("Apply CSTL/CGTL to AST"))
       { ucdArea.applyCSTLtoAST(); } 
-      else if (label.equals("Generate Python 3.8"))
+      else if (label.equals("Generate Typed Python3"))
       { ucdArea.saveModelToFile("output/model.txt"); 
 
 
@@ -2310,7 +2327,7 @@ public void findPlugins()
         { System.out.println("!! Error generating Python tests"); }
         
       }
-      else if (label.equals("Generate Python 3.10"))
+      else if (label.equals("Generate Untyped Python3"))
       { ucdArea.saveModelToFile("output/model.txt"); 
 
         // java.util.Date d1 = new java.util.Date(); 
@@ -2352,6 +2369,8 @@ public void findPlugins()
         // long t2 = d2.getDate(); 
         // System.out.println(">>> Code generation took " + (t2-t1) + "ms"); 
       }
+      else if (label.equals("Generate JavaScript"))
+      { ucdArea.generateJavaScript(); } 
       else if (label.equals("Generate Go"))
       { ucdArea.generateGo(); } 
       else if (label.equals("Generate Mamba"))
@@ -2873,6 +2892,8 @@ public void findPlugins()
         catch (Exception ee) 
         { System.err.println("!! Unable to open the UML-RSDS manual http://agilemde.co.uk/umlrsds20.pdf: requires Firefox"); } 
       }
+      else if (label.equals("Set thresholds"))
+      { ucdArea.setThresholds("analysisConfig.txt"); }
       else if (label.equals("Quality check"))
       { ucdArea.qualityCheck(); }
       else if (label.equals("Definedness/Determinacy"))

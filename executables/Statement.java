@@ -1650,7 +1650,8 @@ abstract class Statement implements Cloneable
   public abstract Expression definedness(Map uses, Vector messages); 
 
   public abstract Map energyUse(Map uses, 
-                                Vector rUses, Vector oUses);
+                                Vector rUses, Vector oUses, 
+                                Vector yUses);
 
   public abstract java.util.Map collectionOperatorUses(
                              int nestingLevel, 
@@ -2081,7 +2082,9 @@ abstract class Statement implements Cloneable
       }
       else 
       { return false; }  
+
       if (ts.getEndStatement() == null) { return false; } 
+
       return Statement.endsWithReturn(ts.getEndStatement()); 
     } 
 
@@ -4160,7 +4163,7 @@ class ReturnStatement extends Statement
                       ModelState beta)
   { if (value != null)
     { Expression expr = value.evaluate(sigma, beta); 
-      beta.setVariableValue("result", expr); 
+      beta.setVariableValue(sigma, "result", expr); 
     } 
 
     return Statement.RETURN; 
@@ -4178,7 +4181,7 @@ class ReturnStatement extends Statement
 
   public void findClones(java.util.Map clones, String rule, String op)
   { if (value == null || 
-        value.syntacticComplexity() < UCDArea.CLONE_LIMIT) 
+        value.syntacticComplexity() < TestParameters.cloneSizeLimit) 
     { return; }
   /*  String val = value + ""; 
     Vector used = (Vector) clones.get(val);
@@ -4197,7 +4200,7 @@ class ReturnStatement extends Statement
                          java.util.Map cloneDefs,
                          String rule, String op)
   { if (value == null || 
-        value.syntacticComplexity() < UCDArea.CLONE_LIMIT) 
+        value.syntacticComplexity() < TestParameters.cloneSizeLimit) 
     { return; }
   /*  String val = value + ""; 
     Vector used = (Vector) clones.get(val);
@@ -4213,10 +4216,10 @@ class ReturnStatement extends Statement
   }
 
   public Map energyUse(Map uses, 
-                       Vector rUses, Vector oUses)
+                       Vector rUses, Vector oUses, Vector yUses)
   { if (value == null) 
     { return uses; } 
-    value.energyUse(uses, rUses, oUses); 
+    value.energyUse(uses, rUses, oUses, yUses); 
 
     int syncomp = value.syntacticComplexity(); 
 
@@ -4832,7 +4835,7 @@ class BreakStatement extends Statement
   { return this; }  
 
   public Map energyUse(Map uses, 
-                       Vector rUses, Vector oUses)
+                       Vector rUses, Vector oUses, Vector yUses)
   { return uses; }  
 
   public java.util.Map collectionOperatorUses(
@@ -5049,7 +5052,7 @@ class ContinueStatement extends Statement
   { return; } 
 
   public Map energyUse(Map uses, 
-                                Vector rUses, Vector oUses)
+                       Vector rUses, Vector oUses, Vector yUses)
   { return uses; }  
 
   public Statement optimiseOCL()
@@ -5261,18 +5264,18 @@ class InvocationStatement extends Statement
       { if (obj != null) 
         { selfobject = obj.evaluate(sigma, beta); } 
         else 
-        { selfobject = beta.getVariableValue("self"); } 
+        { selfobject = beta.getVariableValue(sigma, "self"); } 
 
       // JOptionPane.showInputDialog(selfobject); 
 
         if (selfobject == null) // error 
-        { return res; } 
+        { return Statement.EXCEPTION; } 
 
         ObjectSpecification ospec = 
                  sigma.getObjectSpec("" + selfobject);
 
         if (ospec == null) 
-        { return res; }
+        { return Statement.EXCEPTION; }
 
         Entity ent = ospec.getEntity(); 
 
@@ -5283,10 +5286,10 @@ class InvocationStatement extends Statement
       } 
 
       if (bf == null) 
-      { return res; } 
+      { return Statement.EXCEPTION; } 
 
       beta.addNewEnvironment(); 
-      beta.addVariable("self", selfobject); 
+      beta.addVariable(sigma, "self", selfobject); 
 
       Vector parValues = new Vector(); 
       for (int i = 0; i < actualPars.size(); i++) 
@@ -5430,8 +5433,8 @@ class InvocationStatement extends Statement
   }  
 
   public Map energyUse(Map uses, 
-                       Vector rUses, Vector oUses)
-  { callExp.energyUse(uses, rUses, oUses);  
+                       Vector rUses, Vector oUses, Vector yUses)
+  { callExp.energyUse(uses, rUses, oUses, yUses);  
 
     int syncomp = callExp.syntacticComplexity(); 
     if (syncomp > TestParameters.syntacticComplexityLimit)
@@ -6192,7 +6195,7 @@ class ImplicitInvocationStatement extends Statement
 
   public void findClones(java.util.Map clones, String rule, String op)
   { if (callExp == null || 
-        callExp.syntacticComplexity() < UCDArea.CLONE_LIMIT) 
+        callExp.syntacticComplexity() < TestParameters.cloneSizeLimit) 
     { return; }
     /* String val = callExp + ""; 
     Vector used = (Vector) clones.get(val);
@@ -6210,7 +6213,7 @@ class ImplicitInvocationStatement extends Statement
                          java.util.Map cloneDefs,
                          String rule, String op)
   { if (callExp == null || 
-        callExp.syntacticComplexity() < UCDArea.CLONE_LIMIT) 
+        callExp.syntacticComplexity() < TestParameters.cloneSizeLimit) 
     { return; }
     callExp.findClones(clones,cloneDefs,rule,op); 
   }
@@ -6229,8 +6232,8 @@ class ImplicitInvocationStatement extends Statement
   { return callExp.definedness(uses, messages); } 
 
   public Map energyUse(Map uses, 
-                       Vector rUses, Vector oUses)
-  { callExp.energyUse(uses, rUses, oUses); 
+                       Vector rUses, Vector oUses, Vector yUses)
+  { callExp.energyUse(uses, rUses, oUses, yUses); 
 
     int syncomp = callExp.syntacticComplexity(); 
     if (syncomp > TestParameters.syntacticComplexityLimit)
@@ -6280,8 +6283,8 @@ class ImplicitInvocationStatement extends Statement
   } 
 
   public int execute(ModelSpecification sigma, ModelState beta)
-  { callExp.execute(sigma, beta); 
-    return Statement.NORMAL; 
+  { int status = callExp.execute(sigma, beta); 
+    return status; 
   }
  
   public Statement substituteEq(String oldE, Expression newE)
@@ -6842,6 +6845,8 @@ class WhileStatement extends Statement
     { Expression testvalue = 
          loopTest.evaluate(sigma, beta); 
 
+      testvalue.setBrackets(false); 
+
       while ("true".equals(testvalue + ""))
       { res = body.execute(sigma, beta);
         // System.out.println("---> iteration of while loop: " + sigma + ", " + beta + " " + res);
@@ -6869,6 +6874,8 @@ class WhileStatement extends Statement
       Expression testvalue = 
          loopTest.evaluate(sigma, beta);
  
+      testvalue.setBrackets(false); 
+
       while ("false".equals(testvalue + ""))
       { res = body.execute(sigma, beta);
         // System.out.println("---> iteration of repeat loop: " + sigma + ", " + beta + " " + res);
@@ -6895,11 +6902,11 @@ class WhileStatement extends Statement
 
         String lv = "" + loopVar; 
         beta.addNewEnvironment(); 
-        beta.addVariable(lv, new BasicExpression("null")); 
+        beta.addVariable(sigma, lv, new BasicExpression("null")); 
    
         for (int i = 0; i < n; i++) 
         { Expression val = serange.getElement(i); 
-          beta.setVariableValue(lv, val); 
+          beta.setVariableValue(sigma, lv, val); 
           res = body.execute(sigma, beta); 
           // System.out.println("---> iteration of for loop: " + sigma + ", " + beta + " " + res);
 
@@ -7035,7 +7042,7 @@ class WhileStatement extends Statement
 
   public void findClones(java.util.Map clones, String rule, String op)
   { if (loopRange != null && 
-        loopRange.syntacticComplexity() >= UCDArea.CLONE_LIMIT) 
+        loopRange.syntacticComplexity() >= TestParameters.cloneSizeLimit) 
     { /* String val = loopRange + ""; 
       Vector used = (Vector) clones.get(val);
       if (used == null)  
@@ -7049,7 +7056,7 @@ class WhileStatement extends Statement
       loopRange.findClones(clones,rule,op); 
     }  
     else if (loopTest != null && 
-        loopTest.syntacticComplexity() >= UCDArea.CLONE_LIMIT) 
+        loopTest.syntacticComplexity() >= TestParameters.cloneSizeLimit) 
     { /* String val = loopTest + ""; 
       Vector used = (Vector) clones.get(val);
       if (used == null)  
@@ -7070,10 +7077,10 @@ class WhileStatement extends Statement
                          String rule, String op)
   { if (loopRange != null && 
         loopRange.syntacticComplexity() >= 
-                                UCDArea.CLONE_LIMIT) 
+                         TestParameters.cloneSizeLimit) 
     { loopRange.findClones(clones,cdefs,rule,op); }  
     else if (loopTest != null && 
-        loopTest.syntacticComplexity() >= UCDArea.CLONE_LIMIT) 
+        loopTest.syntacticComplexity() >= TestParameters.cloneSizeLimit) 
     { 
       loopTest.findClones(clones,cdefs,rule,op); 
     } 
@@ -7081,13 +7088,14 @@ class WhileStatement extends Statement
     body.findClones(clones,cdefs,rule,op); 
   }
 
-  public Map energyUse(Map uses, Vector rUses, Vector aUses)
+  public Map energyUse(Map uses, Vector rUses, Vector aUses, 
+                       Vector yUses)
   { if (loopRange != null) 
-    { loopRange.energyUse(uses,rUses,aUses); }
+    { loopRange.energyUse(uses,rUses,aUses,yUses); }
     else if (loopTest != null)
-    { loopTest.energyUse(uses,rUses,aUses); }
+    { loopTest.energyUse(uses,rUses,aUses,yUses); }
   
-    body.energyUse(uses,rUses,aUses);
+    body.energyUse(uses,rUses,aUses,yUses);
 
     if (loopKind == FOR) 
     { if (loopRange != null) 
@@ -9307,29 +9315,27 @@ class CreationStatement extends Statement
   public int execute(ModelSpecification sigma, 
                      ModelState beta)
   { // add assignsTo as new variable, set to initialExpression
-    // Also allocate a new reference for the variable
+    // Also allocate a new reference ref for the variable
+    // add  ref |-> initialExpression to memory and 
+    // var |-> ref in the last beta environment.
 
     java.util.HashMap env = null; 
 
     if (initialExpression != null) 
     { Expression val = initialExpression.evaluate(sigma, beta); 
-      env = beta.addVariable(assignsTo, val);
+      String pid = Identifier.newIdentifier("&_");
+      env = beta.addVariable(sigma, assignsTo, pid, val);
     } // else use default value 
     else if (instanceType != null)  
     { Expression defaultInit = 
         Type.defaultInitialValueExpression(instanceType);
       Expression val = defaultInit.evaluate(sigma, beta); 
-      env = beta.addVariable(assignsTo, val);
+      String pid = Identifier.newIdentifier("&_");
+      env = beta.addVariable(sigma, assignsTo, pid, val);
     }
 
     if (env != null) // success
-    { String pid = Identifier.newIdentifier("&_");
-      sigma.addReferenceTo(pid, assignsTo, 
-                           createsInstanceOf, env);   
-      beta.addVariable("?" + assignsTo, 
-                       new BasicExpression(pid));     
-      return Statement.NORMAL;
-    } 
+    { return Statement.NORMAL; } 
 
     return Statement.EXCEPTION;  
   } 
@@ -9356,7 +9362,8 @@ class CreationStatement extends Statement
     return res; 
   }  
 
-  public Map energyUse(Map uses, Vector rUses, Vector aUses)
+  public Map energyUse(Map uses, Vector rUses, Vector aUses, 
+                       Vector yUses)
   { if (instanceType != null) 
     { int tcomp = instanceType.complexity(); 
       if (tcomp > TestParameters.nestedTypeLimit) 
@@ -9367,7 +9374,7 @@ class CreationStatement extends Statement
     } 
 
     if (initialExpression != null) 
-    { initialExpression.energyUse(uses, rUses, aUses); 
+    { initialExpression.energyUse(uses, rUses, aUses, yUses); 
 
       int syncomp = initialExpression.syntacticComplexity(); 
       if (syncomp > TestParameters.syntacticComplexityLimit)
@@ -10817,7 +10824,7 @@ class SequenceStatement extends Statement
     for (int i = 0; i < substats.size(); i++) 
     { Vector subs = (Vector) substats.get(i); 
       Statement sq = new SequenceStatement(subs); 
-      if (sq.syntacticComplexity() < UCDArea.CLONE_LIMIT) 
+      if (sq.syntacticComplexity() < TestParameters.cloneSizeLimit) 
       { continue; } 
 
       String val = sq + ""; 
@@ -10842,6 +10849,9 @@ class SequenceStatement extends Statement
     { Statement stat = (Statement) statements.get(i); 
       stat.findClones(clones,cdefs,rule,op); 
     }
+
+    if (syntacticComplexity() < TestParameters.cloneSizeLimit)
+    { return; } 
 
     String val = this + ""; 
     Vector used = (Vector) clones.get(val); 
@@ -10872,7 +10882,7 @@ class SequenceStatement extends Statement
     for (int i = 0; i < substats.size(); i++) 
     { Vector subs = (Vector) substats.get(i); 
       Statement sq = new SequenceStatement(subs); 
-      if (sq.syntacticComplexity() < UCDArea.CLONE_LIMIT) 
+      if (sq.syntacticComplexity() < TestParameters.cloneSizeLimit) 
       { continue; } 
 
       String val = sq + ""; 
@@ -10915,10 +10925,11 @@ class SequenceStatement extends Statement
   }  
 
 
-  public Map energyUse(Map uses, Vector rUses, Vector aUses)
+  public Map energyUse(Map uses, Vector rUses, Vector aUses, 
+                       Vector yUses)
   { for (int i = 0; i < statements.size(); i++) 
     { Statement stat = (Statement) statements.get(i); 
-      stat.energyUse(uses, rUses, aUses);
+      stat.energyUse(uses, rUses, aUses, yUses);
 
       if (i < statements.size()-1 && 
           Statement.endsWithControlFlowBreak(stat))
@@ -12415,14 +12426,15 @@ class CaseStatement extends Statement
     return res; 
   }
 
-  public Map energyUse(Map uses, Vector ruses, Vector ouses) 
+  public Map energyUse(Map uses, Vector ruses, Vector ouses, 
+                       Vector yUses) 
   { 
     int n = cases.elements.size();
 
     for (int i = 0; i < n; i++)
     { Maplet mm = (Maplet) cases.elements.elementAt(i);
       Statement cse = (Statement) mm.dest;
-      cse.energyUse(uses, ruses, ouses); 
+      cse.energyUse(uses, ruses, ouses, yUses); 
     }
 
     return uses; 
@@ -12577,9 +12589,10 @@ class ErrorStatement extends Statement
     return new Vector(); 
   }      
 
-  public Map energyUse(Map uses, Vector rUses, Vector aUses)
+  public Map energyUse(Map uses, Vector rUses, 
+                       Vector aUses, Vector yUses)
   { if (thrownObject != null) 
-    { thrownObject.energyUse(uses, rUses, aUses);
+    { thrownObject.energyUse(uses, rUses, aUses, yUses);
 
       int syncomp = thrownObject.syntacticComplexity(); 
       if (syncomp > TestParameters.syntacticComplexityLimit)
@@ -12940,9 +12953,10 @@ class AssertStatement extends Statement
   public Object clone() 
   { return new AssertStatement(condition,message); } 
 
-  public Map energyUse(Map uses, Vector rUses, Vector aUses)
+  public Map energyUse(Map uses, Vector rUses, 
+                       Vector aUses, Vector yUses)
   { if (condition != null) 
-    { condition.energyUse(uses, rUses, aUses); 
+    { condition.energyUse(uses, rUses, aUses, yUses); 
 
       int res = condition.syntacticComplexity();
 
@@ -12955,7 +12969,7 @@ class AssertStatement extends Statement
     }
  
     if (message != null)
-    { message.energyUse(uses, rUses, aUses); } 
+    { message.energyUse(uses, rUses, aUses, yUses); } 
     return uses; 
   } 
 
@@ -13494,7 +13508,8 @@ class CatchStatement extends Statement
     { action.findMagicNumbers(mgns, this + "", op); }
   } 
 
-  public Map energyUse(Map uses, Vector rUses, Vector aUses)
+  public Map energyUse(Map uses, Vector rUses, 
+                       Vector aUses, Vector yUses)
   { if (action == null || 
         action.isSkip())
     { int ocount = (int) uses.get("amber"); 
@@ -13502,7 +13517,7 @@ class CatchStatement extends Statement
       aUses.add("!! Warning (RC): empty action for catch statement: " + this); 
     } 
     else 
-    { action.energyUse(uses, rUses, aUses); }
+    { action.energyUse(uses, rUses, aUses, yUses); }
   
     return uses; 
   } 
@@ -14013,17 +14028,18 @@ class TryStatement extends Statement
     { endStatement.findClones(clones,cdefs,rule,op); } 
   } 
 
-  public Map energyUse(Map uses, Vector rUses, Vector aUses)
+  public Map energyUse(Map uses, Vector rUses, Vector aUses, 
+                       Vector yUses)
   { if (body != null) 
-    { body.energyUse(uses, rUses, aUses); } 
+    { body.energyUse(uses, rUses, aUses, yUses); } 
     
     for (int i = 0; i < catchClauses.size(); i++) 
     { Statement stat = (Statement) catchClauses.get(i); 
-      stat.energyUse(uses, rUses, aUses); 
+      stat.energyUse(uses, rUses, aUses, yUses); 
     }
 
     if (endStatement != null)
-    { endStatement.energyUse(uses, rUses, aUses); } 
+    { endStatement.energyUse(uses, rUses, aUses, yUses); } 
 
     if (body == null || body.isSkip())
     { int acount = (int) uses.get("amber");
@@ -14945,10 +14961,11 @@ class IfStatement extends Statement
     } 
   }
 
-  public Map energyUse(Map uses, Vector ruses, Vector ouses)
+  public Map energyUse(Map uses, Vector ruses, Vector ouses, 
+                       Vector yUses)
   { for (int i = 0; i < cases.size(); i++) 
     { IfCase cse = (IfCase) cases.get(i); 
-      cse.energyUse(uses, ruses, ouses); 
+      cse.energyUse(uses, ruses, ouses, yUses); 
     } 
 
     return uses; 
@@ -15924,23 +15941,17 @@ class AssignStatement extends Statement
       Expression arg = uexpr.getArgument(); 
       Expression ptr = arg.evaluate(sigma, beta);
 
-      String pid = ptr + ""; 
+      String pid = ptr + ""; // a reference
 
-      ObjectSpecification obj = 
-                   sigma.getReferredVariable(pid);
-      if (obj != null) 
-      { // evaluate the name in the specific environment
-        String nme = (String) obj.getRawValue("name"); 
-        java.util.Map env = 
-               (java.util.Map) obj.getRawValue("environment"); 
-        
-        if (env != null && nme != null)
-        { env.put(nme, rhsValue); 
-          System.out.println(">> Updated state after assignment: " + beta);
-          return Statement.NORMAL; 
-        }  
-      } 
-
+      if (ptr != null && !("invalid".equals(pid)) && 
+          !("null".equals(pid)))  // 0 pointer is null
+      { sigma.setMemoryValue(pid, rhsValue);
+        System.out.println();   
+        System.out.println(">> Updated states after " + this + 
+                       ": " + sigma + ">> Local state: " + beta);
+        return Statement.NORMAL; 
+      }
+  
       return Statement.EXCEPTION; 
     } 
 
@@ -15965,7 +15976,8 @@ class AssignStatement extends Statement
             return Statement.NORMAL;  
           } 
 
-          Expression oid = beta.getVariableValue("self"); 
+          Expression oid = 
+                 beta.getVariableValue(sigma, "self"); 
           ObjectSpecification ref = 
                 sigma.getObjectSpec("" + oid); 
 
@@ -15973,13 +15985,13 @@ class AssignStatement extends Statement
           { ref.setOCLValue(var, rhsValue); }
         }   
         else 
-        { beta.setVariableValue(var, rhsValue); } 
+        { beta.setVariableValue(sigma, var, rhsValue); } 
       } 
       else if (obj == null)
       { // simple array variable, or array-valued attribute
  
         Expression indv = indx.evaluate(sigma, beta); 
-        Expression arr = beta.getVariableValue(var); 
+        Expression arr = beta.getVariableValue(sigma, var); 
 
         if (arr instanceof SetExpression)
         { int indval = Integer.parseInt("" + indv); 
@@ -16010,7 +16022,9 @@ class AssignStatement extends Statement
       } 
     } 
 
-    System.out.println(">> Updated state after assignment: " + beta);
+    System.out.println(); 
+    System.out.println(">> Updated state after " + this + ": " + sigma + ">> Local state: " + beta);
+
     return Statement.NORMAL;  
   } 
 
@@ -16181,7 +16195,7 @@ class AssignStatement extends Statement
   } 
 
   public void findClones(java.util.Map clones, String rule, String op)
-  { if (this.syntacticComplexity() < UCDArea.CLONE_LIMIT) 
+  { if (this.syntacticComplexity() < TestParameters.cloneSizeLimit) 
     { return; }
 
     String val = this + ""; 
@@ -16200,7 +16214,7 @@ class AssignStatement extends Statement
   public void findClones(java.util.Map clones, 
                          java.util.Map cdefs,
                          String rule, String op)
-  { if (this.syntacticComplexity() < UCDArea.CLONE_LIMIT) 
+  { if (this.syntacticComplexity() < TestParameters.cloneSizeLimit) 
     { return; }
 
     String val = this + ""; 
@@ -16225,9 +16239,9 @@ class AssignStatement extends Statement
   } 
 
   public Map energyUse(Map uses, 
-                                Vector rUses, Vector oUses)
-  { lhs.energyUse(uses, rUses, oUses); 
-    rhs.energyUse(uses, rUses, oUses);
+                       Vector rUses, Vector oUses, Vector yUses)
+  { lhs.energyUse(uses, rUses, oUses, yUses); 
+    rhs.energyUse(uses, rUses, oUses, yUses);
 
     int syncomp = rhs.syntacticComplexity(); 
     if (syncomp > TestParameters.syntacticComplexityLimit)
@@ -17045,7 +17059,7 @@ class IfCase
   } 
 
   public void findClones(java.util.Map clones, String rule, String op)
-  { if (test.syntacticComplexity() >= UCDArea.CLONE_LIMIT) 
+  { if (test.syntacticComplexity() >= TestParameters.cloneSizeLimit) 
     { test.findClones(clones,rule,op); }
     ifPart.findClones(clones,rule,op);
   }
@@ -17053,15 +17067,16 @@ class IfCase
   public void findClones(java.util.Map clones, 
                          java.util.Map cdefs,
                          String rule, String op)
-  { if (test.syntacticComplexity() >= UCDArea.CLONE_LIMIT) 
+  { if (test.syntacticComplexity() >= TestParameters.cloneSizeLimit) 
     { test.findClones(clones,cdefs,rule,op); } 
     
     ifPart.findClones(clones,cdefs,rule,op);
   }
 
-  public Map energyUse(Map uses, Vector ruses, Vector ouses)
-  { test.energyUse(uses, ruses, ouses); 
-    ifPart.energyUse(uses, ruses, ouses);
+  public Map energyUse(Map uses, Vector ruses, Vector ouses, 
+                       Vector yUses)
+  { test.energyUse(uses, ruses, ouses, yUses); 
+    ifPart.energyUse(uses, ruses, ouses, yUses);
     return uses; 
   }
 
@@ -17505,7 +17520,12 @@ class ConditionalStatement extends Statement
 
   public int execute(ModelSpecification sigma, ModelState beta)
   { Expression tval = test.evaluate(sigma, beta);
+
+    if (tval == null) 
+    { return Statement.EXCEPTION; } 
  
+    tval.setBrackets(false); 
+
     if ("true".equals(tval + ""))
     { int res = ifPart.execute(sigma, beta); 
       return res; 
@@ -17750,9 +17770,9 @@ class ConditionalStatement extends Statement
 
  
   public Map energyUse(Map uses, 
-                                Vector rUses, Vector oUses)
-  { test.energyUse(uses, rUses, oUses); 
-    ifPart.energyUse(uses, rUses, oUses);
+                       Vector rUses, Vector oUses, Vector yUses)
+  { test.energyUse(uses, rUses, oUses, yUses); 
+    ifPart.energyUse(uses, rUses, oUses, yUses);
 
     int res = test.syntacticComplexity();
 
@@ -17764,7 +17784,7 @@ class ConditionalStatement extends Statement
     } 
 
     if (elsePart != null) 
-    { elsePart.energyUse(uses, rUses, oUses); } 
+    { elsePart.energyUse(uses, rUses, oUses, yUses); } 
 
     if ("true".equals(test + "")) 
     { int acount = (int) uses.get("amber"); 
@@ -17886,7 +17906,7 @@ class ConditionalStatement extends Statement
   } // if s->includes(x) then skip else s := s->including(x)
 
   public void findClones(java.util.Map clones, String rule, String op)
-  { if (test.syntacticComplexity() >= UCDArea.CLONE_LIMIT)
+  { if (test.syntacticComplexity() >= TestParameters.cloneSizeLimit)
     { /* String val = test + ""; 
       Vector used = (Vector) clones.get(val);
       if (used == null)  
@@ -17907,7 +17927,7 @@ class ConditionalStatement extends Statement
   public void findClones(java.util.Map clones, 
                          java.util.Map cdefs, 
                          String rule, String op)
-  { if (test.syntacticComplexity() >= UCDArea.CLONE_LIMIT)
+  { if (test.syntacticComplexity() >= TestParameters.cloneSizeLimit)
     { test.findClones(clones,cdefs,rule,op); } 
 
     ifPart.findClones(clones,cdefs,rule,op); 
@@ -18549,8 +18569,9 @@ class FinalStatement extends Statement
                          String rule, String op)
   { body.findClones(clones,cdefs,rule,op); } 
 
-  public Map energyUse(Map uses, Vector rUses, Vector aUses)
-  { body.energyUse(uses, rUses, aUses);  
+  public Map energyUse(Map uses, Vector rUses, Vector aUses,  
+                       Vector yUses)
+  { body.energyUse(uses, rUses, aUses, yUses);  
     return uses; 
   } 
 
