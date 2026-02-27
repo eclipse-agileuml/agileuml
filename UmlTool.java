@@ -185,7 +185,7 @@ public void findPlugins()
     fileMenu.add(saveMI);
 
     JMenu loadMetamodelMenu = 
-      new JMenu("Load Metamodel");
+      new JMenu("Load Metamodel/model");
     fileMenu.add(loadMetamodelMenu);
 
     JMenuItem loadDataMI = 
@@ -829,6 +829,15 @@ public void findPlugins()
     // desMenuItem.setMnemonic(KeyEvent.VK_D);
     analyseMenu.add(tinferenceMenuItem); 
 
+    ((JMenu) analyseMenu).addSeparator(); 
+
+    JMenuItem setThresholds = 
+      new JMenuItem("Set thresholds"); 
+    setThresholds.setToolTipText(
+      "Loads thresholds from analysisConfig.txt");
+    setThresholds.addActionListener(this);
+    analyseMenu.add(setThresholds);
+
     JMenuItem qualCheck = 
       new JMenuItem("Quality check"); 
     qualCheck.setToolTipText(
@@ -853,6 +862,8 @@ public void findPlugins()
       "Checks for energy use flaws");
     analyseMenu.add(energyAnal);
 
+    ((JMenu) analyseMenu).addSeparator(); 
+
     JMenuItem carchItem = new JMenuItem("Clean architecture properties"); 
     carchItem.addActionListener(this);
     analyseMenu.add(carchItem);
@@ -860,6 +871,8 @@ public void findPlugins()
     JMenuItem ddepsItem = new JMenuItem("Data dependencies"); 
     ddepsItem.addActionListener(this);
     analyseMenu.add(ddepsItem);
+
+    ((JMenu) analyseMenu).addSeparator(); 
 
     JMenuItem simulate = new JMenuItem("Simulate"); 
     simulate.addActionListener(this);
@@ -2879,6 +2892,8 @@ public void findPlugins()
         catch (Exception ee) 
         { System.err.println("!! Unable to open the UML-RSDS manual http://agilemde.co.uk/umlrsds20.pdf: requires Firefox"); } 
       }
+      else if (label.equals("Set thresholds"))
+      { ucdArea.setThresholds("analysisConfig.txt"); }
       else if (label.equals("Quality check"))
       { ucdArea.qualityCheck(); }
       else if (label.equals("Definedness/Determinacy"))

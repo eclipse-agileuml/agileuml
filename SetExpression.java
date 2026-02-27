@@ -89,6 +89,9 @@ public class SetExpression extends Expression
   public Expression get(int i)
   { return (Expression) elements.get(i); } 
 
+  public void setElements(Vector elems)
+  { this.elements = elems; } 
+
   public static SetExpression mergeSetExpressions(
                                 SetExpression left, 
                                 SetExpression right)
@@ -949,7 +952,7 @@ public class SetExpression extends Expression
     else if ("double".equals(elementType + ""))
     { res = new BasicExpression(1.0); } 
     else 
-    { res = new BasicExpression("Invalid"); 
+    { res = new BasicExpression("invalid"); 
       return res; 
     }  
 
@@ -965,7 +968,7 @@ public class SetExpression extends Expression
   { Expression res = null;
 
     if (elements.size() == 0) 
-    { return new BasicExpression("Invalid"); } 
+    { return new BasicExpression("invalid"); } 
 
     res = (Expression) elements.get(0);  
     String resv = "" + res; 
@@ -1008,7 +1011,7 @@ public class SetExpression extends Expression
   { Expression res = null;
 
     if (elements.size() == 0) 
-    { return new BasicExpression("Invalid"); } 
+    { return new BasicExpression("invalid"); } 
 
     res = (Expression) elements.get(0);  
     String resv = "" + res; 
@@ -1043,6 +1046,319 @@ public class SetExpression extends Expression
 
     return res;  
   } 
+
+  public Expression selectMinimals(Vector elems)
+  { Expression res = null;
+
+    if (elements.size() == 0) 
+    { return new BasicExpression("invalid"); } 
+
+    Vector minimals = new Vector(); 
+    
+    res = (Expression) elems.get(0);  
+    String resv = "" + res;
+    minimals.add(elements.get(0));  
+
+    for (int i = 1; i < elements.size(); i++) 
+    { Expression elem = (Expression) elements.get(i); 
+      Expression val = (Expression) elems.get(i); 
+      String es = "" + val; 
+
+      if (Expression.isStringValue(resv) && 
+          Expression.isStringValue(es))
+      { String s1 = resv.substring(0, resv.length()-1); 
+        String s2 = es.substring(0, es.length()-1); 
+
+        if (s2.compareTo(s1) < 0)
+        { res = elem; 
+          resv = es; 
+          minimals.clear();   
+          minimals.add(elem); 
+        } 
+        else if (s2.compareTo(s1) == 0)
+        { minimals.add(elem); } 
+      } 
+      else if (Expression.isNumber(resv) && 
+               Expression.isNumber(es))
+      { double dr = Expression.convertNumber(resv); 
+        double de = Expression.convertNumber(es); 
+
+        if (de < dr)
+        { res = elem; 
+          resv = es; 
+          minimals.clear();   
+          minimals.add(elem); 
+        }
+        else if (de == dr)
+        { minimals.add(elem); } 
+      }
+    }
+
+    SetExpression result = new SetExpression(minimals);
+    result.setType(this.getType()); 
+    result.setElementType(this.getElementType()); 
+    result.setOrdered(ordered); 
+    return result;   
+  } 
+
+  public Expression selectMaximals(Vector elems)
+  { Expression res = null;
+
+    if (elements.size() == 0) 
+    { return new BasicExpression("invalid"); } 
+
+    Vector maximals = new Vector(); 
+    
+    res = (Expression) elems.get(0);  
+    String resv = "" + res;
+    maximals.add(elements.get(0));  
+
+    for (int i = 1; i < elements.size(); i++) 
+    { Expression elem = (Expression) elements.get(i); 
+      Expression val = (Expression) elems.get(i); 
+      String es = "" + val; 
+
+      if (Expression.isStringValue(resv) && 
+          Expression.isStringValue(es))
+      { String s1 = resv.substring(0, resv.length()-1); 
+        String s2 = es.substring(0, es.length()-1); 
+
+        if (s2.compareTo(s1) > 0)
+        { res = elem; 
+          resv = es; 
+          maximals.clear();   
+          maximals.add(elem); 
+        } 
+        else if (s2.compareTo(s1) == 0)
+        { maximals.add(elem); } 
+      } 
+      else if (Expression.isNumber(resv) && 
+               Expression.isNumber(es))
+      { double dr = Expression.convertNumber(resv); 
+        double de = Expression.convertNumber(es); 
+
+        if (de > dr)
+        { res = elem; 
+          resv = es; 
+          maximals.clear();   
+          maximals.add(elem); 
+        }
+        else if (de == dr)
+        { maximals.add(elem); } 
+      }
+    }
+
+    SetExpression result = new SetExpression(maximals);
+    result.setType(this.getType()); 
+    result.setElementType(this.getElementType()); 
+    result.setOrdered(ordered); 
+    return result;   
+  } 
+
+  public static Expression isUnique(Vector elems)
+  { Expression res = null;
+
+    if (elems.size() == 0) 
+    { return new BasicExpression("invalid"); } 
+
+    Vector values = new Vector(); 
+    
+    res = (Expression) elems.get(0);  
+    String resv = "" + res;
+    values.add(resv);  
+
+    for (int i = 1; i < elems.size(); i++) 
+    { Expression val = (Expression) elems.get(i); 
+      String es = "" + val; 
+
+      if (values.contains(es))
+      { return new BasicExpression(false); } 
+      else 
+      { values.add(es); }
+    } 
+
+    return new BasicExpression(true);   
+  } 
+
+  public static Expression unionAll(Vector elems)
+  { SetExpression res = new SetExpression();
+
+    if (elems.size() == 0) 
+    { return res; } 
+
+    Vector values = new Vector(); 
+    
+    for (int i = 0; i < elems.size(); i++) 
+    { Expression val = (Expression) elems.get(i); 
+       
+      if (val instanceof SetExpression)
+      { SetExpression st = (SetExpression) val; 
+        Vector stelems = st.getElements(); 
+        
+        for (int j = 0; j < stelems.size(); j++) 
+        { Expression x = (Expression) stelems.get(j); 
+          if (VectorUtil.containsEqualExpression(
+                                 x + "", values)) 
+          { } 
+          else 
+          { values.add(x); } 
+        } 
+      } 
+    } 
+
+    res.setElements(values); 
+    return res; 
+  } 
+
+  public static Expression concatenateAll(Vector elems)
+  { SetExpression res = new SetExpression(true);
+
+    if (elems.size() == 0) 
+    { return res; } 
+
+    Vector values = new Vector(); 
+    
+    for (int i = 0; i < elems.size(); i++) 
+    { Expression val = (Expression) elems.get(i); 
+       
+      if (val instanceof SetExpression)
+      { SetExpression st = (SetExpression) val; 
+        Vector stelems = st.getElements(); 
+        values.addAll(stelems); 
+      } 
+    } 
+
+    res.setElements(values); 
+    return res; 
+  } 
+
+  public static Expression intersectAll(Vector elems)
+  { SetExpression res = new SetExpression();
+
+    if (elems.size() == 0) 
+    { return res; } 
+
+    Vector values = new Vector(); 
+    Vector removed = new Vector(); 
+
+    Expression st0 = (Expression) elems.get(0); 
+    if (st0 instanceof SetExpression)
+    { values = ((SetExpression) st0).getElements(); }  
+    else 
+    { return res; } 
+    
+    for (int i = 1; i < elems.size(); i++) 
+    { Expression val = (Expression) elems.get(i); 
+       
+      if (val instanceof SetExpression)
+      { SetExpression st = (SetExpression) val; 
+        Vector stelems = st.getElements(); 
+        
+        for (int j = 0; j < values.size(); j++) 
+        { Expression x = (Expression) values.get(j); 
+          if (VectorUtil.containsEqualExpression(
+                                      x + "", stelems)) 
+          { } 
+          else 
+          { removed.add(x); } 
+        } 
+      } 
+    } 
+
+    for (int k = 0; k < removed.size(); k++) 
+    { Object x = removed.get(k); 
+      values = VectorUtil.removeAllEqualString(
+                                      x + "", values); 
+    } 
+
+    res.setElements(values); 
+    return res; 
+  } 
+
+  public SetExpression sortedBy(Vector a, Vector f)
+  { int i = a.size()-1;
+    java.util.Map f_map = new java.util.HashMap();
+    for (int j = 0; j < a.size(); j++)
+    { f_map.put(a.get(j), f.get(j)); }
+    Vector elems = SetExpression.mergeSort(a,f_map,0,i);
+
+    SetExpression result = new SetExpression(elems);
+    Type typ = new Type("Sequence", null); 
+    typ.setElementType(this.getElementType());
+    
+    result.setType(typ);  
+    result.setElementType(this.getElementType());
+    result.setOrdered(ordered); 
+    return result;   
+  }
+
+  static Vector mergeSort(Vector a, java.util.Map f, int ind1, int ind2)
+  { Vector res = new Vector();
+
+    if (ind1 > ind2)
+    { return res; }
+
+    if (ind1 == ind2)
+    { res.add(a.get(ind1));
+      return res;
+    }
+
+    if (ind2 == ind1 + 1)
+    { Comparable e1 = (Comparable) f.get(a.get(ind1)); 
+      Comparable e2 = (Comparable) f.get(a.get(ind2));
+      if (e1.compareTo(e2) < 0) // e1 < e2
+      { res.add(a.get(ind1)); 
+        res.add(a.get(ind2)); 
+        return res; 
+      }
+      
+      res.add(a.get(ind2)); 
+      res.add(a.get(ind1)); 
+      return res; 
+    }
+
+    int mid = (ind1 + ind2)/2;
+    Vector a1;
+    Vector a2;
+
+    if (mid == ind1)
+    { a1 = new Vector();
+      a1.add(a.get(ind1));
+      a2 = mergeSort(a,f,mid+1,ind2);
+    }
+    else
+    { a1 = mergeSort(a,f,ind1,mid-1);
+      a2 = mergeSort(a,f,mid,ind2);
+    }
+
+    int i = 0;
+    int j = 0;
+
+    while (i < a1.size() && j < a2.size())
+    { Comparable e1 = (Comparable) f.get(a1.get(i)); 
+      Comparable e2 = (Comparable) f.get(a2.get(j));
+      if (e1.compareTo(e2) < 0) // e1 < e2
+      { res.add(a1.get(i));
+        i++; // get next e1
+      } 
+      else 
+      { res.add(a2.get(j));
+        j++; 
+      } 
+    } 
+
+    if (i == a1.size())
+    { for (int k = j; k < a2.size(); k++)
+      { res.add(a2.get(k)); } 
+    } 
+    else 
+    { for (int k = i; k < a1.size(); k++) 
+      { res.add(a1.get(k)); } 
+    } 
+
+    return res;
+  }
+
 
   public void findClones(java.util.Map clones, String rule, String op)
   { for (int i = 0; i < elements.size(); i++) 
@@ -1095,21 +1411,21 @@ public class SetExpression extends Expression
 
   public Expression getElement(int i)
   { if (i < 0 || i >= elements.size())
-    { return new BasicExpression("Invalid"); } 
+    { return new BasicExpression("invalid"); } 
     return (Expression) elements.get(i); 
   }
 
   public Expression first()
   { int sze = elements.size(); 
     if (sze <= 0)
-    { return new BasicExpression("Invalid"); } 
+    { return new BasicExpression("invalid"); } 
     return (Expression) elements.get(0); 
   }
 
   public Expression last()
   { int sze = elements.size(); 
     if (sze <= 0)
-    { return new BasicExpression("Invalid"); } 
+    { return new BasicExpression("invalid"); } 
     return (Expression) elements.get(sze-1); 
   }
 
@@ -1119,7 +1435,7 @@ public class SetExpression extends Expression
   public Expression getLastElement()
   { int i = elements.size(); 
     if (i == 0) 
-    { return new BasicExpression("Invalid"); } 
+    { return new BasicExpression("invalid"); } 
     else 
     { return (Expression) elements.get(i-1); } 
   } 
@@ -1127,7 +1443,7 @@ public class SetExpression extends Expression
   public Expression getFirstElement()
   { int i = elements.size(); 
     if (i == 0) 
-    { return new BasicExpression("Invalid"); } 
+    { return new BasicExpression("invalid"); } 
     else 
     { return (Expression) elements.get(0); } 
   } 
@@ -2611,10 +2927,11 @@ public class SetExpression extends Expression
   public Expression featureSetting(String var, String k, Vector l)
   { return null; } 
 
-  public Map energyUse(Map res, Vector rUses, Vector aUses) 
+  public Map energyUse(Map res, Vector rUses, Vector aUses, 
+                       Vector yUses) 
   { for (int i = 0; i < elements.size(); i++) 
     { Expression elem = (Expression) elements.get(i);  
-      elem.energyUse(res, rUses, aUses);
+      elem.energyUse(res, rUses, aUses, yUses);
     } 
 
     return res; 
@@ -2653,11 +2970,11 @@ public class SetExpression extends Expression
 
     if (elements.size() > 2 && 
         level > 1 && vuses.size() == 0 && !sideeffect)
-    { messages.add("!!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
-          "!!! Use Extract local variable to optimise."); 
+    { messages.add("!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
+          "!! Use Extract local variable to optimise."); 
       refactorELV = true;
-      int redScore = (int) uses.get("red"); 
-      uses.set("red", redScore+1);  
+      int aScore = (int) uses.get("amber"); 
+      uses.set("amber", aScore+1);  
 
       for (int i = 0; i < elements.size(); i++) 
       { Expression elem = (Expression) elements.get(i);  
@@ -2683,6 +3000,7 @@ public class SetExpression extends Expression
     { Expression elem = (Expression) elements.get(i);  
       res = res + elem.syntacticComplexity();
     } 
+
     return res + 1; 
   }  
 
@@ -2773,14 +3091,38 @@ public class SetExpression extends Expression
     if ("|R".equals(op))
     { return evaluateReject(sigma, beta, var, expr); }
 
+    if ("|A".equals(op))
+    { return evaluateAny(sigma, beta, var, expr); }
+
     if ("!".equals(op))
     { return evaluateForAll(sigma, beta, var, expr); }
 
-    if ("#".equals(op))
+    if ("#".equals(op) || "#LC".equals(op))
     { return evaluateExists(sigma, beta, var, expr); }
 
     if ("#1".equals(op))
     { return evaluateExists1(sigma, beta, var, expr); }
+
+    if ("|selectMinimals".equals(op))
+    { return evaluateSelectMinimals(sigma, beta, var, expr); }
+
+    if ("|selectMaximals".equals(op))
+    { return evaluateSelectMaximals(sigma, beta, var, expr); }
+
+    if ("|isUnique".equals(op))
+    { return evaluateIsUnique(sigma, beta, var, expr); }
+
+    if ("|sortedBy".equals(op))
+    { return evaluateSortedBy(sigma, beta, var, expr); }
+
+    if ("|unionAll".equals(op))
+    { return evaluateUnionAll(sigma, beta, var, expr); }
+
+    if ("|concatenateAll".equals(op))
+    { return evaluateConcatenateAll(sigma, beta, var, expr); }
+
+    if ("|intersectAll".equals(op))
+    { return evaluateIntersectAll(sigma, beta, var, expr); }
 
     return this;  
   } 
@@ -2793,8 +3135,10 @@ public class SetExpression extends Expression
 
     SetExpression res = new SetExpression(true); 
         
-    beta.addNewEnvironment(); 
-    beta.addVariable(sigma, var, new BasicExpression("null")); 
+    beta.addNewEnvironment();
+    String pid = Identifier.nextIdentifier("&_");  
+    beta.addVariable(sigma, var, pid, 
+                     new BasicExpression("null")); 
 
     for (int i = 0; i < elements.size(); i++) 
     { Expression elem = (Expression) elements.get(i);
@@ -2804,6 +3148,7 @@ public class SetExpression extends Expression
     } 
 
     beta.removeLastEnvironment();
+    sigma.freeMemory(pid); 
 
     Type seqtype = new Type("Sequence", null); 
     seqtype.setElementType(expr.getType()); 
@@ -2811,6 +3156,230 @@ public class SetExpression extends Expression
     res.setElementType(expr.getType()); 
 
     return res;
+  } 
+
+  public Expression evaluateSelectMinimals(
+                             ModelSpecification sigma, 
+                             ModelState beta, 
+                             String var, 
+                             Expression expr)
+  { // evaluate expr in each environment with var |-> elem
+
+    Vector res = new Vector(); 
+        
+    beta.addNewEnvironment();
+    String pid = Identifier.nextIdentifier("&_");  
+    beta.addVariable(sigma, var, pid, 
+                     new BasicExpression("null")); 
+
+    for (int i = 0; i < elements.size(); i++) 
+    { Expression elem = (Expression) elements.get(i);
+      beta.setVariableValue(sigma, var, elem); 
+      Expression val = expr.evaluate(sigma, beta);
+ 
+      val.setBrackets(false); 
+      res.add(val); 
+    } 
+
+    beta.removeLastEnvironment();
+    sigma.freeMemory(pid); 
+
+    return this.selectMinimals(res);
+  } 
+
+  public Expression evaluateSelectMaximals(
+                             ModelSpecification sigma, 
+                             ModelState beta, 
+                             String var, 
+                             Expression expr)
+  { // evaluate expr in each environment with var |-> elem
+
+    Vector res = new Vector(); 
+        
+    beta.addNewEnvironment();
+    String pid = Identifier.nextIdentifier("&_");  
+    beta.addVariable(sigma, var, pid, 
+                     new BasicExpression("null")); 
+
+    for (int i = 0; i < elements.size(); i++) 
+    { Expression elem = (Expression) elements.get(i);
+      beta.setVariableValue(sigma, var, elem); 
+      Expression val = expr.evaluate(sigma, beta);
+ 
+      val.setBrackets(false); 
+      res.add(val); 
+    } 
+
+    beta.removeLastEnvironment();
+    sigma.freeMemory(pid); 
+
+    return this.selectMaximals(res);
+  } 
+
+  public Expression evaluateIsUnique(
+                             ModelSpecification sigma, 
+                             ModelState beta, 
+                             String var, 
+                             Expression expr)
+  { // evaluate expr in each environment with var |-> elem
+
+    Vector res = new Vector(); 
+        
+    beta.addNewEnvironment();
+    String pid = Identifier.nextIdentifier("&_");  
+    beta.addVariable(sigma, var, pid, 
+                     new BasicExpression("null")); 
+
+    for (int i = 0; i < elements.size(); i++) 
+    { Expression elem = (Expression) elements.get(i);
+      beta.setVariableValue(sigma, var, elem); 
+      Expression val = expr.evaluate(sigma, beta);
+ 
+      val.setBrackets(false);
+      if (res.contains(val))
+      { beta.removeLastEnvironment();
+        sigma.freeMemory(pid); 
+        return new BasicExpression(false); 
+      } 
+  
+      res.add(val); 
+    } 
+
+    beta.removeLastEnvironment();
+    sigma.freeMemory(pid); 
+
+    return SetExpression.isUnique(res);
+  } 
+
+  public Expression evaluateSortedBy(
+                             ModelSpecification sigma, 
+                             ModelState beta, 
+                             String var, 
+                             Expression expr)
+  { // evaluate expr in each environment with var |-> elem
+
+    Vector elems = new Vector(); 
+    Vector values = new Vector(); 
+        
+    beta.addNewEnvironment();
+    String pid = Identifier.nextIdentifier("&_");  
+    beta.addVariable(sigma, var, pid, 
+                     new BasicExpression("null")); 
+
+    for (int i = 0; i < elements.size(); i++) 
+    { Expression elem = (Expression) elements.get(i);
+      Expression evalue = elem.evaluate(sigma, beta); 
+
+      beta.setVariableValue(sigma, var, evalue); 
+      Expression val = expr.evaluate(sigma, beta);
+
+      evalue.setBrackets(false); 
+      elems.add(evalue); 
+ 
+      val.setBrackets(false);
+      if (Expression.isValue("" + val))  
+      { values.add(Expression.convertValue("" + val)); } 
+      else 
+      { values.add(val); }  
+    } 
+
+    beta.removeLastEnvironment();
+    sigma.freeMemory(pid); 
+
+    return this.sortedBy(elems, values);
+  } 
+
+  public Expression evaluateUnionAll(
+                             ModelSpecification sigma, 
+                             ModelState beta, 
+                             String var, 
+                             Expression expr)
+  { // evaluate expr in each environment with var |-> elem
+
+    Vector values = new Vector(); 
+        
+    beta.addNewEnvironment();
+    String pid = Identifier.nextIdentifier("&_");  
+    beta.addVariable(sigma, var, pid, 
+                     new BasicExpression("null")); 
+
+    for (int i = 0; i < elements.size(); i++) 
+    { Expression elem = (Expression) elements.get(i);
+      Expression evalue = elem.evaluate(sigma, beta); 
+
+      beta.setVariableValue(sigma, var, evalue); 
+      Expression val = expr.evaluate(sigma, beta);
+ 
+      val.setBrackets(false);
+      values.add(val); // should be SetExpressions.   
+    } 
+
+    beta.removeLastEnvironment();
+    sigma.freeMemory(pid); 
+
+    return SetExpression.unionAll(values);
+  } 
+
+  public Expression evaluateConcatenateAll(
+                             ModelSpecification sigma, 
+                             ModelState beta, 
+                             String var, 
+                             Expression expr)
+  { // evaluate expr in each environment with var |-> elem
+
+    Vector values = new Vector(); 
+        
+    beta.addNewEnvironment();
+    String pid = Identifier.nextIdentifier("&_");  
+    beta.addVariable(sigma, var, pid, 
+                     new BasicExpression("null")); 
+
+    for (int i = 0; i < elements.size(); i++) 
+    { Expression elem = (Expression) elements.get(i);
+      Expression evalue = elem.evaluate(sigma, beta); 
+
+      beta.setVariableValue(sigma, var, evalue); 
+      Expression val = expr.evaluate(sigma, beta);
+ 
+      val.setBrackets(false);
+      values.add(val); // should be SetExpressions.   
+    } 
+
+    beta.removeLastEnvironment();
+    sigma.freeMemory(pid); 
+
+    return SetExpression.concatenateAll(values);
+  } 
+
+  public Expression evaluateIntersectAll(
+                             ModelSpecification sigma, 
+                             ModelState beta, 
+                             String var, 
+                             Expression expr)
+  { // evaluate expr in each environment with var |-> elem
+
+    Vector values = new Vector(); 
+        
+    beta.addNewEnvironment();
+    String pid = Identifier.nextIdentifier("&_");  
+    beta.addVariable(sigma, var, pid, 
+                     new BasicExpression("null")); 
+
+    for (int i = 0; i < elements.size(); i++) 
+    { Expression elem = (Expression) elements.get(i);
+      Expression evalue = elem.evaluate(sigma, beta); 
+
+      beta.setVariableValue(sigma, var, evalue); 
+      Expression val = expr.evaluate(sigma, beta);
+ 
+      val.setBrackets(false);
+      values.add(val); // should be SetExpressions.   
+    } 
+
+    beta.removeLastEnvironment();
+    sigma.freeMemory(pid); 
+
+    return SetExpression.intersectAll(values);
   } 
 
   public Expression evaluateSelect(ModelSpecification sigma, 
@@ -2822,17 +3391,22 @@ public class SetExpression extends Expression
     SetExpression res = new SetExpression(); 
         
     beta.addNewEnvironment(); 
-    beta.addVariable(sigma, var, new BasicExpression("null")); 
+    String pid = Identifier.nextIdentifier("&_"); 
+    beta.addVariable(sigma, var, pid, 
+                     new BasicExpression("null")); 
 
     for (int i = 0; i < elements.size(); i++) 
     { Expression elem = (Expression) elements.get(i);
       beta.setVariableValue(sigma, var, elem); 
       Expression val = expr.evaluate(sigma, beta); 
+      val.setBrackets(false); 
+
       if ("true".equals(val + ""))
       { res.addElement(elem); }  
     } 
 
     beta.removeLastEnvironment();
+    sigma.freeMemory(pid); 
 
     res.setOrdered(isOrdered()); 
     res.setType(type); 
@@ -2850,18 +3424,23 @@ public class SetExpression extends Expression
     SetExpression res = new SetExpression(); 
         
     beta.addNewEnvironment(); 
-    beta.addVariable(sigma, var, new BasicExpression("null")); 
+    String pid = Identifier.nextIdentifier("&_"); 
+    beta.addVariable(sigma, var, pid, 
+                     new BasicExpression("null")); 
 
     for (int i = 0; i < elements.size(); i++) 
     { Expression elem = (Expression) elements.get(i);
       beta.setVariableValue(sigma, var, elem); 
-      Expression val = expr.evaluate(sigma, beta); 
+      Expression val = expr.evaluate(sigma, beta);
+      val.setBrackets(false); 
+ 
       if ("true".equals(val + "")) {} 
       else 
       { res.addElement(elem); }  
     } 
 
     beta.removeLastEnvironment();
+    sigma.freeMemory(pid); 
 
     res.setOrdered(isOrdered()); 
     res.setType(type); 
@@ -2876,21 +3455,28 @@ public class SetExpression extends Expression
                              Expression expr)
   { // evaluate expr in each environment with var |-> elem
         
-    beta.addNewEnvironment(); 
-    beta.addVariable(sigma, var, new BasicExpression("null")); 
+    beta.addNewEnvironment();
+    String pid = Identifier.nextIdentifier("&_"); 
+ 
+    beta.addVariable(sigma, var, pid, 
+                     new BasicExpression("null")); 
 
     for (int i = 0; i < elements.size(); i++) 
     { Expression elem = (Expression) elements.get(i);
       beta.setVariableValue(sigma, var, elem); 
-      Expression val = expr.evaluate(sigma, beta); 
+      Expression val = expr.evaluate(sigma, beta);
+      val.setBrackets(false); 
+ 
       if ("true".equals(val + "")) { }
       else  
       { beta.removeLastEnvironment();
+        sigma.freeMemory(pid); 
         return new BasicExpression(false); 
       }  
     } 
 
     beta.removeLastEnvironment();
+    sigma.freeMemory(pid); 
 
     return new BasicExpression(true); 
   } 
@@ -2902,19 +3488,26 @@ public class SetExpression extends Expression
   { // evaluate expr in each environment with var |-> elem
         
     beta.addNewEnvironment(); 
-    beta.addVariable(sigma, var, new BasicExpression("null")); 
+    String pid = Identifier.nextIdentifier("&_"); 
+    beta.addVariable(sigma, var, pid, 
+                     new BasicExpression("null")); 
 
     for (int i = 0; i < elements.size(); i++) 
     { Expression elem = (Expression) elements.get(i);
       beta.setVariableValue(sigma, var, elem); 
-      Expression val = expr.evaluate(sigma, beta); 
+      Expression val = expr.evaluate(sigma, beta);
+      val.setBrackets(false); 
+ 
       if ("true".equals(val + "")) 
       { beta.removeLastEnvironment();
+        sigma.freeMemory(pid); 
+
         return new BasicExpression(true); 
       }  
     } 
 
     beta.removeLastEnvironment();
+    sigma.freeMemory(pid); 
 
     return new BasicExpression(false); 
   } 
@@ -2928,27 +3521,64 @@ public class SetExpression extends Expression
     int count = 0; 
 
     beta.addNewEnvironment(); 
-    beta.addVariable(sigma, var, new BasicExpression("null")); 
+    String pid = Identifier.nextIdentifier("&_"); 
+
+    beta.addVariable(sigma, var, pid, 
+                     new BasicExpression("null")); 
 
     for (int i = 0; i < elements.size(); i++) 
     { Expression elem = (Expression) elements.get(i);
       beta.setVariableValue(sigma, var, elem);
  
-      Expression val = expr.evaluate(sigma, beta); 
+      Expression val = expr.evaluate(sigma, beta);
+      val.setBrackets(false); 
+ 
       if ("true".equals(val + "")) 
       { count++; } 
 
       if (count > 1)
       { beta.removeLastEnvironment();
+        sigma.freeMemory(pid); 
         return new BasicExpression(false); 
       }  
     } 
 
     beta.removeLastEnvironment();
+    sigma.freeMemory(pid); 
 
     if (count == 1)
     { return new BasicExpression(true); } 
     return new BasicExpression(false);  
+  } 
+
+  public Expression evaluateAny(ModelSpecification sigma, 
+                             ModelState beta, 
+                             String var, 
+                             Expression expr)
+  { // evaluate expr in each environment with var |-> elem
+        
+    beta.addNewEnvironment(); 
+    String pid = Identifier.nextIdentifier("&_"); 
+    beta.addVariable(sigma, var, pid, 
+                     new BasicExpression("null")); 
+
+    for (int i = 0; i < elements.size(); i++) 
+    { Expression elem = (Expression) elements.get(i);
+      beta.setVariableValue(sigma, var, elem); 
+      Expression val = expr.evaluate(sigma, beta); 
+      val.setBrackets(false); 
+
+      if ("true".equals(val + "")) 
+      { beta.removeLastEnvironment();
+        sigma.freeMemory(pid); 
+        return elem; 
+      }  
+    } 
+
+    beta.removeLastEnvironment();
+    sigma.freeMemory(pid); 
+
+    return new BasicExpression("null"); 
   } 
 
   public static void main(String[] args)

@@ -2121,6 +2121,28 @@ abstract class Expression
     return false; 
   } // and values of collection, map, enum types? 
 
+  public static Vector convertValues(Vector exprs)
+  { Vector res = new Vector(); 
+    for (int i = 0; i < exprs.size(); i++) 
+    { res.add(Expression.convertValue(exprs.get(i))); } 
+    return res; 
+  } 
+
+  public static Object convertValue(Object ob)
+  { if (Expression.isNumberValue(ob)) 
+    { return Expression.convertNumber("" + ob); } 
+
+    if (ob instanceof String) 
+    { if (Expression.isStringValue((String) ob)) 
+      { return Expression.convertStringValue("" + ob); } 
+
+      if (Expression.isBooleanValue((String) ob)) 
+      { return Expression.convertBooleanValue("" + ob); }
+    }  
+
+    return null; 
+  } // and values of collection, map, enum types? 
+
   public boolean isValue()
   { return umlkind == VALUE; } 
 
@@ -2154,6 +2176,19 @@ abstract class Expression
         data.charAt(len-1) == '\'')
     { return true; }
     return false;
+  }
+
+  public static String convertStringValue(String data)
+  { int len = data.length();
+    if (len > 1 &&
+        data.charAt(0) == '\"' &&
+        data.charAt(len-1) == '\"')
+    { return data.substring(1,len-1); }
+    else if (len > 1 &&
+        data.charAt(0) == '\'' &&
+        data.charAt(len-1) == '\'')
+    { return data.substring(1,len-1); }
+    return "";
   }
   
   public boolean hasBasicType()
@@ -2281,6 +2316,12 @@ abstract class Expression
 
   public static boolean isBoolean(String data)
   { return data.equals("true") || data.equals("false"); }
+
+  public static boolean convertBooleanValue(String data)
+  { if (data.equals("true"))
+    { return true; } 
+    return false; 
+  } 
 
   public static boolean isSet(String data)
   { int len = data.length();
@@ -4317,7 +4358,7 @@ abstract class Expression
     { SetExpression usrc = (SetExpression) src;
       Expression uarg = usrc.last(); 
 
-      System.err.println("!! OES: Inefficient ->last operation: " + src + "->last()");
+      // System.err.println("!! OES: Inefficient ->last operation: " + src + "->last()");
  
       return uarg; 
     } 
@@ -4328,7 +4369,7 @@ abstract class Expression
     { BasicExpression usrc = (BasicExpression) src; 
       String dat = usrc.getData(); 
 
-      System.err.println("!! OES: Inefficient ->last operation: " + src + "->last()");
+      // System.err.println("!! OES: Inefficient ->last operation: " + src + "->last()");
  
       int slen = dat.length(); 
       if (slen > 2)
@@ -4371,6 +4412,17 @@ abstract class Expression
 
       return Expression.simplifyFirst(uarg); 
     } 
+
+    if (src instanceof UnaryExpression && 
+        "->sort".equals(
+           ((UnaryExpression) src).getOperator()))
+    { UnaryExpression usrc = (UnaryExpression) src; 
+      Expression uarg = usrc.getArgument();
+      System.err.println("!! OES: Inefficient ->last operation: " + src + "->last()"); 
+
+      return new UnaryExpression("->max", uarg); 
+    } 
+
 
     if (src instanceof BinaryExpression && 
         "->append".equals(
@@ -4430,19 +4482,22 @@ abstract class Expression
   { // sq->reverse()->first() is  sq->last()
     // sq->front()->first()  is  sq->first()
     // sq->tail()->first() is  sq->at(2)
+    // sq->prepend(x)->first() is x
     // sq->select(x | P)->first()  is  sq->any(x | P)
     // sq->reject(x | P)->first()  is  sq->any(x | not(P))
     // Sequence{x1, ...}->first()  is  x1
     // "text"->first() is "t"
     // s->sortedBy(x | e)->first()  is 
     //    s->selectMinimals(x | e)->any()
+    // s->sort()->first() is s->min()
+    
 
     if (src instanceof SetExpression && 
         src.isSequence())
     { SetExpression usrc = (SetExpression) src; 
       Expression uarg = usrc.first(); 
 
-      System.err.println("!! OES: Inefficient ->first operation: " + src + "->first()");
+      // System.err.println("!! OES: Inefficient ->first operation: " + src + "->first()");
  
       return uarg; 
     }
@@ -4453,7 +4508,7 @@ abstract class Expression
     { BasicExpression usrc = (BasicExpression) src; 
       String dat = usrc.getData(); 
 
-      System.err.println("!! OES: Inefficient ->first operation: " + src + "->first()");
+      // System.err.println("!! OES: Inefficient ->first operation: " + src + "->first()");
  
       if (dat.length() > 2)
       { return new BasicExpression("\"" + dat.charAt(1) + "\""); } 
@@ -4497,6 +4552,26 @@ abstract class Expression
     } 
 
     if (src instanceof BinaryExpression && 
+        "->prepend".equals(
+           ((BinaryExpression) src).getOperator()))
+    { BinaryExpression bsrc = (BinaryExpression) src; 
+      Expression barg = bsrc.getRight();
+      System.err.println("!! OES: Inefficient ->first operation: " + src + "->first()"); 
+
+      return barg; 
+    } 
+
+    if (src instanceof UnaryExpression && 
+        "->sort".equals(
+           ((UnaryExpression) src).getOperator()))
+    { UnaryExpression usrc = (UnaryExpression) src; 
+      Expression uarg = usrc.getArgument();
+      System.err.println("!! OES: Inefficient ->first operation: " + src + "->first()"); 
+
+      return new UnaryExpression("->min", uarg); 
+    } 
+
+    if (src instanceof BinaryExpression && 
         "|C".equals(
            ((BinaryExpression) src).getOperator()))
     { BinaryExpression collexpr = (BinaryExpression) src; 
@@ -4516,6 +4591,36 @@ abstract class Expression
                varexpr, srccoll.getElementType(), 
                atexpr, valexpr); 
     } 
+
+    if (src instanceof BinaryExpression && 
+        "|".equals(
+           ((BinaryExpression) src).getOperator()))
+    { BinaryExpression collexpr = (BinaryExpression) src; 
+      Expression indom = collexpr.getLeft();
+      Expression valexpr = collexpr.getRight(); 
+  
+      System.err.println("!! OES: Inefficient ->first operation: " + src + "->first()"); 
+
+      BinaryExpression res = 
+         new BinaryExpression("|A", indom, valexpr); 
+      return res; 
+    } // s->select(x|P)->first() is s->any(x|P)
+
+    if (src instanceof BinaryExpression && 
+        "|R".equals(
+           ((BinaryExpression) src).getOperator()))
+    { BinaryExpression collexpr = (BinaryExpression) src; 
+      Expression indom = collexpr.getLeft();
+      Expression valexpr = collexpr.getRight(); 
+  
+      System.err.println("!! OES: Inefficient ->first operation: " + src + "->first()"); 
+
+      Expression nvalexpr = Expression.negate(valexpr); 
+
+      BinaryExpression res = 
+         new BinaryExpression("|A", indom, nvalexpr); 
+      return res; 
+    } // s->reject(x|P)->first() is s->any(x|not(P))
 
     if (src instanceof BinaryExpression && 
         "|sortedBy".equals(
@@ -6453,7 +6558,8 @@ public static boolean conflictsReverseOp(String op1, String op2)
   public abstract int cyclomaticComplexity(); 
 
   public abstract Map energyUse(Map uses, 
-                                Vector rUses, Vector oUses); 
+                                Vector rUses, Vector oUses,
+                                Vector yUses); 
 
   public abstract java.util.Map collectionOperatorUses(int level, 
                              java.util.Map res, Vector vars); 

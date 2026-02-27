@@ -92,6 +92,16 @@ public class ModelSpecification
   public void setMemoryValue(String ref, Expression val)
   { memory.put(ref, val); } 
 
+  public void reclaimMemory(Vector addresses)
+  { for (int i = 0; i < addresses.size(); i++) 
+    { String addr = (String) addresses.get(i); 
+      memory.remove(addr); 
+    } 
+  } 
+
+  public void freeMemory(String ref)
+  { memory.remove(ref); } 
+
   public void setStaticAttributeValue(String cls, String att,
                                       Expression val)
   { java.util.Map cAtts = 

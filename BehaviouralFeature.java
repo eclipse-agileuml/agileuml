@@ -225,8 +225,8 @@ public class BehaviouralFeature extends ModelElement
   } 
 
   public Expression execute(ModelSpecification sigma, 
-                      ModelState beta,
-                      Vector parValues)
+                            ModelState beta,
+                            Vector parValues)
   { if (activity == null) 
     { return null; } 
 
@@ -235,8 +235,10 @@ public class BehaviouralFeature extends ModelElement
  
     System.out.println(">> Executing operation " + this + 
                        " on parameters " + parValues + 
-                       " in environment " + sigma + ", " +
+                       " in environments " + sigma + " ++++ " +
                        beta); 
+
+    Vector localMemory = new Vector(); 
 
     // add the parameters: 
     for (int i = 0; i < parameters.size(); i++) 
@@ -246,11 +248,13 @@ public class BehaviouralFeature extends ModelElement
       if (i < parValues.size())
       { Expression pval = (Expression) parValues.get(i); 
         String pid = Identifier.nextIdentifier("&_"); 
+        localMemory.add(pid); 
         beta.addVariable(sigma, pname, pid, pval); 
       } 
       else if (typ != null) 
       { Expression def = Type.defaultInitialValueExpression(typ); 
         String pid = Identifier.nextIdentifier("&_"); 
+        localMemory.add(pid); 
         beta.addVariable(sigma, pname, pid, def); 
       }    
     } 
@@ -269,8 +273,12 @@ public class BehaviouralFeature extends ModelElement
  
     if (resultType != null && 
         !("void".equals(resultType + ""))) 
-    { return beta.getVariableValue(sigma, "result"); } 
+    { Expression res = beta.getVariableValue(sigma, "result"); 
+      sigma.reclaimMemory(localMemory); 
+      return res; 
+    } 
 
+    sigma.reclaimMemory(localMemory); 
     return null; 
   } 
 
@@ -4593,7 +4601,8 @@ public class BehaviouralFeature extends ModelElement
     }  
   } 
 
-  public Map energyAnalysis(Vector redUses, Vector amberUses)
+  public Map energyAnalysis(Vector redUses, Vector amberUses, 
+                            Vector yellowUses)
   { // Scan the postcondition/activity for energy expensive
     // expressions/code
 
@@ -4609,7 +4618,7 @@ public class BehaviouralFeature extends ModelElement
     java.util.Map defs = new java.util.HashMap(); 
 
     if (post != null) 
-    { res = post.energyUse(res, redUses, amberUses);
+    { res = post.energyUse(res, redUses, amberUses, yellowUses);
 
       // System.out.println(res); 
       // System.out.println(redUses); 
@@ -4640,7 +4649,8 @@ public class BehaviouralFeature extends ModelElement
     defs = new java.util.HashMap();
 
     if (activity != null) 
-    { res = activity.energyUse(res, redUses, amberUses);
+    { res = activity.energyUse(res, redUses, 
+                               amberUses, yellowUses);
 
       // System.out.println(res); 
       // System.out.println(redUses); 
@@ -4844,7 +4854,8 @@ int ascore = (int) res.get("amber");
 
   } // and activity
 
-  public int displayMeasures(PrintWriter out)   
+  public int displayMeasures(PrintWriter out, 
+                             java.util.Map flaws)   
   { String res = ""; 
     String nme = getName(); 
     if (entity != null) 
@@ -4859,8 +4870,9 @@ int ascore = (int) res.get("amber");
 
     out.println("*** Number of parameters of operation " + nme + " = " + pars); 
     if (pars > TestParameters.numberOfParametersLimit) 
-    { System.err.println("!!! Code smell (EPL): too many parameters (" + pars + ") for " + nme); 
-      System.err.println(">>> Recommend refactoring by introducing value object for parameters or splitting operation into parts\n"); 
+    { System.err.println("!! Code smell (EPL): too many parameters (" + pars + ") for " + nme); 
+      System.err.println("!! Recommend refactoring by introducing value object for parameters or splitting operation into parts\n"); 
+      flaws.put("EPL", 1); 
       System.err.println(); 
     }  
 
@@ -4884,12 +4896,13 @@ int ascore = (int) res.get("amber");
       out.println("*** Activity syntactic complexity = " + acomp); 
 
       if (acomp > TestParameters.operationSizeLimit) 
-      { System.err.println("!!! Code smell (EOS): too high activity complexity (" + acomp + ") for " + nme); 
-        System.err.println(">>> Recommend refactoring by splitting operation"); 
+      { System.err.println("!! Code smell (EOS): too high activity complexity (" + acomp + ") for " + nme); 
+        System.err.println("!! Recommend refactoring by splitting operation"); 
+        flaws.put("EOS", 1); 
         System.err.println(); 
       }  
       else if (acomp > TestParameters.operationSizeWarning) 
-      { System.err.println("*** Warning: high activity complexity (" + acomp + ") for " + nme); }  
+      { System.err.println("! Warning: high activity complexity (" + acomp + ") for " + nme); }  
       complexity = complexity + acomp;
       System.err.println();  
     }
@@ -4898,18 +4911,19 @@ int ascore = (int) res.get("amber");
     out.println(); 
 
     if (cyc > TestParameters.cyclomaticComplexityLimit) 
-    { System.err.println("!!! Code smell (CC): high cyclomatic complexity (" + cyc + ") for " + nme);
-      System.err.println("!!! Recommend refactoring by splitting operation"); 
+    { System.err.println("!! Code smell (CC): high cyclomatic complexity (" + cyc + ") for " + nme);
+      System.err.println("!! Recommend refactoring by splitting operation"); 
+      flaws.put("CC", 1); 
       System.err.println(); 
     }  
 
     if (complexity > TestParameters.operationSizeLimit) 
-    { System.err.println("!!! Code smell (EHS): too high complexity (" + complexity + ") for " + nme); 
-      System.err.println("!!! Recommend refactoring by splitting operation"); 
+    { System.err.println("!! Code smell (EHS): too high complexity (" + complexity + ") for " + nme); 
+      System.err.println("!! Recommend refactoring by splitting operation"); 
       System.err.println(); 
     }  
     else if (complexity > TestParameters.operationSizeWarning) 
-    { System.err.println("!! Warning: high complexity (" + complexity + ") for " + nme); 
+    { System.err.println("! Warning: high complexity (" + complexity + ") for " + nme); 
       System.err.println(); 
     }  
 
@@ -5173,6 +5187,7 @@ int ascore = (int) res.get("amber");
     out.print("    <Operation "); 
     out.print("Name = \"" + nme + "\" "); 
     out.print("Description = \"\" ");
+    out.print("Syntax = \"\" ");
     out.print("BaseInfo = \"\" ");
     out.print("IsStatic = \"" + isStatic() + "\" ");
     out.print("IsInherited = \"false\" ");

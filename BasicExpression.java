@@ -1925,7 +1925,7 @@ class BasicExpression extends Expression
   public void findClones(java.util.Map clones, 
                          java.util.Map cloneDefs, 
                          String rule, String op)
-  { if (syntacticComplexity() > UCDArea.CLONE_LIMIT)
+  { if (syntacticComplexity() >= TestParameters.cloneSizeLimit)
     { String val = "" + this; 
       Vector used = (Vector) clones.get(val);
       if (used == null)
@@ -18764,15 +18764,16 @@ public Statement generateDesignSubtract(Expression rhs)
 
 
 
-  public Map energyUse(Map res, Vector rUses, Vector oUses) 
+  public Map energyUse(Map res, Vector rUses, Vector oUses, 
+                       Vector yUses) 
   { // Calls to OclType reflection operators and OclDatasource
     // connect are red flags. Also factorial, file opening. 
 
     if (objectRef != null) 
-    { objectRef.energyUse(res,rUses,oUses); }
+    { objectRef.energyUse(res,rUses,oUses,yUses); }
 
     if (arrayIndex != null) 
-    { arrayIndex.energyUse(res,rUses,oUses); 
+    { arrayIndex.energyUse(res,rUses,oUses,yUses); 
       if (arrayIndex.isCollectionValued())
       { rUses.add("!!! Expensive operation: implicit ->collect over index collection in: " + this);
         int rscore = (int) res.get("red"); 
@@ -18783,7 +18784,7 @@ public Statement generateDesignSubtract(Expression rhs)
     if (parameters != null) 
     { for (int i = 0; i < parameters.size(); i++) 
       { Expression par = (Expression) parameters.get(i); 
-        par.energyUse(res,rUses,oUses); 
+        par.energyUse(res,rUses,oUses,yUses); 
       } 
 
       if (arrayIndex != null && this.isOperationCall())
@@ -18797,7 +18798,7 @@ public Statement generateDesignSubtract(Expression rhs)
 
     int mchain = maximumReferenceChain(); 
     if (mchain > TestParameters.referenceChainLimit)
-    { oUses.add("! (LRC) flaw: The expression " + this + " has too many (" + mchain + ") chained references"); 
+    { yUses.add("! (LRC) flaw: The expression " + this + " has too many (" + mchain + ") chained references"); 
       int yscore = (int) res.get("yellow"); 
       res.set("yellow", yscore+1); 
     } 

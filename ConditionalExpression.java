@@ -363,8 +363,10 @@ public class ConditionalExpression extends Expression
     return new ConditionalExpression(testexpr, ifstat, elsestat); 
   } 
 
-  public Map energyUse(Map res, Vector rUses, Vector oUses) 
-  { int syn = syntacticComplexity(); 
+  public Map energyUse(Map res, Vector rUses, Vector oUses,
+                       Vector yUses) 
+  { int syn = syntacticComplexity();
+ 
     if (syn > TestParameters.syntacticComplexityLimit)
     { oUses.add("! Excessive expression size (MEL) in " + this + " : try to simplify OCL expression");
       int ascore = (int) res.get("amber"); 
@@ -373,9 +375,9 @@ public class ConditionalExpression extends Expression
 
     this.maximumReferenceChain(); 
 
-    test.energyUse(res,rUses,oUses); 
-    ifExp.energyUse(res,rUses,oUses); 
-    elseExp.energyUse(res,rUses,oUses);
+    test.energyUse(res,rUses,oUses,yUses); 
+    ifExp.energyUse(res,rUses,oUses,yUses); 
+    elseExp.energyUse(res,rUses,oUses,yUses);
 
     // if s->includes(x) then s else s->including(x) endif
     // if s->includes(x) then s else s->append(x) endif
@@ -415,11 +417,11 @@ public class ConditionalExpression extends Expression
           (testbeRight + "").equals(elsebeRight + ""))
       { if (elsebe.getOperator().equals("->including") || 
             elsebe.getOperator().equals("->append"))
-        { rUses.add("!!! Using sequence " + ifExp + " as set in " + this); 
-          rUses.add("!!! Recommend declaring " + ifExp + " as a Set or SortedSet"); 
+        { oUses.add("!! (OES): Using sequence " + ifExp + " as set in " + this); 
+          oUses.add("!! Recommend declaring " + ifExp + " as a Set or SortedSet"); 
 
-          int oscore = (int) res.get("red"); 
-          res.set("red", oscore + 1); 
+          int oscore = (int) res.get("amber"); 
+          res.set("amber", oscore + 1); 
         } 
       }
     } 
@@ -451,11 +453,11 @@ public class ConditionalExpression extends Expression
           (testbeRight + "").equals(ifbeRight + ""))
       { if (ifbe.getOperator().equals("->including") || 
             ifbe.getOperator().equals("->append"))
-        { rUses.add("!!! Using sequence " + elseExp + " as set in " + this); 
-          rUses.add("!!! Recommend declaring " + elseExp + " as a Set or SortedSet"); 
+        { oUses.add("!! (OES): Using sequence " + elseExp + " as set in " + this); 
+          oUses.add("!! Recommend declaring " + elseExp + " as a Set or SortedSet"); 
 
-          int oscore = (int) res.get("red"); 
-          res.set("red", oscore + 1); 
+          int oscore = (int) res.get("amber"); 
+          res.set("amber", oscore + 1); 
         } 
       } 
     } 

@@ -20,7 +20,8 @@
  * depending on the users actions with the mouse. (Detecting events)
 
    package: Class diagram GUI
-
+   Note - it should not contain business functionality, but it 
+   actually does :( 
  */
 
 
@@ -151,7 +152,8 @@ public class UCDArea extends JPanel
 
   // Parent frame: 
     UmlTool parent; 
-  // Dialog: 
+
+  // Dialogs: 
   ExDialog2 dialog; 
   AttEditDialog attDialog; 
   AstEditDialog astDialog;
@@ -163,7 +165,9 @@ public class UCDArea extends JPanel
   EISUseCaseDialog eisucDialog; 
   BacktrackDialog backtrackDialog; 
   EntityCreateDialog entDialog; 
-  ModifyUseCaseDialog editucDialog; 
+  ModifyUseCaseDialog editucDialog;
+
+  // Event handler:  
   WinHandling state_win = new WinHandling(); 
 
   public static int CLONE_LIMIT = 7; /* expression size */ 
@@ -3698,9 +3702,9 @@ public class UCDArea extends JPanel
     { Object k = keys.next();
       Vector clonedIn = (Vector) clones.get(k); 
       if (clonedIn.size() > 1)
-      { out.println("!!! " + k + " is cloned in: " + clonedIn); 
+      { out.println("!!! (DC) flaw: " + k + " cloned in:\n" + clonedIn); 
         out.println(); 
-        System.err.println("!!! Code smell (DC): Clone " + k + " in " + clonedIn); 
+        System.err.println("!!! (DC) flaw: " + k + " cloned in\n" + clonedIn); 
         System.err.println("!!! Recommend refactoring by code restructing or extracting clones as a new operation");
         System.err.println();  
         clonecount++; 
@@ -3775,11 +3779,87 @@ public class UCDArea extends JPanel
     } 
   } // update UCDOperations
 
+  public void setThresholds(String configFileName)
+  { boolean configeof = true; 
+
+    String configLine = null; 
+
+    File configFile = new File(configFileName); 
+    BufferedReader configbr = null;
+ 
+    try { 
+      configbr = new BufferedReader(new FileReader(configFile));
+      configeof = false;  
+    }
+    catch (FileNotFoundException e)
+    { System.out.println("!! File not found: " + configFileName); 
+      configeof = true; 
+    }
+
+    while (!configeof)
+    { try { configLine = configbr.readLine(); }
+      catch (IOException e)
+      { System.out.println("!! Reading failed.");
+        configeof = true; 
+      }
+
+      if (configLine == null) 
+      { configeof = true; 
+        break; 
+      }
+      else if (configLine.length() > 0)
+      { String[] words = configLine.split("="); 
+        if (words.length >= 2)
+        { 
+          String configPar = words[0].trim(); 
+          String configParValue = words[1].trim(); 
+          int cpar = Integer.parseInt(configParValue); 
+
+          if ("syntacticComplexityLimit".equals(configPar))
+          { TestParameters.syntacticComplexityLimit = cpar; } 
+          else if ("cloneSizeLimit".equals(configPar))
+          { TestParameters.cloneSizeLimit = cpar; } 
+          else if ("energyCloneSizeLimit".equals(configPar))
+          { TestParameters.energyCloneSizeLimit = cpar; }
+          else if ("statementNestingLimit".equals(configPar))
+          { TestParameters.statementNestingLimit = cpar; } 
+          else if ("cyclomaticComplexityLimit".equals(configPar))
+          { TestParameters.cyclomaticComplexityLimit = cpar; } 
+          else if ("referenceChainLimit".equals(configPar))
+          { TestParameters.referenceChainLimit = cpar; } 
+          else if ("nestedTypeLimit".equals(configPar))
+          { TestParameters.nestedTypeLimit = cpar; } 
+          else if ("superclassesLimit".equals(configPar))
+          { TestParameters.superclassesLimit = cpar; } 
+          else if ("inheritanceChainLimit".equals(configPar))
+          { TestParameters.inheritanceChainLimit = cpar; }
+          else if ("numberOfDataFeaturesLimit".equals(configPar))
+          { TestParameters.numberOfDataFeaturesLimit = cpar; } 
+          else if ("numberOfOperationsLimit".equals(configPar))
+          { TestParameters.numberOfOperationsLimit = cpar; }
+          else if ("numberOfParametersLimit".equals(configPar))
+          { TestParameters.numberOfParametersLimit = cpar; } 
+          else if ("operationSizeLimit".equals(configPar))
+          { TestParameters.operationSizeLimit = cpar; } 
+          else if ("operationSizeWarning".equals(configPar))
+          { TestParameters.operationSizeWarning = cpar; } 
+          else if ("classSizeLimit".equals(configPar))
+          { TestParameters.classSizeLimit = cpar; }
+          else if ("efoLimit".equals(configPar))
+          { TestParameters.efoLimit = cpar; } 
+          else if ("efiLimit".equals(configPar))
+          { TestParameters.efiLimit = cpar; } 
+        } 
+      } 
+    } 
+    try { configbr.close(); } catch(IOException e) { }
+  } 
+
   public void energyAnalysis()
   { java.util.Map clnes = new java.util.HashMap(); 
     Vector messages = new Vector();
 
-    TestParameters.cloneSizeLimit = 4; 
+    // TestParameters.cloneSizeLimit = 4; 
 
     energyAnalysis(clnes, messages);
 
@@ -3880,6 +3960,7 @@ public class UCDArea extends JPanel
       amberFlags = amberFlags + 1; 
     }
 
+    messages.add(">>>>> For system " + systemName + " there are the total energy-use flaws:"); 
     messages.add(">> Red flag score: " + redFlags); 
     messages.add(">> Amber flag score: " + amberFlags); 
     messages.add(">> Yellow flag score: " + yellowFlags); 
@@ -3944,8 +4025,8 @@ public class UCDArea extends JPanel
           { out.println("*** " + me + " has no dependencies"); }
           
           if (rang.size() > TestParameters.efoLimit) 
-          { System.err.println("!!! Code smell (EFO): " + me + " uses too many operations: " + rang.size());
-            System.err.println(">>> Suggest refactoring by sequential decomposition"); 
+          { System.err.println("!! Code smell (EFO): " + me + " uses too many operations: " + rang.size());
+            System.err.println("!! Suggest refactoring by sequential decomposition"); 
           } 
           
           Map domrestr = Map.domainRestriction(rang,res); 
@@ -3960,7 +4041,7 @@ public class UCDArea extends JPanel
           if (selfcallsucn > 0) 
           { out.println("*** " + selfcallsucn + " calls in recursive loops in " + me + " : " + selfcallsuc);  
             System.err.println("!!! Code smell (CBR2): " + selfcallsucn + " calls in recursive loops in " + me + " : " + selfcallsuc); 
-            System.err.println(">>> Suggest refactoring using Map Objects Before Links/Replace Recursion by Iteration"); 
+            System.err.println("!!! Suggest refactoring using Map Objects Before Links/Replace Recursion by Iteration"); 
           } 
 
 
@@ -3988,14 +4069,14 @@ public class UCDArea extends JPanel
             if (clonelocation.startsWith(ucname + "_"))
             { out.println(k + " is cloned in: " + ucname); 
               System.err.println("!!! Code smell (DC): Clone " + k + " in " + ucname); 
-              System.err.println(">>> Suggest refactoring using Extract Function"); 
+              System.err.println("!!! Suggest refactoring using Extract Function"); 
 
               ucclonecount++;
             } 
             else if (rang.contains(clonelocation))
             { out.println("*** " + k + " is cloned in: " + ucname); 
               System.err.println("!!! Code smell (DC): Clone " + k + " in " + ucname); 
-              System.err.println(">>> Suggest refactoring using Extract Function"); 
+              System.err.println("!!! Suggest refactoring using Extract Function"); 
               ucclonecount++;
             } 
           } 
@@ -4004,7 +4085,7 @@ public class UCDArea extends JPanel
         if (ucclonecount > 0) 
         { out.println("*** " + ucclonecount + " clones in " + me);  
           System.err.println("!!! Code smell (DC): " + ucclonecount + " clones in " + me); 
-          System.err.println(">>> Suggest refactoring using Extract Function"); 
+          System.err.println("!!! Suggest refactoring using Extract Function"); 
 
           System.err.println(); 
           out.println(); 
@@ -4021,7 +4102,7 @@ public class UCDArea extends JPanel
               
     out.println("*** The total size of all used entity operations is: " + allusedsize); 
     if (selfcallsn > 0) 
-    { out.println("*** There are: " + selfcallsn + " operations involved in recursive loops"); } 
+    { out.println("!!! (CBR2) flaws: " + selfcallsn + " operations involved in recursive loops"); } 
     else 
     { out.println("*** There are no operations involved in recursive loops"); } 
     out.println(); 

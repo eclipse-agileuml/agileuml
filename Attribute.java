@@ -1742,7 +1742,8 @@ public class Attribute extends ModelElement
     return result; 
   } 
 
-  public Map energyUse(Vector reds, Vector ambers)
+  public Map energyUse(Vector reds, Vector ambers, 
+                       Vector yellows)
   { // att : T = init
     
     Map res = new Map(); 
@@ -1754,7 +1755,7 @@ public class Attribute extends ModelElement
     { int tcomp = type.complexity();
 
       if (tcomp > TestParameters.nestedTypeLimit) 
-      { ambers.add("! Warning (MNC) flaw: complex type with complexity " + tcomp + ": " + type);
+      { ambers.add("!! Warning (MNC) flaw: complex type with complexity " + tcomp + ": " + type);
         int ascore = (int) res.get("amber");
         ascore = ascore + 1;
         res.set("amber", ascore);
@@ -1764,7 +1765,7 @@ public class Attribute extends ModelElement
     if (initialExpression != null) 
     { res = 
         initialExpression.energyUse(res, 
-                                    reds, ambers); 
+                                    reds, ambers, yellows); 
     }
  
     return res; 
@@ -1939,7 +1940,7 @@ public class Attribute extends ModelElement
     out.print("      }"); 
   }
 
-  public void generateMambaXML(PrintWriter out)
+  public void generateMambaXML(PrintWriter out, CGSpec cgs)
   { String nme = getName();
     String initVal; 
 
@@ -1947,7 +1948,7 @@ public class Attribute extends ModelElement
     if (expr == null) 
     { initVal = ""; } 
 
-    String exprString = expr + ""; 
+    String exprString = expr.cg(cgs) + ""; 
 
     if (exprString.startsWith("\"") && 
         exprString.endsWith("\""))
@@ -1971,14 +1972,17 @@ public class Attribute extends ModelElement
     out.print(" MaxLength = \"100\"");
     out.print(" MinValue = \"\"");
     out.print(" MaxValue = \"\"");
+    out.print(" ColumnName = \"\"");
     out.print(" CustomValidation = \"\"");
     out.print(" IsCreditCard = \"false\"");
     out.print(" IsEmail = \"false\"");
     out.print(" IsURL = \"false\"");
     out.print(" Scale = \"2\"");
     out.print(" InitValue = \"" + initVal + "\"");
-    out.print(" Precision = \"2\"");
+    out.print(" Precision = \"18\"");
     out.print(" Length = \"100\"");
+    out.print(" Getter = \"\"");
+    out.print(" Setter = \"\"");
     out.print(" IsExternal = \"false\"");
     out.println(" />"); 
   }

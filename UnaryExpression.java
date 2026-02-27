@@ -871,12 +871,16 @@ public void findClones(java.util.Map clones,
     return this; 
   } 
 
-  public Map energyUse(Map res, Vector rUses, Vector aUses) 
+  public Map energyUse(Map res, Vector rUses, Vector aUses,
+                       Vector yUses) 
   { // ->sort()
     // is amber flag.
+    // ->sort()->last() or ->sort()->first() or 
+    // ->sort()->at(1) or ->select(...)->at(1) 
+    // ->select(...)->first() is a red flag.  
     // ->select(...)->any() is a red flag.  
 
-    argument.energyUse(res, rUses, aUses); 
+    argument.energyUse(res, rUses, aUses, yUses); 
 
     if (operator.equals("lambda") && 
         accumulator != null) 
@@ -902,10 +906,10 @@ public void findClones(java.util.Map clones,
           leftargop.equals("->reject") ||
           leftargop.equals("|") ||
           leftargop.equals("|R"))
-      { rUses.add("!!! OCL efficiency smell (OES): Inefficient expression in: " + this + ",");  
-        rUses.add("!!! instead use ->exists");
-        int rscore = (int) res.get("red"); 
-        res.set("red", rscore+1); 
+      { aUses.add("!! OCL efficiency smell (OES): Inefficient expression in: " + this + ",");  
+        aUses.add("!! instead use ->exists");
+        int ascore = (int) res.get("amber"); 
+        res.set("amber", ascore+1); 
       }
     } 
     else if (operator.equals("->isEmpty") && 
@@ -920,33 +924,52 @@ public void findClones(java.util.Map clones,
           leftargop.equals("->reject") ||
           leftargop.equals("|") ||
           leftargop.equals("|R"))
-      { rUses.add("!!! OCL efficiency smell (OES): Inefficient expression in: " + this + ","); 
-        rUses.add("!!! instead use ->forAll");
-        int rscore = (int) res.get("red"); 
-        res.set("red", rscore+1); 
+      { aUses.add("!! OCL efficiency smell (OES): Inefficient expression in: " + this + ","); 
+        aUses.add("!! instead use ->forAll");
+        int ascore = (int) res.get("amber"); 
+        res.set("amber", ascore+1); 
       }
     } 
-    else if (operator.equals("->any"))
+    else if (operator.equals("->any") || 
+             operator.equals("->first"))
     {
-      if (argument instanceof BinaryExpression) 
+      if (argument instanceof UnaryExpression) 
+      { UnaryExpression lbe = (UnaryExpression) argument;
+
+        if (lbe.operator.equals("->sort") || 
+            lbe.operator.equals("->reverse"))
+        { rUses.add("!!! OCL efficiency smell (OES): " + 
+            "Inefficient expr" + operator + 
+            " expression/unused results in: " + this + ",");  
+          rUses.add("!!! Use col->min() instead of col->sort()" + 
+             operator + "(), and col->last() instead of col->reverse()" + 
+             operator + "()");
+          int rscore = (int) res.get("red"); 
+          res.set("red", rscore+1); 
+        }
+      }   
+      else if (argument instanceof BinaryExpression) 
       { BinaryExpression lbe = (BinaryExpression) argument; 
 
         if (lbe.operator.equals("|") ||
             lbe.operator.equals("->select"))
-        { rUses.add("!!! OCL efficiency smell (OES): Inefficient col->select(x | P)->any() expression in: " + this + ",");  
+        { rUses.add("!!! OCL efficiency smell (OES): Inefficient col->select(x | P)" + 
+             operator + "() expression in: " + this + ",");  
           rUses.add("!!! instead use:    col->any(x | P)");
           int rscore = (int) res.get("red"); 
           res.set("red", rscore+1); 
         }
         else if (lbe.operator.equals("|R") ||
             lbe.operator.equals("->reject"))
-        { rUses.add("!!! OCL efficiency smell (OES): Inefficient col->reject(x | P)->any() expression in " + this + ","); 
+        { rUses.add("!!! OCL efficiency smell (OES): Inefficient col->reject(x | P)" + 
+             operator + "() expression in " + this + ","); 
           rUses.add("!!! instead, use:   col->any(x | not(P))");
           int rscore = (int) res.get("red"); 
           res.set("red", rscore+1); 
         }
         else if (lbe.operator.equals("|C"))
-        { rUses.add("!!! OCL efficiency smell (OES): Inefficient col->collect(x | e)->any() expression in " + this + ","); 
+        { rUses.add("!!! OCL efficiency smell (OES): Inefficient col->collect(x | e)" + 
+             operator + "() expression in " + this + ","); 
           rUses.add("!!! instead, use:  let x = col->any() in e");
           int rscore = (int) res.get("red"); 
           res.set("red", rscore+1); 
@@ -956,30 +979,34 @@ public void findClones(java.util.Map clones,
     else if ("->copy".equals(operator) ||
              "->asSet".equals(operator) ||
              "->asSequence".equals(operator))
-    { aUses.add("!! O(n) operator " + this);  
+    { yUses.add("! O(n) operator " + this);  
 
-      int ascore = (int) res.get("amber"); 
-      res.set("amber", ascore+1); 
+      int yscore = (int) res.get("yellow"); 
+      res.set("yellow", yscore+1); 
     } 
     else if ("->sort".equals(operator))
     { if (argument.isSorted())
       { aUses.add("!! Redundant ->sort operation: " + this + 
             "\n!! Argument is already sorted.");
+        int ascore = (int) res.get("amber"); 
+        res.set("amber", ascore+1); 
       }
       else if (argument.isSet()) 
-      { aUses.add("!! n*log(n) sorting algorithm used for " + this + 
-            "\n!! It may be more efficient to use a SortedSet type.");
+      { yUses.add("! n*log(n) sorting algorithm used for " + this + 
+            "\n! It may be more efficient to use a SortedSet type.");
+        int yscore = (int) res.get("yellow"); 
+        res.set("yellow", yscore+1); 
       }
       else 
-      { aUses.add("!! n*log(n) sorting algorithm used for " + this); } 
-
-      int ascore = (int) res.get("amber"); 
-      res.set("amber", ascore+1); 
+      { yUses.add("! n*log(n) sorting algorithm used for " + this);
+        int yscore = (int) res.get("yellow"); 
+        res.set("yellow", yscore+1);
+      } 
     } 
     else if (operator.equals("->unionAll") || 
         operator.equals("->intersectAll") || 
         operator.equals("->concatenateAll"))
-    { aUses.add("! High-cost operation: " + this);
+    { aUses.add("!! High-cost O(n*n) operation: " + this);
 
       int ascore = (int) res.get("amber"); 
       res.set("amber", ascore+1); 
@@ -992,20 +1019,40 @@ public void findClones(java.util.Map clones,
              ((BasicExpression) argument).isOperationCall())
     { // redundant results computation
 
-      rUses.add("!!! Possible redundant operation results (UOR) flaw in: " + this);
-      int rscore = (int) res.get("red"); 
-      res.set("red", rscore+1); 
+      aUses.add("!! Possible redundant operation results (UOR) flaw in: " + this);
+      int ascore = (int) res.get("amber"); 
+      res.set("amber", ascore+1); 
     } 
-    else if (("->last".equals(operator) || 
-              "->first".equals(operator)) && 
-             argument instanceof BinaryExpression && 
-             "|C".equals(
-                ((BinaryExpression) argument).getOperator()))
+    else if ("->last".equals(operator) || 
+             "->first".equals(operator))
     { // redundant results computation
 
-      rUses.add("!!! OCL efficiency smell (UOR): Redundant results computation in: " + this);
-      int rscore = (int) res.get("red"); 
-      res.set("red", rscore+1); 
+      if (argument instanceof UnaryExpression) 
+      { UnaryExpression lbe = (UnaryExpression) argument;
+
+        if (lbe.operator.equals("->sort") || 
+            lbe.operator.equals("->reverse"))
+        { rUses.add("!!! (UOR) flaw: " + 
+            "Unused results in: " + this + ",");  
+          rUses.add("!!! Use col->min() instead of col->sort()->first(), col->max() for col->sort()->last(), col->first() for col->reverse()->last(), and col->last() instead of col->reverse()->first()");
+          int rscore = (int) res.get("red"); 
+          res.set("red", rscore+1); 
+        }
+      }   
+      else if (argument instanceof BinaryExpression)
+      { BinaryExpression lbe = (BinaryExpression) argument;
+        String leftop = lbe.getOperator(); 
+
+        if ("|C".equals(leftop) || 
+            "->collect".equals(leftop) ||
+            "|sortedBy".equals(leftop) ||
+            "->sortedBy".equals(leftop))
+        { 
+          rUses.add("!!! OCL efficiency smell (UOR): Redundant results computation in: " + this);
+          int rscore = (int) res.get("red"); 
+          res.set("red", rscore+1);
+        }
+      } 
     } 
 
     return res; 
@@ -2072,6 +2119,7 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
     { String op = operator.substring(2,operator.length()); 
       return pre + "`" + op; 
     } 
+
     return pre + ""; 
   } 
   
@@ -2125,6 +2173,68 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
       return new UnaryExpression(operator, arg); 
     } 
 
+    if (operator.equals("->isUnique")) 
+    { Expression arg = argument.evaluate(sigma, beta); 
+      
+      if (arg instanceof SetExpression)
+      { Vector elems = ((SetExpression) arg).getElements(); 
+        return SetExpression.isUnique(elems); 
+      } 
+
+      return new UnaryExpression(operator, arg); 
+    } 
+
+    if (operator.equals("->sort")) 
+    { Expression arg = argument.evaluate(sigma, beta); 
+      
+      if (arg instanceof SetExpression)
+      { SetExpression se = (SetExpression) arg; 
+        Vector elems = se.getElements();
+        Vector values = Expression.convertValues(elems);  
+        return se.sortedBy(elems, values); 
+      } 
+
+      return new UnaryExpression(operator, arg); 
+    } 
+
+    if (operator.equals("->unionAll")) 
+    { Expression arg = argument.evaluate(sigma, beta); 
+      
+      if (arg instanceof SetExpression)
+      { SetExpression se = (SetExpression) arg; 
+        Vector elems = se.getElements();
+        // Vector values = Expression.convertValues(elems);  
+        return SetExpression.unionAll(elems); 
+      } 
+
+      return new UnaryExpression(operator, arg); 
+    } 
+
+    if (operator.equals("->concatenateAll")) 
+    { Expression arg = argument.evaluate(sigma, beta); 
+      
+      if (arg instanceof SetExpression)
+      { SetExpression se = (SetExpression) arg; 
+        Vector elems = se.getElements();
+        // Vector values = Expression.convertValues(elems);  
+        return SetExpression.concatenateAll(elems); 
+      } 
+
+      return new UnaryExpression(operator, arg); 
+    } 
+
+    if (operator.equals("->intersectAll")) 
+    { Expression arg = argument.evaluate(sigma, beta); 
+      
+      if (arg instanceof SetExpression)
+      { SetExpression se = (SetExpression) arg; 
+        Vector elems = se.getElements();
+        // Vector values = Expression.convertValues(elems);  
+        return SetExpression.intersectAll(elems); 
+      } 
+
+      return new UnaryExpression(operator, arg); 
+    } 
 
     if (operator.equals("lambda") && accumulator != null)
     { // evaluate the argument, with accumulator set to itself:
@@ -2180,14 +2290,18 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
     { if (argument instanceof BasicExpression && 
           ((BasicExpression) argument).arrayIndex == null) 
       { // remove the object from its class, and set the 
-        // object variable to null: 
-
-        Expression obj = argument.evaluate(sigma, beta);
-        sigma.removeObject(obj); 
-        beta.updateState(sigma, argument, 
-                         new BasicExpression("null")); 
-        System.out.println("DELETED: " + obj);  
-        return Statement.NORMAL; 
+        // object variable to null:
+ 
+        Type argt = argument.getType(); 
+        if (argt != null && argt.isEntity())
+        { 
+          Expression obj = argument.evaluate(sigma, beta);
+          sigma.removeObject(obj); 
+          beta.updateState(sigma, argument, 
+                           new BasicExpression("null")); 
+          System.out.println("DELETED OBJECT: " + obj);  
+          return Statement.NORMAL; 
+        } 
       } 
     } 
     else if ("->oclIsNew".equals(operator) && 
@@ -3175,8 +3289,10 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
         operator.equals("->oclIsInvalid") || 
         operator.equals("->oclIsNew") ||
         operator.equals("->isReal") || 
-        operator.equals("->isInteger") || operator.equals("->isLong") || 
-        operator.equals("->toInteger") || operator.equals("->toReal") || 
+        operator.equals("->isInteger") || 
+        operator.equals("->isLong") || 
+        operator.equals("->toInteger") || 
+        operator.equals("->toReal") || 
         operator.equals("->toLong") || 
         operator.equals("->toBoolean") || 
         operator.equals("->char2byte") || 
@@ -3184,6 +3300,7 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
         operator.equals("->ord") || 
         operator.equals("->succ") || 
         operator.equals("->pred") || 
+        operator.equals("->isUnique") || 
         operator.equals("->isEmpty") || 
         operator.equals("->notEmpty")) 
     { return true; } 
@@ -3395,7 +3512,8 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
         operator.equals("not") || 
         operator.equals("->isInteger") || 
         operator.equals("->isReal") ||
-        operator.equals("->toBoolean") || 
+        operator.equals("->toBoolean") ||
+        operator.equals("->isUnique") ||
         operator.equals("->isEmpty") || 
         operator.equals("->notEmpty"))
     { type = new Type("boolean",null); 
@@ -4078,7 +4196,8 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
       return res; 
     } 
  
-    if (operator.equals("->isEmpty") || 
+    if (operator.equals("->isEmpty") ||
+        operator.equals("->isUnique") || 
         operator.equals("->notEmpty"))
     { type = new Type("boolean",null); 
       elementType = type; 
@@ -5109,6 +5228,8 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
     { return "(" + pre + ".size() == 0)"; } 
     else if (data.equals("notEmpty"))
     { return "(" + pre + ".size() != 0)"; } 
+    else if (data.equals("isUnique"))
+    { return "Set.isUnique(" + pre + ")"; } 
     else if (data.equals("reverse") || data.equals("sort") ||
              data.equals("asSet") || data.equals("asBag") || 
              data.equals("asOrderedSet")) 
@@ -5499,6 +5620,8 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
     { return "(" + pre + ".size() == 0)"; } 
     else if (data.equals("notEmpty"))
     { return "(" + pre + ".size() != 0)"; } 
+    else if (data.equals("isUnique"))
+    { return "Set.isUnique(" + pre + ")"; } 
     else if (data.equals("reverse") || data.equals("sort")) 
     { return "Set." + data + "(" + pre + ")"; }   // an ArrayList
     else if (data.equals("max") || data.equals("min"))   
@@ -5898,7 +6021,9 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
     else if (data.equals("isEmpty"))
     { return "(" + pre + ".size() == 0)"; } 
     else if (data.equals("notEmpty"))
-    { return "(" + pre + ".size() != 0)"; } 
+    { return "(" + pre + ".size() != 0)"; }
+    else if (data.equals("isUnique"))
+    { return "Ocl.isUnique(" + pre + ")"; }  
     else if (data.equals("reverse") || data.equals("sort")) 
     { String bfq = "Ocl." + data + "(" + pre + ")";   
       String cast = type.getJava7(elementType); 
@@ -6305,7 +6430,9 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
     else if (data.equals("isEmpty"))
     { return "(" + pre + ".Count == 0)"; } 
     else if (data.equals("notEmpty"))
-    { return "(" + pre + ".Count != 0)"; } 
+    { return "(" + pre + ".Count != 0)"; }
+    else if (data.equals("isUnique"))
+    { return "SystemTypes.isUnique(" + pre + ")"; }  
     else if (data.equals("reverse"))
     { if (argument.isSet() || argument.isMap())
       { return pre; }
@@ -6670,7 +6797,9 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
     else if (data.equals("isEmpty"))
     { return "(" + pre + "->size() == 0)"; } 
     else if (data.equals("notEmpty"))
-    { return "(" + pre + "->size() != 0)"; } 
+    { return "(" + pre + "->size() != 0)"; }
+    else if (data.equals("isUnique"))
+    { return "UmlRsdsLib<" + celtype + ">::isUnique(" + pre + ")"; }  
     else if (data.equals("reverse") || data.equals("sort") ||
              data.equals("asSet") || data.equals("asBag") || 
              data.equals("asOrderedSet") ||
@@ -7674,14 +7803,19 @@ private BExpression subcollectionsBinvariantForm(BExpression bsimp)
   public boolean conflictsWith(final Expression e)
   { if (e instanceof UnaryExpression)
     { UnaryExpression ue = (UnaryExpression) e; 
-      if (operator.equals("->isEmpty") && ue.operator.equals("->notEmpty") && 
+
+      if (operator.equals("->isEmpty") && 
+          ue.operator.equals("->notEmpty") && 
           (argument + "").equals(ue.argument + ""))
-      { return true; } 
-      if (operator.equals("->notEmpty") && ue.operator.equals("->isEmpty") && 
+      { return true; }
+ 
+      if (operator.equals("->notEmpty") && 
+          ue.operator.equals("->isEmpty") && 
           (argument + "").equals(ue.argument + ""))
       { return true; } 
     } 
-    else if (operator.equals("not") && (argument + "").equals(e + ""))
+    else if (operator.equals("not") && 
+             (argument + "").equals(e + ""))
     { return true; } 
 
     return false; 
@@ -7692,11 +7826,13 @@ private BExpression subcollectionsBinvariantForm(BExpression bsimp)
   { if ("->isDeleted".equals(operator) && op.equals(":"))
     { if ((argument + "").equals(left + ""))   // l : e & l->isDeleted()
       { return true; } 
+
       if ((argument + "").equals(right + ""))  // l : e & e->isDeleted()
       { return true; } 
     } 
 
-    if ("->isDeleted".equals(operator) && op.equals("->includes"))
+    if ("->isDeleted".equals(operator) && 
+        op.equals("->includes"))
     { if ((argument + "").equals(right + ""))   // e->includes(l) & l->isDeleted()
       { return true; } 
       if ((argument + "").equals(left + ""))  // e->includes(r) & e->isDeleted()

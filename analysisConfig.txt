@@ -1,0 +1,17 @@
+syntacticComplexityLimit = 20
+cloneSizeLimit = 10
+energyCloneSizeLimit = 10
+statementNestingLimit = 5
+cyclomaticComplexityLimit = 10
+referenceChainLimit = 4
+nestedTypeLimit = 3
+superclassesLimit = 4
+inheritanceChainLimit = 3
+numberOfDataFeaturesLimit = 20
+numberOfOperationsLimit = 15
+numberOfParametersLimit = 8
+operationSizeLimit = 100
+operationSizeWarning = 50
+classSizeLimit = 1000
+efoLimit = 6
+efiLimit = 6

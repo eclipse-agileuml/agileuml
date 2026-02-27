@@ -35,7 +35,7 @@ public class TestParameters
   public static int syntacticComplexityLimit = 20; /* for MEL */ 
 
   public static int cloneSizeLimit = 7;            /* for DC  */
-  public static int energyCloneSizeLimit = 2; 
+  public static int energyCloneSizeLimit = 4; 
 
   public static int statementNestingLimit = 5;  
   public static int cyclomaticComplexityLimit = 10; 
@@ -97,6 +97,7 @@ public class TestParameters
     sequenceCC.put("->prepend", 2.0);
  
     sequenceCC.put("->union", 2.0); 
+    sequenceCC.put("->concatenate", 2.0); 
     sequenceCC.put("<:", 2.0); 
     sequenceCC.put("->intersection", 4.0);  // O(n*n) 
     sequenceCC.put("-", 4.0); 
@@ -121,6 +122,12 @@ public class TestParameters
     sequenceCC.put("->selectMaximals", 2.0); 
     sequenceCC.put("|selectMaximals", 2.0); 
  
+    sequenceCC.put("->intersectAll", 4.0); 
+    sequenceCC.put("->unionAll", 4.0); 
+    sequenceCC.put("->concatenateAll", 4.0);
+    sequenceCC.put("|intersectAll", 4.0); 
+    sequenceCC.put("|unionAll", 4.0); 
+    sequenceCC.put("|concatenateAll", 4.0);
 
     sequenceCC.put("->forAll", 2.0); 
     sequenceCC.put("->exists", 2.0);   
@@ -204,6 +211,13 @@ public class TestParameters
     sortedsequenceCC.put("->selectMaximals", 2.0); 
     sortedsequenceCC.put("|selectMaximals", 2.0); 
 
+    sortedsequenceCC.put("->intersectAll", 4.0); 
+    sortedsequenceCC.put("->unionAll", 4.0); 
+    sortedsequenceCC.put("->concatenateAll", 4.0);
+    sortedsequenceCC.put("|intersectAll", 4.0); 
+    sortedsequenceCC.put("|unionAll", 4.0); 
+    sortedsequenceCC.put("|concatenateAll", 4.0);
+
     sortedsequenceCC.put("->front", 2.0); 
     sortedsequenceCC.put("->tail", 2.0); 
     sortedsequenceCC.put("->reverse", 2.0); 
@@ -256,6 +270,13 @@ public class TestParameters
     setCC.put("|selectMinimals", 2.0); 
     setCC.put("->selectMaximals", 2.0); 
     setCC.put("|selectMaximals", 2.0); 
+
+    setCC.put("->intersectAll", 4.0); 
+    setCC.put("->unionAll", 4.0); 
+    setCC.put("->concatenateAll", 4.0);
+    setCC.put("|intersectAll", 4.0); 
+    setCC.put("|unionAll", 4.0); 
+    setCC.put("|concatenateAll", 4.0);
 
     setCC.put("->forAll", 2.0); 
     setCC.put("->exists", 2.0);   
@@ -317,6 +338,13 @@ public class TestParameters
     sortedsetCC.put("|selectMinimals", 3.0); 
     sortedsetCC.put("->selectMaximals", 3.0); 
     sortedsetCC.put("|selectMaximals", 3.0); 
+
+    sortedsetCC.put("->intersectAll", 4.0); 
+    sortedsetCC.put("->unionAll", 4.0); 
+    sortedsetCC.put("->concatenateAll", 4.0);
+    sortedsetCC.put("|intersectAll", 4.0); 
+    sortedsetCC.put("|unionAll", 4.0); 
+    sortedsetCC.put("|concatenateAll", 4.0);
     
     sortedsetCC.put("->forAll", 2.0); 
     sortedsetCC.put("->exists", 2.0);   

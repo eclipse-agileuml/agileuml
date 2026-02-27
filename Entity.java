@@ -5160,10 +5160,16 @@ public class Entity extends ModelElement implements Comparable
 
     int totalComplexity = 0; 
 
+    java.util.Map operationFlaws = new java.util.HashMap(); 
+
     for (int i = 0; i < ops; i++)
     { BehaviouralFeature op = (BehaviouralFeature) operations.get(i);
+      String opname = op.getName(); 
+
+      java.util.Map opflaws = new java.util.HashMap(); 
+      operationFlaws.put(opname, opflaws); 
       
-      int opcomplexity = op.displayMeasures(out);
+      int opcomplexity = op.displayMeasures(out, opflaws);
 
       if (opcomplexity > TestParameters.operationSizeLimit) 
       { highcount++; } 
@@ -5174,21 +5180,69 @@ public class Entity extends ModelElement implements Comparable
       totalComplexity = totalComplexity + opcomplexity;  
 
       Vector opuses = op.operationsUsedIn(); 
-      // System.out.println(">>> Operations used in " + op.getName() + ": " + opuses);
+      // System.out.println(">>> Operations used in " + opname + ": " + opuses);
       Vector vuses = new Vector(); 
       Vector newopuses = VectorUtil.union(vuses,opuses); 
   
+      if (newopuses.size() > TestParameters.efoLimit) 
+      { System.err.println("!! Code smell (EFO): > " + 
+          TestParameters.efoLimit + " operations used in " + 
+          nme + "::" + opname); 
+        System.err.println("!! Suggest refactoring by splitting operation");
+        opflaws.put("EFO", 1);  
+      } 
+
       if (newopuses.size() > 0)
-      { out.println("*** Operations used in " + op.getName() + " are: " + newopuses);
+      { out.println("*** Operations used in " + opname + " are: " + newopuses);
         checkPlatformDependence(newopuses); 
       } 
 
-      op.findClones(clones);
-      // System.out.println(">>> Clones in " + op.getName() + ": " + clones);  
+      java.util.Map opclones = new java.util.HashMap(); 
+      op.findClones(opclones);
+      // System.out.println(">>> Clones in " + opname + ": " + clones);  
+      int opdc = 0; 
+      java.util.Set clonekeys = opclones.keySet(); 
+      for (Object kk : clonekeys)
+      { String kks = (String) kk; 
+        Vector used = (Vector) opclones.get(kks); 
+        if (used.size() > 1) 
+        { opdc++; } 
+      } 
 
-      op.findMagicNumbers(mgns); 
-      // System.out.println(">>> Magic numbers in " + op.getName() + ": " + mgns);  
-      out.println(); 
+      if (opdc > 0)
+      { opflaws.put("DC", opdc); } 
+
+      op.findClones(clones);
+      
+      java.util.Map opmgns = new java.util.HashMap();
+      op.findMagicNumbers(opmgns); 
+      // System.out.println(">>> Magic numbers in " + opname + ": " + mgns);  
+
+      int opmgn = 0; 
+      java.util.Set mgnkeys = opmgns.keySet(); 
+      for (Object kk : mgnkeys)
+      { String kks = (String) kk; 
+        Vector used = (Vector) opmgns.get(kks); 
+        if (used.size() > 1) 
+        { opmgn++; } 
+      } 
+
+      if (opmgn > 0)
+      { opflaws.put("MGN", opmgn); } 
+
+      op.findMagicNumbers(opmgns); 
+      out.println();
+
+      int optotalflaws = 0; 
+      java.util.Set flawkeys = opflaws.keySet(); 
+      for (Object kk : flawkeys)
+      { String kks = (String) kk; 
+        int flws = (int) opflaws.get(kks); 
+        optotalflaws += flws;  
+      }
+
+      out.println(">> Operation " + opname + " has " + optotalflaws + " flaws: " + opflaws); 
+      out.println();  
     } 
 
     out.println("*** " + highcount + " operations of " + getName() + " are > " + TestParameters.operationSizeLimit + " complexity"); 
@@ -5931,7 +5985,10 @@ public class Entity extends ModelElement implements Comparable
  
       Vector redDetails = new Vector(); 
       Vector amberDetails = new Vector(); 
-      Map resa = attr.energyUse(redDetails, amberDetails); 
+      Vector yellowDetails = new Vector(); 
+
+      Map resa = attr.energyUse(redDetails, 
+                                amberDetails, yellowDetails); 
       int redop = (int) resa.get("red"); 
       int amberop = (int) resa.get("amber"); 
       int yellowop = (int) resa.get("yellow"); 
@@ -5966,10 +6023,17 @@ public class Entity extends ModelElement implements Comparable
       } 
 
       if (yellowop > 0) 
-      { messages.add("!! Attribute " + attr + 
+      { messages.add("! Attribute " + attr + 
                      " has " + yellowop + 
                      " energy use " +
-                     " yellow flags!"); 
+                     " yellow flags!");
+ 
+        for (int j = 0; j < yellowDetails.size(); j++) 
+        { messages.add(yellowDetails.get(j)); 
+          messages.add(""); 
+        } 
+        messages.add(""); 
+
         int yellowscore = (int) res.get("yellow"); 
         res.set("yellow", yellowscore + yellowop); 
       } 
@@ -5983,6 +6047,8 @@ public class Entity extends ModelElement implements Comparable
     java.util.Map clones = new java.util.HashMap(); 
     java.util.Map cdefs = new java.util.HashMap(); 
 
+    java.util.Map operationFlaws = new java.util.HashMap(); 
+
     for (int i = 0; i < n; i++) 
     { BehaviouralFeature op = 
           (BehaviouralFeature) operations.get(i); 
@@ -5993,7 +6059,9 @@ public class Entity extends ModelElement implements Comparable
 
       Vector redDetails = new Vector(); 
       Vector amberDetails = new Vector(); 
-      Map res1 = op.energyAnalysis(redDetails, amberDetails);
+      Vector yellowDetails = new Vector(); 
+      Map res1 = 
+        op.energyAnalysis(redDetails,amberDetails,yellowDetails);
 
       int redop = (int) res1.get("red"); 
       int amberop = (int) res1.get("amber"); 
@@ -6040,14 +6108,14 @@ public class Entity extends ModelElement implements Comparable
       
       if (redop > 0) 
       { messages.add("!!! Operation " + opname + 
-                           " has " + redop + " energy use " +
-                           " red flags!");
+                     " has " + redop + " energy use " +
+                     " red flags!");
+        messages.add(""); 
 
         for (int j = 0; j < redDetails.size(); j++) 
         { messages.add(redDetails.get(j)); 
           messages.add("");
         } 
-        messages.add(""); 
  
         int redscore = (int) res.get("red"); 
         res.set("red", redscore + redop); 
@@ -6055,30 +6123,41 @@ public class Entity extends ModelElement implements Comparable
      
       if (amberop > 0) 
       { messages.add("!! Operation " + opname + 
-                           " has " + amberop + 
-                           " energy use " +
-                           " amber flags!"); 
+                     " has " + amberop + 
+                     " energy use " +
+                     " amber flags!"); 
+        messages.add(""); 
 
         for (int j = 0; j < amberDetails.size(); j++) 
         { messages.add(amberDetails.get(j)); 
           messages.add("");
         } 
-        messages.add(""); 
 
         int amberscore = (int) res.get("amber"); 
         res.set("amber", amberscore + amberop); 
       } 
 
       if (yellowop > 0) 
-      { messages.add("!! Operation " + opname + 
-                           " has " + yellowop + 
-                           " energy use " +
-                           " yellow flags!"); 
+      { messages.add("! Operation " + opname + 
+                     " has " + yellowop + 
+                     " energy use " +
+                     " yellow flags!"); 
         messages.add(""); 
+
+        for (int j = 0; j < yellowDetails.size(); j++) 
+        { messages.add(yellowDetails.get(j)); 
+          messages.add("");
+        } 
 
         int yellowscore = (int) res.get("yellow"); 
         res.set("yellow", yellowscore + yellowop); 
       } 
+
+      java.util.Map opscores = new java.util.HashMap(); 
+      opscores.put("red", (int) res.get("red")); 
+      opscores.put("amber", (int) res.get("amber")); 
+      opscores.put("yellow", (int) res.get("yellow")); 
+      operationFlaws.put(opname, opscores); 
     } 
 
     messages.add(">> Collection operator uses in " + 
@@ -6268,6 +6347,26 @@ public class Entity extends ModelElement implements Comparable
       res.set("red", redcount); 
     }  
 
+    messages.add("+++ Summary of operation flaws for class " + name + ": "); 
+    java.util.Set opkeys = operationFlaws.keySet(); 
+    for (Object kk : opkeys)
+    { String key = (String) kk; 
+      java.util.Map opflaws = 
+           (java.util.Map) operationFlaws.get(key);
+      java.util.Set opflawskeys = opflaws.keySet(); 
+      int optotalflaws = 0; 
+      for (Object ok : opflawskeys) 
+      { String okey = (String) ok; 
+        int val = (int) opflaws.get(okey); 
+        optotalflaws += val; 
+      } 
+ 
+      messages.add("+++ " + key + " has " + optotalflaws + " flaws: " + opflaws); 
+    } 
+    messages.add(""); 
+
+    messages.add("++++++ Class " + ename + " has flaws: " + res); 
+    messages.add(""); 
        messages.add("++++++++++++++++++++++++++++++++++++++++++++++++++++++++"); 
     messages.add(""); 
 
@@ -9888,21 +9987,24 @@ public class Entity extends ModelElement implements Comparable
     Attribute key = getPrincipalKey(); 
 
     out.print("  <Class ModelName = \"app\" Name = \"" + nme + "\" ShadowModel=\"\" ShadowClass=\"\" Description=\"\" Stereotype=\"Class\""); 
+
     if (key != null)
     { out.print(" PK=\"" + key.getName() + "\""); } 
     else
     { out.print(" PK=\"\""); }
-    out.print(" ConcurencyControl=\"true\" AutoAssignPrimaryKey=\"true\" IsPersisted=\"true\" IsStatic=\"false\""); 
+
+    out.print(" ConcurencyControl=\"true\" AutoAssignPrimaryKey=\"true\" IdGeneratorType=\"HiLoGenerator\" IsPersisted=\"true\" IsStatic=\"false\""); 
+
     if (superclass != null)
-    { out.print(" BaseClass=\"" + superclass.getName() + "\" BaseClasses=\"" + superclass.getName() + "\""); } 
+    { out.print(" BaseClass=\"" + superclass.getName() + "\" TableName = \"\" BaseClasses=\"" + superclass.getName() + "\""); } 
     else 
-    { out.print(" BaseClass=\"\" BaseClasses=\"\""); } 
+    { out.print(" BaseClass=\"\" TableName = \"\" BaseClasses=\"\""); } 
     out.println(" BaseModel=\"\">"); 
  
     out.println("    <Attributes>");
     for (int i = 0; i < attributes.size(); i++)
     { Attribute attr = (Attribute) attributes.get(i); 
-      attr.generateMambaXML(out); 
+      attr.generateMambaXML(out,cgs); 
     } 
     out.println("    </Attributes>"); 
 
