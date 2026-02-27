@@ -110,7 +110,7 @@ Integer.Prd(_1,_2,_3,_4) |--> Domain.MambaHelper.Prdint(Ocl.collectSequence(Doma
 _1.subrange(_2,_3) |-->_1.Skip(_2 - 1).Take(_3 - _2 + 1)<when> _1 Sequence
 _1.subrange(_2,_3) |-->_1.Substring(_2 - 1, _3 - _2 + 1)<when> _1 String
 
-_1[_2] |-->(_1.charAt(_2 - 1) + "")<when> _1 String
+_1[_2] |-->(_1.CharAt(_2 - 1) + "")<when> _1 String
 _1[_2] |-->_1.GetByKey(_2)<when> _1 classId
 
 _1[_2] |-->(_1).Get(_2 - 1)<when> _1 Sequence

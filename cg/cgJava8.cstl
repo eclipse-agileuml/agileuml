@@ -219,6 +219,7 @@ _1->sort() |-->Ocl.sort(_1)
 _1->any() |-->Ocl.any(_1)
 _1->isEmpty() |-->_1.isEmpty()
 _1->notEmpty() |-->!(_1.isEmpty())
+_1->isUnique() |-->Ocl.isUnique(_1)
 
 _1->asSet() |-->Ocl.asSet(_1)
 _1->asSequence() |-->Ocl.asSequence(_1)

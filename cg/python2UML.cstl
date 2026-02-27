@@ -23,6 +23,7 @@ _1 , _* |-->_1, _*`recurse
 
 testlist_comp::
 _1 |-->_1
+_1 , |-->_1
 _1 , _* |-->_1, _*`recurse
 
 sequenceFormation::
@@ -44,6 +45,8 @@ _1 , _* |-->_1->union(_*`recurse)<when> _1 star_expr
 
 _1 , _2 |-->Sequence{ _1, _2 }
 _1 , _2 , _3 |-->Sequence{ _1, _2, _3 }
+_1 , _2 , _3 , _4 |-->Sequence{ _1, _2, _3, _4 }
+_1 , _2 , _3 , _4 , _5 |-->Sequence{ _1, _2, _3, _4, _5 }
 
 _1 , _* |-->Sequence{_1}->union(_*`recurse)
 
@@ -318,8 +321,12 @@ ord _1 |-->_1->char2byte()
 
 pow _1 |-->(_1`firstArg)->pow(_1`secondArg)
 repr _1 |-->("" + (_1))
+
 reversed _1 |-->_1->reverse()
+reversed _1 _2 |-->(_1->reverse())_2
+
 sorted _1 |-->_1`sortedTrailer
+sorted _1 _2 |-->(_1`sortedTrailer)_2
 
 tuple _1 |-->_1`tupleTrailer
 
@@ -518,7 +525,7 @@ _1 |-->_1`counterarguments<when> _1 atom
 
 atom::
 ( ) |-->()
-( _1 ) |-->Sequence{_1}<when> _1 multiple
+( _1 ) |-->_1`sequenceFormation<when> _1 multiple
 ( _1 ) |-->(_1)
 [ ] |-->Sequence{}
 { } |-->Set{}
@@ -1180,7 +1187,7 @@ removeTrailerBrackets::
 trailer::
 . count _1 |-->->count_1
 . index _1 |-->->indexOf_1 - 1
-. sort _1 |-->->sort()
+. sort _1 |-->_1`sortArguments
 . reverse _1 |-->->reverse()
 . pop _1 |-->_1`popArguments
 . popleft _1 |-->_1`popleftArguments
@@ -1303,7 +1310,7 @@ mapQueryForm::
 
 . count _1 |-->->count_1
 . index _1 |-->->indexOf_1 - 1
-. sort _1 |-->->sort()
+. sort _1 |-->_1`sortArguments
 . reverse _1 |-->->reverse()
 . pop _1 |-->_1`popArguments
 . popleft _1 |-->_1`popleftArguments
@@ -1378,7 +1385,7 @@ _1 |-->_1`ocltype
 sequenceQueryForm::
 . count _1 |-->->count_1
 . index _1 |-->->indexOf_1 - 1
-. sort _1 |-->->sort()
+. sort _1 |-->_1`sortArguments
 . reverse _1 |-->->reverse()
 . pop _1 |-->_1`popArguments
 . popleft _1 |-->_1`popleftArguments
@@ -2024,7 +2031,7 @@ trailerUpdateForm::
 . extend _1 |-->->union_1
 . insert _1 |-->.insertAt(_1`firstArg+1, _1`lastArg)
 . remove _1 |-->->excludingFirst_1
-. sort _1 |-->->sort()
+. sort _1 |-->_1`sortArguments
 . reverse _1 |-->->reverse()
 . pop _1 |-->_1`popUpdateArguments
 . popleft _1 |-->_1`popleftUpdateArguments
@@ -2345,15 +2352,43 @@ sortedArguments::
 _1 |-->_1->keys()->sort()<when> _1 Map
 _1 |-->_1->sort()
 
-_1 , _2 |-->_1->sortedBy($x | _2`sortedKeySpecification)
-_1 , _2 , _3 |-->_1->sortedBy($x | _2`sortedKeySpecification)
+_1 , _2 |-->_1->sortedBy($x | _2`sortedKeySpecification)_2`sortedReverseSpecification
+_1 , _2 , _3 |-->_1->sortedBy($x | _2`sortedKeySpecification)_3`sortedReverseSpecification
+
+
+
+sortArguments::
+( ) |-->->sort()
+( _1 ) |-->_1`sortArguments
+_1 |-->->sortedBy($x | _1`sortedKeySpecification)_1`sortedReverseSpecification
+
+_1 , _2 |-->->sortedBy($x | _1`sortedKeySpecification)_2`sortedReverseSpecification
 
 
 sortedKeySpecification::
 key = _1 |-->(_1)->apply($x)
+reverse = _1 |-->$x
+
 _1 |-->_1`sortedKeySpecification<when> _1 test
 _1 |-->_1`sortedKeySpecification<when> _1 logical_test
+_1 |-->_1`sortedKeySpecification<when> _1 arglist
+_1 |-->_1`sortedKeySpecification<when> _1 argument
+_1 |-->_1`sortedKeySpecification<when> _1 comparison
+
 _1 |-->$x
+
+
+sortedReverseSpecification::
+reverse = True |-->->reverse()
+reverse = False |-->
+key = _1 |-->
+
+_1 |-->_1`sortedReverseSpecification<when> _1 test
+_1 |-->_1`sortedReverseSpecification<when> _1 logical_test
+_1 |-->_1`sortedReverseSpecification<when> _1 arglist
+_1 |-->_1`sortedReverseSpecification<when> _1 argument
+_1 |-->_1`sortedReverseSpecification<when> _1 comparison
+_1 |-->
 
 
  
