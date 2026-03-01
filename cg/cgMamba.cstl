@@ -407,7 +407,7 @@ _1->hasPrefix(_2) |-->_1.StartsWith(_2)
 _1->hasSuffix(_2) |-->_1.EndsWith(_2)
 _1->after(_2) |-->Domain.MambaHelper.After(_1,_2))
 _1->before(_2) |-->Domain.MambaHelper.Before(_1,_2)
-_1->isMatch(_2) |-->Domain.MambaHelper.IsMatch(_1,_2)
+_1->isMatch(_2) |-->RegExpLib.VerbalExpressions.StringMatchesPattern(_1, _2)
 _1->hasMatch(_2) |-->Domain.MambaHelper.HasMatch(_1,_2)
 
 /* _1->oclIsKindOf(_2) |-->(_1 instanceof _2) */
