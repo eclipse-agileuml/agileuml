@@ -22937,9 +22937,11 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
     int syn = synLeft + synRight + 1; 
 
     if (syn > TestParameters.syntacticComplexityLimit)
-    { aUses.add("!! Excessive expression size (MEL) in " + this + " : try to simplify OCL expression");
-      int ascore = (int) res.get("amber"); 
-      res.set("amber", ascore+1);
+    { yUses.add("! Excessive expression size (MEL) in " + this + " : try to simplify OCL expression");
+      int yscore = (int) res.get("yellow"); 
+      res.set("yellow", yscore+1);
+      int melcount = (int) res.get("MEL"); 
+      res.set("MEL", melcount+1); 
     } 
 
     /* int mchain = maximumReferenceChain(); 
@@ -22957,6 +22959,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       { aUses.add("!! OCL efficiency smell (OES): Redundant let expression: " + this + "\n");
         int ascore = (int) res.get("amber"); 
         res.set("amber", ascore+1);
+        int oescount = (int) res.get("OES"); 
+        res.set("OES", oescount+1); 
       }
       else 
       { Vector names = new Vector(); 
@@ -22967,6 +22971,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         { aUses.add("!! OCL efficiency smell (OES): Redundant let expression: " + this + "\n");
           int ascore = (int) res.get("amber"); 
           res.set("amber", ascore+1);
+          int oescount = (int) res.get("OES"); 
+          res.set("OES", oescount+1); 
         }
       }
     } 
@@ -22977,6 +22983,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
     { yUses.add("! OCL efficiency smell (OES): Possibly inefficient execution order: " + this + "\n! c(left) = " + synLeft + ", c(right) = " + synRight);
       int yscore = (int) res.get("yellow"); 
       res.set("yellow", yscore+1);
+      int oescount = (int) res.get("OES"); 
+      res.set("OES", oescount+1); 
     } 
 
     if (operator.equals("=") && "0".equals(right + "") && 
@@ -22998,6 +23006,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
           aUses.add("!! OCL efficiency smell (OES): Inefficient comparison: " + this + "\n!! More efficient to use ->forAll");
           int ascore = (int) res.get("amber"); 
           res.set("amber", ascore+1);
+          int oescount = (int) res.get("OES"); 
+          res.set("OES", oescount+1); 
         } 
       }
       /* else if ("->size".equals(leftop))
@@ -23018,6 +23028,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         aUses.add("!! OCL efficiency smell (OES): Inefficient comparison: " + this + "\n!! More efficient to use ->excludes");
         int ascore = (int) res.get("amber"); 
         res.set("amber", ascore+1);
+        int oescount = (int) res.get("OES"); 
+        res.set("OES", oescount+1); 
       } 
     }
     else if (operator.equals("=") && "1".equals(right + "") && 
@@ -23038,6 +23050,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
           aUses.add("!! OCL efficiency smell (OES): Inefficient comparison: " + this + "\n!! More efficient to use ->exists1");
           int ascore = (int) res.get("amber"); 
           res.set("amber", ascore+1);
+          int oescount = (int) res.get("OES"); 
+          res.set("OES", oescount+1);
         } 
       }
     }
@@ -23062,6 +23076,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
           aUses.add("!! OCL efficiency smell (OES): Inefficient comparison: " + this + "\n!! More efficient to use ->exists");
           int ascore = (int) res.get("amber"); 
           res.set("amber", ascore+1);
+          int oescount = (int) res.get("OES"); 
+          res.set("OES", oescount+1); 
         } 
       }
       /* else if ("->size".equals(leftop)) 
@@ -23084,6 +23100,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         aUses.add("!! OCL efficiency smell (OES): Inefficient comparison: " + this + "\n!! More efficient to use ->includes");
         int ascore = (int) res.get("amber"); 
         res.set("amber", ascore+1);
+        int oescount = (int) res.get("OES"); 
+        res.set("OES", oescount+1); 
       } 
     }
     else if (operator.equals("|") ||
@@ -23099,7 +23117,9 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
             lbe.operator.equals("->reject"))
         { aUses.add("!! OCL efficiency smell (OES): Nested select/reject iterators (loops) in " + this + " : more efficient to combine conditions");
           int ascore = (int) res.get("amber"); 
-          res.set("amber", ascore+1); 
+          res.set("amber", ascore+1);
+          int oescount = (int) res.get("OES"); 
+          res.set("OES", oescount+1);  
         }
       }
     }
@@ -23119,6 +23139,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         { aUses.add("!! OCL efficiency smell (OES): Inefficient  select/reject iterators (loops) in " + this + " : more efficient to combine conditions in one ->any");
           int ascore = (int) res.get("amber"); 
           res.set("amber", ascore+1); 
+          int oescount = (int) res.get("OES"); 
+          res.set("OES", oescount+1); 
         }
       }
     }
@@ -23135,7 +23157,9 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
             lbe.operator.equals("->reject"))
         { aUses.add("!! OCL efficiency smell (OES): Nested select/reject iterators (loops) in " + this + " : more efficient to combine conditions");
           int ascore = (int) res.get("amber"); 
-          res.set("amber", ascore+1); 
+          res.set("amber", ascore+1);
+          int oescount = (int) res.get("OES"); 
+          res.set("OES", oescount+1);  
         }
       } 
     }
@@ -23157,6 +23181,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
 
           int ascore = (int) res.get("amber"); 
           res.set("amber", ascore+1); 
+          int oescount = (int) res.get("OES"); 
+          res.set("OES", oescount+1); 
         }
       }
     }
@@ -23176,6 +23202,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
     { aUses.add("!! OCL efficiency smell (OES): High-cost operator in: " + this);
       int ascore = (int) res.get("amber"); 
       res.set("amber", ascore+1); 
+      int oescount = (int) res.get("OES"); 
+      res.set("OES", oescount+1); 
     } 
     else if ("->at".equals(operator) && 
              left instanceof BasicExpression && 
@@ -23185,6 +23213,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       rUses.add("!!! Energy-use flaw (UOR): Redundant results computation in: " + this);
       int rscore = (int) res.get("red"); 
       res.set("red", rscore+1); 
+      int uorcount = (int) res.get("UOR"); 
+      res.set("UOR", uorcount+1); 
     } 
     else if ("->at".equals(operator) && 
              left instanceof BinaryExpression && 
@@ -23195,6 +23225,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       rUses.add("!!! Energy-use flaw (UOR): Redundant results computation in: " + this);
       int rscore = (int) res.get("red"); 
       res.set("red", rscore+1); 
+      int uorcount = (int) res.get("UOR"); 
+      res.set("UOR", uorcount+1); 
     } 
     else if ("->at".equals(operator) && 
              left instanceof BinaryExpression)
@@ -23216,6 +23248,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         aUses.add("!! Energy-use flaw (OES/UOR): Redundant results computation in: " + this);
         int ascore = (int) res.get("amber"); 
         res.set("amber", ascore+1); 
+        int oescount = (int) res.get("OES"); 
+        res.set("OES", oescount+1); 
       } 
     } 
     else if ("->at".equals(operator) && 
@@ -23234,6 +23268,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         aUses.add("!! Energy-use flaw (OES/UOR): Redundant results computation in: " + this);
         int ascore = (int) res.get("amber"); 
         res.set("amber", ascore+1); 
+        int oescount = (int) res.get("OES"); 
+        res.set("OES", oescount+1); 
       } 
     } 
 
@@ -23409,13 +23445,15 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
     Vector vuses = variablesUsedIn(vars);
  
     if (level > 1 && vuses.size() == 0 && !sideeffect)
-    { messages.add("!! (LCE) flaw: The expression " + this + " may be independent of the iterator variables " + vars + "\n" + 
-        "!! Use Extract local variable to optimise."); 
+    { messages.add("!!! (LCE) flaw: The expression " + this + " may be independent of the iterator variables " + vars + "\n" + 
+        "!!! Use Extract local variable to optimise."); 
       messages.add(""); 
       System.err.println(); 
       refactorELV = true;
-      int aScore = (int) uses.get("amber"); 
-      uses.set("amber", aScore+1);  
+      int rScore = (int) uses.get("red"); 
+      uses.set("red", rScore+1);  
+      int lcecount = (int) uses.get("LCE"); 
+      uses.set("LCE", lcecount+1); 
     }
 
     if (operator.equals("->including") ||
@@ -23463,7 +23501,9 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       { messages.add("!! (OES) flaw: O(n)+ operator " + operator + " used in loop, could be O(n*n)"); 
         messages.add(""); 
         int aScore = (int) uses.get("amber"); 
-        uses.set("amber", aScore+1);  
+        uses.set("amber", aScore+1);
+        int oescount = (int) uses.get("OES"); 
+        uses.set("OES", oescount+1);   
       }
 
       right.collectionOperatorUses(level,res,oldvars,
@@ -23515,7 +23555,9 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       { messages.add("!! (OES) flaw: O(n)+ operator " + operator + " used in loop, could be O(n*n)"); 
         messages.add(""); 
         int aScore = (int) uses.get("amber"); 
-        uses.set("amber", aScore+1);  
+        uses.set("amber", aScore+1);
+        int oescount = (int) uses.get("OES"); 
+        uses.set("OES", oescount+1);   
       }
       
       Vector newvars = new Vector(); 
@@ -23558,7 +23600,9 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       { messages.add("!! (OES) flaw: O(n)+ operator " + operator + " used in loop, could be O(n*n)"); 
         messages.add(""); 
         int aScore = (int) uses.get("amber"); 
-        uses.set("amber", aScore+1);  
+        uses.set("amber", aScore+1); 
+        int oescount = (int) uses.get("OES"); 
+        uses.set("OES", oescount+1);  
       }
 
       String var = "" + iter.getLeft(); 
@@ -23580,7 +23624,9 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       { messages.add("!! (OES) flaw: O(n)+ operator " + operator + " used in loop, could be O(n*n)"); 
         messages.add(""); 
         int aScore = (int) uses.get("amber"); 
-        uses.set("amber", aScore+1);  
+        uses.set("amber", aScore+1);
+        int oescount = (int) uses.get("OES"); 
+        uses.set("OES", oescount+1);   
       }
     }
 

@@ -891,6 +891,8 @@ public void findClones(java.util.Map clones,
         int ascore = (int) res.get("amber");
         ascore = ascore + 1;
         res.set("amber", ascore);
+        int mnccount = (int) res.get("MNC"); 
+        res.set("MNC", mnccount+1); 
       } 
     } 
 
@@ -910,6 +912,8 @@ public void findClones(java.util.Map clones,
         aUses.add("!! instead use ->exists");
         int ascore = (int) res.get("amber"); 
         res.set("amber", ascore+1); 
+        int oescount = (int) res.get("OES"); 
+        res.set("OES", oescount+1); 
       }
     } 
     else if (operator.equals("->isEmpty") && 
@@ -928,6 +932,8 @@ public void findClones(java.util.Map clones,
         aUses.add("!! instead use ->forAll");
         int ascore = (int) res.get("amber"); 
         res.set("amber", ascore+1); 
+        int oescount = (int) res.get("OES"); 
+        res.set("OES", oescount+1); 
       }
     } 
     else if (operator.equals("->any") || 
@@ -946,6 +952,8 @@ public void findClones(java.util.Map clones,
              operator + "()");
           int rscore = (int) res.get("red"); 
           res.set("red", rscore+1); 
+          int oescount = (int) res.get("OES"); 
+          res.set("OES", oescount+1); 
         }
       }   
       else if (argument instanceof BinaryExpression) 
@@ -958,6 +966,8 @@ public void findClones(java.util.Map clones,
           rUses.add("!!! instead use:    col->any(x | P)");
           int rscore = (int) res.get("red"); 
           res.set("red", rscore+1); 
+          int oescount = (int) res.get("OES"); 
+          res.set("OES", oescount+1); 
         }
         else if (lbe.operator.equals("|R") ||
             lbe.operator.equals("->reject"))
@@ -966,6 +976,8 @@ public void findClones(java.util.Map clones,
           rUses.add("!!! instead, use:   col->any(x | not(P))");
           int rscore = (int) res.get("red"); 
           res.set("red", rscore+1); 
+          int oescount = (int) res.get("OES"); 
+          res.set("OES", oescount+1); 
         }
         else if (lbe.operator.equals("|C"))
         { rUses.add("!!! OCL efficiency smell (OES): Inefficient col->collect(x | e)" + 
@@ -973,43 +985,55 @@ public void findClones(java.util.Map clones,
           rUses.add("!!! instead, use:  let x = col->any() in e");
           int rscore = (int) res.get("red"); 
           res.set("red", rscore+1); 
+          int oescount = (int) res.get("OES"); 
+          res.set("OES", oescount+1); 
         }
       } 
     }
     else if ("->copy".equals(operator) ||
              "->asSet".equals(operator) ||
              "->asSequence".equals(operator))
-    { yUses.add("! O(n) operator " + this);  
+    { yUses.add("! (OES): O(n) operator " + this);  
 
       int yscore = (int) res.get("yellow"); 
       res.set("yellow", yscore+1); 
+      int oescount = (int) res.get("OES"); 
+      res.set("OES", oescount+1); 
     } 
     else if ("->sort".equals(operator))
     { if (argument.isSorted())
-      { aUses.add("!! Redundant ->sort operation: " + this + 
+      { aUses.add("!! (RC): Redundant ->sort operation: " + this + 
             "\n!! Argument is already sorted.");
         int ascore = (int) res.get("amber"); 
         res.set("amber", ascore+1); 
+        int rccount = (int) res.get("RC"); 
+        res.set("RC", rccount+1); 
       }
       else if (argument.isSet()) 
-      { yUses.add("! n*log(n) sorting algorithm used for " + this + 
+      { yUses.add("! (OES) n*log(n) sorting algorithm used for " + this + 
             "\n! It may be more efficient to use a SortedSet type.");
         int yscore = (int) res.get("yellow"); 
-        res.set("yellow", yscore+1); 
+        res.set("yellow", yscore+1);
+        int oescount = (int) res.get("OES"); 
+        res.set("OES", oescount+1);  
       }
       else 
-      { yUses.add("! n*log(n) sorting algorithm used for " + this);
+      { yUses.add("! (OES) n*log(n) sorting algorithm used for " + this);
         int yscore = (int) res.get("yellow"); 
         res.set("yellow", yscore+1);
+        int oescount = (int) res.get("OES"); 
+        res.set("OES", oescount+1); 
       } 
     } 
     else if (operator.equals("->unionAll") || 
         operator.equals("->intersectAll") || 
         operator.equals("->concatenateAll"))
-    { aUses.add("!! High-cost O(n*n) operation: " + this);
+    { aUses.add("!! (OES) High-cost O(n*n) operation: " + this);
 
       int ascore = (int) res.get("amber"); 
-      res.set("amber", ascore+1); 
+      res.set("amber", ascore+1);
+      int oescount = (int) res.get("OES"); 
+      res.set("OES", oescount+1);  
     }
     else if (("->last".equals(operator) || 
               "->first".equals(operator) || 
@@ -1019,9 +1043,11 @@ public void findClones(java.util.Map clones,
              ((BasicExpression) argument).isOperationCall())
     { // redundant results computation
 
-      aUses.add("!! Possible redundant operation results (UOR) flaw in: " + this);
-      int ascore = (int) res.get("amber"); 
-      res.set("amber", ascore+1); 
+      rUses.add("!!! Possible redundant operation results (UOR) flaw in: " + this);
+      int rscore = (int) res.get("red"); 
+      res.set("red", rscore+1);
+      int oescount = (int) res.get("UOR"); 
+      res.set("UOR", oescount+1); 
     } 
     else if ("->last".equals(operator) || 
              "->first".equals(operator))
@@ -1037,6 +1063,8 @@ public void findClones(java.util.Map clones,
           rUses.add("!!! Use col->min() instead of col->sort()->first(), col->max() for col->sort()->last(), col->first() for col->reverse()->last(), and col->last() instead of col->reverse()->first()");
           int rscore = (int) res.get("red"); 
           res.set("red", rscore+1); 
+          int oescount = (int) res.get("UOR"); 
+          res.set("UOR", oescount+1); 
         }
       }   
       else if (argument instanceof BinaryExpression)
@@ -1051,6 +1079,8 @@ public void findClones(java.util.Map clones,
           rUses.add("!!! OCL efficiency smell (UOR): Redundant results computation in: " + this);
           int rscore = (int) res.get("red"); 
           res.set("red", rscore+1);
+          int oescount = (int) res.get("UOR"); 
+          res.set("UOR", oescount+1); 
         }
       } 
     } 
@@ -1236,7 +1266,7 @@ public void findClones(java.util.Map clones,
           BinaryExpression res = 
             new BinaryExpression("->any", lbe.left, lbe.right); 
 
-          System.out.println("!! OCL efficiency smell (OES): Inefficient " + operator + " expression: " + 
+          System.err.println("!! OCL efficiency smell (OES): Inefficient " + operator + " expression: " + 
             this + 
             "\n! Replaced by " + res);
 
@@ -1248,7 +1278,7 @@ public void findClones(java.util.Map clones,
           BinaryExpression res = 
             new BinaryExpression("|A", lbe.left, notR); 
 
-          System.out.println("!! OCL efficiency smell (OES): Inefficient " + operator + " expression: " + 
+          System.err.println("!! OCL efficiency smell (OES): Inefficient " + operator + " expression: " + 
             this + 
             "\n! Replaced by " + res);
 
@@ -1260,7 +1290,7 @@ public void findClones(java.util.Map clones,
           BinaryExpression res = 
             new BinaryExpression("->any", lbe.left, notR); 
 
-          System.out.println("!! OCL efficiency smell (OES): Inefficient " + operator + " expression: " + 
+          System.err.println("!! OCL efficiency smell (OES): Inefficient " + operator + " expression: " + 
             this + 
             "\n! Replaced by " + res);
   
@@ -1270,7 +1300,7 @@ public void findClones(java.util.Map clones,
                  operator.equals("->first"))
         { Expression res = Expression.simplifyFirst(lbe); 
  
-          System.out.println("!! OCL efficiency smell (OES): Inefficient " + operator + " expression: " + 
+          System.err.println("!! OCL efficiency smell (OES): Inefficient " + operator + " expression: " + 
             this + 
             "\n! Replaced by " + res);
   
@@ -1280,7 +1310,7 @@ public void findClones(java.util.Map clones,
                  operator.equals("->any"))
         { Expression res = Expression.simplifyAny(lbe); 
  
-          System.out.println("!! OCL efficiency smell (OES): Inefficient " + operator + " expression: " + 
+          System.err.println("!! OCL efficiency smell (OES): Inefficient " + operator + " expression: " + 
             this + 
             "\n! Replaced by " + res);
   
@@ -1293,7 +1323,7 @@ public void findClones(java.util.Map clones,
       { // Redundant ->sort operation:  
         // Argument is already sorted.
 
-        System.out.println("!! OES flaw: Redundant ->sort operation: " + 
+        System.err.println("!! OES flaw: Redundant ->sort operation: " + 
             this + 
             "\n! Argument is already sorted.");
         return arg; 
@@ -1392,12 +1422,14 @@ public void findClones(java.util.Map clones,
     boolean sideeffects = isSideEffecting(); 
  
     if (level > 1 && vuses.size() == 0 && !sideeffects)
-    { messages.add("!! (LCE) flaw: The expression " + this + " may be independent of the iterator variables " + vars + "\n" + 
-          "!! Use Extract local variable to optimise.");
+    { messages.add("!!! (LCE) flaw: The expression " + this + " may be independent of the iterator variables " + vars + "\n" + 
+          "!!! Use Extract local variable to optimise.");
       messages.add(""); 
       refactorELV = true; 
-      int aScore = (int) uses.get("amber"); 
-      uses.set("amber", aScore + 1);  
+      int rScore = (int) uses.get("red"); 
+      uses.set("red", rScore + 1);  
+      int oescount = (int) uses.get("LCE"); 
+      uses.set("LCE", oescount+1); 
     }
 
     if (operator.equals("->sort") || 
@@ -1441,6 +1473,8 @@ public void findClones(java.util.Map clones,
         messages.add(""); 
         int aScore = (int) uses.get("amber"); 
         uses.set("amber", aScore + 1);
+        int oescount = (int) uses.get("UOR"); 
+        uses.set("UOR", oescount+1); 
       }
     }
 
@@ -1448,7 +1482,9 @@ public void findClones(java.util.Map clones,
     { messages.add("! (OES): I/O within loop can be inefficient: " + this); 
       messages.add("");
       int yScore = (int) uses.get("yellow"); 
-      uses.set("yellow", yScore + 1); 
+      uses.set("yellow", yScore + 1);
+      int oescount = (int) uses.get("OES"); 
+      uses.set("OES", oescount+1);  
     } 
 
     return res; 

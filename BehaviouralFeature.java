@@ -4614,6 +4614,18 @@ public class BehaviouralFeature extends ModelElement
     res.set("amber", 0); 
     res.set("yellow", 0); 
 
+    res.set("DEV", 0); 
+    res.set("LCE", 0); 
+    res.set("LRC", 0); 
+    res.set("MEL", 0); 
+    res.set("OES", 0); 
+    res.set("UVA", 0); 
+    res.set("UOR", 0); 
+    res.set("RL", 0); 
+    res.set("RC", 0); res.set("DC", 0); 
+    res.set("NTE", 0); 
+    res.set("MNC", 0); 
+
     java.util.Map clones = new java.util.HashMap(); 
     java.util.Map defs = new java.util.HashMap(); 
 
@@ -4682,6 +4694,8 @@ public class BehaviouralFeature extends ModelElement
           int ascore = (int) res.get("amber");
           ascore = ascore + actualExpressionClones.size();
           res.set("amber", ascore);
+          int devscore = (int) res.get("DEV"); 
+          res.set("DEV", devscore+1); 
         } 
 
         if (actualStatementClones.size() > 0)
@@ -4691,6 +4705,8 @@ public class BehaviouralFeature extends ModelElement
           int ascore = (int) res.get("amber");
           ascore = ascore + actualStatementClones.size();
           res.set("amber", ascore);
+          int dcscore = (int) res.get("DC"); 
+          res.set("DC", dcscore+1); 
         } 
 
       } // In a postcondition they usually are repeats.
@@ -4702,8 +4718,10 @@ public class BehaviouralFeature extends ModelElement
              unusedVars + "\n" + 
              "!! Use remove unused parameters refactoring"); 
       int ascore = (int) res.get("amber");
-      ascore = ascore + unusedVars.size();
-      res.set("amber", ascore);
+      int uvsze = unusedVars.size();
+      res.set("amber", ascore + uvsze);
+      int uvascore = (int) res.get("UVA"); 
+      res.set("UVA", uvascore + uvsze); 
     } 
 
     Vector opuses = this.operationsUsedIn();
@@ -4721,6 +4739,8 @@ public class BehaviouralFeature extends ModelElement
         int ascore = (int) res.get("amber");
         ascore = ascore + 1;
         res.set("amber", ascore);
+        int rlscore = (int) res.get("RL"); 
+        res.set("RL", rlscore + 1); 
       } 
     } 
 
@@ -4743,6 +4763,8 @@ int ascore = (int) res.get("amber");
         int ascore = (int) res.get("amber");
         ascore = ascore + 1;
         res.set("amber", ascore);
+        int rlscore = (int) res.get("RL"); 
+        res.set("RL", rlscore + 1); 
       } 
     } 
 
@@ -4854,8 +4876,7 @@ int ascore = (int) res.get("amber");
 
   } // and activity
 
-  public int displayMeasures(PrintWriter out, 
-                             java.util.Map flaws)   
+  public int displayMeasures(PrintWriter out)   
   { String res = ""; 
     String nme = getName(); 
     if (entity != null) 
@@ -4872,7 +4893,7 @@ int ascore = (int) res.get("amber");
     if (pars > TestParameters.numberOfParametersLimit) 
     { System.err.println("!! Code smell (EPL): too many parameters (" + pars + ") for " + nme); 
       System.err.println("!! Recommend refactoring by introducing value object for parameters or splitting operation into parts\n"); 
-      flaws.put("EPL", 1); 
+      // flaws.put("EPL", 1); 
       System.err.println(); 
     }  
 
@@ -4898,7 +4919,7 @@ int ascore = (int) res.get("amber");
       if (acomp > TestParameters.operationSizeLimit) 
       { System.err.println("!! Code smell (EOS): too high activity complexity (" + acomp + ") for " + nme); 
         System.err.println("!! Recommend refactoring by splitting operation"); 
-        flaws.put("EOS", 1); 
+        // flaws.put("EOS", 1); 
         System.err.println(); 
       }  
       else if (acomp > TestParameters.operationSizeWarning) 
@@ -4913,7 +4934,7 @@ int ascore = (int) res.get("amber");
     if (cyc > TestParameters.cyclomaticComplexityLimit) 
     { System.err.println("!! Code smell (CC): high cyclomatic complexity (" + cyc + ") for " + nme);
       System.err.println("!! Recommend refactoring by splitting operation"); 
-      flaws.put("CC", 1); 
+      // flaws.put("CC", 1); 
       System.err.println(); 
     }  
 

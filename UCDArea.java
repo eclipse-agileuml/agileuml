@@ -3642,15 +3642,15 @@ public class UCDArea extends JPanel
       for (int k = 0; k < ops.size(); k++) 
       { BehaviouralFeature bf = (BehaviouralFeature) ops.get(k); 
         int cyc = bf.cc();
-        if (cyc > 10) 
+        if (cyc > TestParameters.cyclomaticComplexityLimit) 
         { highcost = highcost + 30; } 
 
         int eplbf = bf.epl(); 
-        if (eplbf > 10) 
+        if (eplbf > TestParameters.numberOfParametersLimit) 
         { highcost = highcost + 30; }
 
         int bfefo = bf.efo(); 
-        if (bfefo > 5) 
+        if (bfefo > TestParameters.efoLimit) 
         { highcost = highcost + 30; }
       }  
     } 
@@ -3895,28 +3895,42 @@ public class UCDArea extends JPanel
     int amberFlags = 0; 
     int yellowFlags = 0; 
 
-    for (int j = 0; j < entities.size(); j++) 
-    { Entity ent = (Entity) entities.get(j); 
-      if (ent.isDerived()) { continue; } 
+    File file = new File("output/energyUseSummary.txt");
+    try
+    { PrintWriter out = new PrintWriter(
+                              new BufferedWriter(
+                                new FileWriter(file)));
+          
+      for (int j = 0; j < entities.size(); j++) 
+      { Entity ent = (Entity) entities.get(j); 
+        if (ent.isDerived()) { continue; } 
 
-      if (ent.isComponent() || ent.isExternal())
-      { continue; } 
+        if (ent.isComponent() || ent.isExternal())
+        { continue; } 
 
-      Map scores = ent.energyAnalysis(messages); 
-      redFlags = redFlags + (int) scores.get("red"); 
-      amberFlags = 
-        amberFlags + (int) scores.get("amber"); 
-      yellowFlags = 
-        yellowFlags + (int) scores.get("yellow"); 
+        Map scores = ent.energyAnalysis(messages, out);
+ 
+        redFlags = redFlags + (int) scores.get("red"); 
+        amberFlags = 
+          amberFlags + (int) scores.get("amber"); 
+        yellowFlags = 
+          yellowFlags + (int) scores.get("yellow"); 
 
-      Map cg = ent.getCallGraph(); 
-      if (cg.size() > 0) 
-      { // out.println("*** Call graph of entity " + 
-        //             ent.getName() + " is: " + cg); 
-        res = Map.union(res,cg); 
-      }  
-    } 
+        Map cg = ent.getCallGraph(); 
+        if (cg.size() > 0) 
+        { // out.println("*** Call graph of entity " + 
+          //             ent.getName() + " is: " + cg); 
+          res = Map.union(res,cg); 
+        }  
+      } 
 
+      out.close();
+
+      System.out.println(">> Summary written to output/energyUseSummary.txt"); 
+    }
+    catch (IOException ex)
+    { System.out.println("!! Error generating summary file"); }
+    
     for (int j = 0; j < useCases.size(); j++) 
     { UseCase uc = (UseCase) useCases.get(j); 
       // if (uc.isDerived()) { continue; } 
@@ -3952,8 +3966,8 @@ public class UCDArea extends JPanel
 
     // System.out.println(">> Operations in maximum chain are " + lastfound); 
 
-    if (n >= 5) 
-    { messages.add("!! Maximum call chain length is " + n); 
+    if (n > TestParameters.referenceChainLimit) 
+    { messages.add("!! (MPL) flaw: Maximum call chain length is " + n); 
       messages.add("!! Amber warning: long sequence of calls"); 
       messages.add("!! Try inline expansion of the end operation(s): replace call by definition"); 
 
@@ -3999,7 +4013,7 @@ public class UCDArea extends JPanel
  
     if (selfcallsn > 0) 
     { System.err.println("!!! Code smell (CBR2): complex call graph with " + selfcallsn + " recursive dependencies"); 
-      System.err.println(">>> Suggest refactoring using Replace recursion by iteration (for tail recursions)"); 
+      System.err.println("!!! Suggest refactoring using Replace recursion by iteration (for tail recursions)"); 
     } 
 
     Vector allused = new Vector(); 

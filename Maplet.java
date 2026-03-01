@@ -2,7 +2,7 @@ import java.util.Vector;
 import java.io.*; 
 
 /******************************
-* Copyright (c) 2003--2025 Kevin Lano
+* Copyright (c) 2003--2026 Kevin Lano
 * This program and the accompanying materials are made available under the
 * terms of the Eclipse Public License 2.0 which is available at
 * http://www.eclipse.org/legal/epl-2.0
@@ -310,8 +310,32 @@ class Map
     } 
     return res; 
   }
+
+  public Vector getKeys()
+  { Vector res = new Vector(); 
+    for (int i = 0; i < elements.size(); i++)
+    { Maplet mm = (Maplet) elements.elementAt(i); 
+      Object src = mm.source; 
+      if (res.contains(src)) { } 
+      else 
+      { res.add(src); }
+    } 
+    return res; 
+  }
  
   public Vector range()
+  { Vector res = new Vector(); 
+    for (int i = 0; i < elements.size(); i++)
+    { Maplet mm = (Maplet) elements.elementAt(i); 
+      Object d = mm.dest; 
+      if (res.contains(d)) { } 
+      else 
+      { res.add(d); }
+    } 
+    return res; 
+  }
+
+  public Vector getValues()
   { Vector res = new Vector(); 
     for (int i = 0; i < elements.size(); i++)
     { Maplet mm = (Maplet) elements.elementAt(i); 

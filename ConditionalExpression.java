@@ -368,9 +368,11 @@ public class ConditionalExpression extends Expression
   { int syn = syntacticComplexity();
  
     if (syn > TestParameters.syntacticComplexityLimit)
-    { oUses.add("! Excessive expression size (MEL) in " + this + " : try to simplify OCL expression");
-      int ascore = (int) res.get("amber"); 
-      res.set("amber", ascore+1);
+    { yUses.add("! Excessive expression size (MEL) in " + this + " : try to simplify OCL expression");
+      int yscore = (int) res.get("yellow"); 
+      res.set("yellow", yscore+1);
+      int melcount = (int) res.get("MEL"); 
+      res.set("MEL", melcount+1); 
     } 
 
     this.maximumReferenceChain(); 
@@ -421,7 +423,9 @@ public class ConditionalExpression extends Expression
           oUses.add("!! Recommend declaring " + ifExp + " as a Set or SortedSet"); 
 
           int oscore = (int) res.get("amber"); 
-          res.set("amber", oscore + 1); 
+          res.set("amber", oscore + 1);
+          int oescount = (int) res.get("OES"); 
+          res.set("OES", oescount+1); 
         } 
       }
     } 
@@ -458,6 +462,8 @@ public class ConditionalExpression extends Expression
 
           int oscore = (int) res.get("amber"); 
           res.set("amber", oscore + 1); 
+          int oescount = (int) res.get("OES"); 
+          res.set("OES", oescount+1); 
         } 
       } 
     } 
@@ -487,6 +493,9 @@ public class ConditionalExpression extends Expression
       refactorELV = true;  
       int redScore = (int) uses.get("red"); 
       uses.set("red", redScore+1); 
+      int lcecount = (int) uses.get("OES"); 
+      uses.set("OES", lcecount+1);
+ 
       test.collectionOperatorUses(level,res,vars); 
       ifExp.collectionOperatorUses(level,res,vars);  
       java.util.Map nres = 

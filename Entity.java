@@ -5020,8 +5020,8 @@ public class Entity extends ModelElement implements Comparable
       Vector opuses = op.operationsUsedIn();
 
       if (opuses.contains(ename + "::" + nme))
-      { System.err.println("!! Code smell (CBR2): potential self-recursion in " + op); 
-        System.err.println("!! Refactor by replacing recursion by iteration, or use caching to optimise.\n"); 
+      { System.err.println("!!! Code smell (CBR2): potential self-recursion in " + op); 
+        System.err.println("!!! Refactor by replacing recursion by iteration, or use caching to optimise.\n"); 
       } 
 
       if (opuses.contains("OclProcess::start") || 
@@ -5044,14 +5044,14 @@ public class Entity extends ModelElement implements Comparable
 
       if (pars != null && 
           pars.size() > TestParameters.numberOfParametersLimit) 
-      { System.err.println("!!! Code smell (EPL): too many parameters (" + pars + ") for " + nme); 
-        System.err.println(">>> Recommend refactoring by introducing value object for parameters or splitting operation into parts"); 
+      { System.err.println("! Code smell (EPL): too many parameters (" + pars + ") for " + nme); 
+        System.err.println("! Recommend refactoring by introducing value object for parameters or splitting operation into parts"); 
         System.err.println(); 
       }  
 
       int sze = op.syntacticComplexity(); 
       if (sze >= TestParameters.operationSizeLimit) 
-      { System.err.println("!!! Operation " + 
+      { System.err.println("!! Operation " + 
                            ename + "::" + nme + 
                            " too large (EOS): " + sze);
         System.err.println();  
@@ -5059,7 +5059,7 @@ public class Entity extends ModelElement implements Comparable
       }
 
       if (sze >= TestParameters.operationSizeWarning) 
-      { System.err.println("!! Warning: large operation (EOS): " + 
+      { System.err.println("! Warning: large operation (EOS): " + 
             ename + "::" + nme + " size = " + sze); 
         System.err.println();  
         continue;
@@ -5156,7 +5156,7 @@ public class Entity extends ModelElement implements Comparable
     out.println("*** Number of " + nme + " operations = " + ops); 
 
     if (ops > TestParameters.numberOfOperationsLimit) 
-    { out.println("!! Code smell (ENO): excessive number of operations " + (ops) + " in " + nme); } 
+    { out.println("!! Code smell (ENO): excessive number of operations " + (ops) + " in class " + nme); } 
 
     int totalComplexity = 0; 
 
@@ -5168,28 +5168,64 @@ public class Entity extends ModelElement implements Comparable
 
       java.util.Map opflaws = new java.util.HashMap(); 
       operationFlaws.put(opname, opflaws); 
+      int opred = 0; 
+      int opamber = 0; 
+      int opyellow = 0; 
       
-      int opcomplexity = op.displayMeasures(out, opflaws);
+      int opcomplexity = op.displayMeasures(out);
 
       if (opcomplexity > TestParameters.operationSizeLimit) 
-      { highcount++; } 
+      { highcount++; 
+        opyellow++; 
+        opflaws.put("EOS", 1); 
+      } 
       else if (opcomplexity > 
                TestParameters.operationSizeWarning)
       { lowcount++; } 
 
       totalComplexity = totalComplexity + opcomplexity;  
 
+      Vector pars = op.getParameters(); 
+
+      if (pars != null && 
+          pars.size() > TestParameters.numberOfParametersLimit) 
+      { // System.err.println("! Code smell (EPL): too many parameters (" + pars + ") for " + nme); 
+        // System.err.println("! Recommend refactoring by introducing value object for parameters or splitting operation into parts"); 
+        // System.err.println();
+        opyellow++; 
+        opflaws.put("EPL", 1);  
+      }  
+
+      int cyc = op.cyclomaticComplexity(); 
+      
+      if (cyc > TestParameters.cyclomaticComplexityLimit) 
+      { // System.err.println("!! Code smell (CC): high cyclomatic complexity (" + cyc + ") for " + nme);
+        // System.err.println("!! Recommend refactoring by splitting operation"); 
+        opflaws.put("CC", 1);
+        opyellow++;  
+        // System.err.println(); 
+      }  
+
       Vector opuses = op.operationsUsedIn(); 
       // System.out.println(">>> Operations used in " + opname + ": " + opuses);
+
+      if (opuses.contains(nme + "::" + opname))
+      { System.err.println("!!! Code smell (CBR2): potential self-recursion in " + op); 
+        System.err.println("!!! Refactor by replacing recursion by iteration, or use caching to optimise.\n");
+        opred++;  
+        opflaws.put("CBR", 1); 
+      } 
+
       Vector vuses = new Vector(); 
       Vector newopuses = VectorUtil.union(vuses,opuses); 
   
       if (newopuses.size() > TestParameters.efoLimit) 
-      { System.err.println("!! Code smell (EFO): > " + 
+      { System.err.println("!! Code smell (EFO): more than " + 
           TestParameters.efoLimit + " operations used in " + 
           nme + "::" + opname); 
         System.err.println("!! Suggest refactoring by splitting operation");
-        opflaws.put("EFO", 1);  
+        opflaws.put("EFO", 1);
+        opamber++;   
       } 
 
       if (newopuses.size() > 0)
@@ -5206,7 +5242,9 @@ public class Entity extends ModelElement implements Comparable
       { String kks = (String) kk; 
         Vector used = (Vector) opclones.get(kks); 
         if (used.size() > 1) 
-        { opdc++; } 
+        { opdc++;
+          opamber++; 
+        } 
       } 
 
       if (opdc > 0)
@@ -5224,7 +5262,9 @@ public class Entity extends ModelElement implements Comparable
       { String kks = (String) kk; 
         Vector used = (Vector) opmgns.get(kks); 
         if (used.size() > 1) 
-        { opmgn++; } 
+        { opmgn++; 
+          opamber++; 
+        } 
       } 
 
       if (opmgn > 0)
@@ -5241,7 +5281,10 @@ public class Entity extends ModelElement implements Comparable
         optotalflaws += flws;  
       }
 
-      out.println(">> Operation " + opname + " has " + optotalflaws + " flaws: " + opflaws); 
+      out.println(">> Operation " + opname + " has " + 
+                  optotalflaws + " flaws: (red = " + opred + 
+                  ", amber = " + opamber + ", yellow = " + 
+                  opyellow + ") " + opflaws); 
       out.println();  
     } 
 
@@ -5956,7 +5999,7 @@ public class Entity extends ModelElement implements Comparable
     } 
   } 
 
-  public Map energyAnalysis(Vector messages)
+  public Map energyAnalysis(Vector messages, PrintWriter out)
   { Map res = new Map(); // multimaps - use set not put 
     res.set("red", 0); 
     res.set("amber", 0); 
@@ -6053,6 +6096,7 @@ public class Entity extends ModelElement implements Comparable
     { BehaviouralFeature op = 
           (BehaviouralFeature) operations.get(i); 
       String opname = op.getName(); 
+      java.util.Map opscores = new java.util.HashMap(); 
 
       java.util.Map opclones = new java.util.HashMap(); 
       java.util.Map opcdefs = new java.util.HashMap(); 
@@ -6061,7 +6105,8 @@ public class Entity extends ModelElement implements Comparable
       Vector amberDetails = new Vector(); 
       Vector yellowDetails = new Vector(); 
       Map res1 = 
-        op.energyAnalysis(redDetails,amberDetails,yellowDetails);
+        op.energyAnalysis(redDetails,amberDetails,
+                          yellowDetails);
 
       int redop = (int) res1.get("red"); 
       int amberop = (int) res1.get("amber"); 
@@ -6078,21 +6123,23 @@ public class Entity extends ModelElement implements Comparable
         if (cs.size() > 1) 
         { actualClones.add(k); } 
         if (cs.size() > 4) 
-        { messages.add("!!! (DC) flaw: Cloned expression/statement with multiple copies: " + k + " from " + op);
+        { messages.add("!! (DC) flaw: Cloned expression/statement with multiple copies: " + k + " from " + op);
           messages.add(""); 
  
-          redop = redop + 1; 
-          res1.set("red", redop); 
-          redDetails.add("!!! (DC) Expression/statement!: " + k);
+          // amberop = amberop + 1; 
+          // res1.set("amber", amberop); 
+          // amberDetails.add("!! (DC) Expression/statement!: " + k);
         } 
       } 
 
       if (actualClones.size() > 0)
-      { messages.add("!!! (DEV) flaw: Cloned expressions/statements " + actualClones + " from " + op); 
+      { messages.add("!! (DEV) flaw: Cloned expressions/statements " + actualClones + " from " + op); 
         messages.add(""); 
-        redop = redop + actualClones.size(); 
-        res1.set("red", redop); 
-        redDetails.add("!!! Expression/statement clones!: " + actualClones);
+        int opclesze = actualClones.size();
+        res1.set("amber", amberop + opclesze); 
+        amberDetails.add("!!! Expression/statement clones of " + op + "!: " + actualClones);
+        int devcount = (int) res1.get("DEV"); 
+        res1.set("DEV", devcount + opclesze); 
       }  
 
       Vector collVars = new Vector(); 
@@ -6153,10 +6200,21 @@ public class Entity extends ModelElement implements Comparable
         res.set("yellow", yellowscore + yellowop); 
       } 
 
-      java.util.Map opscores = new java.util.HashMap(); 
-      opscores.put("red", (int) res.get("red")); 
-      opscores.put("amber", (int) res.get("amber")); 
-      opscores.put("yellow", (int) res.get("yellow")); 
+      opscores.put("red", redop); 
+      opscores.put("amber", amberop); 
+      opscores.put("yellow", yellowop);
+
+      Vector keys = res1.getKeys(); 
+      for (int ii = 0; ii < keys.size(); ii++) 
+      { String key = (String) keys.get(ii); 
+        int val = (int) res1.get(key); 
+        if (val > 0 && 
+            !(key.equals("red")) && 
+            !(key.equals("amber")) && 
+            !(key.equals("yellow")))
+        { opscores.put(key, val); } 
+      } 
+ 
       operationFlaws.put(opname, opscores); 
     } 
 
@@ -6307,19 +6365,23 @@ public class Entity extends ModelElement implements Comparable
     // Also, check each attribute, if sequence-typed but no 
     // indexing operations, suggest a bag/set is used instead.
 
+    int snicount = 0; 
     for (int i = 0; i < attributes.size(); i++) 
     { Attribute attr = (Attribute) attributes.get(i); 
-
+      
       if (attr.hasSequenceType())
       { boolean indexUse = 
           attr.hasIndexingOperation(collOps); 
 
         if (indexUse == false)
-        { messages.add("! No use of indexes with sequence-valued attribute " + attr + "\n! It may be more efficient to use a SortedSet or Bag\n"); 
-          int yellowscore = (int) res.get("yellow"); 
-          res.set("yellow", yellowscore + 1); 
+        { messages.add("! (SNI) No use of indexes with sequence-valued attribute " + attr + "\n! It may be more efficient to use a SortedSet or Bag\n"); 
+          snicount++;  
         } 
       } 
+
+      int yellowscore = (int) res.get("yellow"); 
+      res.set("yellow", yellowscore + snicount);
+      res.set("SNI", snicount); 
     }       
 
     messages.add(""); 
@@ -6334,39 +6396,61 @@ public class Entity extends ModelElement implements Comparable
       { messages.add("!!! (DC) flaw: Cloned expression/statement with multiple copies: " + k + " from " + name);
         messages.add(""); 
  
-        int redcount = (int) res.get("red"); 
-        res.set("red", redcount + 1); 
+        // int redcount = (int) res.get("red"); 
+        // res.set("red", redcount + 1); 
       } 
     } 
 
     if (entityClones.size() > 0)
     { messages.add("!!! (DEV) flaw: Cloned expressions/statements " + entityClones + " from " + name); 
       messages.add(""); 
-      int redcount = (int) res.get("red"); 
-      redcount = redcount + entityClones.size(); 
-      res.set("red", redcount); 
+      int redcount = (int) res.get("red");
+      int ecsze = entityClones.size(); 
+      res.set("red", redcount + ecsze); 
+      res.set("DEV", ecsze); 
     }  
 
-    messages.add("+++ Summary of operation flaws for class " + name + ": "); 
-    java.util.Set opkeys = operationFlaws.keySet(); 
-    for (Object kk : opkeys)
-    { String key = (String) kk; 
-      java.util.Map opflaws = 
-           (java.util.Map) operationFlaws.get(key);
-      java.util.Set opflawskeys = opflaws.keySet(); 
-      int optotalflaws = 0; 
-      for (Object ok : opflawskeys) 
-      { String okey = (String) ok; 
-        int val = (int) opflaws.get(okey); 
-        optotalflaws += val; 
-      } 
- 
-      messages.add("+++ " + key + " has " + optotalflaws + " flaws: " + opflaws); 
-    } 
-    messages.add(""); 
+    if (n > 0)
+    { messages.add("+++ Summary of operation energy-use flaws for class " + name + ": ");
+      
+      out.println("+++ Summary of operation energy-use flaws for class " + name + ": "); 
+      out.println(); 
+      messages.add(""); 
 
-    messages.add("++++++ Class " + ename + " has flaws: " + res); 
+      java.util.Set opkeys = operationFlaws.keySet(); 
+      for (Object kk : opkeys)
+      { String key = (String) kk; 
+        java.util.Map opflaws = 
+           (java.util.Map) operationFlaws.get(key);
+
+        java.util.Set opflawskeys = opflaws.keySet(); 
+
+        int optotalflaws = 0; 
+
+        for (Object ok : opflawskeys) 
+        { String okey = (String) ok; 
+          if ("red".equals(okey) || "amber".equals(okey) || 
+              "yellow".equals(okey))
+          { int val = (int) opflaws.get(okey); 
+            optotalflaws += val;
+          }  
+        } 
+ 
+        String mess = "+++ " + key + " has " + optotalflaws + " flaws: " + opflaws; 
+ 
+        messages.add(mess); 
+        out.println(mess); 
+      } 
+
+      messages.add("");
+      out.println();  
+    }
+
+    messages.add("++++++ Class " + ename + " has class-level flaws: " + res); 
+    out.println("++++++ Class " + ename + " has class-level flaws: " + res);
+
     messages.add(""); 
+    out.println(); 
        messages.add("++++++++++++++++++++++++++++++++++++++++++++++++++++++++"); 
     messages.add(""); 
 

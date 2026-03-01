@@ -2970,12 +2970,14 @@ public class SetExpression extends Expression
 
     if (elements.size() > 2 && 
         level > 1 && vuses.size() == 0 && !sideeffect)
-    { messages.add("!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
-          "!! Use Extract local variable to optimise."); 
+    { messages.add("!!! (LCE) flaw: The expression " + this + " is independent of the iterator variables " + vars + "\n" + 
+          "!!! Use Extract local variable to optimise."); 
       refactorELV = true;
-      int aScore = (int) uses.get("amber"); 
-      uses.set("amber", aScore+1);  
-
+      int rScore = (int) uses.get("red"); 
+      uses.set("red", rScore+1);
+      int lcecount = (int) uses.get("LCE"); 
+      uses.set("LCE", lcecount+1); 
+    
       for (int i = 0; i < elements.size(); i++) 
       { Expression elem = (Expression) elements.get(i);  
         elem.collectionOperatorUses(level, res, vars);

@@ -18775,9 +18775,11 @@ public Statement generateDesignSubtract(Expression rhs)
     if (arrayIndex != null) 
     { arrayIndex.energyUse(res,rUses,oUses,yUses); 
       if (arrayIndex.isCollectionValued())
-      { rUses.add("!!! Expensive operation: implicit ->collect over index collection in: " + this);
+      { rUses.add("!!! (OES) Expensive operation: implicit ->collect over index collection in: " + this);
         int rscore = (int) res.get("red"); 
-        res.set("red", rscore+1); 
+        res.set("red", rscore+1);
+        int oescount = (int) res.get("OES"); 
+        res.set("OES", oescount+1); 
       } 
     } 
 
@@ -18792,7 +18794,9 @@ public Statement generateDesignSubtract(Expression rhs)
 
         rUses.add("!!! Energy-use flaw (UOR): Redundant results computation in: " + this);
         int rscore = (int) res.get("red"); 
-        res.set("red", rscore+1); 
+        res.set("red", rscore+1);
+        int oescount = (int) res.get("UOR"); 
+        res.set("UOR", oescount+1); 
       } 
     } 
 
@@ -18801,6 +18805,9 @@ public Statement generateDesignSubtract(Expression rhs)
     { yUses.add("! (LRC) flaw: The expression " + this + " has too many (" + mchain + ") chained references"); 
       int yscore = (int) res.get("yellow"); 
       res.set("yellow", yscore+1); 
+
+      int oescount = (int) res.get("LRC"); 
+      res.set("LRC", oescount+1); 
     } 
 
 
@@ -18811,19 +18818,25 @@ public Statement generateDesignSubtract(Expression rhs)
           "newOclProcess".equals(data))
       { oUses.add("!! Expensive operation (OES): Call of process/task creation: " + this);
         int ascore = (int) res.get("amber"); 
-        res.set("amber", ascore+1); 
+        res.set("amber", ascore+1);
+        int oescount = (int) res.get("OES"); 
+        res.set("OES", oescount+1); 
       }
       else if ("OclType".equals(objectRef + "") && 
                "loadExecutableObject".equals(data))
       { oUses.add("!! Expensive operation (OES): Runtime library loading: " + this);
         int ascore = (int) res.get("amber"); 
         res.set("amber", ascore+1); 
+        int oescount = (int) res.get("OES"); 
+        res.set("OES", oescount+1); 
       } 
       else if ("OclDatasource".equals(objectRef + "") && 
                "getConnection".equals(data))
       { oUses.add("!! Expensive operation (OES): Database/internet connection: " + this);
         int ascore = (int) res.get("amber"); 
-        res.set("amber", ascore+1); 
+        res.set("amber", ascore+1);
+        int oescount = (int) res.get("OES"); 
+        res.set("OES", oescount+1); 
       } 
       else if ("OclType".equals(objectRef + "") && 
                ("getAttributeValue".equals(data) || 
@@ -18832,7 +18845,9 @@ public Statement generateDesignSubtract(Expression rhs)
                 "removeAttribute".equals(data)))
       { oUses.add("!! Reflection is energy-expensive (OES): " + this);
         int ascore = (int) res.get("amber"); 
-        res.set("amber", ascore+1); 
+        res.set("amber", ascore+1);
+        int oescount = (int) res.get("OES"); 
+        res.set("OES", oescount+1); 
       } 
     }     
 
@@ -18847,8 +18862,8 @@ public Statement generateDesignSubtract(Expression rhs)
     Vector vuses = variablesUsedIn(vars); 
 
     if (level > 1 && vuses.size() == 0 && !sideeffect)
-    { System.err.println("!! Warning (LCE): The expression " + this + " may be independent of the iterator variables " + vars + "\n" + 
-       "!!  Use Extract local variable to optimise.");
+    { System.err.println("!!! Warning (LCE): The expression " + this + " may be independent of the iterator variables " + vars + "\n" + 
+       "!!!  Use Extract local variable to optimise.");
        refactorELV = true; 
        System.err.println();  
     }
@@ -18929,12 +18944,14 @@ public Statement generateDesignSubtract(Expression rhs)
 
       if (syncom >= TestParameters.energyCloneSizeLimit &&
           level > 1 && vuses.size() == 0 && !sideeffect)
-      { messages.add("!! Warning (LCE): The expression " + this + " may be independent of the iterator variables " + vars + "\n" + 
-          "!!  Use Extract local variable to optimise.");
+      { messages.add("!!! Warning (LCE): The expression " + this + " may be independent of the iterator variables " + vars + "\n" + 
+          "!!!  Use Extract local variable to optimise.");
         refactorELV = true;  
-        int amberScore = (int) uses.get("amber"); 
-        uses.set("amber", amberScore+1); 
+        int rScore = (int) uses.get("red"); 
+        uses.set("red", rScore+1); 
         messages.add(""); 
+        int oescount = (int) uses.get("LCE"); 
+        uses.set("LCE", oescount+1);
       }
     } // Any non-trivial basic expression
 
@@ -18956,6 +18973,8 @@ public Statement generateDesignSubtract(Expression rhs)
         int amberScore = (int) uses.get("amber"); 
         uses.set("amber", amberScore+1); 
         messages.add("");
+        int oescount = (int) uses.get("OES"); 
+        uses.set("OES", oescount+1);
       }
     } 
    
@@ -18983,6 +19002,8 @@ public Statement generateDesignSubtract(Expression rhs)
       int amberScore = (int) uses.get("amber"); 
       uses.set("amber", amberScore+1); 
       messages.add("");
+      int oescount = (int) uses.get("OES"); 
+      uses.set("OES", oescount+1);
     }
 
     if (arrayIndex != null) 
@@ -19004,8 +19025,9 @@ public Statement generateDesignSubtract(Expression rhs)
         int aScore = (int) uses.get("amber"); 
         uses.set("amber", aScore+1); 
         messages.add("");
+        int oescount = (int) uses.get("OES"); 
+        uses.set("OES", oescount+1);      
       } 
-
     } 
 
     return res; 
