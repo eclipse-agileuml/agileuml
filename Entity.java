@@ -6374,7 +6374,7 @@ public class Entity extends ModelElement implements Comparable
           attr.hasIndexingOperation(collOps); 
 
         if (indexUse == false)
-        { messages.add("! (SNI) No use of indexes with sequence-valued attribute " + attr + "\n! It may be more efficient to use a SortedSet or Bag\n"); 
+        { messages.add("! (OES): No use of indexes with sequence-valued attribute " + attr + "\n! It may be more efficient to use a SortedSet or Bag\n"); 
           snicount++;  
         } 
       } 
