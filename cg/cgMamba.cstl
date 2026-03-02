@@ -94,8 +94,12 @@ IncorrectElementException.newIncorrectElementException() |-->Exception.Create()
 
 /*   $$$   _1.allInstances |-->_1._1_allInstances   */
 
+_1.insertAt(_2,_3) |-->(_1.Substring(0,_2-1) + _3 + _1.Substring(_2-1))<when> _1 String
 _1.insertAt(_2,_3) |-->Domain.MambaHelper.InsertAt(_1,_2,_3)
+
+_1.setAt(_2,_3) |-->(_1.Substring(0,_2-1) + _3 + _1.Substring(_2))<when> _1 String
 _1.setAt(_2,_3) |-->Domain.MambaHelper.SetAt(_1,_2,_3)
+
 _1.replace(_2,_3) |-->_1.Replace(_2,_3)
 _1.replaceAll(_2,_3) |-->_1.ReplaceWithRegex(_2, _3)
 _1.replaceAllMatches(_2,_3) |-->_1.ReplaceWithRegex(_2, _3)
