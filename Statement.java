@@ -198,6 +198,7 @@ abstract class Statement implements Cloneable
       { nontail++; } 
     } 
 
+    System.out.println(); 
     System.out.println(">> " + bf + " has " + 
          nonrecursive + " non-recursive returns, " + 
          tailrecursive + " tail recursive decrement returns,\n>>" + 
@@ -205,6 +206,7 @@ abstract class Statement implements Cloneable
          nontail + " non-tail recursive returns,\n>> " + 
          semitail + " semi-tail recursive decrement returns: " + 
          semitails);
+    System.out.println(); 
 
     if (nonrecursive == 1 &&  
         semitail >= 1 && nontail == 0)
@@ -218,7 +220,7 @@ abstract class Statement implements Cloneable
     }  
 
     return false;  
-  } 
+  } // can also consider ->including, ->append
 
   public static Expression conditionalBranches2Expressions(
       Statement st, BehaviouralFeature bf, String op, String par,
@@ -1796,7 +1798,7 @@ abstract class Statement implements Cloneable
       { nontail++; } 
     } 
 
-    System.err.println(">> " + nme + " has " + 
+    System.err.println(">> " + nme + " has\n>>> " + 
          nonrecursive + " non-recursive returns, " + 
          tailrecursive + " tail recursive returns,\n>>" + 
          " and " + 
@@ -2995,7 +2997,7 @@ abstract class Statement implements Cloneable
   { // self.nme(exprs) replaced by pars := exprs; continue
     // Likewise for return self.nme(exprs)
     // Any branch that does not terminate in nme call/return
-    // or exit/return is ended by break. 
+    // or exit/return is ended by break: exits the recursion. 
 
     if (st == null) 
     { return st; }
@@ -3003,6 +3005,28 @@ abstract class Statement implements Cloneable
     if (st instanceof InvocationStatement)
     { InvocationStatement invok = 
         (InvocationStatement) st;
+      
+      Expression expr = invok.getCallExp();
+ 
+      // if ((expr + "").startsWith("self." + nme + "("))
+      if (expr != null && expr.isSelfCall(bf))
+      { Statement res = new ContinueStatement();  
+        Statement passigns = 
+             bf.parameterAssignments(expr);
+
+        if (passigns == null) 
+        { return res; } 
+        else if (passigns instanceof SequenceStatement)
+        { ((SequenceStatement) passigns).addStatement(res); 
+          return passigns; 
+        } // passigns.setBrackets(true) 
+      }
+      return st; 
+    } 
+
+    if (st instanceof ImplicitInvocationStatement)
+    { ImplicitInvocationStatement invok = 
+        (ImplicitInvocationStatement) st;
       
       Expression expr = invok.getCallExp();
  
@@ -3040,6 +3064,7 @@ abstract class Statement implements Cloneable
           return passigns; 
         } 
       }
+
       return st; 
     } 
  
@@ -3085,6 +3110,10 @@ abstract class Statement implements Cloneable
         Statement.replaceSelfCallsByContinue(bf,nme,ifstat); 
       Statement newelse = 
         Statement.replaceSelfCallsByContinue(bf,nme,elsestat); 
+
+      if (newelse == null || newelse.isSkip())
+      { newelse = new BreakStatement(); } 
+      // Statement.hasSelfCall(bf,nme,st)
 
       return new ConditionalStatement(tst,newif,newelse); 
     } 
@@ -3193,6 +3222,29 @@ abstract class Statement implements Cloneable
           return passigns; 
         } // passigns.setBrackets(true) 
       }
+      return st; 
+    } 
+
+    if (st instanceof ImplicitInvocationStatement)
+    { ImplicitInvocationStatement invok = 
+        (ImplicitInvocationStatement) st;
+      
+      Expression expr = invok.getCallExp();
+ 
+      // if ((expr + "").startsWith("self." + nme + "("))
+      if (expr != null && expr.isSelfCall(bf))
+      { Statement res = new ContinueStatement();  
+        Statement passigns = 
+             bf.parameterAssignments(expr);
+
+        if (passigns == null) 
+        { return res; } 
+        else if (passigns instanceof SequenceStatement)
+        { ((SequenceStatement) passigns).addStatement(res); 
+          return passigns; 
+        } // passigns.setBrackets(true) 
+      }
+
       return st; 
     } 
 

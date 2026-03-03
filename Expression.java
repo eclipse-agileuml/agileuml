@@ -3932,6 +3932,21 @@ abstract class Expression
   { if (e1 == null) { return null; } 
     if (e2 == null) { return null; } 
 
+    String e1s = "" + e1; 
+    String e2s = "" + e2; 
+
+    if ("1".equals(e1s))
+    { return e2; } 
+
+    if ("1".equals(e2s))
+    { return e1; } 
+
+    if ("0".equals(e1s))
+    { return new BasicExpression(0); } 
+
+    if ("0".equals(e2s))
+    { return new BasicExpression(0); } 
+
     if (isInteger("" + e1) && isInteger("" + e2))
     { int v1 = convertInteger("" + e1); 
       int v2 = convertInteger("" + e2); 

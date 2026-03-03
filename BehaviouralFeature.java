@@ -4593,11 +4593,11 @@ public class BehaviouralFeature extends ModelElement
         Statement.isCumulativeRecursion(this,activity))
     { activity = 
         Statement.simplifyCumulativeRecursion(this,activity);
-      System.out.println(">>> " + activity + " is a cumulative recursion");  
+      System.out.println(">>> " + activity + "\n>>> is a cumulative recursion");  
     } 
     else if (activity != null) 
     { activity = activity.optimiseOCL(); 
-      System.out.println(">>> " + activity + " is not a cumulative recursion");
+      System.out.println(">>> " + activity + "\n>>> is not a cumulative recursion");
     }  
   } 
 
@@ -4622,9 +4622,11 @@ public class BehaviouralFeature extends ModelElement
     res.set("UVA", 0); 
     res.set("UOR", 0); 
     res.set("RL", 0); 
-    res.set("RC", 0); res.set("DC", 0); 
+    res.set("RC", 0); 
+    res.set("DC", 0); 
     res.set("NTE", 0); 
     res.set("MNC", 0); 
+    res.set("CBR", 0); 
 
     java.util.Map clones = new java.util.HashMap(); 
     java.util.Map defs = new java.util.HashMap(); 
@@ -4772,37 +4774,59 @@ int ascore = (int) res.get("amber");
         activity != null)
     { if (Statement.isQueryRecursion(this, name, activity))
       { boolean tailrec = 
-            Statement.isTailRecursion(this, name, 
-                                                 activity); 
+            Statement.isTailRecursion(this, name, activity); 
         System.err.println(); 
 
         if (tailrec) 
-        { amberUses.add("!! Possible tail recursive operation! (CBR2) " + name);   
+        { amberUses.add("!! Tail recursive returns in operation! (CBR2) " + name);   
           amberUses.add("!! Use 'Replace recursion by loop' refactoring"); 
           int ascore = (int) res.get("amber");
           ascore = ascore + 1;
           res.set("amber", ascore);
+          int cbr2 = (int) res.get("CBR"); 
+          res.set("CBR", cbr2 + 1); 
         } 
         else 
         { boolean semitail = 
             Statement.isSemiTailRecursive(this, name, activity); 
           if (semitail) 
-          { amberUses.add("!! Possible semi-tail-recursion (CBR2) in " + name);   
+          { amberUses.add("!! Possible semi-tail-recursive returns (CBR2) in " + name);   
             amberUses.add("!! Use 'Replace recursion by loop' refactoring");
             int ascore = (int) res.get("amber");
             ascore = ascore + 1;
             res.set("amber", ascore);
+            int cbr2 = (int) res.get("CBR"); 
+            res.set("CBR", cbr2 + 1); 
           }
           else 
-          { redUses.add("!!! Non-tail-recursion (CBR2) in " + name); 
+          { redUses.add("!!! Non-tail-recursive returns (CBR2) in " + name); 
             redUses.add("!!! Use 'Make operation cached' refactoring");
             int rscore = (int) res.get("red");
             rscore = rscore + 1;
             res.set("red", rscore);
+            int cbr2 = (int) res.get("CBR"); 
+            res.set("CBR", cbr2 + 1); 
           }  
         } 
+      }
+      else if (Statement.isTailRecursive(this, name, activity))
+      { amberUses.add("!! Tail recursive calls in operation! (CBR2) " + name);   
+        amberUses.add("!! Use 'Replace recursion by loop' refactoring"); 
+        int ascore = (int) res.get("amber");
+        ascore = ascore + 1;
+        res.set("amber", ascore);
+        int cbr2 = (int) res.get("CBR"); 
+        res.set("CBR", cbr2 + 1); 
+      }  
+      else 
+      { redUses.add("!!! Non-tail recursive operation! (CBR2) " + name);   
+        redUses.add("!!! Use 'Make operation cached' refactoring"); 
+          int rscore = (int) res.get("red");
+          rscore = rscore + 1;
+          res.set("red", rscore);
+          int cbr2 = (int) res.get("CBR"); 
+          res.set("CBR", cbr2 + 1); 
       } 
-
       // System.err.println(); 
       // System.err.println(); 
     }
@@ -4819,6 +4843,8 @@ int ascore = (int) res.get("amber");
         int ascore = (int) res.get("amber");
         ascore = ascore + 1;
         res.set("amber", ascore); 
+        int cbr2 = (int) res.get("CBR"); 
+        res.set("CBR", cbr2 + 1); 
       } 
       else if (isSemiTailRecursive(cases))
       { amberUses.add("!! Possible semi-tail-recursion (CBR2) in " + name);   
@@ -4826,6 +4852,8 @@ int ascore = (int) res.get("amber");
         int ascore = (int) res.get("amber");
         ascore = ascore + 1;
         res.set("amber", ascore); 
+        int cbr2 = (int) res.get("CBR"); 
+        res.set("CBR", cbr2 + 1); 
       } 
       else 
       { redUses.add("!!! Non-tail-recursion (CBR2) in " + name); 
@@ -4833,6 +4861,8 @@ int ascore = (int) res.get("amber");
         int rscore = (int) res.get("red");
         rscore = rscore + 1;
         res.set("red", rscore); 
+        int cbr2 = (int) res.get("CBR"); 
+        res.set("CBR", cbr2 + 1); 
       } 
 
       // System.err.println(); 
@@ -12504,7 +12534,8 @@ int ascore = (int) res.get("amber");
   // Check completeness: if post updates v but not w when w data depends on v
 
   public void removeUnusedStatements()
-  { if (activity == null) { return; } 
+  { if (activity == null) 
+    { return; } 
 
     Statement newact = 
        Statement.removeUnusedStatements(activity); 
@@ -12512,7 +12543,8 @@ int ascore = (int) res.get("amber");
   } 
 
   public void unfoldOperationCall(String nme, Statement defn)
-  { if (activity == null) { return; } 
+  { if (activity == null) 
+    { return; } 
 
     Statement newact = 
        Statement.unfoldCall(activity, nme, defn); 
@@ -12531,12 +12563,12 @@ int ascore = (int) res.get("amber");
 
     // ... ; if E then self.nme() else skip ; ***
     // is   while true do (... ; if E then continue else 
-    //                     skip) ; ***
+    //                     break) ; ***
 
     // ... ; if E then self.nme(exprs) else skip ; ***
     // is   while true do (... ; 
     //         if E then (pars := exprs ; continue) else 
-    //                     skip) ; ***
+    //                    break) ; ***
     // 
 
     Statement oldact = act; 
