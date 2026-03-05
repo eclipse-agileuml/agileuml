@@ -1068,6 +1068,13 @@ public void findPlugins()
       "Replaces self calls of operation by loop code where possible");
     qualityMenu.add(removeRecursionop);
 
+    JMenuItem removeCumulativeRecursion = 
+      new JMenuItem("Replace cumulative recursions"); 
+    removeCumulativeRecursion.addActionListener(this);
+    removeCumulativeRecursion.setToolTipText(
+      "Simplifies count-down recursions where possible");
+    qualityMenu.add(removeCumulativeRecursion);
+
     JMenuItem makeOpCached = 
       new JMenuItem("Make operation cached"); 
     makeOpCached.addActionListener(this);
@@ -2979,7 +2986,9 @@ public void findPlugins()
       else if (label.equals("Replace call by definition"))
       { this.replaceCallByDefinition(); } 
       else if (label.equals("Replace recursion by loops"))
-      { this.transformOperationActivity(); } 
+      { this.transformOperationActivity(); }
+      else if (label.equals("Replace cumulative recursions"))
+      { this.replaceCumulativeRecursion(); }  
       else if (label.equals("Make operation cached"))
       { this.makeOperationCached(); } 
       else if (label.equals("Remove unused parameters"))
@@ -3797,6 +3806,26 @@ public void findPlugins()
         vals[0] instanceof Entity)
     { Entity ent = (Entity) vals[0];
       ucdArea.transformOperationActivity(ent);
+    } 
+  }
+
+  private void replaceCumulativeRecursion()
+  { if (listShowDialog == null)
+    { listShowDialog = new ListShowDialog(this);
+      listShowDialog.pack();
+      listShowDialog.setLocationRelativeTo(this); 
+    }
+    listShowDialog.setOldFields(ucdArea.getEntities()); // getClasses?
+    thisLabel.setText("Select entity to replace recursion in"); 
+    System.out.println(">> Select entity to replace recursion in");
+
+    listShowDialog.setVisible(true); 
+
+    Object[] vals = listShowDialog.getSelectedValues();
+    if (vals != null && vals.length > 0 &&
+        vals[0] instanceof Entity)
+    { Entity ent = (Entity) vals[0];
+      ucdArea.replaceCumulativeRecursion(ent);
     } 
   }
 

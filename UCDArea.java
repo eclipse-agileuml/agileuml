@@ -7549,6 +7549,53 @@ public class UCDArea extends JPanel
     // System.out.println(">> Set activity for operation " + nme + " of entity " + ent); 
   }
 
+  public void replaceCumulativeRecursion(Entity ent)
+  { String nme = 
+          JOptionPane.showInputDialog("Enter operation name:");
+    BehaviouralFeature bf = ent.getOperation(nme); 
+    if (bf == null) 
+    { System.err.println("!! ERROR: No such operation: " + nme); 
+      return; 
+    } 
+
+    Statement stat = bf.getActivity();
+    Statement effect = null; 
+ 
+    if (stat == null) 
+    { System.err.println("!!! Activity must be non-null to apply this refactoring"); 
+      bf.addStereotype("noRecursion"); 
+      effect = 
+          bf.generateDesign(ent,entities,types); 
+    } 
+    else 
+    { 
+      effect = bf.replaceCumulativeRecursion(); 
+      // effect = bf.selfCalls2Loops(stat); 
+    } 
+
+    if (effect == null)
+    { System.err.println("!!! ERROR: Syntax error in activity"); 
+      return; 
+    } 
+    else if (effect == stat) 
+    { System.out.println(">>> No change to activity"); 
+      return; 
+    } 
+    
+    Vector contexts = new Vector(); 
+    contexts.add(ent); 
+    Vector pars = new Vector(); 
+
+    effect.setEntity(ent); 
+    pars.addAll(bf.getParameters()); 
+
+    effect.typeCheck(types,entities,contexts,pars); 
+    
+    bf.setActivity(effect); 
+    updateActivities(ent, bf, effect); 
+    // System.out.println(">> Set activity for operation " + nme + " of entity " + ent); 
+  }
+
   public void makeOperationCached(Entity ent)
   { String nme = 
           JOptionPane.showInputDialog("Enter operation name:");

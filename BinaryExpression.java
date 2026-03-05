@@ -275,6 +275,14 @@ class BinaryExpression extends Expression
     } 
 
     if (operator.equals("+") || operator.equals("*")) { } 
+    else if (operator.equals("->including") && 
+             bf.hasSetType())
+    { } 
+    else if (operator.equals("->union") && 
+             bf.hasSetType())
+    { } 
+    else if (operator.equals("->append") && 
+             bf.hasSequenceType()) { } 
     else 
     { return false; } 
 
@@ -289,7 +297,9 @@ class BinaryExpression extends Expression
     // System.out.println(">> lvars: " + lvars); 
     // System.out.println(">> rvars: " + rvars); 
 
-    if (rvars.contains(bfname) && !lvars.contains(bfname))
+    if (rvars.contains(bfname) && !lvars.contains(bfname) && 
+        !(operator.equals("->including")) && 
+        !(operator.equals("->append")))
     { return right.isSelfCall(bf); } 
 
     if (lvars.contains(bfname) && !rvars.contains(bfname))
@@ -311,7 +321,9 @@ class BinaryExpression extends Expression
                                                         bf, par); 
     } 
 
-    if (operator.equals("+") || operator.equals("*")) { } 
+    if (operator.equals("+") || operator.equals("*") ||
+        (operator.equals("->including") && 
+         bf.hasSetType())) { } 
     else 
     { return false; } 
 
@@ -326,7 +338,8 @@ class BinaryExpression extends Expression
     // System.out.println(">> lvars: " + lvars); 
     // System.out.println(">> rvars: " + rvars); 
 
-    if (rvars.contains(bfname) && !lvars.contains(bfname))
+    if (rvars.contains(bfname) && !lvars.contains(bfname) && 
+        !(operator.equals("->including")))
     { return right.isSelfCallDecrement(bf, par); } 
 
     if (lvars.contains(bfname) && !rvars.contains(bfname))
@@ -349,6 +362,14 @@ class BinaryExpression extends Expression
     } Only for abstract constraints */ 
 
     if (operator.equals("+") || operator.equals("*")) { } 
+    else if (operator.equals("->including") && 
+             Type.hasSetType(_result))
+    { } 
+    else if (operator.equals("->union") && 
+             Type.hasSetType(_result))
+    { } 
+    else if (operator.equals("->append") && 
+             Type.hasSequenceType(_result)) { } 
     else 
     { return null; } 
 
@@ -360,10 +381,18 @@ class BinaryExpression extends Expression
     Vector lvars = left.variablesUsedIn(names); 
     Vector rvars = right.variablesUsedIn(names); 
 
+    // JOptionPane.showInputDialog("trying to replace " + this + " " + lvars + " " + rvars); 
+
+    if (lvars.contains(bfname) && 
+        "->append".equals(operator)) // left is the self call
+    { return new BinaryExpression("->prepend", _result, right); } 
+
     if (lvars.contains(bfname)) // left is the self call
     { return new BinaryExpression(operator, _result, right); } 
 
-    if (rvars.contains(bfname)) // right is the self call
+    if (rvars.contains(bfname) && 
+        !(operator.equals("->including")) && 
+        !(operator.equals("->append"))) // right is self call
     { return new BinaryExpression(operator, left, _result); } 
 
     return null; 
@@ -380,7 +409,8 @@ class BinaryExpression extends Expression
         ((BinaryExpression) right).isSemiTailRecursion(bf); 
     } Only for abstract constraints */ 
 
-    if (operator.equals("+") || operator.equals("*")) { } 
+    if (operator.equals("+") || operator.equals("*") ||
+        operator.equals("->including")) { } 
     else 
     { return null; } 
 
@@ -395,7 +425,8 @@ class BinaryExpression extends Expression
     if (lvars.contains(bfname)) // left is the self call
     { return right; } 
 
-    if (rvars.contains(bfname)) // right is the self call
+    if (rvars.contains(bfname) && 
+        !(operator.equals("->including"))) 
     { return left; } 
 
     return null; 
@@ -433,7 +464,9 @@ class BinaryExpression extends Expression
     } // no recursive call
 
     if (rvars.contains(bfname) && !lvars.contains(bfname))
-    { if ("+".equals(operator) || "*".equals(operator))
+    { if ("+".equals(operator) || "*".equals(operator) ||
+          ("->union".equals(operator) && 
+                         bf.hasSetType()))
       { if (right.isSelfCall(bf))
         { semitailReturns.add(this); 
           return; 
@@ -442,7 +475,13 @@ class BinaryExpression extends Expression
     }  
 
     if (lvars.contains(bfname) && !rvars.contains(bfname))
-    { if ("+".equals(operator) || "*".equals(operator))
+    { if ("+".equals(operator) || "*".equals(operator) ||
+          ("->including".equals(operator) && 
+                         bf.hasSetType()) ||
+          ("->append".equals(operator) && 
+                         bf.hasSequenceType()) ||
+          ("->union".equals(operator) && 
+                         bf.hasSetType()))
       { if (left.isSelfCall(bf))
         { semitailReturns.add(this); 
           return; 
@@ -464,6 +503,12 @@ class BinaryExpression extends Expression
     } Only for abstract constraints */ 
 
     if (operator.equals("+") || operator.equals("*")) { } 
+    else if (operator.equals("->including") && 
+             bf.hasSetType()) { } 
+    else if (operator.equals("->union") && 
+             bf.hasSetType()) { } 
+    else if (operator.equals("->append") && 
+             bf.hasSequenceType()) { } 
     else 
     { return null; } 
 
@@ -474,7 +519,9 @@ class BinaryExpression extends Expression
     Vector lvars = left.variablesUsedIn(names); 
     Vector rvars = right.variablesUsedIn(names); 
 
-    if (rvars.contains(bfname))
+    if (rvars.contains(bfname) && 
+        !(operator.equals("->including")) && 
+        !(operator.equals("->append")))
     { return right; } 
 
     if (lvars.contains(bfname))
@@ -519,20 +566,22 @@ class BinaryExpression extends Expression
     Vector rvars = right.variablesUsedIn(varnames); 
 
     if (operator.equals("<") || 
+        operator.equals("=") || 
         operator.equals("<="))
     { if (lvars.contains(var) && 
-        !rvars.contains(var))
+          !rvars.contains(var))
       { return true; }
       return false; 
-    } // var < val, var <= val
+    } // var < val, var = val, var <= val
 
-    if (operator.equals(">") || 
+    if (operator.equals(">") ||
+        operator.equals("=") ||  
         operator.equals(">="))
     { if (rvars.contains(var) && 
-        !lvars.contains(var))
+          !lvars.contains(var))
       { return true; }
       return false; 
-    } // val > var, val >= var
+    } // val > var, val = var, val >= var
     
     return false; 
   } 
@@ -546,18 +595,20 @@ class BinaryExpression extends Expression
     Vector lvars = left.variablesUsedIn(varnames); 
     Vector rvars = right.variablesUsedIn(varnames); 
 
-    if (operator.equals("<") || 
+    if (operator.equals("<") ||
+        operator.equals("=") ||  
         operator.equals("<="))
     { if (rvars.contains(var) && 
-        !lvars.contains(var))
+          !lvars.contains(var))
       { return true; }
       return false; 
     } // val < var, val <= var
 
     if (operator.equals(">") || 
+        operator.equals("=") ||  
         operator.equals(">="))
     { if (lvars.contains(var) && 
-        !rvars.contains(var))
+          !rvars.contains(var))
       { return true; }
       return false; 
     } // var > val, var >= val
@@ -569,9 +620,9 @@ class BinaryExpression extends Expression
   { if (operator.equals("<")) // var < bnd, recursion ends at bnd
     { return right; } 
  
-    if (operator.equals("<=") || operator.equals("="))
+    if (operator.equals("<="))
     { return new BinaryExpression("+", right, 
-                   new BasicExpression(1)); 
+                       new BasicExpression(1)); 
     } // recursion ends at bnd+1
 
     if (operator.equals(">")) // bnd > var
@@ -579,8 +630,28 @@ class BinaryExpression extends Expression
 
     if (operator.equals(">=")) // bnd >= var
     { return new BinaryExpression("+", left, 
-                   new BasicExpression(1)); 
+                       new BasicExpression(1)); 
     } // recursion ends at bnd+1
+
+    Vector varnames = new Vector(); 
+    varnames.add(var); 
+
+    Vector lvars = left.variablesUsedIn(varnames); 
+    Vector rvars = right.variablesUsedIn(varnames); 
+
+    if (operator.equals("=") &&
+        lvars.contains(var) && 
+        !rvars.contains(var)) // var = bnd
+    { return new BinaryExpression("+", right, 
+                       new BasicExpression(1)); 
+    } 
+
+    if (operator.equals("=") &&
+        rvars.contains(var) && 
+        !lvars.contains(var)) // bnd = var
+    { return new BinaryExpression("+", left, 
+                       new BasicExpression(1)); 
+    }  
 
     return null; 
   } 
@@ -601,6 +672,22 @@ class BinaryExpression extends Expression
 
     if (operator.equals(">="))
     { return right; }
+
+    Vector varnames = new Vector(); 
+    varnames.add(var); 
+
+    Vector lvars = left.variablesUsedIn(varnames); 
+    Vector rvars = right.variablesUsedIn(varnames); 
+
+    if (operator.equals("=") &&
+        lvars.contains(var) && 
+        !rvars.contains(var)) // var = bnd
+    { return right; } 
+
+    if (operator.equals("=") &&
+        rvars.contains(var) && 
+        !lvars.contains(var)) // bnd = var
+    { return left; }  
 
     return null;  
   } 

@@ -276,6 +276,14 @@ public class Type extends ModelElement
     return false; 
  } 
 
+  public static boolean hasSetType(Expression expr)
+  { if (expr == null) 
+    { return false; } 
+
+    Type typ = expr.getType(); 
+    return Type.isSetType(typ); 
+  } 
+
   public boolean isSetType() 
   { return "Set".equals(name); } 
 
@@ -301,6 +309,14 @@ public class Type extends ModelElement
     String nme = typ.getName(); 
 
     return "Set".equals(nme) && typ.isSorted(); 
+  } 
+
+  public static boolean hasSequenceType(Expression expr)
+  { if (expr == null) 
+    { return false; } 
+
+    Type typ = expr.getType(); 
+    return Type.isSequenceType(typ); 
   } 
 
   public boolean isSequenceType() 
