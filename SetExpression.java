@@ -267,6 +267,7 @@ public class SetExpression extends Expression
                                 SetExpression left, 
                                 Expression right)
   { // ->excluding for literal collection
+    right.setBrackets(false); 
 
     Type typ = left.getType(); 
     Vector elems1 = left.getElements(); 
@@ -274,6 +275,7 @@ public class SetExpression extends Expression
     
     for (int i = 0; i < elems1.size(); i++) 
     { Expression expr1 = (Expression) elems1.get(i); 
+      expr1.setBrackets(false); 
 
       if (VectorUtil.test("=", "" + expr1, "" + right))
       { } 
@@ -289,6 +291,7 @@ public class SetExpression extends Expression
                                 SetExpression left, 
                                 Expression right)
   { // ->excludingFirst for literal collection
+    right.setBrackets(false); 
 
     Type typ = left.getType(); 
     Vector elems1 = left.getElements(); 
@@ -299,6 +302,7 @@ public class SetExpression extends Expression
  
     while (i < elems1.size())
     { Expression expr1 = (Expression) elems1.get(i); 
+      expr1.setBrackets(false); 
 
       if (notfound &&
           VectorUtil.test("=", "" + expr1, "" + right))
@@ -338,7 +342,9 @@ public class SetExpression extends Expression
     
     if (Type.isSequenceType(typ) || Type.isSetType(typ))
     { for (int i = 0; i < elems1.size(); i++) 
-      { Expression e1 = (Expression) elems1.get(i); 
+      { Expression e1 = (Expression) elems1.get(i);
+        e1.setBrackets(false); 
+ 
         if (VectorUtil.containsEqualExpression(
                                e1 + "", elems2)) 
         { newelems.add(e1); } 
@@ -390,6 +396,8 @@ public class SetExpression extends Expression
     if (Type.isSequenceType(typ) || Type.isSetType(typ))
     { for (int i = 0; i < elems2.size(); i++) 
       { Expression e2 = (Expression) elems2.get(i); 
+        e2.setBrackets(false); 
+
         if (VectorUtil.containsEqualExpression(
                                e2 + "", elems1)) 
         { }
@@ -457,6 +465,8 @@ public class SetExpression extends Expression
     if (Type.isSequenceType(typ) || Type.isSetType(typ))
     { for (int i = 0; i < elems2.size(); i++) 
       { Expression e2 = (Expression) elems2.get(i); 
+        e2.setBrackets(false); 
+
         if (VectorUtil.containsEqualExpression(
                                e2 + "", elems1)) 
         { anyincluded = true; 
@@ -588,33 +598,57 @@ public class SetExpression extends Expression
   }
 
   public static Expression includesKey(SetExpression left, 
-                                    Expression key)
+                                       Expression key)
   { // for maps
+    key.setBrackets(false); 
     Vector elems1 = left.getElements(); 
-       
+    boolean allLiteralValues = true; 
+   
     for (int i = 0; i < elems1.size(); i++) 
     { BinaryExpression maplet1 = 
           (BinaryExpression) elems1.get(i); 
       Expression key1 = maplet1.getLeft();
+      key1.setBrackets(false); 
+
       if (VectorUtil.test("=", "" + key1, "" + key))
-      { return new BasicExpression(true); }  
+      { return new BasicExpression(true); }
+  
+      if (Expression.isLiteralValue(key1)) { } 
+      else 
+      { allLiteralValues = false; } 
     }
+
+    if (Expression.isLiteralValue(key) &&
+        allLiteralValues)
+    { return new BasicExpression(false); } 
 
     return new BinaryExpression("->includesKey", left, key);
   }
 
   public static Expression excludesKey(SetExpression left, 
-                                    Expression key)
+                                       Expression key)
   { // for maps
+    key.setBrackets(false); 
     Vector elems1 = left.getElements(); 
+    boolean allLiteralValues = true; 
        
     for (int i = 0; i < elems1.size(); i++) 
     { BinaryExpression maplet1 = 
           (BinaryExpression) elems1.get(i); 
       Expression key1 = maplet1.getLeft();
+      key1.setBrackets(false); 
+
       if (VectorUtil.test("=", "" + key1, "" + key))
       { return new BasicExpression(false); }  
+    
+      if (Expression.isLiteralValue(key1)) { } 
+      else 
+      { allLiteralValues = false; } 
     }
+
+    if (Expression.isLiteralValue(key) &&
+        allLiteralValues)
+    { return new BasicExpression(true); } 
 
     return new BinaryExpression("->excludesKey", left, key);
   }
@@ -622,31 +656,55 @@ public class SetExpression extends Expression
   public static Expression includesValue(SetExpression left, 
                                          Expression val)
   { // for maps
+    val.setBrackets(false); 
     Vector elems1 = left.getElements(); 
-       
+    boolean allLiteralValues = true; 
+
     for (int i = 0; i < elems1.size(); i++) 
     { BinaryExpression maplet1 = 
           (BinaryExpression) elems1.get(i); 
       Expression val1 = maplet1.getRight();
+      val1.setBrackets(false); 
+ 
       if (VectorUtil.test("=", "" + val1, "" + val))
-      { return new BasicExpression(true); }  
+      { return new BasicExpression(true); }
+
+      if (Expression.isLiteralValue(val1)) { } 
+      else 
+      { allLiteralValues = false; }  
     }
 
+    if (Expression.isLiteralValue(val) && 
+        allLiteralValues) 
+    { return new BasicExpression(false); } 
+ 
     return new BinaryExpression("->includesValue", left, val);
   }
 
   public static Expression excludesValue(SetExpression left, 
                                          Expression val)
   { // for maps
+    val.setBrackets(false); 
     Vector elems1 = left.getElements(); 
+    boolean allLiteralValues = true; 
        
     for (int i = 0; i < elems1.size(); i++) 
     { BinaryExpression maplet1 = 
           (BinaryExpression) elems1.get(i); 
       Expression val1 = maplet1.getRight();
+      val1.setBrackets(false); 
+
       if (VectorUtil.test("=", "" + val1, "" + val))
       { return new BasicExpression(false); }  
+
+      if (Expression.isLiteralValue(val1)) { } 
+      else 
+      { allLiteralValues = false; }  
     }
+
+    if (Expression.isLiteralValue(val) && 
+        allLiteralValues) 
+    { return new BasicExpression(true); } 
 
     return new BinaryExpression("->excludesValue", left, val);
   }
@@ -680,7 +738,7 @@ public class SetExpression extends Expression
 
     Type typ = left.getType(); 
     Vector elems1 = left.getElements(); 
-       
+   
     Vector mapelems = new Vector(); 
     for (int i = 0; i < elems1.size(); i++) 
     { BinaryExpression maplet1 = 
@@ -783,6 +841,34 @@ public class SetExpression extends Expression
     return null; 
   } 
 
+  public Expression at(Expression index)
+  { // if this is a map, get mapped value
+    // else if index is integer, return index-1 element
+
+    String strindex = "" + index; 
+
+    if (type != null && Type.isMapType(type))
+    { // elements are list of pairs
+
+      for (int i = 0; i < elements.size(); i++) 
+      { BinaryExpression maplet = 
+              (BinaryExpression) elements.get(i);
+        Expression src = maplet.getLeft(); 
+        if ((src + "").equals(strindex)) 
+        { return maplet.getRight(); } 
+      } 
+
+      return null;  
+    } 
+
+    if (Expression.isIntegerValue(index + ""))
+    { int indx = Integer.parseInt(index + "");  
+      return this.atExpression(indx);
+    } 
+
+    return null; // new BasicExpression("invalid")
+  } 
+
   public Expression atExpression(int i) 
   { if (0 < i && i <= elements.size())
     { return (Expression) elements.get(i-1); } 
@@ -865,6 +951,7 @@ public class SetExpression extends Expression
     { Expression elem = (Expression) elements.get(i); 
       res = Expression.simplifyAnd(res,elem.determinate());  
     } 
+
     return res; 
   } 
 
@@ -881,6 +968,7 @@ public class SetExpression extends Expression
     { Expression elem = (Expression) elements.get(i); 
       argres.add(elem.checkConversions(propType, propElemType, interp));  
     } 
+
     return new SetExpression(argres,ordered); 
   }  
 
@@ -891,10 +979,11 @@ public class SetExpression extends Expression
       Expression ne = elem.addPreForms(var); 
       newelems.add(ne); 
     } 
+
     SetExpression result = new SetExpression(newelems,ordered);
-	result.setType(type); 
-	result.setElementType(elementType); 
-	return result;  
+    result.setType(type); 
+    result.setElementType(elementType); 
+    return result;  
   } 
 
   public Expression removePrestate()
@@ -1472,23 +1561,52 @@ public class SetExpression extends Expression
   { elements.removeAll(es); }
 
   public boolean hasElement(Expression elem)
-  { for (int i = 0; i < elements.size(); i++) 
+  { elem.setBrackets(false); 
+
+    for (int i = 0; i < elements.size(); i++) 
     { Expression expr = (Expression) elements.get(i); 
       expr.setBrackets(false); 
+
       if (VectorUtil.test("=", "" + expr, "" + elem))
       { return true; }
     } 
+
     return false; 
+  } // but if all literal values and so is elem, can decide.
+
+  public Expression includes(Expression elem)
+  { elem.setBrackets(false); 
+    boolean allLiterals = true; 
+
+    for (int i = 0; i < elements.size(); i++) 
+    { Expression expr = (Expression) elements.get(i); 
+      expr.setBrackets(false); 
+
+      if (VectorUtil.test("=", "" + expr, "" + elem))
+      { return new BasicExpression(true); }
+
+      if (Expression.isLiteralValue(expr)) { } 
+      else 
+      { allLiterals = false; } 
+    } 
+
+    if (allLiterals && Expression.isLiteralValue(elem))
+    { return new BasicExpression(false); } 
+
+    return new BinaryExpression("->includes", this, elem); 
   } 
 
   public int count(Expression elem)
   { int res = 0; 
+    elem.setBrackets(false); 
+
     for (int i = 0; i < elements.size(); i++) 
     { Expression expr = (Expression) elements.get(i); 
       expr.setBrackets(false); 
       if (VectorUtil.test("=", "" + expr, "" + elem))
       { res++; }
     } 
+
     return res; 
   } 
 

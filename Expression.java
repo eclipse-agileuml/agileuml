@@ -2121,6 +2121,9 @@ abstract class Expression
     return false; 
   } // and values of collection, map, enum types? 
 
+  public static boolean isLiteralValue(Expression expr)
+  { return Expression.isValue("" + expr); } 
+
   public static Vector convertValues(Vector exprs)
   { Vector res = new Vector(); 
     for (int i = 0; i < exprs.size(); i++) 
@@ -3295,7 +3298,7 @@ abstract class Expression
       { if (sval.length() > 0)
         { return new BasicExpression("\"" + sval.charAt(0) + "\""); } 
         else 
-        { return new BasicExpression("Invalid"); } 
+        { return new BasicExpression("invalid"); } 
       } 
 
       if (op.equals("->last"))
@@ -3303,7 +3306,7 @@ abstract class Expression
         if (n > 0)
         { return new BasicExpression("\"" + sval.charAt(n-1) + "\""); } 
         else 
-        { return new BasicExpression("Invalid"); } 
+        { return new BasicExpression("invalid"); } 
       } 
     } 
     else if (Expression.isIntegerValue(str + "") &&
@@ -3314,6 +3317,134 @@ abstract class Expression
     } 
 
     return new UnaryExpression(op, str); 
+  } 
+
+  public static Expression simplifyStringExpression(String op,
+                                   Expression s1, Expression s2)
+  { String ds1 = "" + s1; 
+    String ds2 = "" + s2; 
+
+    if (ds1.startsWith("\"") && ds1.endsWith("\"") && 
+        ds1.length() > 1 && 
+        ds2.startsWith("\"") && ds2.endsWith("\"") && 
+        ds2.length() > 1)
+    { String sval1 = ds1.substring(1, ds1.length()-1); 
+      String sval2 = ds2.substring(1, ds2.length()-1); 
+
+      if (op.equals("->after"))
+      { int ind = sval1.indexOf(sval2);
+        int seplength = sval2.length();
+        if (ind < 0 || seplength == 0) 
+        { return new BasicExpression(""); }
+        
+        String res = sval1.substring(ind + seplength); 
+        return new BasicExpression("\"" + res + "\""); 
+      } 
+ 
+      if (op.equals("->before")) 
+      { if (sval2.length() == 0) 
+        { return s1; }
+        int ind = sval1.indexOf(sval2);
+        if (ind < 0) 
+        { return s1; }
+        String res = sval1.substring(0,ind);
+        return new BasicExpression("\"" + res + "\""); 
+      }         
+
+      if (op.equals("->hasMatch"))
+      { java.util.regex.Pattern patt = 
+             java.util.regex.Pattern.compile(sval2); 
+        java.util.regex.Matcher matcher = patt.matcher(sval1); 
+
+        if (matcher.find())
+        { return new BasicExpression(true); }
+        return new BasicExpression(false);
+      } 
+
+      if (op.equals("->isMatch"))
+      { if (sval1.matches(sval2))
+        { return new BasicExpression(true); }
+        return new BasicExpression(false);
+      } 
+
+      if (op.equals("->firstMatch"))
+      { java.util.regex.Pattern patt =  
+                  java.util.regex.Pattern.compile(sval2);
+        java.util.regex.Matcher matcher = patt.matcher(sval1);
+
+        String res = "";
+        if (matcher.find())
+        { res = matcher.group() + ""; } 
+        return new BasicExpression("\"" + res + "\"");
+      }
+
+      if (op.equals("->allMatches"))
+      { java.util.regex.Pattern patt = 
+             java.util.regex.Pattern.compile(sval2); 
+        java.util.regex.Matcher matcher = patt.matcher(sval1); 
+        Vector res = new Vector(); 
+        while (matcher.find())
+        { String match = matcher.group() + ""; 
+          if (match != null && match.length() > 0) 
+          { res.add(new BasicExpression("\"" + match + "\"")); }
+        }
+
+        return new SetExpression(res, true); 
+      } 
+
+      if (op.equals("->split"))
+      { String[] splits = sval1.split(sval2);
+       
+        Vector res = new Vector(); 
+  
+        for (int j = 0; j < splits.length; j++) 
+        { String sp = splits[j]; 
+          if (sp != null && sp.length() > 0) 
+          { res.add(new BasicExpression("\"" + sp + "\"")); }
+        } 
+ 
+        return new SetExpression(res, true); 
+      }
+
+      if (op.equals("->hasSuffix"))
+      { return new BasicExpression(sval1.endsWith(sval2)); }
+  
+      if (op.equals("->hasPrefix"))
+      { return new BasicExpression(sval1.startsWith(sval2)); }
+ 
+      if (op.equals("->indexOf"))
+      { int indx = sval1.indexOf(sval2); 
+        return new BasicExpression(indx+1); 
+      } 
+ 
+      if (op.equals("->lastIndexOf"))
+      { int indx = sval1.lastIndexOf(sval2); 
+        return new BasicExpression(indx+1); 
+      } 
+
+      if (op.equals("->equalsIgnoreCase"))
+      { boolean eq = sval1.equalsIgnoreCase(sval2); 
+        return new BasicExpression(eq); 
+      } 
+    } 
+
+    if (ds1.startsWith("\"") && ds1.endsWith("\"") && 
+        ds1.length() > 1)
+    { String sval1 = ds1.substring(1, ds1.length()-1); 
+
+      if (op.equals("->at") && 
+          Expression.isIntegerValue(ds2))
+      { int indx = Expression.convertInteger(ds2); 
+        if (indx > 0 && indx <= sval1.length()) 
+        { String si = "\"" + sval1.charAt(indx-1) + "\""; 
+          return new BasicExpression(si); 
+        } 
+
+        return new BasicExpression("invalid"); 
+      } 
+    } 
+
+    return new BinaryExpression(op, s1, s2); 
   } 
 
   public static Expression simplifyMath2Expression(String op, 
@@ -3474,9 +3605,11 @@ abstract class Expression
 
     if (op.equals("or")) { return simplifyOr(e1,e2); }
 
-    if (op.equals("=>")) { return simplifyImp(e1,e2); }
+    if (op.equals("=>")) 
+    { return simplifyImp(e1,e2); }
  
-    if (op.equals("=")) { return simplifyEq(e1,e2,vars); }
+    if (op.equals("=")) 
+    { return simplifyEq(e1,e2,vars); }
     // if (op.equals("->apply")) { return simplifyApply(e1,e2,vars); }
 
     if (op.equals("!=") || op.equals("/=")) 
@@ -3610,12 +3743,10 @@ abstract class Expression
     } // not for sorted collections, maps 
 
     if ("->at".equals(op) && 
-        e1 instanceof SetExpression && 
-        Expression.isIntegerValue(e2 + ""))
+        e1 instanceof SetExpression)
     { SetExpression s1 = (SetExpression) e1;
-      int indx = Integer.parseInt(e2 + "");  
-      return s1.atExpression(indx); 
-    } // not for sorted collections, maps 
+      return s1.at(e2); 
+    }  
 
     if ("->restrict".equals(op) && 
         e1 instanceof SetExpression && 
@@ -3643,9 +3774,9 @@ abstract class Expression
       } 
     } 
 
-    if (Expression.isStringOperator(op))
+    if (Expression.isString2Operator(op))
     { 
-      return Expression.simplifyStringExpression(op, e1);  
+      return Expression.simplifyStringExpression(op, e1, e2);  
     } 
 
     return new BinaryExpression(op,e1,e2);
@@ -3805,12 +3936,10 @@ abstract class Expression
       res = SetExpression.intersectionSetExpressions(s1, s2); 
     } // not for sorted collections, maps 
     else if ("->at".equals(op) && 
-        e1 instanceof SetExpression && 
-        Expression.isIntegerValue(e2 + ""))
+        e1 instanceof SetExpression)
     { SetExpression s1 = (SetExpression) e1;
-      int indx = Integer.parseInt(e2 + "");  
-      res = s1.atExpression(indx); 
-    } // not for sorted collections, maps 
+      res = s1.at(e2); 
+    }  
     else if (Expression.isMath2Operator(op) &&
              Expression.isNumberValue(e1 + "") && 
              Expression.isNumberValue(e2 + ""))
@@ -3818,9 +3947,9 @@ abstract class Expression
       double d2 = Expression.convertNumber(e2 + ""); 
       res = Expression.simplifyMath2Expression(op, d1, d2); 
     }    
-    else if (Expression.isStringOperator(op))
+    else if (Expression.isString2Operator(op))
     { 
-      res = Expression.simplifyStringExpression(op, e1);  
+      res = Expression.simplifyStringExpression(op, e1, e2);  
     } 
     else
     { res = new BinaryExpression(op,e1,e2); } 
@@ -3862,24 +3991,6 @@ abstract class Expression
       return new BasicExpression(s); 
     } 
 
-    if (isInteger("" + e1) && isInteger("" + e2))
-    { int v1 = convertInteger("" + e1); 
-      int v2 = convertInteger("" + e2); 
-      return new BasicExpression(v1 + v2); 
-    }
-
-    if (isLong("" + e1) && isLong("" + e2))
-    { long v1 = convertLong("" + e1); 
-      long v2 = convertLong("" + e2); 
-      return new BasicExpression(v1 + v2); 
-    }
-    
-    if (isNumber("" + e1) && isNumber("" + e2))
-    { double v1 = convertNumber("" + e1); 
-      double v2 = convertNumber("" + e2); 
-      return new BasicExpression(v1 + v2); 
-    } 
-
     if (Expression.isInteger(e1) && 
         Expression.isStringValue(e2))
     { String s1 = "" + e1; 
@@ -3896,6 +4007,30 @@ abstract class Expression
       int n1 = s2.length(); 
       String s = "\"" + s1 + s2.substring(1); 
       return new BasicExpression(s); 
+    } 
+
+    if ("0".equals(e1 + "")) 
+    { return e2; } 
+
+    if ("0".equals(e2 + "")) 
+    { return e1; } 
+
+    if (isInteger("" + e1) && isInteger("" + e2))
+    { int v1 = convertInteger("" + e1); 
+      int v2 = convertInteger("" + e2); 
+      return new BasicExpression(v1 + v2); 
+    }
+
+    if (isLong("" + e1) && isLong("" + e2))
+    { long v1 = convertLong("" + e1); 
+      long v2 = convertLong("" + e2); 
+      return new BasicExpression(v1 + v2); 
+    }
+    
+    if (isNumber("" + e1) && isNumber("" + e2))
+    { double v1 = convertNumber("" + e1); 
+      double v2 = convertNumber("" + e2); 
+      return new BasicExpression(v1 + v2); 
     } 
 
     return new BinaryExpression("+", e1, e2); 
@@ -4087,7 +4222,7 @@ abstract class Expression
       // case of v2 = 0 
 
       return new BasicExpression(((int) v1) % ((int) v2)); 
-    } 
+    } // v1 - ((int) (v1/v2))
 
     return new BinaryExpression("mod", e1, e2); 
   }  
@@ -5966,8 +6101,8 @@ abstract class Expression
   } // and other cases
 
   private static Expression simplifyIn(Expression le,
-                                Expression re,
-                                Vector vars)
+                                       Expression re,
+                                       Vector vars)
   { if (re instanceof SetExpression)
     { SetExpression rse = (SetExpression) re;
 
@@ -5979,8 +6114,9 @@ abstract class Expression
         return simplify("=",le,relem,vars);
       }
 
-      boolean isin = rse.hasElement(le);
-      return new BasicExpression(isin);  
+      // boolean isin = rse.hasElement(le);
+      // return new BasicExpression(isin);
+      return rse.includes(le);   
     } // x : a \/ b  as  x : a or x : b etc?
 
     return new BinaryExpression(":",le,re);
@@ -6000,9 +6136,11 @@ abstract class Expression
         return simplify("/=",le,relem,vars);
       }
 
-      boolean isin = rse.hasElement(le);
-      return new BasicExpression(!isin);  
-    } // x : a \/ b  as  x : a or x : b etc?
+      // boolean isin = rse.hasElement(le);
+      // return new BasicExpression(!isin);
+      Expression isin = rse.includes(le);
+      return Expression.simplifyNot(isin);   
+    } 
 
     return new BinaryExpression("/:",le,re);
   }
@@ -6020,8 +6158,9 @@ abstract class Expression
         return simplify("=",le,relem,false);
       }
 
-      boolean isin = rse.hasElement(le);
-      return new BasicExpression(isin);  
+      // boolean isin = rse.hasElement(le);
+      // return new BasicExpression(isin);
+      return rse.includes(le);   
     } // x : a \/ b  as  x : a or x : b etc?
 
     return new BinaryExpression(":",le,re);

@@ -176,6 +176,16 @@ public class BehaviouralFeature extends ModelElement
     { elementType = rt; }  // primitive, String, entity type
   } 
 
+  public boolean hasSetType()
+  { return resultType != null && 
+           Type.isSetType(resultType); 
+  } 
+
+  public boolean hasSequenceType()
+  { return resultType != null && 
+           Type.isSequenceType(resultType); 
+  } 
+
   public void setComments(String comms)
   { comments = comms; } 
 
@@ -4582,6 +4592,23 @@ public class BehaviouralFeature extends ModelElement
     return res; 
   } 
 
+  public Statement replaceCumulativeRecursion()
+  { if (activity != null && 
+        Statement.isCumulativeRecursion(this,activity))
+    { activity = 
+        Statement.simplifyCumulativeRecursion(this,activity);
+      System.out.println(); 
+      System.out.println(">>> " + activity + 
+                         "\n>>> simplified cumulative recursion");  
+    }
+    else 
+    { System.out.println(">>> " + activity + 
+             "\n>>> is not a cumulative recursion");
+    } 
+
+    return activity; 
+  }  
+  
   public void simplifyOCL() 
   { if (pre != null) 
     { pre = pre.simplifyOCL(); }
@@ -4589,16 +4616,8 @@ public class BehaviouralFeature extends ModelElement
     if (post != null) 
     { post = post.simplifyOCL(); } 
 
-    if (activity != null && 
-        Statement.isCumulativeRecursion(this,activity))
-    { activity = 
-        Statement.simplifyCumulativeRecursion(this,activity);
-      System.out.println(">>> " + activity + "\n>>> is a cumulative recursion");  
-    } 
-    else if (activity != null) 
-    { activity = activity.optimiseOCL(); 
-      System.out.println(">>> " + activity + "\n>>> is not a cumulative recursion");
-    }  
+    if (activity != null) 
+    { activity = activity.optimiseOCL(); }  
   } 
 
   public Map energyAnalysis(Vector redUses, Vector amberUses, 
@@ -4819,13 +4838,26 @@ int ascore = (int) res.get("amber");
         res.set("CBR", cbr2 + 1); 
       }  
       else 
-      { redUses.add("!!! Non-tail recursive operation! (CBR2) " + name);   
-        redUses.add("!!! Use 'Make operation cached' refactoring"); 
+      { boolean semitail = 
+          Statement.isSemiTailRecursive(this, name, activity); 
+        if (semitail) 
+        { amberUses.add("!! Possible semi-tail-recursive returns (CBR2) in " + name);   
+          amberUses.add("!! Use 'Replace recursion by loop' refactoring");
+          int ascore = (int) res.get("amber");
+          ascore = ascore + 1;
+          res.set("amber", ascore);
+          int cbr2 = (int) res.get("CBR"); 
+          res.set("CBR", cbr2 + 1); 
+        }
+        else 
+        { redUses.add("!!! Non-tail recursive operation! (CBR2) " + name);   
+          redUses.add("!!! Use 'Make operation cached' refactoring"); 
           int rscore = (int) res.get("red");
           rscore = rscore + 1;
           res.set("red", rscore);
           int cbr2 = (int) res.get("CBR"); 
-          res.set("CBR", cbr2 + 1); 
+          res.set("CBR", cbr2 + 1);
+        }  
       } 
       // System.err.println(); 
       // System.err.println(); 

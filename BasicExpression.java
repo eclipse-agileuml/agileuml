@@ -1690,19 +1690,28 @@ class BasicExpression extends Expression
         { return true; }
         return false; 
       }  
-      else if (data.equals("toLowerCase") || data.equals("toUpperCase") || 
-               data.equals("flatten") || data.equals("sortedBy") || 
-               data.equals("reverse") || data.equals("sort") || data.equals("asSequence") || 
-               data.equals("front") || data.equals("tail") || data.equals("insertAt") || 
+      else if (data.equals("toLowerCase") || 
+               data.equals("toUpperCase") || 
+               data.equals("flatten") || 
+               data.equals("sortedBy") || 
+               data.equals("reverse") || data.equals("sort") || 
+               data.equals("asSequence") || 
+               data.equals("front") || data.equals("tail") || 
+               data.equals("insertAt") || 
                data.equals("subrange") ||
                data.equals("setAt") ||
-               data.equals("replace") || data.equals("replaceAll") || 
+               data.equals("replace") || 
+               data.equals("replaceAll") || 
                data.equals("replaceAllMatches") ||
-               data.equals("characters") || data.equals("allInstances") || 
-               data.equals("closure") || data.equals("asSet") || data.equals("subcollections"))
+               data.equals("characters") || 
+               data.equals("allInstances") || 
+               data.equals("closure") || data.equals("asSet") || 
+               data.equals("subcollections"))
       { return false; }   // but strings don't need to be wrapped 
-      else if (data.equals("max") || data.equals("min") || data.equals("last") ||
-               data.equals("sum") || data.equals("first") || data.equals("any"))
+      else if (data.equals("max") || data.equals("min") || 
+               data.equals("last") ||
+               data.equals("sum") || data.equals("first") || 
+               data.equals("any"))
       { if (objectRef != null) 
         { Type objstype = objectRef.getElementType(); 
           return Type.primitiveType(objstype);
@@ -7597,7 +7606,8 @@ class BasicExpression extends Expression
         String par2 = ((Expression) parameters.get(1)).queryForm(env,local); 
         return "Set.replace(" + pre + "," + par1 + "," + par2 + ")"; 
       } 
-      else if (data.equals("replaceAll") && parameters != null && parameters.size() > 1)
+      else if (data.equals("replaceAll") && 
+               parameters != null && parameters.size() > 1)
       { String par1 = ((Expression) parameters.get(0)).queryForm(env,local); 
         String par2 = ((Expression) parameters.get(1)).queryForm(env,local); 
         return "Set.replaceAll(" + pre + "," + par1 + "," + par2 + ")"; 
@@ -17239,7 +17249,7 @@ public Statement generateDesignSubtract(Expression rhs)
           return BasicExpression.newFunctionBasicExpression(
                       "insertAt", col, vect); 
         } 
-      } 
+      } // not for strings
 
       if (data.equals("setAt")) 
       { Expression obj = this.getObjectRef(); 
@@ -17265,7 +17275,7 @@ public Statement generateDesignSubtract(Expression rhs)
           return BasicExpression.newFunctionBasicExpression(
                       "setAt", col, vect); 
         } 
-      } 
+      } // not for strings
 
       if (data.equals("excludingSubrange")) 
       { Expression obj = this.getObjectRef(); 
@@ -17396,6 +17406,106 @@ public Statement generateDesignSubtract(Expression rhs)
                       "setSubrange", col, vect); 
         } 
       } 
+
+      if (data.equals("replaceAll") || 
+          data.equals("replaceAllMatches"))
+      { // two parameters
+        Expression obj = this.getObjectRef(); 
+        Expression strV = obj.evaluate(sigma, beta); 
+
+        Expression regex = (Expression) parameters.get(0); 
+        Expression rep = (Expression) parameters.get(1); 
+        
+        Expression regexV = regex.evaluate(sigma, beta); 
+        Expression repV = rep.evaluate(sigma, beta);
+ 
+        if (Expression.isStringValue(strV) && 
+            Expression.isStringValue(regexV) && 
+            Expression.isStringValue(repV))
+        { String strValue = 
+             (strV+"").substring(1, (strV+"").length()-1); 
+
+          String regexValue = 
+                   (regexV+"").substring(1, 
+                                  (regexV+"").length()-1);  
+          String repValue = 
+                   (repV+"").substring(1, (repV+"").length()-1); 
+         
+          try 
+          { java.util.regex.Pattern patt = 
+              java.util.regex.Pattern.compile(regexValue); 
+            java.util.regex.Matcher matcher = 
+                                  patt.matcher(strValue); 
+            String newValue = matcher.replaceAll(repValue);
+            return 
+              new BasicExpression("\"" + newValue + "\"");
+          } 
+          catch (Exception _ex) 
+          { Vector vect = new Vector(); 
+            vect.add(regexV); 
+            vect.add(repV); 
+            return BasicExpression.newFunctionBasicExpression(
+                      "replaceAll", strV, vect);
+          }  
+        }
+        else 
+        { Vector vect = new Vector(); 
+          vect.add(regexV); 
+          vect.add(repV); 
+          return BasicExpression.newFunctionBasicExpression(
+                      "replaceAll", strV, vect); 
+        } 
+      } 
+
+      if (data.equals("replaceFirstMatch"))
+      { // two parameters
+        Expression obj = this.getObjectRef(); 
+        Expression strV = obj.evaluate(sigma, beta); 
+
+        Expression regex = (Expression) parameters.get(0); 
+        Expression rep = (Expression) parameters.get(1); 
+        
+        Expression regexV = regex.evaluate(sigma, beta); 
+        Expression repV = rep.evaluate(sigma, beta);
+ 
+        if (Expression.isStringValue(strV) && 
+            Expression.isStringValue(regexV) && 
+            Expression.isStringValue(repV))
+        { String strValue = 
+             (strV+"").substring(1, (strV+"").length()-1); 
+
+          String regexValue = 
+                   (regexV+"").substring(1, 
+                                  (regexV+"").length()-1);  
+          String repValue = 
+               (repV+"").substring(1, (repV+"").length()-1); 
+         
+          try 
+          { java.util.regex.Pattern patt = 
+               java.util.regex.Pattern.compile(regexValue); 
+            java.util.regex.Matcher matcher = 
+                                  patt.matcher(strValue); 
+            String newValue = matcher.replaceFirst(repValue);
+            return 
+              new BasicExpression("\"" + newValue + "\"");
+          } 
+          catch (Exception _ex)
+          { Vector vect = new Vector(); 
+            vect.add(regexV); 
+            vect.add(repV); 
+            return BasicExpression.newFunctionBasicExpression(
+                      "replaceFirstMatch", strV, vect);
+          }  
+        }
+        else 
+        { Vector vect = new Vector(); 
+          vect.add(regexV); 
+          vect.add(repV); 
+          return BasicExpression.newFunctionBasicExpression(
+                      "replaceFirstMatch", strV, vect); 
+        } 
+      } 
+
     } 
 
     return this;  
