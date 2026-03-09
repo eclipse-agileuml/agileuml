@@ -3,7 +3,7 @@
 
 
 /******************************
-* Copyright (c) 2003--2025 Kevin Lano
+* Copyright (c) 2003--2026 Kevin Lano
 * This program and the accompanying materials are made available under the
 * terms of the Eclipse Public License 2.0 which is available at
 * http://www.eclipse.org/legal/epl-2.0
@@ -760,12 +760,16 @@ class OclMaplet<K,T>
   { Set<T> res = new HashSet<T>();
     for (T _a : a)
     { if (b.contains(_a)) { }
-      else { res.add(_a); }
+      else 
+      { res.add(_a); }
     }
+
     for (T _b : b)
     { if (a.contains(_b)) { }
-      else { res.add(_b); }
+      else 
+      { res.add(_b); }
     }
+
     return res;
   }
 
@@ -773,10 +777,13 @@ class OclMaplet<K,T>
 
   public static <T> boolean isUnique(Collection<T> evals)
   { HashSet<T> vals = new HashSet<T>(); 
+
     for (T ob : evals)
-    { if (vals.contains(ob)) { return false; }
+    { if (vals.contains(ob)) 
+      { return false; }
       vals.add(ob);
     }
+
     return true;
   }
 
@@ -1559,18 +1566,25 @@ class OclMaplet<K,T>
     ArrayList<String> res = new ArrayList<String>(); 
   
     for (int j = 0; j < splits.length; j++) 
-    { if (splits[j].length() > 0) 
-      { res.add(splits[j]); }
+    { String sp = splits[j]; 
+      if (sp != null && sp.length() > 0) 
+      { res.add(sp); }
     } 
     return res; 
   }
   
   public static ArrayList<String> allMatches(String str, String regex)
-  { java.util.regex.Pattern patt = java.util.regex.Pattern.compile(regex); 
+  { java.util.regex.Pattern patt = 
+              java.util.regex.Pattern.compile(regex); 
     java.util.regex.Matcher matcher = patt.matcher(str); 
+
     ArrayList<String> res = new ArrayList<String>(); 
     while (matcher.find())
-    { res.add(matcher.group() + ""); }
+    { String match = matcher.group() + ""; 
+      if (match != null && match.length() > 0)
+      { res.add(match); }
+    } 
+
     return res; 
   }
 
@@ -1585,7 +1599,8 @@ class OclMaplet<K,T>
 
 
   public static String replaceAll(String str, String regex, String rep)
-  { java.util.regex.Pattern patt = java.util.regex.Pattern.compile(regex); 
+  { java.util.regex.Pattern patt = 
+         java.util.regex.Pattern.compile(regex); 
     java.util.regex.Matcher matcher = patt.matcher(str); 
     return matcher.replaceAll(rep); 
   }
