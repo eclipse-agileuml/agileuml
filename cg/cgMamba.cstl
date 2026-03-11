@@ -359,13 +359,13 @@ _1->at(_2) |-->_1.Get(_2)
 _1->restrict(_2) |-->Domain.MambaHelper.RestrictMap(_1,_2)
 _1->antirestrict(_2) |-->Domain.MambaHelper.AntirestrictMap(_1,_2)
 
-_1->select(_2 | _3) |-->Domain.MambaHelper.SelectMap(_1,(_2)->{return _3;})<when> _1 Map
+_1->select(_2 | _3) |-->Domain.AgileUML.Ocl.SelectMap(_1,(_2)->{return _3;})<when> _1 Map
 _1->select(_2 | _3) |-->_1.Where(_2 => _3)
 
-_1->reject(_2 | _3) |-->Domain.MambaHelper.RejectMap(_1,(_2)->{return _3;})<when> _1 Map
+_1->reject(_2 | _3) |-->Domain.AgileUML.Ocl.RejectMap(_1,(_2)->{return _3;})<when> _1 Map
 _1->reject(_2 | _3) |-->_1.Where(_2 => !(_3))
 
- _1->collect(_2 | _3) |-->Domain.MambaHelper.CollectMap(_1,(_2)->{return _3;})<when> _1 Map
+ _1->collect(_2 | _3) |-->Domain.AgileUML.Ocl.CollectMap(_1,(_2)->{return _3;})<when> _1 Map
 _1->collect(_2 | _3) |-->_1.Select(_2 => _3)
 
 /*   $$$   _1->iterate(_2; _3 = _4 | _5) |-->Ocl.iterate(_1, _4, (_2)->((_3)->{return _5;}))   */
@@ -385,18 +385,19 @@ _1->forAll(_2 | _3) |-->_1.All(_2 => _3)
 _1->exists(_2 | _3) |-->_1.GetAll().Any(_2 => _3)<when> _1 classId
 _1->exists(_2 | _3) |-->_1.Any(_2 =>  _3)
 
-_1->exists1(_2 | _3) |-->Domain.MambaHelper.Exists1(_1.GetAll(), _2 => _3)<when> _1 classId
-_1->exists1(_2 | _3) |-->Domain.MambaHelper.Exists1(_1, _2 => _3)
+_1->exists1(_2 | _3) |-->Domain.AgileUML.Ocl.Exists1(_1.GetAll(), _2 => _3)<when> _1 classId
+_1->exists1(_2 | _3) |-->Domain.AgileUML.Ocl.Exists1(_1, _2 => _3)
 
-_1->isUnique(_2 | _3) |-->Domain.MambaHelper.IsUnique(Domain.MambaHelper.CollectSequence(_1, (_2)->{ return _3; }))
+_1->isUnique(_2 | _3) |-->
 
 _1 : _2 |-->_2.Contains(_1)
-_1 <: _2 |-->Domain.MambaHelper.ContainsAll(_1, _2)
+_1 <: _2 |-->_1.All(x => _2.Contains(x))
 _1 /: _2 |-->!(_2.Contains(_1))
+_1 /<: _2 |-->_1.Any(x => !(_2.Contains(x)))
 _1->includes(_2) |-->_1.Contains(_2)
-_1->includesAll(_2) |-->Domain.MambaHelper.ContainsAll(_1, _2)
+_1->includesAll(_2) |-->_2.All(x => _1.Contains(x))
 _1->excludes(_2) |-->!(_1.Contains(_2))
-_1->excludesAll(_2) |-->Domain.MambaHelper.ExcludesAll(_1, _2)
+_1->excludesAll(_2) |-->_1.All(x => !(_1.Contains(x)))
 
 _1->including(_2) |-->Domain.MambaHelper.IncludingSet(_1,_2)<when> _1 Set
  _1->including(_2) |-->Domain.MambaHelper.IncludingSequence(_1,_2)<when> _1 Sequence
@@ -409,8 +410,8 @@ _1->excludingFirst(_2) |-->Domain.MambaHelper.RemoveFirst(_1,_2)
 
 _1->hasPrefix(_2) |-->_1.StartsWith(_2)
 _1->hasSuffix(_2) |-->_1.EndsWith(_2)
-_1->after(_2) |-->Domain.MambaHelper.After(_1,_2))
-_1->before(_2) |-->Domain.MambaHelper.Before(_1,_2)
+_1->after(_2) |-->Domain.AgileUML.Ocl.After(_1,_2))
+_1->before(_2) |-->Domain.AgileUML.Ocl.Before(_1,_2)
 _1->isMatch(_2) |-->RegExpLib.VerbalExpressions.StringMatchesPattern(_1, _2)
 _1->hasMatch(_2) |-->Domain.MambaHelper.HasMatch(_1,_2)
 
@@ -426,11 +427,11 @@ let _1 : _2 = _3 in _4 |-->((_2 _1) => _4).Invoke(_3)
 
 SetExpression::
 Set{} |-->Collection.Create()
-Set{_1} |-->{_1}.ToCollection().Distinct()
+Set{_1} |-->({_1}).Distinct()
 SortedSet{} |-->Collection.Create()
-SortedSet{_1} |-->{_1}.ToCollection().Distinct().OrderBy(x => x)
+SortedSet{_1} |-->({_1}).Distinct().OrderBy(x => x)
 Sequence{} |-->Collection.Create()
-Sequence{_1} |-->{_1}.ToCollection()
+Sequence{_1} |-->{_1}
 Map{} |-->Dictionary.Create()
 /*   $$$   Map{_1} |-->Ocl.initialiseMap(_1)   */
 
@@ -442,43 +443,6 @@ Ref{_1} |-->{_1}
 ConditionalExpression::
 if _1 then _2 else _3 endif |-->((_1) ? _2 : _3)
 
-
-
-/* Class normally cannot be directly defined by code in Mamba */
-Class::
-class _1 { _2 }   |-->class _1 { \n _2 \n}\n
-/* class _1 { _2 }   |-->interface _1 { _2`cginterface }\n<when> _1 interface   */
-/* class _1 { _2 }   |-->class _1 implements Runnable\n{ static ArrayList<_1> _1_allInstances = new ArrayList<_1>();\n\n  _1() { _1_allInstances.add(this); }\n\n  static _1 create_1() { _1 result = new _1();\n    return result; }\n\n_2}\n<when> _1 active */
-/* class _1 { _2 }   |-->class _1 { static ArrayList<_1> _1_allInstances = new ArrayList<_1>();\n\n  _1() { _1_allInstances.add(this); }\n\n  static _1 create_1() { _1 result = new _1();\n    return result; }\n\n_2}\n  */
-/* class _1 extends _2 { _3 }   |-->class _1 extends _2 { static ArrayList<_1> _1_allInstances = new ArrayList<_1>();\n\n  _1() { super();\n    _1_allInstances.add(this); }\n\n  static _1 create_1() { _1 result = new _1();\n    return result; }\n\n_3}\n */
-/* class _1 implements _2 { _3 }   |-->class _1 implements _2 { static ArrayList<_1> _1_allInstances = new ArrayList<_1>();\n\n  _1() { _1_allInstances.add(this); }\n\n  static _1 create_1() { _1 result = new _1();\n    return result; }\n\n_3}\n */
-/* class _1 extends _2 implements _3 { _4 }   |-->class _1 extends _2 implements _3 { static ArrayList<_1> _1_allInstances = new ArrayList<_1>();\n\n  _1() { super();\n    _1_allInstances.add(this); }\n\n  static _1 create_1() { _1 result = new _1();\n    return result; }\n\n_4}\n */
-/* abstract class _1 { _2 }   |-->abstract class _1 { static ArrayList<_1> _1_allInstances = new ArrayList<_1>();\n  _1() { _1_allInstances.add(this); }\n\n_2}\n */
-/* abstract class _1 extends _2 { _3 }   |-->abstract class _1 extends _2 { static ArrayList<_1> _1_allInstances = new ArrayList<_1>();\n\n  _1() { super();\n    _1_allInstances.add(this); }\n\n_3}\n */
-/* abstract class _1 implements _2 { _3 }   |-->abstract class _1 implements _2 { static ArrayList<_1> _1_allInstances = new ArrayList<_1>();\n\n  _1() { _1_allInstances.add(this); }\n\n_3}\n */
-/* abstract class _1 extends _2 implements _3 { _4 }   |-->abstract class _1 extends _2 implements _3 { static ArrayList<_1> _1_allInstances = new ArrayList<_1>();\n\n  _1() { super();\n    _1_allInstances.add(this); }\n\n_4}\n */
-
-
-
-/* Attribute normally cannot be directly defined by code in Mamba */
-Attribute::
-static attribute _1 : _2 := _3; |-->  static _2 _1 = _3;\n
-
-static attribute _1 : _2; |-->  static _2 _1 = _2`defaultValue;\n
-
-/* identity attribute _1 : _2 |-->  _2 _1 = _2`defaultValue; /* primary */\n  static Map<_2,_1`ownername> _1`ownername_index = new HashMap<_2,_1`ownername>();\n\n  static _1`ownername createByPK_1`ownername(_2 _1x)\n  { _1`ownername result = _1`ownername._1`ownername_index.get(_1x);\n    if (result != null) { return result; }\n    result = new _1`ownername();\n    _1`ownername._1`ownername_index.put(_1x,result);\n    result._1 = _1x;\n    return result; }\n\n  static void kill_1`ownername(_2 _1x)\n  { _1`ownername rem = _1`ownername_index.get(_1x);\n    if (rem == null) { return; }\n    ArrayList<_1`ownername> remd = new ArrayList<_1`ownername>();\n    remd.add(rem);\n    _1`ownername_index.remove(_1x);\n    _1`ownername_allInstances.removeAll(remd);\n  }\n\n */
-
-identity attribute _1 : _2 |-->  _2 _1 = _2`defaultValue;\n
-
-attribute _1 : _2 := _3; |-->  _2 _1 = _3;\n
-
-attribute _1 : _2; |-->  _2 _1 = _2`defaultValue;\n
-
-reference _1 : _2; |-->  _2 _1 = _2.Create();\n<when> _2 collection
-
-reference _1 : _2; |-->  _2 _1 = _2.Create();\n<when> _2 map
-
-reference _1 : _2; |-->  _2 _1 = null;\n
 
 
 
@@ -495,6 +459,7 @@ _1 |-->_1
 
 
 /* Operation (object-oriented) normally cannot be directly defined by code in Mamba */
+
 Operation::
 query _1(_2) : _3 pre: _4 post: _5 activity: _6 |-->\n  function _3 _1(_2)  {\n_6  \n }\n\n
 
@@ -548,7 +513,3 @@ var _1 : _2 := _3 |-->    _2 _1 = _3;\n
 var _1 : _2 |-->    _2 _1;\n
 
 
-
-/* Class normally cannot be directly defined by code in Mamba */
-UseCase::
-/* usecase _1(_2) : _3 { _4 } |--> static function _3 _1(_2)\n  {\n_4  } */
