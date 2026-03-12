@@ -969,7 +969,7 @@ public void findPlugins()
     transMenu.setToolTipText("Transform UML/OCL Models"); 
     menuBar.add(transMenu); 
 
-    JMenuItem qualityMenu = new JMenu("Refactoring"); 
+    JMenuItem qualityMenu = new JMenu("Quality refactoring"); 
     transMenu.add(qualityMenu); 
 
     JMenuItem extractIntf = 
@@ -1040,75 +1040,78 @@ public void findPlugins()
 
     ((JMenu) qualityMenu).addSeparator(); 
 
+    JMenuItem energyMenu = new JMenu("Energy use refactoring"); 
+    transMenu.add(energyMenu); 
+
     JMenuItem extractLocalVar = 
       new JMenuItem("Extract Local Variable"); 
     extractLocalVar.setToolTipText(
       "Defines new local variable for cloned expressions");
     extractLocalVar.addActionListener(this);
-    qualityMenu.add(extractLocalVar);
+    energyMenu.add(extractLocalVar);
 
     JMenuItem moveopto = 
       new JMenuItem("Move operation to parameter class"); 
     moveopto.setToolTipText(
       "Moves operation into class of first class-typed parameter");
     moveopto.addActionListener(this);
-    qualityMenu.add(moveopto);
+    energyMenu.add(moveopto);
 
     JMenuItem removeCallDefinition = 
       new JMenuItem("Replace call by definition"); 
     removeCallDefinition.addActionListener(this);
     removeCallDefinition.setToolTipText(
       "Replaces calls of operation by operation code");
-    qualityMenu.add(removeCallDefinition);
+    energyMenu.add(removeCallDefinition);
 
     JMenuItem removeRecursionop = 
       new JMenuItem("Replace recursion by loops"); 
     removeRecursionop.addActionListener(this);
     removeRecursionop.setToolTipText(
       "Replaces self calls of operation by loop code where possible");
-    qualityMenu.add(removeRecursionop);
+    energyMenu.add(removeRecursionop);
 
     JMenuItem removeCumulativeRecursion = 
       new JMenuItem("Replace cumulative recursions"); 
     removeCumulativeRecursion.addActionListener(this);
     removeCumulativeRecursion.setToolTipText(
       "Simplifies count-down recursions where possible");
-    qualityMenu.add(removeCumulativeRecursion);
+    energyMenu.add(removeCumulativeRecursion);
 
     JMenuItem makeOpCached = 
       new JMenuItem("Make operation cached"); 
     makeOpCached.addActionListener(this);
     makeOpCached.setToolTipText(
       "Makes operation cached");
-    qualityMenu.add(makeOpCached);
+    energyMenu.add(makeOpCached);
 
     JMenuItem removeUnusedPars = 
       new JMenuItem("Remove unused parameters"); 
     removeUnusedPars.addActionListener(this);
     removeUnusedPars.setToolTipText(
       "Removes unused operation parameters");
-    qualityMenu.add(removeUnusedPars);
+    energyMenu.add(removeUnusedPars);
 
     JMenuItem hoistDecsop = 
       new JMenuItem("Hoist local declarations"); 
     hoistDecsop.addActionListener(this);
     hoistDecsop.setToolTipText(
       "Hoists local declarations to start of operation code");
-    qualityMenu.add(hoistDecsop);
+    energyMenu.add(hoistDecsop);
 
     JMenuItem reduceNestingop = 
       new JMenuItem("Reduce code nesting"); 
     reduceNestingop.addActionListener(this);
     reduceNestingop.setToolTipText(
       "Reduces depth of code nesting where possible");
-    qualityMenu.add(reduceNestingop);
+    energyMenu.add(reduceNestingop);
 
     JMenuItem simplifyOCLop = 
       new JMenuItem("Simplify OCL"); 
     simplifyOCLop.addActionListener(this);
     simplifyOCLop.setToolTipText(
       "Simplifies OCL expressions & reduces code where possible");
-    qualityMenu.add(simplifyOCLop);
+    energyMenu.add(simplifyOCLop);
 
     JMenuItem refineMenu = new JMenu("Refinement"); 
     transMenu.add(refineMenu); 

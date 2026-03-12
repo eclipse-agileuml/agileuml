@@ -438,14 +438,17 @@ public abstract class ASTTerm
   } 
 
   public static void addStereo(ASTTerm ast, String str)
-  { if (ast == null) { return; } 
+  { if (ast == null || str == null) 
+    { return; } 
 
     String lit = ast.literalForm(); 
     addStereo(lit,str); 
   } 
 
   public static void addStereo(String lit, String str)
-  { Object mfs = ASTTerm.metafeatures.get(lit); 
+  { if (str == null) { return; } 
+
+    Object mfs = ASTTerm.metafeatures.get(lit); 
     if (mfs == null) 
     { mfs = new Vector(); 
       ASTTerm.metafeatures.put(lit, mfs); 
@@ -474,6 +477,9 @@ public abstract class ASTTerm
   public static void setTaggedValue(ASTTerm ast, String mf, String val) 
   { // updates stereotypes of ast so that mf=val
 
+    if (ast == null || mf == null || val == null) 
+    { return; } 
+
     String lit = ast.literalForm();
 
     setTaggedValue(lit, mf, val); 
@@ -481,7 +487,10 @@ public abstract class ASTTerm
 
 
   public static void setTaggedValue(String lit, String mf, String val) 
-  { Object mfs = ASTTerm.metafeatures.get(lit); 
+  { if (lit == null || mf == null || val == null) 
+    { return; } 
+
+    Object mfs = ASTTerm.metafeatures.get(lit); 
     // System.out.println("*** " + lit + " has tagged values: " + 
     //                    mfs); 
 

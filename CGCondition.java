@@ -358,6 +358,8 @@ public class CGCondition
     for (int x = 0; x < reps.size() && x < vars.size(); x++)
     { String var = (String) vars.get(x);
       String arg1 = (String) reps.get(x); 
+	  
+	  if (var == null || arg1 == null) { continue; }
 
       String svarx = var; 
       String smffeat = null; 
@@ -365,6 +367,11 @@ public class CGCondition
       { 
         // If stereo has a metafeature: _i`mf
         // evaluate _i`mf in cgs and set stereo to result 
+
+        /* JOptionPane.showMessageDialog(null, 
+          "LHS variable " + var + " value is " + arg1 + "\n" + 
+          " Stereotype value is: " + stereo + " " + stereomfs,   "",
+          JOptionPane.INFORMATION_MESSAGE); */ 
 
         String smf = (String) stereomfs.get(0); 
         int smfindex = smf.indexOf("`"); 
@@ -382,7 +389,7 @@ public class CGCondition
         } 
       } 
 
-      stereo = stereo.replace(var,arg1);
+      if (stereo != null) { stereo = stereo.replace(var,arg1); } 
 
       /* JOptionPane.showMessageDialog(null, 
           "LHS variable " + var + " value is " + arg1 + "\n" + 

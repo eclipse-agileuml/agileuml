@@ -3599,6 +3599,12 @@ abstract class Expression
 
     if (op.equals("->pow")) { return simplifyPower(e1,e2); } 
 
+    if (op.equals("->truncateTo")) 
+    { return simplifyTruncateTo(e1,e2); } 
+
+    if (op.equals("->roundTo")) 
+    { return simplifyRoundTo(e1,e2); } 
+
     if (op.equals("#&")) { return simplifyExistsAnd(e1,e2); } 
 
     if (op.equals("&")) { return simplifyAnd(e1,e2); } 
@@ -3819,6 +3825,10 @@ abstract class Expression
     else if (op.equals("div")) { res = simplifyDiv(e1,e2); } 
     else if (op.equals("->pow")) 
     { res = simplifyPower(e1,e2); } 
+    else if (op.equals("->truncateTo")) 
+    { res = simplifyTruncateTo(e1,e2); } 
+    else if (op.equals("->roundTo")) 
+    { res = simplifyRoundTo(e1,e2); } 
     else if (op.equals("->includesKey") && 
              e1 instanceof SetExpression) 
     { SetExpression se1 = (SetExpression) e1; 
@@ -4114,6 +4124,50 @@ abstract class Expression
     } // but (-1)->pow(0.5) undefined
 
     return new BinaryExpression("->pow", e1, e2); 
+  }  
+
+  public static Expression simplifyTruncateTo(Expression e1, Expression e2) 
+  { if (e1 == null) { return null; } 
+    if (e2 == null) { return e1; } 
+
+    if (isNumber("" + e1) && isInteger("" + e2))
+    { double v1 = convertNumber("" + e1); 
+      int v2 = convertInteger("" + e2);
+      if (v2 <= 0)
+      { return new BasicExpression((int) v1); } 
+
+      double y = v1*Math.pow(10,v2);
+      
+      return new BasicExpression(((int) y)/Math.pow(10,v2)); 
+    }
+
+    if ("0".equals(e2 + ""))
+    { return new BinaryExpression("->oclAsType", e1, 
+                       new BasicExpression("int")); 
+    } 
+
+    return new BinaryExpression("->truncateTo", e1, e2); 
+  }  
+
+  public static Expression simplifyRoundTo(Expression e1, Expression e2) 
+  { if (e1 == null) { return null; } 
+    if (e2 == null) { return e1; } 
+
+    if (isNumber("" + e1) && isInteger("" + e2))
+    { double v1 = convertNumber("" + e1); 
+      int v2 = convertInteger("" + e2);
+      if (v2 == 0)
+      { return new BasicExpression(Math.round(v1)); } 
+
+      double y = v1*Math.pow(10,v2);
+      
+      return new BasicExpression(Math.round(y)/Math.pow(10,v2)); 
+    }
+
+    if ("0".equals(e2 + ""))
+    { return new UnaryExpression("->round", e1); } 
+
+    return new BinaryExpression("->roundTo", e1, e2); 
   }  
 
   public static Expression simplifyDivide(Expression e1, Expression e2) 

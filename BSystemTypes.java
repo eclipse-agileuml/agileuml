@@ -6208,7 +6208,7 @@ public class BSystemTypes extends BComponent
 
     res = res + 
     "    public static double truncateN(double x, int n)\n" +
-    "    { if (n < 0) \n" +
+    "    { if (n <= 0) \n" +
     "      { return (int) x; }\n" + 
     "      double y = x*Math.pow(10,n); \n" +
     "      return ((int) y)/Math.pow(10,n);\n" +
