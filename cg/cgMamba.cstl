@@ -143,9 +143,9 @@ UnaryExpression::
 
 !_1 |-->(_1)[0]
 
-_1->log() |-->Domain.MambaHelper.Log(_1)
-_1->log10() |-->Domain.MambaHelper.Log10(_1)
-_1->exp() |-->Math.Pow(2.718281828, _1)
+_1->log() |-->Domain.AgileUML.Ocl.Log(_1)
+_1->log10() |-->Domain.AgileUML.Ocl.Log10(_1)
+_1->exp() |-->CommonLib.Math.Pow(2.718281828, _1)
 
 /* _1 in OCL is radians, convert radians to degrees: */
 _1->sin() |-->CommonLib.Math.Sin(_1 * (180.0 / CommonLib.Math.Pi()))
@@ -167,13 +167,10 @@ _1->abs() |-->CommonLib.Math.Abs(_1)
 
 _1->size() |-->_1.Length
 
-_1->toInteger() |-->int.Parse(_1)<when> _1 String
-_1->toInteger() |-->int.Parse(_1.ToString())
-_1->toLong() |-->long.Parse(_1)<when> _1 String
-_1->toLong() |-->long.Parse(_1.ToString())
-_1->toReal() |-->float.Parse(_1)<when> _1 String
-_1->toReal() |-->float.Parse(_1.ToString())
-_1->toBoolean() |-->bool.Parse(_1.ToString())
+_1->toInteger() |-->int.Parse(_1 + "")
+_1->toLong() |-->long.Parse(_1 + "")
+_1->toReal() |-->float.Parse(_1 + "")
+_1->toBoolean() |-->bool.Parse(_1 + "")
 
 _1->char2byte() |-->Domain.MambaHelper.Char2byte(_1)
 _1->byte2char() |-->Domain.MambaHelper.Byte2char(_1)
@@ -302,12 +299,11 @@ _1 div _2 |-->(int.Parse((_1 / _2).ToString()))
 
 /* _1 |-> _2 |-->(new OclMaplet(_1,_2)) */
 
-/*   $$$   _1->compareTo(_2) |-->((Comparable) _1).compareTo(_2)<when> _1 object   */
 _1->compareTo(_2) |-->string.Compare(_1, _2)<when> _1 String
 _1->compareTo(_2) |-->((_1 < _2) ? -1 : ((_1 > _2) ? 1 : 0 ))
 
 _1->pow(_2) |-->CommonLib.Math.Pow(_1, _2)
-_1->gcd(_2) |-->Domain.MambaHelper.Gcd(_1,_2)
+_1->gcd(_2) |-->Domain.AgileUML.Ocl.Gcd(_1,_2)
 
 _1->truncateTo(_2) |-->((_1) as int)<when> _2 0
 
@@ -319,7 +315,7 @@ _1^_2 |-->_1.Concat(_2)
 _1->concatenate(_2) |-->_1.Concat(_2)
 
 _1->union(_2) |-->Domain.MambaHelper.UnionMap(_1,_2)<when> _1 Map
-_1->union(_2) |-->_1.AddRange(_2).Distinct()<when> _1 Set
+_1->union(_2) |-->_1.Concat(_2).Distinct()<when> _1 Set
 _1->union(_2) |-->_1.Concat(_2)
 
 _1->unionAll(_2|_3) |-->Domain.MambaHelper.UnionAll(_1,(_2)->{return _3;})
@@ -388,7 +384,8 @@ _1->exists(_2 | _3) |-->_1.Any(_2 =>  _3)
 _1->exists1(_2 | _3) |-->Domain.AgileUML.Ocl.Exists1(_1.GetAll(), _2 => _3)<when> _1 classId
 _1->exists1(_2 | _3) |-->Domain.AgileUML.Ocl.Exists1(_1, _2 => _3)
 
-_1->isUnique(_2 | _3) |-->
+_1->isUnique(_2 | _3) |-->(_1.GetAll().Select(_2 => _3).Distinct().Length == _1.GetAll().Length)<when> _1 classId
+_1->isUnique(_2 | _3) |-->(_1.Select(_2 => _3).Distinct().Length == _1.Length)
 
 _1 : _2 |-->_2.Contains(_1)
 _1 <: _2 |-->_1.All(x => _2.Contains(x))
@@ -399,13 +396,14 @@ _1->includesAll(_2) |-->_2.All(x => _1.Contains(x))
 _1->excludes(_2) |-->!(_1.Contains(_2))
 _1->excludesAll(_2) |-->_1.All(x => !(_1.Contains(x)))
 
-_1->including(_2) |-->Domain.MambaHelper.IncludingSet(_1,_2)<when> _1 Set
- _1->including(_2) |-->Domain.MambaHelper.IncludingSequence(_1,_2)<when> _1 Sequence
-_1->prepend(_2) |-->Domain.MambaHelper.Prepend(_1,_2)
-_1->append(_2) |-->Domain.MambaHelper.Append(_1,_2)
-_1->excluding(_2) |-->Domain.MambaHelper.ExcludingSet(_1,_2)<when> _1 Set
-_1->excluding(_2) |-->Domain.MambaHelper.ExcludingSequence(_1,_2)<when> _1 Sequence
-_1->excludingAt(_2) |-->Domain.MambaHelper.RemoveAt(_1,_2)
+_1->including(_2) |-->_1.Concat({_2}).Distinct()<when> _1 Set
+_1->including(_2) |-->_1.Concat({_2})
+
+_1->prepend(_2) |-->({_1}).Concat(_2)
+_1->append(_2) |-->_1.Concat({_2})
+
+_1->excluding(_2) |-->_1.Except({_2})
+_1->excludingAt(_2) |-->_1.Take(_2-1).Concat(_1.Skip(_2))
 _1->excludingFirst(_2) |-->Domain.MambaHelper.RemoveFirst(_1,_2)
 
 _1->hasPrefix(_2) |-->_1.StartsWith(_2)

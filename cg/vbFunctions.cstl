@@ -444,6 +444,29 @@ unlockStmt::
 _* |-->
 
 
+type_::
+_1 |-->_1
+_1 ( ) |-->Sequence(_1)
+
+complexType::
+Double |-->double
+Decimal |-->double
+Currency |-->double
+Integer |-->int
+Long |-->int
+LongLong |-->long
+LongPtr |-->long
+Object |-->OclAny
+Variant |-->OclAny
+Byte |-->int
+Single |-->double
+Collection |-->Sequence(Map(String,OclAny))
+Dictionary |-->Map(String,OclAny)
+Range |-->Sequence(Sequence(OclAny))
+Date |-->OclDate
+_1 |-->_1
+_1 . _2 |-->_1._2
+
 
 sequenceType::
 % |-->: Sequence(int)
@@ -459,6 +482,12 @@ AS _1 _2 |-->: Sequence(_1)
 As _1 |-->: Sequence(_1)
 As New _1 |-->: Sequence(_1)
 As _1 _2 |-->: Sequence(_1)
+
+
+asTypeClause::
+AS _1 |-->: _1
+AS NEW _1 |-->: _1
+AS _1 _2 |-->: _1
 
 
 asTypeType::
