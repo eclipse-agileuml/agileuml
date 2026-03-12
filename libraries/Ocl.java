@@ -514,7 +514,7 @@ class OclMaplet<K,T>
     }
 
     public static double truncateTo(double x, int n)
-    { if (n < 0) 
+    { if (n <= 0) 
       { return (int) x; }
       double y = x*Math.pow(10,n); 
       return ((int) y)/Math.pow(10,n);
