@@ -3997,19 +3997,24 @@ public class BehaviouralFeature extends ModelElement
     } 
  
     if (pre != null) 
-    { pre.typeCheck(types,localEntities,contexts,env); } 
+    { pre.typeInference(types,localEntities,contexts,env, 
+                        localvartypes); 
+    } 
 
     boolean res = false; 
 
     if (post != null) 
-    { res = post.typeCheck(
-              types,localEntities,contexts,env); 
+    { res = post.typeInference(
+              types,localEntities,contexts,env,localvartypes); 
     }
  
+    Vector localVars = new Vector(); 
+
     if (activity != null) 
     { System.out.println(">>> Type inference for activity " + activity); 
       res = activity.typeInference(
               types,localEntities,contexts,env,localvartypes);
+      localVars = Statement.getLocalDeclarations(activity); 
     } 
 
     System.out.println(); 
@@ -4031,7 +4036,29 @@ public class BehaviouralFeature extends ModelElement
          (Type) localvartypes.get(par.getName());
       if (Type.isVacuousType(par.getType()) && 
           newpartype != null)
-      { par.setType(newpartype); } 
+      { par.setType(newpartype); 
+        System.out.println(">>> Retyped parameter " + par + 
+                           " to " + newpartype); 
+      } 
+    } 
+
+    for (int i = 0; i < localVars.size(); i++) 
+    { CreationStatement dec = 
+              (CreationStatement) localVars.get(i); 
+      Type newvartype = 
+         (Type) localvartypes.get(dec.getVar());
+      if (Type.isVacuousType(dec.getType()) && 
+          newvartype != null)
+      { dec.setType(newvartype);
+        Expression ini = newvartype.getDefaultValueExpression(); 
+        Expression init = dec.getInitialisation(); 
+
+        if (init == null || "null".equals("" + init))
+        { dec.setInitialisation(ini); } 
+ 
+        System.out.println(">>> Retyped local variable " + 
+                           dec.getVar() + " to " + newvartype); 
+      } 
     } 
 
     return res;  

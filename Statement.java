@@ -2678,7 +2678,8 @@ abstract class Statement implements Cloneable
   }  
 
   public static Vector getLocalDeclarations(Statement st)
-  { // Local declarations for "hoist declarations" 
+  { // Local declarations for "hoist declarations" and 
+    // type inference
 
     Vector res = new Vector(); 
     if (st == null) 
@@ -9481,6 +9482,9 @@ class CreationStatement extends Statement
 
   public Type getType()
   { return instanceType; } 
+
+  // public void setType(Type typ)
+  // { instanceType = typ; } 
 
   public String getOclType()
   { if ("int".equals(createsInstanceOf) || 

@@ -1810,7 +1810,8 @@ public class Entity extends ModelElement implements Comparable
     localtypes.addAll(types); 
     localtypes.addAll(typeParameters); 
     for (int i = 0; i < operations.size(); i++) 
-    { BehaviouralFeature bf = (BehaviouralFeature) operations.get(i); 
+    { BehaviouralFeature bf = 
+                 (BehaviouralFeature) operations.get(i); 
       bf.typeInference(localtypes,entities,vartypes); 
     } 
   } 
