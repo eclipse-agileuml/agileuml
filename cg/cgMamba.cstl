@@ -1,11 +1,11 @@
 /* Main code-generation specification file for Mamba       */
 /* Created By Kevin Lano and Kunxiang Jin   May 2024       */
-/* Based On https://docs.zappdev.com/MambaLanguage/About/  */
+/* Based on https://docs.zappdev.com/MambaLanguage/About/  */
 /*                                                         */
 /*                                                         */
 /* Note that newlines should be written as \n              */
 /* Comments written between these brackets on one line     */
-/* No new operation in Mamba                               */
+/* Operations like ->restrict, ->hasValue missing in Mamba */
 
 
 
@@ -47,7 +47,7 @@ IncorrectElementException |-->Exception
 AssertionException |-->Exception
 AccessingException |-->Exception
 
- _1 |-->_1
+_1 |-->_1
 
 
 
@@ -88,28 +88,30 @@ NullAccessException.newNullAccessException() |-->Exception.Create()
 IndexingException.newIndexingException() |-->Exception.Create()
 IncorrectElementException.newIncorrectElementException() |-->Exception.Create()
 
-/* AssertionException.newAssertionException(_1) |-->(new AssertionError(_1)) */
-
-/* _1 |-->_1`typename._1<when> _1 enumerationLiteral */
-
-/*   $$$   _1.allInstances |-->_1._1_allInstances   */
+_1.allInstances |-->_1.GetAll()
 
 _1.insertAt(_2,_3) |-->(_1.Substring(0,_2-1) + _3 + _1.Substring(_2-1))<when> _1 String
-_1.insertAt(_2,_3) |-->Domain.MambaHelper.InsertAt(_1,_2,_3)
+_1.insertAt(_2,_3) |-->_1.Take(_2-1).Concat({_3}).Concat(_1.Skip(_2-1))
+
+_1.insertInto(_2,_3) |-->(_1.Substring(0,_2-1) + _3 + _1.Substring(_2-1))<when> _1 String
+_1.insertInto(_2,_3) |-->_1.Take(_2-1).Concat(_3).Concat(_1.Skip(_2-1))
 
 _1.setAt(_2,_3) |-->(_1.Substring(0,_2-1) + _3 + _1.Substring(_2))<when> _1 String
-_1.setAt(_2,_3) |-->Domain.MambaHelper.SetAt(_1,_2,_3)
+_1.setAt(_2,_3) |-->_1.Take(_2-1).Concat({_3}).Concat(_1.Skip(_2))
+
+_1.setSubrange(_2,_3,_4) |-->(_1.Substring(0,_2-1) + _4 + _1.Substring(_3))<when> _1 String
+_1.setSubrange(_2,_3,_4) |-->_1.Take(_2-1).Concat(_4).Concat(_1.Skip(_3))
 
 _1.replace(_2,_3) |-->_1.Replace(_2,_3)
 _1.replaceAll(_2,_3) |-->_1.ReplaceWithRegex(_2, _3)
 _1.replaceAllMatches(_2,_3) |-->_1.ReplaceWithRegex(_2, _3)
 _1.replaceFirstMatch(_2,_3) |-->_1.ReplaceFirst(_2,_3)
 
-Integer.subrange(_1,_2) |-->Domain.MambaHelper.IntegerSubrange(_1,_2)
+Integer.subrange(_1,_2) |-->Domain.Ocl.integerSubrange(_1,_2)
 
-Integer.Sum(_1,_2,_3,_4) |--> Domain.MambaHelper.Sumint(Domain.MambaHelper.CollectSequence(Domain.MambaHelper.IntegerSubrange(_1,_2),(_3)->{ return _4; }))
+Integer.Sum(_1,_2,_3,_4) |-->Domain.Ocl.integerSubrange(_1,_2).Sum(_3 => _4) 
 
-Integer.Prd(_1,_2,_3,_4) |--> Domain.MambaHelper.Prdint(Ocl.collectSequence(Domain.MambaHelper.CollectSequence(Domain.MambaHelper.IntegerSubrange(_1,_2),(_3)->{ return _4; }))
+Integer.Prd(_1,_2,_3,_4) |-->Domain.Ocl.Prd_4`type(Domain.Ocl.integerSubrange(_1,_2).Select(_3 => _4))
 
 _1.subrange(_2,_3) |-->_1.Skip(_2 - 1).Take(_3 - _2 + 1)<when> _1 Sequence
 _1.subrange(_2,_3) |-->_1.Substring(_2 - 1, _3 - _2 + 1)<when> _1 String
@@ -134,7 +136,7 @@ _1._2 |-->_1._2
 
 
 UnaryExpression::
--_1 |-->-1 * _1
+-_1 |-->(-1) * _1
 +_1 |-->_1
 /*   $$$    |-->Ocl.newRef_1`type(_1)<when> _1 numeric   */
 /*   $$$   ?_1 |-->Ocl.newRef_1`type(_1)<when> _1 boolean   */
@@ -143,19 +145,21 @@ UnaryExpression::
 
 !_1 |-->(_1)[0]
 
-_1->log() |-->Domain.AgileUML.Ocl.Log(_1)
-_1->log10() |-->Domain.AgileUML.Ocl.Log10(_1)
+_1->log() |-->Domain.Ocl.Log(_1)
+_1->log10() |-->Domain.Ocl.Log10(_1)
 _1->exp() |-->CommonLib.Math.Pow(2.718281828, _1)
 
-/* _1 in OCL is radians, convert radians to degrees: */
-_1->sin() |-->CommonLib.Math.Sin(_1 * (180.0 / CommonLib.Math.Pi()))
-_1->cos() |-->CommonLib.Math.Cos(_1 * (180.0 / CommonLib.Math.Pi()))
-_1->tan() |-->CommonLib.Math.Tan(_1 * (180.0 / CommonLib.Math.Pi()))
+_1->sin() |-->CommonLib.Math.Sin(_1)
+_1->cos() |-->CommonLib.Math.Cos(_1)
+_1->tan() |-->CommonLib.Math.Tan(_1)
 
-/* result in Mamba is degree, convert degrees to radians: */
-_1->asin() |-->CommonLib.Math.Asin(_1) * (CommonLib.Math.Pi() / 180)
-_1->acos() |-->CommonLib.Math.Acos(_1) * (CommonLib.Math.Pi() / 180)
-_1->atan() |-->CommonLib.Math.Atan(_1) * (CommonLib.Math.Pi() / 180)
+_1->asin() |-->CommonLib.Math.Asin(_1)
+_1->acos() |-->CommonLib.Math.Acos(_1)
+_1->atan() |-->CommonLib.Math.Atan(_1)
+
+_1->sinh() |-->Domain.Ocl.Sinh(_1)
+_1->cosh() |-->Domain.Ocl.Cosh(_1)
+_1->tanh() |-->Domain.Ocl.Tanh(_1)
 
 _1->sqr() |-->(_1 ) * (_1)
 _1->sqrt() |-->CommonLib.Math.Sqrt(_1)
@@ -172,19 +176,19 @@ _1->toLong() |-->long.Parse(_1 + "")
 _1->toReal() |-->float.Parse(_1 + "")
 _1->toBoolean() |-->bool.Parse(_1 + "")
 
-_1->char2byte() |-->Domain.MambaHelper.Char2byte(_1)
-_1->byte2char() |-->Domain.MambaHelper.Byte2char(_1)
+_1->char2byte() |-->CommonLib.Utilities.StringToByteArray(_1.Substring(0,1), "utf-8").Get(0)
+_1->byte2char() |-->CommonLib.Utilities.ByteArrayToString({_1 as byte}, "utf-8")
 
-_1->isInteger() |-->Domain.MambaHelper.IsInteger(_1)
-_1->isLong() |-->Domain.MambaHelper.IsLong(_1)
-_1->isReal() |-->Domain.MambaHelper.IsReal(_1)
+_1->isInteger() |-->Domain.Ocl.IsInteger(_1)
+_1->isLong() |-->Domain.Ocl.IsLong(_1)
+_1->isReal() |-->Domain.Ocl.IsReal(_1)
 
 _1->toUpper() |-->_1.ToUpper()
 _1->toLower() |-->_1.ToLower()
 _1->toUpperCase() |-->_1.ToUpper()
 _1->toLowerCase() |-->_1.ToLower()
 _1->trim() |-->_1.Trim()
-_1->characters() |-->Domain.MambaHelper.Characters(_1)
+_1->characters() |-->Domain.Ocl.Characters(_1)
 
 _1->oclIsUndefined() |-->(_1 == null)
 _1->oclIsInvalid() |-->_1.Equals(null)
@@ -197,11 +201,9 @@ _1->oclType() |-->_1.GetType().Create()
 
 /*   $$$   _1->allInstances() |-->_1._1_allInstances   */
 
-_1->copy() |-->Domain.MambaHelper.CopySequence(_1)<when> _1 Sequence
-_1->copy() |-->Domain.MambaHelper.CopySortedSet(_1)<when> _1 SortedSet
-_1->copy() |-->Domain.MambaHelper.CopySet(_1)<when> _1 Set
-_1->copy() |-->Domain.MambaHelper.CopySortedMap(_1)<when> _1 SortedMap
-_1->copy() |-->Domain.MambaHelper.CopyMap(_1)<when> _1 Map
+_1->copy() |-->({}).Concat(_1)<when> _1 Sequence
+_1->copy() |-->({}).Concat(_1)<when> _1 Set
+_1->copy() |-->_1.Copy(true, true)<when> _1 Map
 _1->copy() |-->_1.Copy(true, true)<when> _1 object
 _1->copy() |-->_1
 
@@ -213,9 +215,12 @@ _1->reverse() |-->_1.Reverse()
 _1->max() |-->_1.Max(x => x)
 _1->min() |-->_1.Min(x => x)
 _1->sum() |-->_1.Sum(x => x)
-_1->prd() |-->Domain.MambaHelper.Prd_1`elementType(_1)
-_1->sort() |-->_1.Sort((x,y)=> x > y ? -1 : 1)
-_1->any() |-->_1.Single(x => x)
+_1->prd() |-->Domain.Ocl.Prd_1`elementType(_1)
+
+_1->sort() |-->_1.OrderByKey()<when> _1 Map
+_1->sort() |-->_1.OrderBy(x => x)
+
+_1->any() |-->_1.First(x => x)
 _1->isEmpty() |-->!(_1.Any())
 _1->notEmpty() |-->_1.Any()
 
@@ -224,7 +229,7 @@ _1->asSequence() |-->_1
 _1->asOrderedSet() |-->_1.Distinct()
 _1->asBag() |-->_1
 
-_1->flatten() |-->Domain.MambaHelper.UnionAllSet(_1)<when> _1 Set
+_1->flatten() |-->_1.SelectMany(x => x).Distinct()<when> _1 Set
 _1->flatten() |-->_1.SelectMany(x => x)<when> _1 Sequence
 /* Recursive Ocl.flatten is missing */
 
@@ -236,22 +241,20 @@ _1->display() |-->DebugLib.Logger.WriteInfoLine(_1 + "");
 
 lambda _1 : _2 in _3 |-->((_2 _1) => _3)
 
-/*   $$$   _1->unionAll() |-->Ocl.unionAllMap(_1)<when> _1 MapCollection   */
-_1->unionAll() |-->Domain.MambaHelper.UnionAll(_1)
-/*   $$$   _1->intersectAll() |-->Ocl.intersectAllMap(_1)<when> _1 MapCollection   */
-
-_1->intersectAll() |--Domain.MambaHelper.IntersectAll(_1)
+_1->unionAll() |-->_1.SelectMany(x => x).Distinct()
 _1->concatenateAll() |-->_1.SelectMany(x => x)
+
+_1->intersectAll() |-->/* Not supported by Mamba */
+
 
 
 
 BinaryExpression::
 _1 & _2 |-->_1 && _2
-_1 or _2 |-->_1 || _2
+_1 or _2 |-->(_1 || _2)
+_1 implies _2 |-->(!(_1) || _2)
 _1 xor _2 |-->((_1 || _2) && !(_1 && _2))
 
-_1 = _2 |-->_1 == _2<when> _1 not String, _1 not object, _1 not collection
-_1 = _2 |-->_1 == _2<when> _1 String
 _1 = _2 |-->_1.Equals(_2)<when> _1 object
 _1 = _2 |-->_1.Equals(_2)<when> _1 Sequence, _2 collection
 _1 = _2 |-->_1.Equals(_2)<when> _1 Set, _2 collection
@@ -259,8 +262,6 @@ _1 = _2 |-->_1 == _2
 
 _1 <>= _2 |-->_1 == _2
 
-_1 /= _2 |-->_1 != _2<when> _1 not String, _1 not object, _1 not collection
-_1 /= _2 |-->_1 != _2<when> _1 String
 _1 /= _2 |-->!(_1.Equals(_2))<when> _1 object
 _1 /= _2 |-->!(_1.Equals(_2))<when> _1 Sequence, _2 collection
 _1 /= _2 |-->!(_1.Equals(_2))<when> _1 Set, _2 collection
@@ -287,15 +288,15 @@ _1 + _2 |-->_1 + _2
 
 _1 - _2 |-->_2.Length - _1.Length<when> _1 Ref, _2 Ref
 _1 - _2 |-->_1 - _2<when> _1 numeric, _2 numeric
-_1 - _2 |-->Domain.MambaHelper.Subtract(_1,_2)<when> _1 String, _2 String
-_1 - _2 |-->Domain.MambaHelper.ExcludeAllMap(_1,_2)<when>_1 Map
+_1 - _2 |-->Domain.Ocl.StringSubtract(_1,_2)<when> _1 String, _2 String
+_1 - _2 |-->/* Not supported by Mamba */<when>_1 Map
 _1 - _2 |-->_1.Except(_2)<when> _1 Set
 _1 - _2 |-->_1.Except(_2)<when> _1 Sequence
 
 _1 * _2 |-->_1 * _2
 _1 / _2 |-->_1 / _2
 _1 mod _2 |-->_1 % _2
-_1 div _2 |-->(int.Parse((_1 / _2).ToString()))
+_1 div _2 |-->((_1 / _2) as int)
 
 /* _1 |-> _2 |-->(new OclMaplet(_1,_2)) */
 
@@ -303,7 +304,7 @@ _1->compareTo(_2) |-->string.Compare(_1, _2)<when> _1 String
 _1->compareTo(_2) |-->((_1 < _2) ? -1 : ((_1 > _2) ? 1 : 0 ))
 
 _1->pow(_2) |-->CommonLib.Math.Pow(_1, _2)
-_1->gcd(_2) |-->Domain.AgileUML.Ocl.Gcd(_1,_2)
+_1->gcd(_2) |-->Domain.Ocl.Gcd(_1,_2)
 
 _1->truncateTo(_2) |-->((_1) as int)<when> _2 0
 
@@ -314,17 +315,17 @@ _1->roundTo(_2) |-->CommonLib.Math.Round(_1, _2)
 _1^_2 |-->_1.Concat(_2)
 _1->concatenate(_2) |-->_1.Concat(_2)
 
-_1->union(_2) |-->Domain.MambaHelper.UnionMap(_1,_2)<when> _1 Map
+_1->union(_2) |-->/* Not supported by Mamba */<when> _1 Map
 _1->union(_2) |-->_1.Concat(_2).Distinct()<when> _1 Set
 _1->union(_2) |-->_1.Concat(_2)
 
-_1->unionAll(_2|_3) |-->Domain.MambaHelper.UnionAll(_1,(_2)->{return _3;})
+_1->unionAll(_2|_3) |-->_1.SelectMany(_2 => _3).Distinct()<when> _1 Set
+_1->unionAll(_2|_3) |-->_1.SelectMany(_2 => _3)<when> _1 Sequence
 
-_1->intersection(_2) |-->Domain.MambaHelper.IntersectionMap(_1,_2)<when> _1 Map
+_1->intersection(_2) |-->/* Not supported by Mamba */<when> _1 Map
 _1->intersection(_2) |-->_1.Intersect(_2)
 
-_1->intersectAll(_2|_3) |-->Domain.MambaHelper.IntersectAllSet(_1,(_2)->{return _3;})<when> _3 Set
-_1->intersectAll(_2|_3) |-->Domain.MambaHelper.IntersectAllSequence(_1,(_2)->{return _3;})<when> _3 Sequence
+_1->intersectAll(_2|_3) |-->/* Not supported by Mamba */
 
 _1->count(_2) |-->_1.Count(_x => _x == _2)
 
@@ -337,8 +338,8 @@ _1->lastIndexOf(_2) |-->(_1.LastIndexOf(_2) + 1)
 _1->equalsIgnoreCase(_2) |-->string.Compare(_1, _2, true)
 _1->split(_2) |-->_1.Split(_2).ToCollection()
 
-_1->allMatches(_2) |-->Domain.MambaHelper.AllMatches(_1,_2)
-_1->firstMatch(_2) |-->Domain.MambaHelper.FirstMatch(_1,_2)
+_1->allMatches(_2) |-->Domain.Ocl.AllMatches(_1,_2)
+_1->firstMatch(_2) |-->Domain.Ocl.FirstMatch(_1,_2)
 
 _1->apply(_2) |-->_1.Invoke(_2)
 
@@ -352,16 +353,16 @@ _1->at(_2) |-->_1.Get(_2 - 1)<when> _1 Ref
 _1->at(_2) |-->_1.Get(_2 - 1)<when> _2 numeric
 _1->at(_2) |-->_1.Get(_2)
 
-_1->restrict(_2) |-->Domain.MambaHelper.RestrictMap(_1,_2)
-_1->antirestrict(_2) |-->Domain.MambaHelper.AntirestrictMap(_1,_2)
+_1->restrict(_2) |-->/* Not defined in Mamba */
+_1->antirestrict(_2) |-->/* Not defined in Mamba */
 
-_1->select(_2 | _3) |-->Domain.AgileUML.Ocl.SelectMap(_1,(_2)->{return _3;})<when> _1 Map
+_1->select(_2 | _3) |-->/* Not defined in Mamba */<when> _1 Map
 _1->select(_2 | _3) |-->_1.Where(_2 => _3)
 
-_1->reject(_2 | _3) |-->Domain.AgileUML.Ocl.RejectMap(_1,(_2)->{return _3;})<when> _1 Map
+_1->reject(_2 | _3) |-->/* Not defined in Mamba */<when> _1 Map
 _1->reject(_2 | _3) |-->_1.Where(_2 => !(_3))
 
- _1->collect(_2 | _3) |-->Domain.AgileUML.Ocl.CollectMap(_1,(_2)->{return _3;})<when> _1 Map
+ _1->collect(_2 | _3) |-->/* Not defined in Mamba */<when> _1 Map
 _1->collect(_2 | _3) |-->_1.Select(_2 => _3)
 
 /*   $$$   _1->iterate(_2; _3 = _4 | _5) |-->Ocl.iterate(_1, _4, (_2)->((_3)->{return _5;}))   */
@@ -381,8 +382,8 @@ _1->forAll(_2 | _3) |-->_1.All(_2 => _3)
 _1->exists(_2 | _3) |-->_1.GetAll().Any(_2 => _3)<when> _1 classId
 _1->exists(_2 | _3) |-->_1.Any(_2 =>  _3)
 
-_1->exists1(_2 | _3) |-->Domain.AgileUML.Ocl.Exists1(_1.GetAll(), _2 => _3)<when> _1 classId
-_1->exists1(_2 | _3) |-->Domain.AgileUML.Ocl.Exists1(_1, _2 => _3)
+_1->exists1(_2 | _3) |-->(_1.GetAll().Where(_2 => _3).Length == 1)<when> _1 classId
+_1->exists1(_2 | _3) |-->(_1.Where(_2 => _3).Length == 1)
 
 _1->isUnique(_2 | _3) |-->(_1.GetAll().Select(_2 => _3).Distinct().Length == _1.GetAll().Length)<when> _1 classId
 _1->isUnique(_2 | _3) |-->(_1.Select(_2 => _3).Distinct().Length == _1.Length)
@@ -394,7 +395,13 @@ _1 /<: _2 |-->_1.Any(x => !(_2.Contains(x)))
 _1->includes(_2) |-->_1.Contains(_2)
 _1->includesAll(_2) |-->_2.All(x => _1.Contains(x))
 _1->excludes(_2) |-->!(_1.Contains(_2))
-_1->excludesAll(_2) |-->_1.All(x => !(_1.Contains(x)))
+_1->excludesAll(_2) |-->_1.All(x => !(_2.Contains(x)))
+
+_1->includesKey(_2) |-->_1.HasKey(_2)
+_1->excludesKey(_2) |-->!(_1.HasKey(_2))
+
+_1->includesValue(_2) |-->_1.GetValues().Contains(_2)
+_1->excludesValue(_2) |-->!(_1.GetValues().Contains(_2))
 
 _1->including(_2) |-->_1.Concat({_2}).Distinct()<when> _1 Set
 _1->including(_2) |-->_1.Concat({_2})
@@ -404,14 +411,14 @@ _1->append(_2) |-->_1.Concat({_2})
 
 _1->excluding(_2) |-->_1.Except({_2})
 _1->excludingAt(_2) |-->_1.Take(_2-1).Concat(_1.Skip(_2))
-_1->excludingFirst(_2) |-->Domain.MambaHelper.RemoveFirst(_1,_2)
+_1->excludingFirst(_2) |-->/* Not defined in Mamba */
 
 _1->hasPrefix(_2) |-->_1.StartsWith(_2)
 _1->hasSuffix(_2) |-->_1.EndsWith(_2)
-_1->after(_2) |-->Domain.AgileUML.Ocl.After(_1,_2))
-_1->before(_2) |-->Domain.AgileUML.Ocl.Before(_1,_2)
+_1->after(_2) |-->Domain.Ocl.After(_1,_2)
+_1->before(_2) |-->Domain.Ocl.Before(_1,_2)
 _1->isMatch(_2) |-->RegExpLib.VerbalExpressions.StringMatchesPattern(_1, _2)
-_1->hasMatch(_2) |-->Domain.MambaHelper.HasMatch(_1,_2)
+_1->hasMatch(_2) |-->Domain.Ocl.HasMatch(_1,_2)
 
 /* _1->oclIsKindOf(_2) |-->(_1 instanceof _2) */
 _1->oclIsTypeOf(_2) |-->(_1.GetType() == _2.GetType())
@@ -475,24 +482,23 @@ static operation _1(_2) : _3 pre: _4 post: _5 activity: _6 |-->\n  static functi
 
 
 Statement::
-_1[_2] := _3 |-->    _1.Set(_2 - 1, _3);\n<when>_1 String
 _1[_2] := _3 |-->    _1.Set(_2, _3);\n<when>_1 Map
 _1[_2] := _3 |-->    _1.Set(_2 - 1, _3);\n
 
 _1 := _2 |-->    _1 = _2;\n
 
-while _1 do _2 |-->    while (_1)    {\n  _2    }\n
+while _1 do _2 |-->    while (_1) {\n  _2    }\n
 
 for _1 : Integer.subrange(_2, _3) do _4 |-->    for (int _1 = _2; _1 <= _3; _1+1)\n    {\n  _4    }\n
 
 for _1 : _2 do _3 |-->   foreach _1 in _2    {\n  _3    }\n
 
-if _1 then _2 else _3 |-->    if (_1)    {\n  _2    }\n    else {\n  _3    }\n
+if _1 then _2 else _3 |-->    if (_1) {\n  _2    }\n    else {\n  _3    }\n
 
 _1 ; _2 |-->_1_2
 skip |-->    {}\n
 return _1 |-->    return _1;\n
-return |--> return;\n
+return |-->   return;\n
 continue |-->    continue;\n
 break |-->    break;\n
 call _1 |-->    _1;\n 
