@@ -16,6 +16,7 @@ public class ModelSpecification
   Vector allocated = new Vector(); // all references
   java.util.Map memory = new java.util.HashMap(); 
                                    // references -> Expression
+  Vector exceptions = new Vector(); // of ObjectSpecification
 
   Map correspondence = new Map();
 
@@ -73,7 +74,7 @@ public class ModelSpecification
     else 
     { objects.add(obj); } 
 	
-    objectmap.put(obj.getName(),obj);
+    objectmap.put(obj.getName(), obj);
  
     if (obj.entity != null) 
     { Entity ent = obj.entity;
@@ -101,6 +102,40 @@ public class ModelSpecification
 
   public void freeMemory(String ref)
   { memory.remove(ref); } 
+
+
+  public void addException(ObjectSpecification ex)
+  { exceptions.add(ex); } 
+
+  public void removeException(ObjectSpecification ex)
+  { Vector removed = new Vector(); 
+    removed.add(ex);
+    exceptions.removeAll(removed); 
+  }
+
+  public ObjectSpecification firstException(String cname)
+  { // oldest exception (if any) with class cname
+    for (int i = 0; i < exceptions.size(); i++) 
+    { ObjectSpecification obj = 
+          (ObjectSpecification) exceptions.get(i); 
+      if (cname.equals(obj.objectClass))
+      { return obj; } 
+    } 
+    return null; 
+  }  
+
+  public ObjectSpecification lastException(String cname)
+  { // most recent exception (if any) with class cname
+    int n = exceptions.size(); 
+    for (int i = n-1; i >= 0; i--) 
+    { ObjectSpecification obj = 
+          (ObjectSpecification) exceptions.get(i); 
+      if (cname.equals(obj.objectClass))
+      { return obj; } 
+    } 
+    return null; 
+  }  
+  
 
   public void setStaticAttributeValue(String cls, String att,
                                       Expression val)
@@ -225,6 +260,8 @@ public class ModelSpecification
     } 
 
     res = res + ">> Memory state: " + memory + "\n"; 
+    res = res + ">> Exceptions: " + exceptions + "\n"; 
+
 
     return res; 
   }

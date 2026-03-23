@@ -2352,10 +2352,11 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
           ObjectSpecification newobj = 
                  argent.initialisedObject(oid);
           sigma.addObject(newobj); 
-          beta.updateState(sigma, argument, new BasicExpression(oid));  
+          beta.updateState(sigma, argument, 
+                           new BasicExpression(oid));  
           return Statement.NORMAL;
         } 
-      } 
+      } // false if object already exists, otherwise true
     }
 
     return Statement.NORMAL;

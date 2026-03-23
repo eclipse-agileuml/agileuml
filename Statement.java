@@ -31,6 +31,10 @@ abstract class Statement implements Cloneable
   public static final int BREAK = 2;
   public static final int RETURN = 3; 
   public static final int EXCEPTION = 4; 
+  public static final int EXIT = 5;
+  public static final int OTHER = 6; 
+   
+  
 
   public static final String[] spaces = { "", "  ", "    ", "      ", "        ", "          ", "            ", "              ", "                ", "                  ", "                    " }; 
   // spaces[i] is i*2 spaces
@@ -52,6 +56,93 @@ abstract class Statement implements Cloneable
 
   /* public abstract String getOclType(); */ 
 
+  public static boolean isIncrement(Statement st, String vname)
+  { if (st instanceof AssignStatement)
+    { AssignStatement asm = (AssignStatement) st; 
+      Expression lhs = asm.getLhs(); 
+      Expression rhs = asm.getRhs(); 
+      if (vname.equals("" + lhs) && 
+          rhs instanceof BinaryExpression)
+      { BinaryExpression bexpr = (BinaryExpression) rhs; 
+        if ("+".equals(bexpr.getOperator()))
+        { Expression bleft = bexpr.getLeft(); 
+          Expression bright = bexpr.getRight(); 
+          if (vname.equals(bleft + "") && 
+              "1".equals(bright + ""))
+          { return true; } 
+          if (vname.equals(bright + "") && 
+              "1".equals(bleft + ""))
+          { return true; } 
+        } 
+      } 
+    }
+
+    if (st instanceof SequenceStatement)
+    { SequenceStatement ss = (SequenceStatement) st; 
+      if (ss.size() == 1) 
+      { Statement st1 = ss.getStatement(0); 
+        return Statement.isIncrement(st1, vname); 
+      } 
+    } 
+
+    return false; 
+  } 
+
+  public static boolean ineffectiveFirstStatement(Statement st)
+  { // st is a sequence statement with > 1 elements and 
+    // first is creation statement var v := expr; 
+    // where v is never updated in the remaining statements,
+    // and expr is loop constant & side-effect free. 
+    // Also v /: vars(expr)
+
+    if (st instanceof SequenceStatement) { } 
+    else 
+    { return false; }
+
+    // SequenceStatement ss = (SequenceStatement) st; 
+    // if (ss.size() < 2) 
+    // { return false; } 
+
+    Statement first = Statement.getFirstStatement(st); 
+    if (first instanceof CreationStatement) { } 
+    else 
+    { return false; } 
+
+    CreationStatement cre = (CreationStatement) first; 
+    Statement rem = Statement.removeFirstStatement(st); 
+    
+    String vname = cre.getVariable(); 
+    Expression rhs = cre.getInitialisationExpression(); 
+
+    Vector vvs = new Vector(); 
+    vvs.add(vname); 
+
+    Vector newvars = new Vector(); 
+    Vector wrfr = rem.writeFrame();
+    for (int i = 0; i < wrfr.size(); i++) 
+    { String wrv = (String) wrfr.get(i); 
+      int k = wrv.indexOf("::"); 
+      if (k >= 0) 
+      { newvars.add(wrv.substring(k+2)); } 
+      else 
+      { newvars.add(wrv); } 
+    }  
+
+    // JOptionPane.showInputDialog("Variables " + newvars + " are written in " + rem); 
+
+    if (newvars.contains(vname))
+    { return false; } // it is written in rem
+
+    Vector vuses = rhs.variablesUsedIn(newvars); 
+
+    // JOptionPane.showInputDialog("Variables " + vuses + " are used in " + rhs); 
+
+    if (vuses.size() == 0) 
+    { return true; } // rhs not modified by loop code
+
+    return false; 
+  }  
+ 
   public static boolean isOclBasicStatement(Statement st)
   { if (st instanceof ContinueStatement) 
     { return true; } 
@@ -553,6 +644,9 @@ abstract class Statement implements Cloneable
 
     return stat; 
   } 
+
+  public Statement removeIneffectiveStatements()
+  { return this; } 
 
   public int execute(ModelSpecification sigma, ModelState beta)
   { return Statement.NORMAL; } // default is to do nothing
@@ -1564,6 +1658,31 @@ abstract class Statement implements Cloneable
     } 
 
     return st; 
+  } 
+
+  public static Statement removeFirstStatement(Statement st)
+  { if (st == null) 
+    { return null; }
+ 
+    if (st instanceof SequenceStatement) 
+    { SequenceStatement sq = (SequenceStatement) st; 
+      int n = sq.size(); 
+
+      if (n >= 1) 
+      { Statement stat = sq.getStatement(0); 
+        Statement rem = Statement.removeFirstStatement(stat);
+        
+        SequenceStatement newsq = new SequenceStatement(); 
+        newsq.addStatement(rem);  
+        for (int i = 1; i < n; i++) 
+        { newsq.addStatement(sq.getStatement(i)); } 
+        return newsq; 
+      } 
+
+      return new InvocationStatement("skip");
+    } 
+
+    return new InvocationStatement("skip"); 
   } 
 
   public static Statement removeLastStatement(Statement st)
@@ -5528,9 +5647,17 @@ class InvocationStatement extends Statement
         parValues.add(parval); // could be null; 
       } 
 
-      bf.execute(sigma, beta, parValues);
-      beta.removeLastEnvironment();   
+      Expression expr = bf.execute(sigma, beta, parValues);
+      beta.removeLastEnvironment();
+
+      if (expr instanceof BinaryExpression)
+      { Expression bfstatus = ((BinaryExpression) expr).getRight(); 
+        res = Integer.parseInt(bfstatus + ""); 
+      }    
     }
+
+    if (res == Statement.RETURN) 
+    { res = Statement.NORMAL; } 
 
     return res; 
   } 
@@ -7329,7 +7456,9 @@ class WhileStatement extends Statement
   { if (loopRange != null) 
     { loopRange.energyUse(uses,rUses,aUses,yUses); }
     else if (loopTest != null)
-    { loopTest.energyUse(uses,rUses,aUses,yUses); }
+    { loopTest.energyUse(uses,rUses,aUses,yUses); 
+      loopTest.setBrackets(false); 
+    }
   
     body.energyUse(uses,rUses,aUses,yUses);
 
@@ -7359,6 +7488,15 @@ class WhileStatement extends Statement
       }
     }  
 
+    if (Statement.ineffectiveFirstStatement(body))
+    { int acount = (int) uses.get("amber"); 
+      uses.set("amber", acount + 1); 
+      aUses.add("!! Redundant code (RC):" + 
+        " first statement of body can be moved before loop: " + this + "\n");
+      int rccount = (int) uses.get("RC"); 
+      uses.set("RC", rccount+1);
+    } 
+
     if (loopKind == WHILE || loopKind == REPEAT)
     { if (loopTest == null || "false".equals("" + loopTest))
       { if (loopKind == WHILE)
@@ -7380,6 +7518,7 @@ class WhileStatement extends Statement
 
         return uses; 
       } 
+
 
       // if WHILE or REPEAT and vars(loopTest) /\ wr(body) = {}
       // and no return/break/exit within the loop, 
@@ -7425,8 +7564,8 @@ class WhileStatement extends Statement
       { int ycount = (int) uses.get("yellow"); 
         uses.set("yellow", ycount + 1); 
         yUses.add("! (OES) Unbounded loops can be inefficient: " + 
-                  loopSummary() + 
-                  "\n! Recommend replacing by a bounded loop\n");
+            loopSummary() + 
+            "\n! Recommend replacing by a bounded loop\n");
         int oescount = (int) uses.get("OES"); 
         uses.set("OES", oescount+1);    
       }  
@@ -7447,23 +7586,26 @@ class WhileStatement extends Statement
       int rccount = (int) uses.get("RC"); 
       uses.set("RC", rccount+1);    
     }
-    else if (loopKind == WHILE)
-    { if (loopTest instanceof BinaryExpression && 
-          "<".equals(((BinaryExpression) loopTest).getOperator()))
-      { BinaryExpression ltexpr = 
+    else if (loopKind == WHILE &&
+             loopTest instanceof BinaryExpression)
+    { BinaryExpression ltexpr = 
                              (BinaryExpression) loopTest; 
-        Expression lft = ltexpr.getLeft(); 
+      String bop = ltexpr.getOperator(); 
+
+      if ("<".equals(bop) || "<=".equals(bop))
+      { Expression lft = ltexpr.getLeft(); 
         Expression rgt = ltexpr.getRight(); 
         String vname = "" + lft; 
         Vector vvs = new Vector(); 
         vvs.add(vname); 
       
-        body.setBrackets(false); 
-        String bodytext = (body + "").trim(); 
+        boolean bdybr = body.hasBrackets(); 
+        // body.setBrackets(false); 
+        // String bodytext = (body + "").trim(); 
 
         Vector vuses = rgt.variablesUsedIn(vvs);
  
-        if ((vname + " := " + vname + " + 1").equals(bodytext) && 
+        if (Statement.isIncrement(body, vname) && 
             vuses.size() == 0)
         { int rcount = (int) uses.get("amber"); 
           uses.set("amber", rcount + 1); 
@@ -7473,13 +7615,62 @@ class WhileStatement extends Statement
           int rccount = (int) uses.get("RC"); 
           uses.set("RC", rccount+1);    
         }
+        else 
+        { Statement last = 
+              Statement.getLastStatement(body); 
+          
+          // String lasttext = (last + "").trim(); 
 
-        body.setBrackets(true); 
+          if (Statement.isIncrement(last, vname) && 
+              (lft instanceof BasicExpression) && 
+              Type.hasIntegerType(rgt))
+          { Statement reducedBody = 
+               Statement.removeLastStatement(body); 
+            Vector nuses = 
+                reducedBody.variablesUsedIn(vvs); 
+            if (nuses.size() == 0) 
+            { int rcount = (int) uses.get("amber"); 
+              uses.set("amber", rcount + 1); 
+              aUses.add("!! (RC): RHS of loop test " + loopTest + 
+              " independent of incremented variable!\n" + 
+              "!! Possible code reduction of while loop to for loop: " + loopSummary() + "\n");
+              int rccount = (int) uses.get("RC"); 
+              uses.set("RC", rccount+1);    
+            }
+          }
+        }
+
+        body.setBrackets(bdybr); 
       }
     }
 
     return uses; 
   } // red if nested loops. Amber for a while loop.
+
+  public Statement removeIneffectiveStatements()
+  { 
+    if (Statement.ineffectiveFirstStatement(body))
+    { Statement first = Statement.getFirstStatement(body); 
+      Statement rem = Statement.removeFirstStatement(body); 
+      rem.setBrackets(true); 
+
+      WhileStatement res = new WhileStatement(loopTest,rem); 
+      res.setEntity(entity); 
+      res.setLoopKind(loopKind); 
+      res.setLoopRange(loopVar,loopRange); 
+      res.setBrackets(brackets); 
+      res.setInvariant(invariant); 
+      res.setVariant(variant);
+
+      SequenceStatement ss = new SequenceStatement(); 
+      ss.addStatement(first); 
+      ss.addStatement(res); 
+      return ss;  
+    } 
+
+    return this; 
+  }
+
 
   public java.util.Map collectionOperatorUses(
                              int nestingLevel, 
@@ -7675,37 +7866,132 @@ class WhileStatement extends Statement
         { return newcode; }  
       } 
     } 
-    else if (loopKind == WHILE)
-    { if (lt instanceof BinaryExpression && 
-          "<".equals(((BinaryExpression) lt).getOperator()))
-      { BinaryExpression ltexpr = 
+    else if (loopKind == WHILE && 
+             lt instanceof BinaryExpression)
+    { BinaryExpression ltexpr = 
                              (BinaryExpression) lt; 
-        Expression lft = ltexpr.getLeft(); 
+        
+      String bop = ltexpr.getOperator(); 
+
+      if ("<".equals(bop) || "<=".equals(bop))
+      { Expression lft = ltexpr.getLeft(); 
         Expression rgt = ltexpr.getRight(); 
         String vname = "" + lft; 
         Vector vvs = new Vector(); 
         vvs.add(vname); 
-      
+
+        boolean brs = newbody.hasBrackets();       
         newbody.setBrackets(false); 
+
         String bodytext = (newbody + "").trim(); 
 
         Vector vuses = rgt.variablesUsedIn(vvs);
  
-        if ((vname + " := " + vname + " + 1").equals(bodytext) && 
+        if (Statement.isIncrement(newbody, vname) &&
+            lft instanceof BasicExpression &&  
             vuses.size() == 0)
-        { System.err.println(">>> Reducing while loop to conditional");
+        { System.err.println(">>> Reducing while loop " + this + " to conditional");
+        // while vname < rgt do vname := vname + 1
+        // same as: 
+        // if vname < rgt then vname := rgt->ceil() else skip
  
+        // while vname <= rgt do vname := vname + 1
+        // same as: 
+        // if vname <= rgt then vname := (rgt+1)->floor() else skip
+
           rgt.setBrackets(true); 
+
+          Expression rhs = Expression.simplify("->ceil", rgt);
+          if (bop.equals("<="))
+          { rgt = Expression.simplifyPlus(rgt, 
+                                 new BasicExpression(1)); 
+            rgt.setBrackets(true); 
+            rhs = Expression.simplify("->floor", rgt); 
+          }  
 
           ConditionalStatement res = 
             new ConditionalStatement(lt, 
-              new AssignStatement(lft, 
-                new UnaryExpression("->ceil", rgt)), 
+               new AssignStatement(lft, rhs), 
                   new InvocationStatement("skip")); 
           return res; 
         } 
+        else 
+        { Statement last = Statement.getLastStatement(newbody); 
+          // also reduce 
+          // while vname < rgt do (C; vname := vname + 1) 
+          // to 
+          // for vname : Integer.subrange(vname, rgt-1)
+          // do C; 
 
-        newbody.setBrackets(true); 
+          String lasttext = (last + "").trim(); 
+
+          if (Statement.isIncrement(last, vname)  
+              && (lft instanceof BasicExpression) 
+              && ((BasicExpression) lft).isSimpleVariable() 
+              && Type.hasIntegerType(lft)  
+              && Type.hasIntegerType(rgt))
+          { Statement reducedBody = 
+               Statement.removeLastStatement(newbody); 
+            Vector nuses = 
+                reducedBody.variablesUsedIn(vvs); 
+            if (nuses.size() == 0) 
+            { System.err.println(">>> Loop " + this + " reduced to for loop:"); 
+
+              reducedBody.setBrackets(true); 
+              Expression rhs = 
+                 Expression.simplifyMinus(rgt, 
+                                     new BasicExpression(1)); 
+              if (bop.equals("<="))
+              { rhs = rgt; } 
+
+              System.err.println("for " + vname + 
+                 " : Integer.subrange(" + vname + "," + rhs + 
+                 ") do " + reducedBody); 
+
+              Vector pars = new Vector(); 
+              pars.add(lft); 
+              pars.add(rhs); 
+              BasicExpression newrange = 
+                BasicExpression.newFunctionBasicExpression(
+                           "subrange", "Integer", pars); 
+              BinaryExpression newtest = 
+                 new BinaryExpression(":", lft, newrange); 
+              WhileStatement ws = 
+                new WhileStatement(newtest, reducedBody); 
+              ws.setEntity(entity); 
+              ws.setLoopKind(FOR); 
+              ws.setLoopRange(lft,newrange); 
+              ws.setBrackets(brackets); 
+
+              if (bop.equals("<"))
+              { SetExpression maxset = new SetExpression(); 
+                maxset.addElement(lft); 
+                maxset.addElement(rhs); 
+                AssignStatement ast =
+                  new AssignStatement(lft, 
+                    new UnaryExpression("->max", maxset));
+                SequenceStatement ss = new SequenceStatement(); 
+                ss.addStatement(ws); 
+                ss.addStatement(ast);  
+                return ss;
+              } 
+
+              ConditionalExpression expr = 
+                new ConditionalExpression(lt, 
+                  new BinaryExpression("+", rhs, 
+                    new BasicExpression(1)), lft);
+              expr.setBrackets(true);  
+              AssignStatement ast2 =
+                  new AssignStatement(lft,expr); 
+              SequenceStatement ss2 = new SequenceStatement(); 
+              ss2.addStatement(ws); 
+              ss2.addStatement(ast2);  
+              return ss2; 
+            } // follow loop by update to vname
+          } 
+        }  
+            
+        newbody.setBrackets(brs); 
       } 
     } 
 
@@ -9516,8 +9802,14 @@ class CreationStatement extends Statement
   public String getVar()
   { return assignsTo; } 
 
+  public String getVariable()
+  { return assignsTo; } 
+
   public String getDeclaredVariable()
   { return assignsTo; } 
+
+  public Expression getInitialisationExpression()
+  { return initialExpression; } 
 
   public CreationStatement(String cio, String ast)
   { createsInstanceOf = cio;
@@ -10952,6 +11244,73 @@ class SequenceStatement extends Statement
     return res;  
   } 
 
+  public Statement removeIneffectiveStatements()
+  { Vector newstats = new Vector(); 
+
+    Vector fstatements = flattenSequenceStatement(); 
+    
+    for (int i = 0; i < fstatements.size(); i++) 
+    { Statement stat = (Statement) fstatements.get(i);
+
+      // System.out.println(stat); 
+
+      if (stat instanceof AssignStatement && 
+          i < fstatements.size()-1 &&
+          (fstatements.get(i+1) instanceof AssignStatement))
+      { AssignStatement as1 = (AssignStatement) stat; 
+        AssignStatement as2 = 
+              (AssignStatement) fstatements.get(i+1);
+        Expression lhs1 = as1.getLhs(); 
+        Expression lhs2 = as2.getLhs(); 
+ 
+        if (("" + lhs1).equals(lhs2 + ""))
+        { Expression rhs2 = as2.getRhs(); 
+          Vector vvs = new Vector(); 
+          vvs.add("" + lhs1); 
+          Vector vuses = rhs2.variablesUsedIn(vvs); 
+          if (vuses.size() == 0)
+          { System.err.println("!! (RC) Ineffective assignment: " + as1); 
+            i++; 
+            newstats.add(as2);
+            continue;  
+          }
+        } 
+      } 
+      else if (stat instanceof CreationStatement && 
+          i < fstatements.size()-1 &&
+          (fstatements.get(i+1) instanceof CreationStatement))
+      { CreationStatement as1 = (CreationStatement) stat; 
+        CreationStatement as2 = 
+              (CreationStatement) fstatements.get(i+1);
+        String var1 = as1.getVariable(); 
+        String var2 = as2.getVariable(); 
+ 
+        if (var1.equals(var2))
+        { Expression rhs2 = as2.getInitialisation(); 
+          Vector vvs = new Vector(); 
+          vvs.add(var1); 
+          Vector vuses = rhs2.variablesUsedIn(vvs); 
+          if (vuses.size() == 0)
+          { System.err.println("!! (RC) Ineffective declaration: " + as1); 
+            i++; 
+            newstats.add(as2);
+            continue;  
+          }
+        } 
+      } 
+
+      Statement newstat = stat.removeIneffectiveStatements(); 
+      if (newstat instanceof SequenceStatement)
+      { SequenceStatement ss = (SequenceStatement) newstat; 
+        newstats.addAll(ss.statements); 
+      } 
+      else 
+      { newstats.add(newstat); } 
+    } 
+
+    return new SequenceStatement(newstats); 
+  } 
+
   public int execute(ModelSpecification sigma, ModelState beta)
   { // create new environment, then execute each statement 
     // in turn.
@@ -10965,15 +11324,17 @@ class SequenceStatement extends Statement
     { Statement stat = (Statement) statements.get(i); 
       res = stat.execute(sigma, beta);
 
-      if (res == Statement.BREAK || res == Statement.RETURN ||
-          res == Statement.CONTINUE)
+      if (res == Statement.BREAK || 
+          res == Statement.RETURN ||
+          res == Statement.CONTINUE ||
+          res == Statement.EXCEPTION)
       { beta.removeLastEnvironment();
         return res; 
       }   
     } 
 
     beta.removeLastEnvironment();
-    return Statement.NORMAL;  
+    return res;  
   } 
 
 
@@ -11191,14 +11552,30 @@ class SequenceStatement extends Statement
     return res; 
   }  
 
+  public Vector variablesUsedIn(Vector vars, int i)
+  { Vector res = new Vector(); 
+
+    for (int j = i; j < statements.size(); j++) 
+    { Statement stat = (Statement) statements.get(j); 
+      res = VectorUtil.union(res,
+                         stat.variablesUsedIn(vars)); 
+    }
+
+    return res; 
+  }  // variables in statements from i onwards
+
 
   public Map energyUse(Map uses, Vector rUses, Vector aUses, 
                        Vector yUses)
-  { for (int i = 0; i < statements.size(); i++) 
-    { Statement stat = (Statement) statements.get(i); 
+  { Vector fstatements = flattenSequenceStatement(); 
+    SequenceStatement sflat = 
+         new SequenceStatement(fstatements); 
+
+    for (int i = 0; i < fstatements.size(); i++) 
+    { Statement stat = (Statement) fstatements.get(i); 
       stat.energyUse(uses, rUses, aUses, yUses);
 
-      if (i < statements.size()-1 && 
+      if (i < fstatements.size()-1 && 
           Statement.endsWithControlFlowBreak(stat))
       { int acount = (int) uses.get("amber"); 
         uses.set("amber", acount+1); 
@@ -11206,6 +11583,74 @@ class SequenceStatement extends Statement
         int rccount = (int) uses.get("RC"); 
         uses.set("RC", rccount+1);
       } 
+
+      if (stat instanceof AssignStatement && 
+          i < fstatements.size()-1 &&
+          (fstatements.get(i+1) instanceof AssignStatement))
+      { AssignStatement as1 = (AssignStatement) stat; 
+        AssignStatement as2 = 
+              (AssignStatement) fstatements.get(i+1);
+        Expression lhs1 = as1.getLhs(); 
+        Expression lhs2 = as2.getLhs(); 
+ 
+        if (("" + lhs1).equals(lhs2 + ""))
+        { Expression rhs2 = as2.getRhs(); 
+          Vector vvs = new Vector(); 
+          vvs.add("" + lhs1); 
+          Vector vuses = rhs2.variablesUsedIn(vvs); 
+          if (vuses.size() == 0)
+          { int acount = (int) uses.get("amber"); 
+            uses.set("amber", acount+1); 
+            aUses.add("!! (RC) Ineffective assignment: " + as1); 
+            int rccount = (int) uses.get("RC"); 
+            uses.set("RC", rccount+1);
+            i++; 
+            continue;  
+          }
+        } // rhs not side-effecting
+      } 
+      else if (stat instanceof CreationStatement && 
+          i < fstatements.size()-1 &&
+          (fstatements.get(i+1) instanceof CreationStatement))
+      { CreationStatement as1 = (CreationStatement) stat; 
+        CreationStatement as2 = 
+              (CreationStatement) fstatements.get(i+1);
+        String var1 = as1.getVariable(); 
+        String var2 = as2.getVariable(); 
+ 
+        if (var1.equals(var2))
+        { Expression rhs2 = as2.getInitialisation(); 
+          Vector vvs = new Vector(); 
+          vvs.add(var1); 
+          Vector vuses = rhs2.variablesUsedIn(vvs); 
+          if (vuses.size() == 0)
+          { int acount = (int) uses.get("amber"); 
+            uses.set("amber", acount+1); 
+            aUses.add("!! (RC) Ineffective declaration: " + as1); 
+            int rccount = (int) uses.get("RC"); 
+            uses.set("RC", rccount+1);
+            i++; 
+            continue;  
+          } // rhs not side-effecting
+        }
+      }
+      else if (stat instanceof AssignStatement)
+      { AssignStatement as1 = (AssignStatement) stat; 
+        Expression lhs = as1.getLhs(); 
+        if (lhs instanceof BasicExpression && 
+            ((BasicExpression) lhs).isVariable())
+        { Vector vvs = new Vector(); 
+          vvs.add("" + lhs); 
+          Vector vuses = sflat.variablesUsedIn(vvs,i+1); 
+          if (vuses.size() == 0)
+          { int acount = (int) uses.get("amber"); 
+            uses.set("amber", acount+1); 
+            aUses.add("!! (RC) No use of assigned variable: " + as1); 
+            int rccount = (int) uses.get("RC"); 
+            uses.set("RC", rccount+1);
+          }
+        } // rhs not side-effecting
+      }   
     }
 
     return uses; 
@@ -11249,9 +11694,11 @@ class SequenceStatement extends Statement
   } 
 
   public Statement optimiseOCL()
-  { Vector newstats = new Vector(); 
-    for (int i = 0; i < statements.size(); i++) 
-    { Statement stat = (Statement) statements.get(i); 
+  { Vector fstats = flattenSequenceStatement(); 
+    Vector newstats = new Vector(); 
+
+    for (int i = 0; i < fstats.size(); i++) 
+    { Statement stat = (Statement) fstats.get(i); 
 
       if (stat.isSkip()) 
       { continue; } 
@@ -11657,6 +12104,7 @@ class SequenceStatement extends Statement
   { Vector res = new Vector(); 
     if (statements.size() == 0) 
     { return res; } 
+
     for (int i = 0; i < statements.size(); i++) 
     { Statement si = (Statement) statements.get(i);
       if (si instanceof SequenceStatement)
@@ -11667,6 +12115,7 @@ class SequenceStatement extends Statement
       else 
       { res.add(si); } 
     } 
+
     return res; 
   } 
 
@@ -12840,6 +13289,23 @@ class ErrorStatement extends Statement
     return new ErrorStatement(null); 
   } 
 
+  public int execute(ModelSpecification sigma, ModelState beta)
+  { if (thrownObject == null) 
+    { return EXCEPTION; } 
+
+    Expression exValue = thrownObject.evaluate(sigma, beta);
+    // should be an object id 
+
+    System.out.println(">>> Exception " + exValue + " thrown"); 
+    ObjectSpecification obj = sigma.getObject("" + exValue); 
+    if (obj != null) 
+    { sigma.addException(obj); } 
+
+    System.out.println(">>> Exceptions are: " + sigma.exceptions); 
+
+    return EXCEPTION; 
+  } 
+
   public Statement optimiseOCL()
   { if (thrownObject != null) 
     { Expression tobj = thrownObject.simplifyOCL(); 
@@ -13671,7 +14137,7 @@ class AssertStatement extends Statement
 }
 
 class CatchStatement extends Statement
-{ // This represents a catch clause
+{ // This represents a catch clause of a try statement
 
   Expression caughtObject = null; 
   Statement action = null; 
@@ -13746,6 +14212,51 @@ class CatchStatement extends Statement
 
     return new CatchStatement(cobj,cact); 
   }
+
+  public int execute(ModelSpecification sigma, 
+                     ModelState beta)
+  { // add caughtObject as new variable, set to objid of
+    // exception
+    // Also allocate a new reference ref for the variable
+    // add  ref |-> initialExpression to memory and 
+    // var |-> ref in the last beta environment.
+
+    java.util.HashMap env = null; 
+
+    if (caughtObject instanceof BinaryExpression)
+    { Expression var = 
+         ((BinaryExpression) caughtObject).getLeft(); 
+      Expression typ = 
+         ((BinaryExpression) caughtObject).getRight(); 
+      String assignsTo = "" + var; 
+      String tname = "" + typ; 
+      ObjectSpecification ex = sigma.lastException(tname); 
+
+      if (ex != null && ex.getName() != null && 
+          ex.getEntity() != null) 
+      { Expression val = new BasicExpression(ex.getName());
+        Entity ent = ex.getEntity();
+        val.setType(new Type(ent));   
+        String pid = Identifier.newIdentifier("&_");
+        beta.addNewEnvironment(); 
+        env = beta.addVariable(sigma, assignsTo, pid, val);
+      } 
+      else 
+      { return Statement.EXCEPTION; }  
+    
+      if (env != null) // success
+      { int status = Statement.NORMAL; 
+
+        if (action != null) 
+        { status = action.execute(sigma, beta); }
+
+        beta.removeLastEnvironment();
+        return status;  
+      }  
+    }
+
+    return Statement.EXCEPTION;  
+  } 
 
   public Expression definedness(Map uses, Vector messages)
   { return action.definedness(uses, messages); } 
@@ -14234,6 +14745,34 @@ class TryStatement extends Statement
   
     return res; 
   }
+
+  public int execute(ModelSpecification sigma, 
+                     ModelState beta)
+  { // execute the body, then successive catch clauses, 
+    // if status is EXCEPTION, then (always) final clause
+
+    if (body == null) 
+    { return Statement.NORMAL; } 
+
+    int n = catchClauses.size(); 
+
+    int trystatus = body.execute(sigma, beta); 
+
+    JOptionPane.showInputDialog("TRY returned status " + trystatus + " " + n + " catch clauses"); 
+
+    if (trystatus == Statement.EXCEPTION)
+    { for (int i = 0; i < n; i++)  
+      { Statement cclause = (Statement) catchClauses.get(i); 
+        int cstatus = cclause.execute(sigma, beta); 
+        if (cstatus != Statement.NORMAL)
+        { return cstatus; } 
+      } // exit, return, exception from a catch clause
+    }
+    else 
+    { return trystatus; } 
+
+    return Statement.NORMAL;   
+  } 
 
   public Vector variablesUsedIn(Vector vars) 
   { Vector res = new Vector(); 
@@ -18253,8 +18792,20 @@ class ConditionalStatement extends Statement
     return res; 
   } 
 
+  public Statement removeIneffectiveStatements()
+  { Statement ifc = ifPart.removeIneffectiveStatements();
+    test.setBrackets(false); 
+    if ("true".equals(test + ""))
+    { return ifc; } 
+    Statement elsec = null; 
+    if (elsePart != null) 
+    { elsec = elsePart.removeIneffectiveStatements(); }
+    return new ConditionalStatement(test, ifc, elsec); 
+  } 
+
   public Statement generateDesign(java.util.Map env, boolean local)
   { Statement ifc = ifPart.generateDesign(env,local);
+    test.setBrackets(false); 
     if ("true".equals(test + ""))
     { return ifc; } 
     Statement elsec = null; 
@@ -18856,6 +19407,21 @@ class FinalStatement extends Statement
     return new FinalStatement(ifc); 
   }  
 
+  public int execute(ModelSpecification sigma, 
+                     ModelState beta)
+  { 
+    int res = Statement.NORMAL; 
+
+    // ModelState local = (ModelState) beta.clone(); 
+    beta.addNewEnvironment(); 
+
+    if (body != null) 
+    { res = body.execute(sigma, beta); }
+ 
+    beta.removeLastEnvironment(); 
+    return res; 
+  } 
+
   public Statement optimiseOCL()
   { Statement ifc = body.optimiseOCL(); 
     return new FinalStatement(ifc); 
@@ -19141,5 +19707,6 @@ class FinalStatement extends Statement
 
   public Expression definedness(Map uses, Vector messages)
   { return body.definedness(uses, messages); } 
+
 }
 

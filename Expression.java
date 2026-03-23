@@ -3232,8 +3232,16 @@ abstract class Expression
       { double dd = Expression.convertNumber(arg + ""); 
         return Expression.simplifyMathExpression(op, dd); 
       } 
+
+      if (Type.hasIntegerType(arg))
+      { if ("->ceil".equals(op) || 
+            "->floor".equals(op) || 
+            "->round".equals(op))
+        { return arg; } 
+      } 
    
-      return new UnaryExpression(op, arg); 
+      Expression res = new UnaryExpression(op, arg);
+      return res;  
     } 
 
     if (Expression.isStringOperator(op))
@@ -4043,7 +4051,9 @@ abstract class Expression
       return new BasicExpression(v1 + v2); 
     } 
 
-    return new BinaryExpression("+", e1, e2); 
+    Expression res = new BinaryExpression("+", e1, e2);
+    res.setBrackets(true); 
+    return res;  
   }  
 
   public static Expression simplifyMinus(Expression e1, Expression e2) 
@@ -4070,7 +4080,9 @@ abstract class Expression
       return new BasicExpression(v1 - v2); 
     }
  
-    return new BinaryExpression("-", e1, e2); 
+    Expression res = new BinaryExpression("-", e1, e2);
+    res.setBrackets(true); 
+    return res;  
   }  
 
   public static Expression simplifyMult(Expression e1, Expression e2) 

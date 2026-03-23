@@ -1092,6 +1092,13 @@ public void findPlugins()
       "Removes unused operation parameters");
     energyMenu.add(removeUnusedPars);
 
+    JMenuItem removeIneffectiveStats = 
+      new JMenuItem("Remove ineffective statements"); 
+    removeIneffectiveStats.addActionListener(this);
+    removeIneffectiveStats.setToolTipText(
+      "Moves/combines statements to simplify code");
+    energyMenu.add(removeIneffectiveStats);
+
     JMenuItem hoistDecsop = 
       new JMenuItem("Hoist local declarations"); 
     hoistDecsop.addActionListener(this);
@@ -2996,6 +3003,8 @@ public void findPlugins()
       { this.makeOperationCached(); } 
       else if (label.equals("Remove unused parameters"))
       { this.removeUnusedParameters(); } 
+      else if (label.equals("Remove ineffective statements"))
+      { this.removeIneffectiveStatements(); } 
       else if (label.equals("Split operation"))
       { this.splitOperationActivity(); } 
       else if (label.equals("Hoist local declarations"))
@@ -3869,6 +3878,26 @@ public void findPlugins()
         vals[0] instanceof Entity)
     { Entity ent = (Entity) vals[0];
       ucdArea.removeUnusedParameters(ent);
+    } 
+  }
+
+  private void removeIneffectiveStatements()
+  { if (listShowDialog == null)
+    { listShowDialog = new ListShowDialog(this);
+      listShowDialog.pack();
+      listShowDialog.setLocationRelativeTo(this); 
+    }
+    listShowDialog.setOldFields(ucdArea.getEntities()); // getClasses?
+    thisLabel.setText("Select entity to remove ineffective statements"); 
+    System.out.println(">> Select entity to remove ineffective statements");
+
+    listShowDialog.setVisible(true); 
+
+    Object[] vals = listShowDialog.getSelectedValues();
+    if (vals != null && vals.length > 0 &&
+        vals[0] instanceof Entity)
+    { Entity ent = (Entity) vals[0];
+      ent.removeIneffectiveStatements();
     } 
   }
 

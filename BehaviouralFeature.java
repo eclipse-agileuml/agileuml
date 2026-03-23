@@ -238,7 +238,10 @@ public class BehaviouralFeature extends ModelElement
                             ModelState beta,
                             Vector parValues)
   { if (activity == null) 
-    { return null; } 
+    { return 
+        new BinaryExpression(",", null, 
+               new BasicExpression(Statement.NORMAL)); 
+    } 
 
     // return value is that computed by this operation,
     // if it returns a value. 
@@ -278,19 +281,21 @@ public class BehaviouralFeature extends ModelElement
 
     int status = activity.execute(sigma, beta); 
 
-    /* JOptionPane.showInputDialog(">> Operation result is " + 
-                      beta.getVariableValue("result")); */ 
+    JOptionPane.showInputDialog(">> Operation status is " + 
+                                status); 
  
     if (resultType != null && 
         !("void".equals(resultType + ""))) 
     { Expression res = beta.getVariableValue(sigma, "result"); 
       sigma.reclaimMemory(localMemory); 
-      return res; 
+      return new BinaryExpression(",", res, 
+                       new BasicExpression(status)); 
     } 
 
     sigma.reclaimMemory(localMemory); 
-    return null; 
-  } 
+    return new BinaryExpression(",", null, 
+                       new BasicExpression(status)); 
+  } // But also need to return status. 
 
   public void jsClassFromConstructor(Entity ent, Entity cclass, Vector inits, Vector entities) 
   { // For each statement  self.att := expr  in activity
@@ -3650,7 +3655,7 @@ public class BehaviouralFeature extends ModelElement
       if (activity != null)
       { Vector actuses = activity.getUses(pname); 
         if (actuses.size() == 0) 
-        { System.err.println("!! Code smell (UVA): parameter " + pname + " is unused in operation " + getName() + " activity.");
+        { System.err.println("! Code smell (UVA): parameter " + pname + " is unused in operation " + getName() + " activity.");
           UVA++; 
           unusedVars.add(par); 
         } 
@@ -3658,8 +3663,8 @@ public class BehaviouralFeature extends ModelElement
     } 
 
     if (UVA > 0) 
-    { System.err.println("!!! UVA (parameters) = " + UVA + " for operation " + name); 
-      System.err.println("!! Unused parameters (UVA): " + unusedVars); 
+    { System.err.println("! UVA (parameters) = " + UVA + " for operation " + name); 
+      System.err.println("! Unused parameters (UVA): " + unusedVars); 
       System.out.println(); 
     } 
 
@@ -4647,6 +4652,11 @@ public class BehaviouralFeature extends ModelElement
     { activity = activity.optimiseOCL(); }  
   } 
 
+  public void removeIneffectiveStatements() 
+  { if (activity != null) 
+    { activity = activity.removeIneffectiveStatements(); }  
+  } 
+
   public Map energyAnalysis(Vector redUses, Vector amberUses, 
                             Vector yellowUses)
   { // Scan the postcondition/activity for energy expensive
@@ -5182,12 +5192,12 @@ int ascore = (int) res.get("amber");
     System.out.println("*** Total complexity of operation " + nme + " = " + complexity); 
     System.out.println(); 
     if (cyc > TestParameters.cyclomaticComplexityLimit) 
-    { System.err.println("!!! Code smell (CC): high cyclomatic complexity (" + cyc + ") for " + nme); 
+    { System.err.println("!! Code smell (CC): high cyclomatic complexity (" + cyc + ") for " + nme); 
       System.err.println(); 
     }
   
     if (complexity > TestParameters.operationSizeLimit) 
-    { System.err.println("!!! Code smell (EHS): too high complexity (" + complexity + ") for " + nme); 
+    { System.err.println("!! Code smell (EHS): too high complexity (" + complexity + ") for " + nme); 
       System.err.println(); 
     }  
 

@@ -757,6 +757,12 @@ public class Type extends ModelElement
     return false; 
   } 
 
+  public static boolean hasIntegerType(Expression expr)
+  { if (expr == null) { return false; } 
+    Type t = expr.getType(); 
+    return Type.isIntegerType(t);  
+  } 
+
   public static boolean isIntegerType(Type t)
   { if (t == null) { return false; } 
     String tname = t.getName(); 

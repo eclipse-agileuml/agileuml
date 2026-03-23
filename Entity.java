@@ -6000,6 +6000,17 @@ public class Entity extends ModelElement implements Comparable
     } 
   } 
 
+  public void removeIneffectiveStatements()
+  { int n = operations.size(); 
+
+    for (int i = 0; i < n; i++) 
+    { BehaviouralFeature op = 
+          (BehaviouralFeature) operations.get(i); 
+      op.removeIneffectiveStatements(); 
+    } 
+  } 
+
+
   public Map energyAnalysis(Vector messages, PrintWriter out)
   { Map res = new Map(); // multimaps - use set not put 
     res.set("red", 0); 

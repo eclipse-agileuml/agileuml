@@ -17194,6 +17194,9 @@ public Statement generateDesignSubtract(Expression rhs)
 
       beta.removeLastEnvironment(); 
   
+      if (res instanceof BinaryExpression)
+      { return ((BinaryExpression) res).getLeft(); } 
+
       return res; 
     } 
 
@@ -18097,6 +18100,21 @@ public Statement generateDesignSubtract(Expression rhs)
  
     return false;  
   }
+
+  public boolean isSimpleVariable()
+  { if (("" + this).equals(data) && 
+        (umlkind == VARIABLE || 
+         umlkind == ATTRIBUTE))
+    { return true; } 
+    return false; 
+  } 
+
+  public boolean isVariable()
+  { if (("" + this).equals(data) && 
+        umlkind == VARIABLE)
+    { return true; } 
+    return false; 
+  } 
 
   public boolean isTailRecursion(BehaviouralFeature bf)
   { // either bfname does not occur in this, or 
