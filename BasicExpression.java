@@ -455,6 +455,8 @@ class BasicExpression extends Expression
       { return true; }   
       if (data.equals("create" + tname))
       { return true; } 
+      if (data.equals("new" + tname))
+      { return true; } 
     } 
 
     return false;  

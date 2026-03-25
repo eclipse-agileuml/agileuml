@@ -2479,6 +2479,59 @@ abstract class Statement implements Cloneable
     return false;
   } // Other cases, for all other forms of statement. 
 
+  public static boolean endsWithError(Statement st)
+  { if (st == null) 
+    { return false; }
+ 
+    if (st instanceof SequenceStatement) 
+    { SequenceStatement sq = (SequenceStatement) st; 
+      Vector stats = sq.getStatements(); 
+      if (stats.size() == 0) 
+      { return false; } // just a skip 
+      Statement stat = (Statement) stats.get(stats.size()-1); 
+      return Statement.endsWithError(stat);
+    } 
+    
+    if (st instanceof ErrorStatement)
+    { return true; } 
+
+    if (st instanceof ConditionalStatement) 
+    { ConditionalStatement cs = (ConditionalStatement) st; 
+      if (Statement.endsWithError(cs.ifPart()))
+      { return Statement.endsWithError(cs.elsePart()); } 
+      return false; 
+    } 
+
+    if (st instanceof WhileStatement) 
+    { return false; } 
+    // Nested loops cannot be handled within a recursion. 
+
+    if (st instanceof TryStatement) 
+    { TryStatement ts = (TryStatement) st; 
+
+      if (Statement.endsWithError(ts.getBody())) 
+      { Vector stats = ts.getClauses(); 
+        for (int i = 0; i < stats.size(); i++) 
+        { if (stats.get(i) instanceof Statement)
+          { Statement stat = (Statement) stats.get(i); 
+            if (Statement.endsWithError(stat)) { } 
+            else 
+            { return false; } 
+          }
+          else 
+          { return false; } 
+        }  
+      }
+      else 
+      { return false; }  
+      if (ts.getEndStatement() == null) 
+      { return false; } 
+      return Statement.endsWithError(ts.getEndStatement()); 
+    } 
+
+    return false;
+  } // Other cases, for all other forms of statement. 
+
   public static boolean endsWithExit(Statement st)
   { if (st == null) 
     { return false; }
@@ -2494,8 +2547,9 @@ abstract class Statement implements Cloneable
     
     if (st instanceof InvocationStatement)
     { String called = 
-        ((InvocationStatement) st).calledOperation(); 
-      if ("exit".equals(called))
+        "" + ((InvocationStatement) st).getCallExpression();
+ 
+      if (called.startsWith("OclProcess.exit("))
       { return true; }
       return false; 
     }  // OclProcess.exit(n)
@@ -2525,7 +2579,7 @@ abstract class Statement implements Cloneable
           }
           else 
           { return false; } 
-        }  
+        } // and the final statement if present 
       }
       else 
       { return false; }  
@@ -2544,6 +2598,9 @@ abstract class Statement implements Cloneable
     { return true; } 
 
     if (Statement.endsWithContinue(stat))
+    { return true; } 
+
+    if (Statement.endsWithError(stat))
     { return true; } 
 
     return Statement.endsWithExit(stat); 
@@ -2771,7 +2828,7 @@ abstract class Statement implements Cloneable
 
           SequenceStatement remStat = 
               new SequenceStatement(precedingStats);
-
+          remStat.brackets = st.brackets; 
           return remStat;  
         } // insert creation statement before remainingStats
         else 
@@ -5448,6 +5505,9 @@ class InvocationStatement extends Statement
   public String getOperator() 
   { return "call"; } 
 
+  public Expression getCallExpression()
+  { return callExp; } 
+
   InvocationStatement(String act, String targ, String assigns)
   { action = act; 
     target = targ; 
@@ -5589,6 +5649,9 @@ class InvocationStatement extends Statement
 
     if ("skip".equals(callExp + "")) 
     { return res; } 
+
+    if ((callExp + "").startsWith("OclProcess.exit("))
+    { return Statement.EXIT; }
 
     if (callExp instanceof BasicExpression)
     { BasicExpression cexpr = (BasicExpression) callExp; 
@@ -7139,6 +7202,11 @@ class WhileStatement extends Statement
     loopRange = lr;
   }
 
+  public void setLoopVarRange(Expression lv, Expression lr)
+  { loopVar = lv; 
+    loopRange = lr; 
+  } 
+
   public void setLoopVar(Expression lv)
   { loopVar = lv; }
 
@@ -7217,7 +7285,9 @@ class WhileStatement extends Statement
         if (res == Statement.BREAK)
         { return Statement.NORMAL; } 
 
-        if (res == Statement.RETURN)
+        if (res == Statement.RETURN || 
+            res == Statement.EXIT || 
+            res == Statement.EXCEPTION)
         { return res; }   
 
         testvalue = loopTest.evaluate(sigma, beta); 
@@ -7231,7 +7301,9 @@ class WhileStatement extends Statement
       if (res == Statement.BREAK)
       { return Statement.NORMAL; } 
 
-      if (res == Statement.RETURN)
+      if (res == Statement.RETURN || 
+          res == Statement.EXIT || 
+          res == Statement.EXCEPTION)
       { return res; }   
 
       Expression testvalue = 
@@ -7246,7 +7318,9 @@ class WhileStatement extends Statement
         if (res == Statement.BREAK)
         { return Statement.NORMAL; } 
 
-        if (res == Statement.RETURN)
+        if (res == Statement.RETURN || 
+            res == Statement.EXIT || 
+            res == Statement.EXCEPTION)
         { return res; }   
   
         testvalue = loopTest.evaluate(sigma, beta); 
@@ -7278,7 +7352,9 @@ class WhileStatement extends Statement
             return Statement.NORMAL; 
           } 
 
-          if (res == Statement.RETURN)
+          if (res == Statement.RETURN || 
+              res == Statement.EXIT || 
+              res == Statement.EXCEPTION)
           { beta.removeLastEnvironment();
             return res; 
           }   
@@ -7622,7 +7698,8 @@ class WhileStatement extends Statement
           // String lasttext = (last + "").trim(); 
 
           if (Statement.isIncrement(last, vname) && 
-              (lft instanceof BasicExpression) && 
+              (lft instanceof BasicExpression) &&
+              Type.hasIntegerType(lft) && 
               Type.hasIntegerType(rgt))
           { Statement reducedBody = 
                Statement.removeLastStatement(body); 
@@ -7865,6 +7942,44 @@ class WhileStatement extends Statement
         if (newcode != null) 
         { return newcode; }  
       } 
+      else if (newbody instanceof ConditionalStatement) 
+      { ConditionalStatement ifstat = 
+                   (ConditionalStatement) newbody; 
+        Expression iftest = ifstat.getTest(); 
+
+        // vars(iftest) disjoint from wr(newbody) &&
+        // elsepart is skip: newcode is if with loop inside
+
+        if (ifstat.hasSkipElse())
+        { Statement rem = ifstat.getIfPart(); 
+          Vector newvars = new Vector(); 
+          Vector wrfr = rem.writeFrame();
+          for (int i = 0; i < wrfr.size(); i++) 
+          { String wrv = (String) wrfr.get(i); 
+            int k = wrv.indexOf("::"); 
+            if (k >= 0) 
+            { newvars.add(wrv.substring(k+2)); } 
+            else 
+            { newvars.add(wrv); }
+          } 
+          newvars.add(lv + ""); 
+
+          Vector uses = iftest.variablesUsedIn(newvars); 
+          if (uses.size() == 0)
+          { JOptionPane.showInputDialog(">> Conditional can be swapped with loop: if " + iftest + " then (for " + loopTest + " do " + rem + ") else skip"); 
+            WhileStatement ws = new WhileStatement(loopTest,rem); 
+            ws.setLoopKind(Statement.FOR); 
+            ws.setLoopVarRange(lv,lr);
+            ws.setBrackets(true); 
+            ws.setInvariant(invariant); 
+            ws.setVariant(variant);
+ 
+            ConditionalStatement newcode =
+                new ConditionalStatement(iftest, ws); 
+            return newcode;  
+          }
+        }  
+      }
     } 
     else if (loopKind == WHILE && 
              lt instanceof BinaryExpression)
@@ -11264,11 +11379,15 @@ class SequenceStatement extends Statement
         Expression lhs2 = as2.getLhs(); 
  
         if (("" + lhs1).equals(lhs2 + ""))
-        { Expression rhs2 = as2.getRhs(); 
+        { Expression rhs1 = as1.getRhs(); 
+          Expression rhs2 = as2.getRhs(); 
           Vector vvs = new Vector(); 
           vvs.add("" + lhs1); 
-          Vector vuses = rhs2.variablesUsedIn(vvs); 
-          if (vuses.size() == 0)
+          Vector vuses = rhs2.variablesUsedIn(vvs);
+
+          JOptionPane.showInputDialog(lhs1 + " " + vuses + " " + rhs1.isSideEffecting()); 
+ 
+          if (vuses.size() == 0 && !rhs1.isSideEffecting())
           { System.err.println("!! (RC) Ineffective assignment: " + as1); 
             i++; 
             newstats.add(as2);
@@ -11286,11 +11405,12 @@ class SequenceStatement extends Statement
         String var2 = as2.getVariable(); 
  
         if (var1.equals(var2))
-        { Expression rhs2 = as2.getInitialisation(); 
+        { Expression rhs1 = as1.getInitialisation(); 
+          Expression rhs2 = as2.getInitialisation(); 
           Vector vvs = new Vector(); 
           vvs.add(var1); 
           Vector vuses = rhs2.variablesUsedIn(vvs); 
-          if (vuses.size() == 0)
+          if (vuses.size() == 0 && !rhs1.isSideEffecting())
           { System.err.println("!! (RC) Ineffective declaration: " + as1); 
             i++; 
             newstats.add(as2);
@@ -11298,9 +11418,34 @@ class SequenceStatement extends Statement
           }
         } 
       } 
+      else if (stat instanceof CreationStatement && 
+          i < fstatements.size()-1 &&
+          (fstatements.get(i+1) instanceof AssignStatement))
+      { CreationStatement as1 = (CreationStatement) stat; 
+        AssignStatement as2 = 
+              (AssignStatement) fstatements.get(i+1);
+        String var1 = as1.getVariable(); 
+        String var2 = "" + as2.getLhs(); 
+ 
+        if (var1.equals(var2))
+        { Expression rhs1 = as1.getInitialisation(); 
+          Expression rhs2 = as2.getRhs(); 
+          Vector vvs = new Vector(); 
+          vvs.add(var1); 
+          Vector vuses = rhs2.variablesUsedIn(vvs); 
+          if (vuses.size() == 0 && !rhs1.isSideEffecting())
+          { System.err.println("!! (RC) Ineffective declaration initialisation: " + as1); 
+            i++; 
+            as1.setInitialisation(rhs2); 
+            newstats.add(as1);
+            continue;  
+          }
+        } 
+      } 
 
       Statement newstat = stat.removeIneffectiveStatements(); 
-      if (newstat instanceof SequenceStatement)
+      if (newstat instanceof SequenceStatement && 
+          newstat.brackets == false)
       { SequenceStatement ss = (SequenceStatement) newstat; 
         newstats.addAll(ss.statements); 
       } 
@@ -11327,7 +11472,8 @@ class SequenceStatement extends Statement
       if (res == Statement.BREAK || 
           res == Statement.RETURN ||
           res == Statement.CONTINUE ||
-          res == Statement.EXCEPTION)
+          res == Statement.EXCEPTION || 
+          res == Statement.EXIT)
       { beta.removeLastEnvironment();
         return res; 
       }   
@@ -11594,11 +11740,12 @@ class SequenceStatement extends Statement
         Expression lhs2 = as2.getLhs(); 
  
         if (("" + lhs1).equals(lhs2 + ""))
-        { Expression rhs2 = as2.getRhs(); 
+        { Expression rhs1 = as1.getRhs(); 
+          Expression rhs2 = as2.getRhs(); 
           Vector vvs = new Vector(); 
           vvs.add("" + lhs1); 
           Vector vuses = rhs2.variablesUsedIn(vvs); 
-          if (vuses.size() == 0)
+          if (vuses.size() == 0 && !rhs1.isSideEffecting())
           { int acount = (int) uses.get("amber"); 
             uses.set("amber", acount+1); 
             aUses.add("!! (RC) Ineffective assignment: " + as1); 
@@ -11619,11 +11766,12 @@ class SequenceStatement extends Statement
         String var2 = as2.getVariable(); 
  
         if (var1.equals(var2))
-        { Expression rhs2 = as2.getInitialisation(); 
+        { Expression rhs1 = as1.getInitialisation(); 
+          Expression rhs2 = as2.getInitialisation(); 
           Vector vvs = new Vector(); 
           vvs.add(var1); 
           Vector vuses = rhs2.variablesUsedIn(vvs); 
-          if (vuses.size() == 0)
+          if (vuses.size() == 0 && !rhs1.isSideEffecting())
           { int acount = (int) uses.get("amber"); 
             uses.set("amber", acount+1); 
             aUses.add("!! (RC) Ineffective declaration: " + as1); 
@@ -11634,18 +11782,50 @@ class SequenceStatement extends Statement
           } // rhs not side-effecting
         }
       }
+      else if (stat instanceof CreationStatement && 
+          i < fstatements.size()-1 &&
+          (fstatements.get(i+1) instanceof AssignStatement))
+      { CreationStatement as1 = (CreationStatement) stat; 
+        AssignStatement as2 = 
+              (AssignStatement) fstatements.get(i+1);
+        String var1 = as1.getVariable(); 
+        String var2 = "" + as2.getLhs(); 
+ 
+        if (var1.equals(var2))
+        { Expression rhs1 = as1.getInitialisation(); 
+          Expression rhs2 = as2.getRhs(); 
+          Vector vvs = new Vector(); 
+          vvs.add(var1); 
+          Vector vuses = rhs2.variablesUsedIn(vvs); 
+          if (vuses.size() == 0 && !rhs1.isSideEffecting())
+          { int acount = (int) uses.get("amber"); 
+            uses.set("amber", acount+1); 
+            aUses.add("!! (RC) Ineffective declaration initialisation: " + as1); 
+            int rccount = (int) uses.get("RC"); 
+            uses.set("RC", rccount+1);
+            i++; 
+            continue;  
+          } 
+        } 
+      } 
       else if (stat instanceof AssignStatement)
       { AssignStatement as1 = (AssignStatement) stat; 
-        Expression lhs = as1.getLhs(); 
+        Expression lhs = as1.getLhs();
+
+        // System.out.println(lhs + " " + ((BasicExpression) lhs).isVariable()); 
+ 
         if (lhs instanceof BasicExpression && 
             ((BasicExpression) lhs).isVariable())
         { Vector vvs = new Vector(); 
           vvs.add("" + lhs); 
           Vector vuses = sflat.variablesUsedIn(vvs,i+1); 
+
+          // System.out.println(">> Uses of " + lhs + " in " + sflat + " = " + vuses); 
+
           if (vuses.size() == 0)
-          { int acount = (int) uses.get("amber"); 
-            uses.set("amber", acount+1); 
-            aUses.add("!! (RC) No use of assigned variable: " + as1); 
+          { int ycount = (int) uses.get("yellow"); 
+            uses.set("yellow", ycount+1); 
+            yUses.add("! (Possible RC) No use of assigned variable: " + as1); 
             int rccount = (int) uses.get("RC"); 
             uses.set("RC", rccount+1);
           }
@@ -11705,7 +11885,8 @@ class SequenceStatement extends Statement
       
       Statement newstat = stat.optimiseOCL();
 
-      if (newstat instanceof SequenceStatement && 
+      if (newstat instanceof SequenceStatement &&
+          newstat.brackets == false && 
           ((SequenceStatement) newstat).size() == 1)
       { Statement ss = 
           ((SequenceStatement) newstat).getStatement(0); 
@@ -12107,10 +12288,25 @@ class SequenceStatement extends Statement
 
     for (int i = 0; i < statements.size(); i++) 
     { Statement si = (Statement) statements.get(i);
-      if (si instanceof SequenceStatement)
+      if (si instanceof SequenceStatement && 
+          si.brackets == false)
       { Vector subseq = 
           ((SequenceStatement) si).flattenSequenceStatement(); 
         res.addAll(subseq); 
+      } 
+      else if (si instanceof SequenceStatement && 
+               si.brackets == true)
+      { Vector subseq = 
+          ((SequenceStatement) si).flattenSequenceStatement();
+        Vector localdecs = Statement.getLocalDeclarations(si); 
+        if (localdecs.size() == 0) 
+        { res.addAll(subseq); } 
+        else  
+        { SequenceStatement newss = 
+                new SequenceStatement(subseq); 
+          newss.brackets = true; 
+          res.add(newss); 
+        } 
       } 
       else 
       { res.add(si); } 
@@ -14242,7 +14438,7 @@ class CatchStatement extends Statement
         env = beta.addVariable(sigma, assignsTo, pid, val);
       } 
       else 
-      { return Statement.EXCEPTION; }  
+      { return Statement.NORMAL; } // skip this clause  
     
       if (env != null) // success
       { int status = Statement.NORMAL; 
@@ -14255,7 +14451,7 @@ class CatchStatement extends Statement
       }  
     }
 
-    return Statement.EXCEPTION;  
+    return Statement.EXCEPTION; // invalid condition 
   } 
 
   public Expression definedness(Map uses, Vector messages)
@@ -14752,7 +14948,11 @@ class TryStatement extends Statement
     // if status is EXCEPTION, then (always) final clause
 
     if (body == null) 
-    { return Statement.NORMAL; } 
+    { if (endStatement == null)
+      { return Statement.NORMAL; }
+
+      return endStatement.execute(sigma, beta); 
+    }  
 
     int n = catchClauses.size(); 
 
@@ -14760,18 +14960,26 @@ class TryStatement extends Statement
 
     JOptionPane.showInputDialog("TRY returned status " + trystatus + " " + n + " catch clauses"); 
 
+    if (trystatus == Statement.EXIT)
+    { return trystatus; } 
+
     if (trystatus == Statement.EXCEPTION)
     { for (int i = 0; i < n; i++)  
       { Statement cclause = (Statement) catchClauses.get(i); 
         int cstatus = cclause.execute(sigma, beta); 
-        if (cstatus != Statement.NORMAL)
+        if (cstatus == Statement.EXIT)
         { return cstatus; } 
       } // exit, return, exception from a catch clause
+
+      if (endStatement != null) 
+      { return endStatement.execute(sigma, beta); } 
     }
+    else if (endStatement != null) 
+    { return endStatement.execute(sigma, beta); } 
     else 
     { return trystatus; } 
 
-    return Statement.NORMAL;   
+    return Statement.NORMAL;    
   } 
 
   public Vector variablesUsedIn(Vector vars) 
@@ -18280,7 +18488,13 @@ class ConditionalStatement extends Statement
   public Statement ifPart()
   { return ifPart; } 
 
+  public Statement getIfPart()
+  { return ifPart; } 
+
   public Statement elsePart()
+  { return elsePart; } 
+
+  public Statement getElsePart()
   { return elsePart; } 
 
   public Statement getIf()
