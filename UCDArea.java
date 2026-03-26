@@ -3848,7 +3848,9 @@ public class UCDArea extends JPanel
           else if ("efoLimit".equals(configPar))
           { TestParameters.efoLimit = cpar; } 
           else if ("efiLimit".equals(configPar))
-          { TestParameters.efiLimit = cpar; } 
+          { TestParameters.efiLimit = cpar; }
+          
+          System.out.println(">>> Set " + configPar + " = " + cpar);  
         } 
       } 
     } 

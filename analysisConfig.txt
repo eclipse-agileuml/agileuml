@@ -1,9 +1,9 @@
 syntacticComplexityLimit = 20
-cloneSizeLimit = 10
-energyCloneSizeLimit = 10
+cloneSizeLimit = 5
+energyCloneSizeLimit = 5
 statementNestingLimit = 5
 cyclomaticComplexityLimit = 10
-referenceChainLimit = 4
+referenceChainLimit = 3
 nestedTypeLimit = 3
 superclassesLimit = 4
 inheritanceChainLimit = 3

@@ -6147,11 +6147,11 @@ public class Entity extends ModelElement implements Comparable
       if (actualClones.size() > 0)
       { messages.add("!! (DEV) flaw: Cloned expressions/statements " + actualClones + " from " + op); 
         messages.add(""); 
-        int opclesze = actualClones.size();
-        res1.set("amber", amberop + opclesze); 
-        amberDetails.add("!!! Expression/statement clones of " + op + "!: " + actualClones);
+        // int opclesze = actualClones.size();
+        res1.set("amber", amberop + 1); 
+        amberDetails.add("!! Expression/statement clones of " + op + "!: " + actualClones);
         int devcount = (int) res1.get("DEV"); 
-        res1.set("DEV", devcount + opclesze); 
+        res1.set("DEV", devcount + 1); 
       }  
 
       Vector collVars = new Vector(); 
@@ -6414,12 +6414,12 @@ public class Entity extends ModelElement implements Comparable
     } 
 
     if (entityClones.size() > 0)
-    { messages.add("!!! (DEV) flaw: Cloned expressions/statements " + entityClones + " from " + name); 
+    { messages.add("!! (DEV) flaw: Cloned expressions/statements " + entityClones + " from " + name); 
       messages.add(""); 
-      int redcount = (int) res.get("red");
-      int ecsze = entityClones.size(); 
-      res.set("red", redcount + ecsze); 
-      res.set("DEV", ecsze); 
+      // int redcount = (int) res.get("red");
+      // int ecsze = entityClones.size(); 
+      // res.set("red", redcount + ecsze); 
+      // res.set("DEV", ecsze); 
     }  
 
     if (n > 0)

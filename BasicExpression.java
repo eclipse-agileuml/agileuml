@@ -1102,7 +1102,12 @@ class BasicExpression extends Expression
   }
 
   public boolean containsSubexpression(Expression expr) 
-  { if (arrayIndex != null) 
+  { if (objectRef != null) 
+    { if (objectRef.containsSubexpression(expr))
+      { return true; } 
+    }
+
+    if (arrayIndex != null) 
     { if (arrayIndex.containsSubexpression(expr))
       { return true; } 
     } 
@@ -1950,6 +1955,14 @@ class BasicExpression extends Expression
       // if (used.size() > 1) 
       // { JOptionPane.showInputDialog(">> Potential clone: " + this); } 
     } 
+
+    if (objectRef != null) 
+    { objectRef.findClones(clones,cloneDefs,rule,op); } 
+
+    if (arrayIndex != null) 
+    { objectRef.findClones(clones,cloneDefs,rule,op); } 
+
+    // and parameters
   } 
 
   public void findMagicNumbers(java.util.Map mgns, String rule, String op)

@@ -2795,7 +2795,7 @@ abstract class Statement implements Cloneable
     { typ = new Type("OclAny", null); } 
 
     String vname = 
-        Identifier.nextIdentifier("factored_expr");
+        Identifier.nextIdentifier("factoredExpr");
 
     CreationStatement dec = 
       CreationStatement.newCreationStatement(vname,typ,expr);
@@ -2821,7 +2821,7 @@ abstract class Statement implements Cloneable
           { Statement ss = 
                  (Statement) stats.get(j); 
             Statement newstat = 
-                        ss.substituteEq(expr + "", var); 
+                 ss.substituteEq(expr + "", var); 
 
             precedingStats.add(newstat);
           }  
@@ -10329,7 +10329,10 @@ class CreationStatement extends Statement
   } 
 
   public boolean containsSubexpression(Expression expr)
-  { if (initialExpression != null) 
+  { // JOptionPane.showInputDialog("*** " + this + " contains " + expr + ": " + 
+    //    initialExpression.containsSubexpression(expr)); 
+
+    if (initialExpression != null) 
     { return initialExpression.containsSubexpression(expr); } 
     return false; 
   } 
