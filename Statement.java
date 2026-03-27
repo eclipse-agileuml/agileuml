@@ -13911,6 +13911,35 @@ class AssertStatement extends Statement
     return uses; 
   } 
 
+  public int execute(ModelSpecification sigma, ModelState beta)
+  { if (condition == null) 
+    { return EXCEPTION; } 
+
+    Expression cond = condition.evaluate(sigma, beta); 
+    if ("invalid".equals(cond + ""))
+    { return EXCEPTION; } 
+
+    if ("false".equals(cond + ""))
+    { // throw an AssertionException(message); 
+      String oid = Identifier.newIdentifier("oid_"); 
+      Entity assertionException = 
+        new Entity("AssertionException"); 
+      ObjectSpecification newobj = 
+         assertionException.initialisedObject(oid); 
+      sigma.addObject(newobj); 
+
+      Expression exValue = new BasicExpression(oid);
+      exValue.setType(new Type(assertionException)); 
+      // should be an object id 
+
+      System.out.println(">>> Exception " + exValue + " thrown"); 
+      sigma.addException(newobj);
+      return EXCEPTION; 
+    }  
+
+    return NORMAL; 
+  } 
+
   public Expression definedness(Map uses, Vector messages)
   { return condition.definedness(uses, messages); } 
 

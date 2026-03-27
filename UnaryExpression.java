@@ -2198,12 +2198,44 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
       return new BasicExpression("invalid");  
     } 
 
+    if (operator.equals("->oclIsUndefined")) 
+    { // true for null or invalid, also Math_NaN
+      
+      Expression arg = argument.evaluate(sigma, beta); 
+      if ("invalid".equals(arg + "") || 
+          "null".equals(arg + "") || 
+          "Math_NaN".equals(arg + ""))
+      { return new BasicExpression(true); } 
+      return new BasicExpression(false); 
+    } 
+
+    if (operator.equals("->oclIsInvalid"))
+    { Expression arg = argument.evaluate(sigma, beta); 
+      if ("invalid".equals(arg + "") || 
+          "Math_NaN".equals(arg + ""))
+      { return new BasicExpression(true); } 
+      return new BasicExpression(false); 
+    }   
+
     if (Expression.isMathOperator(operator))
     { Expression arg = argument.evaluate(sigma, beta); 
       
       if (Expression.isNumber(arg + ""))
       { double dd = Expression.convertNumber(arg + ""); 
         return Expression.simplifyMathExpression(operator, dd); 
+      } 
+   
+      return new UnaryExpression(operator, arg); 
+    } 
+
+    if (Expression.isStringOperator(operator))
+    { 
+      Expression arg = argument.evaluate(sigma, beta); 
+      
+      if (Expression.isStringValue(arg + ""))
+      { String dd = Expression.convertStringValue(arg + ""); 
+        return Expression.simplifyStringExpression(
+                                        operator, arg);  
       } 
    
       return new UnaryExpression(operator, arg); 
@@ -2308,6 +2340,71 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
       } 
  
       return res; 
+    }
+
+    if ("->display".equals(operator))
+    { return new BasicExpression(true); }  
+    
+    if ("->isDeleted".equals(operator))
+    { if (argument instanceof BasicExpression && 
+          ((BasicExpression) argument).arrayIndex == null) 
+      { // remove the object from its class, and set the 
+        // object variable to null:
+ 
+        Type argt = argument.getType(); 
+        if (argt != null && argt.isEntity())
+        { Entity argent = argt.getEntity(); 
+          String ename = argent.getName(); 
+
+          Expression obj = argument.evaluate(sigma, beta);
+
+          if ("invalid".equals(obj + ""))
+          { return new BasicExpression("invalid"); }
+
+          if ("null".equals(obj + ""))
+          { return new BasicExpression(true); }
+
+          Vector objs = sigma.getObjectsOf(ename + ""); 
+          for (int i = 0; i < objs.size(); i++) 
+          { ObjectSpecification ox = 
+              (ObjectSpecification) objs.get(i); 
+            if ((obj + "").equals(ox + ""))
+            { return new BasicExpression(false); }  
+          } 
+
+          return new BasicExpression(true);
+        }
+
+        return new BasicExpression("invalid"); 
+      } 
+    
+      if ("->oclIsNew".equals(operator) && 
+             (argument instanceof BasicExpression))
+      { Type argt = argument.getType(); 
+
+        if (argt != null && argt.isEntity())
+        { Entity argent = argt.getEntity(); 
+          String ename = argent.getName(); 
+          Expression obj = argument.evaluate(sigma, beta);
+
+          if ("invalid".equals(obj + ""))
+          { return new BasicExpression("invalid"); }
+
+          if ("null".equals(obj + ""))
+          { return new BasicExpression(false); }
+
+          Vector objs = sigma.getObjectsOf(ename + ""); 
+          for (int i = 0; i < objs.size(); i++) 
+          { ObjectSpecification ox = 
+              (ObjectSpecification) objs.get(i); 
+            if ((obj + "").equals(ox + ""))
+            { return new BasicExpression(true); }  
+          } 
+          return new BasicExpression(false);
+        } 
+
+        return new BasicExpression("invalid");
+      } // true if object already exists, otherwise false
     }
 
     Expression pre = argument.evaluate(sigma, beta);
