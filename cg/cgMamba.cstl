@@ -191,7 +191,7 @@ _1->trim() |-->_1.Trim()
 _1->characters() |-->Domain.Ocl.Characters(_1)
 
 _1->oclIsUndefined() |-->(_1 == null)
-_1->oclIsInvalid() |-->_1.Equals(null)
+_1->oclIsInvalid() |-->(_1 == null)
 
 _1->oclType() |-->int.Create()<when> _1 int
 _1->oclType() |-->long.Create()<when> _1 long
