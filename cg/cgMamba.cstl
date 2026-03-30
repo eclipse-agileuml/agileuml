@@ -193,17 +193,13 @@ _1->characters() |-->Domain.Ocl.Characters(_1)
 _1->oclIsUndefined() |-->(_1 == null)
 _1->oclIsInvalid() |-->(_1 == null)
 
-_1->oclType() |-->int.Create()<when> _1 int
-_1->oclType() |-->long.Create()<when> _1 long
-_1->oclType() |-->double.Create()<when> _1 double
-_1->oclType() |-->bool.Create()<when> _1 boolean
-_1->oclType() |-->_1.GetType().Create()
+_1->oclType() |-->RuntimeType.GetTypeOf(_1)
 
 /*   $$$   _1->allInstances() |-->_1._1_allInstances   */
 
 _1->copy() |-->({}).Concat(_1)<when> _1 Sequence
 _1->copy() |-->({}).Concat(_1)<when> _1 Set
-_1->copy() |-->_1.Copy(true, true)<when> _1 Map
+_1->copy() |-->_1.OrderByKey()<when> _1 Map
 _1->copy() |-->_1.Copy(true, true)<when> _1 object
 _1->copy() |-->_1
 
