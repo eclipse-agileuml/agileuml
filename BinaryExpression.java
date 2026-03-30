@@ -15095,6 +15095,34 @@ public boolean conflictsWithIn(String op, Expression el,
         return Statement.NORMAL; 
       } 
     }
+    else if ("&".equals(operator))
+    { int status1 = left.execute(sigma, beta); 
+      if (status1 == Statement.NORMAL)
+      { int status2 = right.execute(sigma, beta); 
+        return status2; 
+      }  
+      return status1;  
+    }
+    else if ("!".equals(operator))
+    { BinaryExpression expr = (BinaryExpression) left; 
+      Expression col = expr.getRight(); 
+      Expression var = expr.getLeft(); // identifier
+      Expression range = col.evaluate(sigma, beta);
+
+      if (range == null) 
+      { return Statement.EXCEPTION; } 
+
+      if (Expression.isInvalid(range)) 
+      { return Statement.EXCEPTION; } 
+
+      if (range instanceof SetExpression)
+      { SetExpression srange = (SetExpression) range; 
+        return 
+          srange.executeForAll(sigma, beta, 
+                                      "" + var, right); 
+      } 
+    } 
+
     return Statement.NORMAL; 
   } 
   
@@ -15159,10 +15187,12 @@ public boolean conflictsWithIn(String op, Expression el,
       String indvar = Identifier.nextIdentifier("_ind"); 
 
           
-      if ("Integer".equals(eleftname) && (left instanceof BasicExpression))
+      if ("Integer".equals(eleftname) && 
+          (left instanceof BasicExpression))
       { BasicExpression leftbe = (BasicExpression) left; 
         Vector leftpars = leftbe.getParameters(); 
-        if (leftpars != null && leftpars.size() >= 2 && "subrange".equals(leftbe.data))
+        if (leftpars != null && leftpars.size() >= 2 && 
+            "subrange".equals(leftbe.data))
         { Expression startexp = (Expression) leftpars.get(0); 
           Expression endexp = (Expression) leftpars.get(1);
           String startexpqf = startexp.queryForm(env,false); 
@@ -22998,9 +23028,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       }
     }  
 
-    BinaryExpression res = (BinaryExpression) clone(); 
-    res.left = lexpr; 
-    res.right = rexpr; 
+    Expression res = 
+      Expression.simplify(operator, lexpr, rexpr, needsBracket); 
     return res; 
   }
 

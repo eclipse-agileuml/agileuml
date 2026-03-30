@@ -5656,10 +5656,15 @@ class InvocationStatement extends Statement
     if (callExp instanceof BasicExpression)
     { BasicExpression cexpr = (BasicExpression) callExp; 
       Expression obj = cexpr.getObjectRef(); 
-      // if null, it is a call on self. 
+      // if null, it is a call on self, or static op.
+ 
       String op = cexpr.getData(); 
       Vector actualPars = cexpr.getParameters(); 
-      int npars = actualPars.size(); 
+      int npars = 0; 
+      if (actualPars != null) 
+      { npars = actualPars.size(); }
+      else 
+      { actualPars = new Vector(); } 
 
       Expression selfobject = null;
       BehaviouralFeature bf = null;
@@ -6583,7 +6588,7 @@ class InvocationStatement extends Statement
 
 class ImplicitInvocationStatement extends Statement
 { Expression callExp; 
-
+  // an expression executed for its side-effects
 
   public ImplicitInvocationStatement(Expression ee)
   { callExp = ee; } 
@@ -7742,6 +7747,7 @@ class WhileStatement extends Statement
       SequenceStatement ss = new SequenceStatement(); 
       ss.addStatement(first); 
       ss.addStatement(res); 
+      ss.setBrackets(true); // because first is a declaration
       return ss;  
     } 
 
@@ -13925,7 +13931,8 @@ class AssertStatement extends Statement
       Entity assertionException = 
         new Entity("AssertionException"); 
       ObjectSpecification newobj = 
-         assertionException.initialisedObject(oid); 
+         assertionException.initialisedObject(oid);
+      newobj.setOCLAttribute("message", message);  
       sigma.addObject(newobj); 
 
       Expression exValue = new BasicExpression(oid);
@@ -14440,6 +14447,22 @@ class CatchStatement extends Statement
 
     return new CatchStatement(cobj,cact); 
   }
+
+  public boolean matchesException(ModelSpecification sigma, 
+                                  ModelState beta)
+  { if (caughtObject instanceof BinaryExpression)
+    { Expression typ = 
+         ((BinaryExpression) caughtObject).getRight(); 
+      String tname = "" + typ; 
+      ObjectSpecification ex = sigma.lastException(tname); 
+
+      if (ex != null && ex.getName() != null && 
+          ex.getEntity() != null) 
+      { return true; } 
+    }
+ 
+    return false; 
+  } 
 
   public int execute(ModelSpecification sigma, 
                      ModelState beta)
@@ -14976,8 +14999,11 @@ class TryStatement extends Statement
 
   public int execute(ModelSpecification sigma, 
                      ModelState beta)
-  { // execute the body, then successive catch clauses, 
-    // if status is EXCEPTION, then (always) final clause
+  { // execute the body, then if status is EXIT do exit, if    
+    // status is EXCEPTION, try
+    // successive catch clauses,  
+    // if status is return, continue, break, normal, then do 
+    // final clause and finish with status.
 
     if (body == null) 
     { if (endStatement == null)
@@ -14990,28 +15016,41 @@ class TryStatement extends Statement
 
     int trystatus = body.execute(sigma, beta); 
 
-    JOptionPane.showInputDialog("TRY returned status " + trystatus + " " + n + " catch clauses"); 
+    // JOptionPane.showInputDialog("TRY returned status " + trystatus + " " + n + " catch clauses"); 
 
     if (trystatus == Statement.EXIT)
     { return trystatus; } 
 
     if (trystatus == Statement.EXCEPTION)
-    { for (int i = 0; i < n; i++)  
-      { Statement cclause = (Statement) catchClauses.get(i); 
-        int cstatus = cclause.execute(sigma, beta); 
-        if (cstatus == Statement.EXIT)
-        { return cstatus; } 
-      } // exit, return, exception from a catch clause
+    { int cstatus = Statement.NORMAL; 
 
-      if (endStatement != null) 
-      { return endStatement.execute(sigma, beta); } 
+      for (int i = 0; i < n; i++)  
+      { CatchStatement cclause = 
+             (CatchStatement) catchClauses.get(i);
+
+        if (cclause.matchesException(sigma, beta))  
+        { cstatus = cclause.execute(sigma, beta); 
+          if (cstatus == Statement.EXIT)
+          { return cstatus; } 
+          // exit, return, exception from a catch clause
+
+          if (endStatement != null) 
+          { int endstatus = endStatement.execute(sigma, beta); 
+            if (endstatus == Statement.EXIT || 
+                endstatus == Statement.EXCEPTION)
+            { return endstatus; }
+          } 
+          return cstatus;
+        }  
+      }
+      return trystatus; // no catch matched   
     }
     else if (endStatement != null) 
-    { return endStatement.execute(sigma, beta); } 
+    { endStatement.execute(sigma, beta); 
+      return trystatus; 
+    } 
     else 
     { return trystatus; } 
-
-    return Statement.NORMAL;    
   } 
 
   public Vector variablesUsedIn(Vector vars) 
@@ -18585,7 +18624,8 @@ class ConditionalStatement extends Statement
   public int execute(ModelSpecification sigma, ModelState beta)
   { Expression tval = test.evaluate(sigma, beta);
 
-    if (tval == null) 
+    if (tval == null || 
+        "invalid".equals(tval + "")) 
     { return Statement.EXCEPTION; } 
  
     tval.setBrackets(false); 
@@ -18594,7 +18634,7 @@ class ConditionalStatement extends Statement
     { int res = ifPart.execute(sigma, beta); 
       return res; 
     } 
-    else 
+    else // null value counts as false. 
     { int res = elsePart.execute(sigma, beta); 
       return res; 
     } 
@@ -18684,6 +18724,55 @@ class ConditionalStatement extends Statement
     { elsec = (Statement) elsePart.clone(); }
     return new ConditionalStatement(testc, ifc, elsec); 
   }  
+
+  public Statement removeIneffectiveStatements()
+  { Statement statif = ifPart.removeIneffectiveStatements(); 
+    if (elsePart == null) 
+    { return new ConditionalStatement(test, statif, elsePart); } 
+
+    Statement statelse = elsePart.removeIneffectiveStatements(); 
+
+    if (Statement.ineffectiveFirstStatement(statif) && 
+        Statement.ineffectiveFirstStatement(statelse))
+    { Statement iffirst = Statement.getFirstStatement(statif); 
+      Statement elfirst = Statement.getFirstStatement(statelse); 
+
+      // the declared variable should not occur in test
+      if (iffirst instanceof CreationStatement)
+      { CreationStatement cs = (CreationStatement) iffirst; 
+        String var = cs.getVariable(); 
+        Vector vs = new Vector(); 
+        vs.add(var); 
+        Vector vuses = test.variablesUsedIn(vs); 
+        if (vuses.size() > 0)
+        { return new ConditionalStatement(
+                          test, statif, statelse); 
+        } 
+      } 
+
+      if (("" + iffirst).equals("" + elfirst))
+      { Statement remif = Statement.removeFirstStatement(statif); 
+        Statement remelse = 
+                       Statement.removeFirstStatement(statelse);
+        remelse.setBrackets(true);  
+      
+        ConditionalStatement res = 
+             new ConditionalStatement(test,remif,remelse); 
+
+        SequenceStatement ss = new SequenceStatement(); 
+        ss.addStatement(iffirst); 
+        ss.addStatement(res); 
+        ss.setBrackets(true); // because first is a declaration
+
+        System.err.println("!! (RC): ineffective declarations " + iffirst + " moved before conditional test"); 
+          
+        return ss;
+      }  
+    } 
+
+    return new ConditionalStatement(test, statif, statelse); 
+  }
+
 
   public Statement optimiseOCL()
   { Expression testc = test.simplifyOCL(); 
@@ -18788,9 +18877,13 @@ class ConditionalStatement extends Statement
     else 
     { Statement lastIfStat = Statement.getLastStatement(ifc);
       Statement lastElseStat = 
-                    Statement.getLastStatement(elsec); 
-      if (("" + lastIfStat).equals("" + lastElseStat))
-      { System.err.println(">> Refactoring duplicated final statement " + lastIfStat + " from conditional statement"); 
+                    Statement.getLastStatement(elsec);
+ 
+      if (lastIfStat instanceof CreationStatement) 
+      { } 
+      else if (("" + lastIfStat).equals("" + lastElseStat))
+      { System.err.println(">> Refactoring duplicated final statement " + 
+             lastIfStat + " from conditional statement"); 
 
         Statement newifpart = 
              Statement.removeLastStatement(ifc); 
@@ -18987,6 +19080,34 @@ class ConditionalStatement extends Statement
       }  
     } 
 
+    if (Statement.ineffectiveFirstStatement(ifPart) && 
+        Statement.ineffectiveFirstStatement(elsePart))
+    { Statement iffirst = Statement.getFirstStatement(ifPart); 
+      Statement elfirst =  
+                   Statement.getFirstStatement(elsePart); 
+
+      // the declared variable should not occur in test
+      if (iffirst instanceof CreationStatement)
+      { CreationStatement cs = (CreationStatement) iffirst; 
+        String var = cs.getVariable(); 
+        Vector vs = new Vector(); 
+        vs.add(var); 
+        Vector vuses = test.variablesUsedIn(vs); 
+        if (vuses.size() > 0)
+        { return uses; }
+
+        if (("" + iffirst).equals("" + elfirst))
+        { oUses.add("!! Redundant code (RC): " + 
+             "duplicated initial statement " + iffirst + 
+             " in conditional");
+          int oscore = (int) uses.get("amber"); 
+          uses.set("amber", oscore + 1);
+          int rccount = (int) uses.get("RC"); 
+          uses.set("RC", rccount+1);
+        }
+      } 
+    }  
+
     return uses; 
   } // if s->includes(x) then skip else s := s->including(x)
 
@@ -19038,6 +19159,7 @@ class ConditionalStatement extends Statement
     return res; 
   } 
 
+  /* 
   public Statement removeIneffectiveStatements()
   { Statement ifc = ifPart.removeIneffectiveStatements();
     test.setBrackets(false); 
@@ -19047,7 +19169,7 @@ class ConditionalStatement extends Statement
     if (elsePart != null) 
     { elsec = elsePart.removeIneffectiveStatements(); }
     return new ConditionalStatement(test, ifc, elsec); 
-  } 
+  } */ 
 
   public Statement generateDesign(java.util.Map env, boolean local)
   { Statement ifc = ifPart.generateDesign(env,local);

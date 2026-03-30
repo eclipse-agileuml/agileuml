@@ -17105,14 +17105,12 @@ public Statement generateDesignSubtract(Expression rhs)
       Expression expr = beta.getVariableValue(sigma,nme); 
 
       if (expr != null) 
-      { if (arrayIndex != null && 
-            expr instanceof SetExpression) 
-        { // expect a sequence
+      { if (arrayIndex != null) 
+        { // expect a sequence or string
 
           Expression indval = arrayIndex.evaluate(sigma,beta);
-          int indx = Integer.parseInt("" + indval); 
-          return ((SetExpression) expr).getExpression(indx); 
-        } 
+          return Expression.simplifyAt(expr, indval); 
+        }     
       } 
 
       return expr; 
@@ -17174,24 +17172,24 @@ public Statement generateDesignSubtract(Expression rhs)
         { selfobject = beta.getVariableValue(sigma, "self"); } 
 
         if (selfobject == null) // error
-        { return this; } 
+        { return new BasicExpression("invalid"); } 
 
         ObjectSpecification ospec = 
                  sigma.getObjectSpec("" + selfobject);
 
         if (ospec == null) // static case
-        { return this; } 
+        { return this; } // staticOperationQueryCall
  
         Entity ent = ospec.getEntity(); 
 
         if (ent == null) 
-        { return this; } 
+        { return new BasicExpression("invalid"); } 
 
         bf = ent.getOperation(op, npars);
       }
 
       if (bf == null) 
-      { return this; } 
+      { return new BasicExpression("invalid"); } 
  
       beta.addNewEnvironment(); 
       String pid = Identifier.nextIdentifier("&_"); 
@@ -17200,8 +17198,12 @@ public Statement generateDesignSubtract(Expression rhs)
       Vector parValues = new Vector(); 
       for (int i = 0; i < actualPars.size(); i++) 
       { Expression pval = (Expression) actualPars.get(i); 
-        Expression parval = pval.evaluate(sigma, beta); 
-        parValues.add(parval); // could be null; 
+        Expression parval = pval.evaluate(sigma, beta);
+
+        if (parval == null || "invalid".equals(parval + ""))
+        { return new BasicExpression("invalid"); } 
+ 
+        parValues.add(parval); // can be null; 
       } 
 
       Expression res = 
@@ -17210,7 +17212,15 @@ public Statement generateDesignSubtract(Expression rhs)
       beta.removeLastEnvironment(); 
   
       if (res instanceof BinaryExpression)
-      { return ((BinaryExpression) res).getLeft(); } 
+      { BinaryExpression beres = (BinaryExpression) res; 
+        Expression status = beres.getRight();
+        // JOptionPane.showInputDialog("Call of " + bf + " status: " + status); 
+ 
+        if (("" + status).equals("" + Statement.EXCEPTION))
+        { return new BasicExpression("invalid"); } 
+
+        return beres.getLeft(); 
+      } 
 
       return res; 
     } 

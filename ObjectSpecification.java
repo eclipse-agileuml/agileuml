@@ -90,6 +90,9 @@ public class ObjectSpecification extends ModelElement
   public Object getRawValue(String att) 
   { return attvalues.get(att); } 
 
+  public void setOCLAttribute(String att, Expression val) 
+  { setOCLValue(att, val); } 
+
   public void setOCLValue(String att, Expression val) 
   { oclattvalues.put(att,val);
     attvalues.put(att, "" + val);

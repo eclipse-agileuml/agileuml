@@ -87,7 +87,9 @@ public class ConditionalExpression extends Expression
   public int execute(
                 ModelSpecification sigma, ModelState beta)
   { Expression cond = test.evaluate(sigma, beta);
-    if (cond == null) 
+    if (cond == null || 
+        "invalid".equals(cond + "") || 
+        "(invalid)".equals(cond + "")) 
     { return Statement.EXCEPTION; } 
  
     Expression scond = cond.simplify();

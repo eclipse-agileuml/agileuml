@@ -1790,6 +1790,20 @@ abstract class Expression
 
   public abstract int minModality(); 
 
+  public static boolean isInvalid(Expression expr)
+  { String sexpr = "" + expr; 
+
+    if ("invalid".equals(sexpr) || 
+        "(invalid)".equals(sexpr))
+    { return true; } 
+
+    if ("Math_NaN".equals(sexpr) || 
+        "(Math_NaN)".equals(sexpr))
+    { return true; } 
+
+    return false; 
+  } 
+
   public boolean isNumeric()
   { if (type != null) 
     { return type.getName().equals("int") || 
@@ -5861,6 +5875,7 @@ abstract class Expression
     // sq->collect(x|e)->at(i)  is  let x = sq->at(i) in e
     // Sequence{x1, ..., xn}->at(i)  is  xi
 
+    // boolean brks = src.getBrackets(); 
     arg.setBrackets(false); 
 
     if ((src.isSequence() || src.isString()) && 
@@ -5897,7 +5912,9 @@ abstract class Expression
                 new BinaryExpression("-", 
                           new BasicExpression(1), 
                           new BasicExpression(-val))); 
-        return new BinaryExpression("->at", src, indx); 
+        Expression res = new BinaryExpression("->at", src, indx);
+        // res.setBrackets(brks); 
+        return res;  
       } 
     } 
 

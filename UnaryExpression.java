@@ -2201,10 +2201,14 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
     if (operator.equals("->oclIsUndefined")) 
     { // true for null or invalid, also Math_NaN
       
-      Expression arg = argument.evaluate(sigma, beta); 
+      Expression arg = argument.evaluate(sigma, beta);
+      
       if ("invalid".equals(arg + "") || 
           "null".equals(arg + "") || 
-          "Math_NaN".equals(arg + ""))
+          "Math_NaN".equals(arg + "") ||
+          "(invalid)".equals(arg + "") || 
+          "(null)".equals(arg + "") || 
+          "(Math_NaN)".equals(arg + ""))
       { return new BasicExpression(true); } 
       return new BasicExpression(false); 
     } 
@@ -2212,7 +2216,9 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
     if (operator.equals("->oclIsInvalid"))
     { Expression arg = argument.evaluate(sigma, beta); 
       if ("invalid".equals(arg + "") || 
-          "Math_NaN".equals(arg + ""))
+          "Math_NaN".equals(arg + "") ||
+          "(invalid)".equals(arg + "") || 
+          "(Math_NaN)".equals(arg + ""))
       { return new BasicExpression(true); } 
       return new BasicExpression(false); 
     }   

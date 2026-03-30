@@ -3601,6 +3601,37 @@ public class SetExpression extends Expression
     return new BasicExpression(true); 
   } 
 
+  public int executeForAll(ModelSpecification sigma, 
+                           ModelState beta, 
+                           String var, 
+                           Expression expr)
+  { // evaluate expr in each environment with var |-> elem
+        
+    beta.addNewEnvironment();
+    String pid = Identifier.nextIdentifier("&_"); 
+ 
+    beta.addVariable(sigma, var, pid, 
+                     new BasicExpression("null")); 
+
+    for (int i = 0; i < elements.size(); i++) 
+    { Expression elem = (Expression) elements.get(i);
+      beta.setVariableValue(sigma, var, elem); 
+      int estatus = expr.execute(sigma, beta);
+      
+      if (estatus == Statement.NORMAL) { }
+      else  
+      { beta.removeLastEnvironment();
+        sigma.freeMemory(pid); 
+        return estatus; 
+      }  
+    } 
+
+    beta.removeLastEnvironment();
+    sigma.freeMemory(pid); 
+
+    return Statement.NORMAL; 
+  } 
+
   public Expression evaluateExists(ModelSpecification sigma, 
                              ModelState beta, 
                              String var, 
