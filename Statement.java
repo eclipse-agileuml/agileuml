@@ -9998,9 +9998,13 @@ class CreationStatement extends Statement
     java.util.HashMap env = null; 
 
     if (initialExpression != null) 
-    { Expression val = initialExpression.evaluate(sigma, beta); 
+    { Expression val = initialExpression.evaluate(sigma, beta);
+ 
       String pid = Identifier.newIdentifier("&_");
       env = beta.addVariable(sigma, assignsTo, pid, val);
+
+      if (Expression.isInvalid(val))
+      { return Statement.EXCEPTION; } 
     } // else use default value 
     else if (instanceType != null)  
     { Expression defaultInit = 
@@ -10008,6 +10012,9 @@ class CreationStatement extends Statement
       Expression val = defaultInit.evaluate(sigma, beta); 
       String pid = Identifier.newIdentifier("&_");
       env = beta.addVariable(sigma, assignsTo, pid, val);
+
+      if (Expression.isInvalid(val))
+      { return Statement.EXCEPTION; } 
     }
 
     if (env != null) // success
@@ -17027,7 +17034,7 @@ class AssignStatement extends Statement
   public int execute(ModelSpecification sigma, ModelState beta)
   { Expression rhsValue = rhs.evaluate(sigma, beta);
  
-    if ("invalid".equals("" + rhsValue))
+    if (Expression.isInvalid(rhsValue))
     { return Statement.EXCEPTION; } 
 
     if (lhs instanceof UnaryExpression && 
@@ -17036,18 +17043,17 @@ class AssignStatement extends Statement
       Expression arg = uexpr.getArgument(); 
       Expression ptr = arg.evaluate(sigma, beta);
 
+      if (Expression.isInvalidOrNull(ptr))
+      { return Statement.EXCEPTION; } 
+
       String pid = ptr + ""; // a reference
 
-      if (ptr != null && !("invalid".equals(pid)) && 
-          !("null".equals(pid)))  // 0 pointer is null
-      { sigma.setMemoryValue(pid, rhsValue);
-        System.out.println();   
-        System.out.println(">> Updated states after " + this + 
+      sigma.setMemoryValue(pid, rhsValue);
+      System.out.println();   
+      System.out.println(">> Updated states after " + this + 
                        ": " + sigma + ">> Local state: " + beta);
-        return Statement.NORMAL; 
-      }
-  
-      return Statement.EXCEPTION; 
+   
+      return Statement.NORMAL; 
     } 
 
     if (lhs instanceof BasicExpression)
@@ -17133,7 +17139,7 @@ class AssignStatement extends Statement
     Expression ldef = lhs.definedness(uses, messages); 
     Expression rdef = rhs.definedness(uses, messages); 
 
-    Expression res = Expression.simplify("&", ldef, rdef, null); 
+    Expression res = Expression.simplifyAnd(ldef, rdef); 
     return res; 
   } 
 

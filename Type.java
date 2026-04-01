@@ -831,10 +831,12 @@ public class Type extends ModelElement
   { if (t1 == null || t2 == null) 
     { return false; } 
 
-    if (t1.getName().equals(t2.getName())) { return true; }  // collections? 
+    if (t1.getName().equals(t2.getName())) 
+    { return true; }  // but not for collections 
 
     if (t1.isEntity() && t2.isEntity()) 
-    { return Entity.isAncestor(t2.entity,t1.entity); } 
+    { return Entity.isAncestor(t2.entity,t1.entity); }
+ 
     if (t2.getName().equals("double"))
     { if (t1.isEnumeration()) { return true; } 
       if (t1.getName().equals("int")) { return true; } 

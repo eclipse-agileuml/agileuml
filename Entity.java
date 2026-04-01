@@ -13611,13 +13611,35 @@ public class Entity extends ModelElement implements Comparable
   { if (b == null) { return false; } 
 
     Entity s = b.getSuperclass();
-    if (s == null) { return false; }
-    if (s == a) { return true; }   // s.equals(a) ?? 
+
+    if (s == null) 
+    { return false; }
+
+    if (s == a) 
+    { return true; }   // s.equals(a) ??
+ 
     return isAncestor(a,s);
   }
 
+  public static boolean isAncestor(String aname, Entity b)
+  { if (b == null) 
+    { return false; } 
+
+    Entity s = b.getSuperclass();
+
+    if (s == null) 
+    { return false; }
+
+    if (s.getName().equals(aname)) 
+    { return true; }  
+ 
+    return isAncestor(aname, s);
+  }
+
   public static boolean isDescendant(Entity a, Entity b)
-  { if (a == b) { return true; } 
+  { if (a == b) 
+    { return true; }
+ 
     return isAncestor(b,a); 
   }
 

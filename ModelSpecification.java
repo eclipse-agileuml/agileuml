@@ -126,13 +126,26 @@ public class ModelSpecification
 
   public ObjectSpecification lastException(String cname)
   { // most recent exception (if any) with class cname
+    // or class a descendent of that class. 
+
     int n = exceptions.size(); 
     for (int i = n-1; i >= 0; i--) 
     { ObjectSpecification obj = 
-          (ObjectSpecification) exceptions.get(i); 
-      if (cname.equals(obj.objectClass))
+          (ObjectSpecification) exceptions.get(i);
+
+      Entity ex = obj.getEntity(); 
+
+      if (ex != null) 
+      { if (cname.equals(ex.getName()))
+        { return obj; } 
+
+        if (Entity.isAncestor(cname, ex))
+        { return obj; } 
+      }  
+      else if (cname.equals(obj.objectClass))
       { return obj; } 
     } 
+
     return null; 
   }  
   

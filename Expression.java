@@ -1804,6 +1804,19 @@ abstract class Expression
     return false; 
   } 
 
+  public static boolean isInvalidOrNull(Expression expr)
+  { if (expr == null) 
+    { return true; } 
+
+    String sexpr = "" + expr; 
+
+    if ("null".equals(sexpr) || 
+        "(null)".equals(sexpr))
+    { return true; } 
+
+    return Expression.isInvalid(expr); 
+  } 
+
   public boolean isNumeric()
   { if (type != null) 
     { return type.getName().equals("int") || 
