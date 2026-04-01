@@ -208,8 +208,8 @@
 }</Operation>
         <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="IsInteger" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function bool IsInteger(string str) 
 {  try { 
-     int.Parse(str); 
-     return true; 
+     int x = int.Parse(str); 
+     return (x + "") == str; 
    }
    catch Exception e {
      return false; 
@@ -222,7 +222,10 @@
     if (d == null) {
        return false;
     }
-    return true; 
+    
+    if (d + "") == str
+    { return true; } 
+    return false; 
   }
   catch Exception e {
     return false; 
@@ -236,7 +239,10 @@
     if (l == null) {
       return false;
     }
-    return true; 
+    
+    if (l + "") == str
+    { return true; } 
+    return false; 
   }
   catch Exception e {
     return false; 
@@ -259,7 +265,7 @@
       </Operations>
     </Class>
     <Class ModelName="AgileUML" Name="Excel" ShadowModel="" ShadowClass="" Description="" Stereotype="Class" PK="Id" ConcurencyControl="true" AutoAssignPrimaryKey="true" IdGeneratorType="HiLoGenerator" IsPersisted="true" IsStatic="false" BaseClass="" TableName="" BaseClasses="" BaseModel="">
-      <DiagramInfo IsExpanded="true" Width="180" Height="180" Top="195" Left="414" />
+      <DiagramInfo IsExpanded="true" Width="180" Height="180" Top="68" Left="354" />
       <Attributes>
         <Attribute Name="Id" IsValueClass="false" Description="" DataType="int" BaseInfo="" Length="100" Precision="18" Scale="2" InitValue="" IsRequired="false" IsInherited="false" Persisted="true" ColumnName="" IsEncrypted="false" IsStatic="false" ReadOnly="false" IsExternal="false" CustomValidation="" IsCreditCard="false" IsURL="false" IsEmail="false" MinLength="0" MaxLength="100" MinValue="" MaxValue="" Getter="" Setter="" />
       </Attributes>
@@ -387,6 +393,145 @@
     }
     EBinCall = (CommonLib.Math.Pow(2.718281828, (-1 * R * T))) * CallV;
     return EBinCall; 
+}</Operation>
+      </Operations>
+    </Class>
+    <Class ModelName="AgileUML" Name="StringLib" ShadowModel="" ShadowClass="" Description="" Stereotype="Class" PK="Id" ConcurencyControl="true" AutoAssignPrimaryKey="true" IdGeneratorType="HiLoGenerator" IsPersisted="true" IsStatic="false" BaseClass="" TableName="" BaseClasses="" BaseModel="">
+      <DiagramInfo IsExpanded="true" Width="180" Height="180" Top="144" Left="893" />
+      <Attributes>
+        <Attribute Name="Id" IsValueClass="false" Description="" DataType="int" BaseInfo="" Length="100" Precision="18" Scale="2" InitValue="" IsRequired="false" IsInherited="false" Persisted="true" ColumnName="" IsEncrypted="false" IsStatic="false" ReadOnly="false" IsExternal="false" CustomValidation="" IsCreditCard="false" IsURL="false" IsEmail="false" MinLength="0" MaxLength="100" MinValue="" MaxValue="" Getter="" Setter="" />
+      </Attributes>
+      <Operations>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="padLeftWithInto" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function string padLeftWithInto(
+	string s,
+	string c,
+	int n
+)
+{
+  string result = "";
+
+  result = pad(n - s.Length, c) + s;
+  return result;
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="rightAlignInto" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function string rightAlignInto(
+	string s,
+	int n
+)
+{ 
+  string result = "";
+
+  if (n &lt;= s.Length)
+  { result = s.Substring(0, n); }
+  else
+  { result = pad(n - s.Length, " ") + s; }
+  return result;
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="capitalise" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function string capitalise(
+	string str
+)
+{ 
+  if (str.Length &gt; 0)
+  { string s1 = str.CharAt(0) + "";
+    return s1.ToUpper() + str.Substring(1, str.Length - 1);
+  }
+  return str; 
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="swapCase" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function string swapCase(
+	string s
+)
+{
+  int ind = 1;
+  string res = "";
+
+  while (ind &lt;= s.Length)
+  { string chr = "" + s.CharAt(ind - 1);
+    if (chr.Equals(chr.ToUpper()))
+    { res = res + chr.ToLower(); }
+    else
+    { res = res + chr.ToUpper(); }
+    ind = ind + 1;
+  }
+
+  return res;
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="padRightWithInto" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function string padRightWithInto(
+	string s,
+	string c,
+	int n
+)
+{
+  string result = "";
+  result = s + pad(n - s.Length, c);
+  return result;
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="leftAlignInto" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function string leftAlignInto(
+	string s,
+	int n
+)
+{
+  string result = "";
+
+  if (n &lt;= s.Length)
+  { result = s.Substring(0, n); }
+  else 
+  { result = s + pad(n - s.Length, " "); }
+  return result;
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="pad" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function string pad(
+	int n,
+	string c
+)
+{
+  string res = ""; 
+  for (int i = 0; i &lt; n; i+1)
+  { res = res + c; }
+  return res;
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="nCopies" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function string nCopies(
+	string s,
+	int n
+)
+{
+  string result = "";
+  for (int i = 0; i &lt; n; i+1)
+  {
+    result = result + s;
+  }
+
+  return result;
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="sumStringsWithSeparator" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function string sumStringsWithSeparator(
+	Collection[string] lst,
+	string sep
+)
+{
+  string res = "";
+  for (int i = 0; i &lt; lst.Length; i+1)
+  { string xx = lst.Get(i);
+    res = res + xx;
+    if (i &lt; lst.Length - 1)
+    { res = res + sep; }
+  }
+  return res;
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="leftTrimWith" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function string leftTrimWith(string str, string ch)
+{
+  if (str == null || str.Length == 0) 
+  { return str; }
+  
+  for (int i = 0; i &lt; str.Length; i+1)  
+  { if (ch.Equals("" + str.CharAt(i)))
+    { } 
+    else 
+    { string trm = str.Substring(i); 
+      return trm;
+    }
+  }
+  return ""; 
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="newString" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function string newString(Object s)
+{
+   return "" + s; 
 }</Operation>
       </Operations>
     </Class>
