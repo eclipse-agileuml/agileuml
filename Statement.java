@@ -126,7 +126,7 @@ abstract class Statement implements Cloneable
       { newvars.add(wrv.substring(k+2)); } 
       else 
       { newvars.add(wrv); } 
-    }  
+    } // for FOR loop add the loop variable
 
     // JOptionPane.showInputDialog("Variables " + newvars + " are written in " + rem); 
 
@@ -4627,12 +4627,12 @@ class ReturnStatement extends Statement
 
     int syncomp = value.syntacticComplexity(); 
 
-    if (syncomp > TestParameters.syntacticComplexityLimit)
+    /* if (syncomp > TestParameters.syntacticComplexityLimit)
     { yUses.add("! Code smell (MEL): too high expression complexity (" + syncomp + ") for " + value); 
       yUses.add("! Recommend OCL refactoring");
       int melcount = (int) uses.get("MEL"); 
       uses.set("MEL", melcount+1); 
-    } // yellow flaw
+    } */ // yellow flaw
 
     return uses; 
   }  
@@ -5861,13 +5861,13 @@ class InvocationStatement extends Statement
                        Vector rUses, Vector oUses, Vector yUses)
   { callExp.energyUse(uses, rUses, oUses, yUses);  
 
-    int syncomp = callExp.syntacticComplexity(); 
+   /* int syncomp = callExp.syntacticComplexity(); 
     if (syncomp > TestParameters.syntacticComplexityLimit)
     { yUses.add("! Code smell (MEL): too high expression complexity (" + syncomp + ") for " + callExp); 
       yUses.add("! Recommend OCL refactoring");
       int melcount = (int) uses.get("MEL"); 
       uses.set("MEL", melcount+1);  
-    } 
+    } */  
 
     return uses; 
   }  
@@ -6662,14 +6662,14 @@ class ImplicitInvocationStatement extends Statement
                        Vector rUses, Vector oUses, Vector yUses)
   { callExp.energyUse(uses, rUses, oUses, yUses); 
 
-    int syncomp = callExp.syntacticComplexity(); 
+    /* int syncomp = callExp.syntacticComplexity(); 
     if (syncomp > TestParameters.syntacticComplexityLimit)
     { int yuses = (int) uses.get("yellow"); 
       uses.set("yellow", yuses+1); 
       yUses.add("! Code smell (MEL): too high expression complexity (" + syncomp + ") for " + callExp);
       int melcount = (int) uses.get("MEL"); 
       uses.set("MEL", melcount+1);    
-    } 
+    } */ 
 
     if (callExp.isSideEffecting()) { } 
     else 
@@ -7543,6 +7543,7 @@ class WhileStatement extends Statement
   
     body.energyUse(uses,rUses,aUses,yUses);
 
+    /* 
     if (loopKind == FOR) 
     { if (loopRange != null) 
       { int rcomp = loopRange.syntacticComplexity();
@@ -7567,19 +7568,20 @@ class WhileStatement extends Statement
         int melcount = (int) uses.get("MEL"); 
         uses.set("MEL", melcount+1);    
       }
-    }  
-
-    if (Statement.ineffectiveFirstStatement(body))
-    { int acount = (int) uses.get("amber"); 
-      uses.set("amber", acount + 1); 
-      aUses.add("!! Redundant code (RC):" + 
-        " first statement of body can be moved before loop: " + this + "\n");
-      int rccount = (int) uses.get("RC"); 
-      uses.set("RC", rccount+1);
-    } 
+    }  */ 
 
     if (loopKind == WHILE || loopKind == REPEAT)
-    { if (loopTest == null || "false".equals("" + loopTest))
+    { if (Statement.ineffectiveFirstStatement(body))
+      { int acount = (int) uses.get("amber"); 
+        uses.set("amber", acount + 1); 
+        aUses.add("!! Redundant code (RC):" + 
+          " first statement of body can be moved before loop: " + this + "\n");
+        int rccount = (int) uses.get("RC"); 
+        uses.set("RC", rccount+1);
+      } 
+
+      if (loopTest == null || "false".equals("" + loopTest) ||
+          "(false)".equals("" + loopTest))
       { if (loopKind == WHILE)
         { int acount = (int) uses.get("amber"); 
           uses.set("amber", acount + 1); 
@@ -7619,7 +7621,8 @@ class WhileStatement extends Statement
       Vector vuses = loopTest.variablesUsedIn(newvars); 
 
       if (loopKind == WHILE &&
-          "true".equals("" + loopTest)) 
+          ("true".equals("" + loopTest) || 
+           "(true)".equals("" + loopTest))) 
       { int rcount = (int) uses.get("red"); 
         uses.set("red", rcount + 1); 
         rUses.add("!!! (NTE) Unbounded while loop with true condition: may not terminate!: " + loopSummary() + "\n"); 
@@ -7627,7 +7630,8 @@ class WhileStatement extends Statement
         uses.set("NTE", ntecount+1);    
       }
       else if (loopKind == REPEAT &&
-               "false".equals("" + loopTest)) 
+               ("false".equals("" + loopTest) || 
+                "(false)".equals("" + loopTest))) 
       { int rcount = (int) uses.get("red"); 
         uses.set("red", rcount + 1); 
         rUses.add("!!! (NTE) Unbounded repeat loop with false condition: may not terminate!: " + loopSummary() + "\n"); 
@@ -7730,7 +7734,19 @@ class WhileStatement extends Statement
   } // red if nested loops. Amber for a while loop.
 
   public Statement removeIneffectiveStatements()
-  { 
+  { if (loopKind == Statement.FOR)
+    { Statement newbody = body.removeIneffectiveStatements(); 
+      WhileStatement res = 
+           new WhileStatement(loopTest, newbody); 
+      res.setEntity(entity); 
+      res.setLoopKind(loopKind); 
+      res.setLoopRange(loopVar,loopRange); 
+      res.setBrackets(brackets); 
+      res.setInvariant(invariant); 
+      res.setVariant(variant);
+      return res; 
+    } 
+
     if (Statement.ineffectiveFirstStatement(body))
     { Statement first = Statement.getFirstStatement(body); 
       Statement rem = Statement.removeFirstStatement(body); 
@@ -10061,7 +10077,7 @@ class CreationStatement extends Statement
     if (initialExpression != null) 
     { initialExpression.energyUse(uses, rUses, aUses, yUses); 
 
-      int syncomp = initialExpression.syntacticComplexity(); 
+   /* int syncomp = initialExpression.syntacticComplexity(); 
       if (syncomp > TestParameters.syntacticComplexityLimit)
       { int ycount = (int) uses.get("yellow"); 
         uses.set("yellow", ycount + 1); 
@@ -10069,7 +10085,7 @@ class CreationStatement extends Statement
                   "! Recommend OCL refactoring");
         int melcount = (int) uses.get("MEL"); 
         uses.set("MEL", melcount+1);
-      } 
+      } */
     } 
 
     return uses; 
@@ -11401,7 +11417,7 @@ class SequenceStatement extends Statement
           vvs.add("" + lhs1); 
           Vector vuses = rhs2.variablesUsedIn(vvs);
 
-          JOptionPane.showInputDialog(lhs1 + " " + vuses + " " + rhs1.isSideEffecting()); 
+          // JOptionPane.showInputDialog(lhs1 + " " + vuses + " " + rhs1.isSideEffecting()); 
  
           if (vuses.size() == 0 && !rhs1.isSideEffecting())
           { System.err.println("!! (RC) Ineffective assignment: " + as1); 
@@ -11653,7 +11669,7 @@ class SequenceStatement extends Statement
     { used.add(op); }
 
     if (used.size() > 1) 
-    { System.err.println("!!! (DC): Duplicated code segment: " + val); } 
+    { System.err.println("!! (DC): Duplicated code segment: " + val); } 
 
     clones.put(val,used);
     cdefs.put(val, this); 
@@ -11824,7 +11840,7 @@ class SequenceStatement extends Statement
           } 
         } 
       } 
-      else if (stat instanceof AssignStatement)
+      /* else if (stat instanceof AssignStatement)
       { AssignStatement as1 = (AssignStatement) stat; 
         Expression lhs = as1.getLhs();
 
@@ -11846,7 +11862,7 @@ class SequenceStatement extends Statement
             uses.set("RC", rccount+1);
           }
         } // rhs not side-effecting
-      }   
+      }  */  
     }
 
     return uses; 
@@ -13541,7 +13557,7 @@ class ErrorStatement extends Statement
   { if (thrownObject != null) 
     { thrownObject.energyUse(uses, rUses, aUses, yUses);
 
-      int syncomp = thrownObject.syntacticComplexity(); 
+   /*   int syncomp = thrownObject.syntacticComplexity(); 
       if (syncomp > TestParameters.syntacticComplexityLimit)
       { int ycount = (int) uses.get("yellow"); 
         uses.set("yellow", ycount + 1); 
@@ -13549,7 +13565,7 @@ class ErrorStatement extends Statement
                   "! Recommend OCL refactoring");
         int melcount = (int) uses.get("MEL"); 
         uses.set("MEL", melcount+1);   
-      }
+      } */ 
     }
  
     return uses; 
@@ -13907,7 +13923,7 @@ class AssertStatement extends Statement
   { if (condition != null) 
     { condition.energyUse(uses, rUses, aUses, yUses); 
 
-      int res = condition.syntacticComplexity();
+    /*  int res = condition.syntacticComplexity();
 
       if (res > TestParameters.syntacticComplexityLimit)
       { int ycount = (int) uses.get("yellow"); 
@@ -13916,7 +13932,7 @@ class AssertStatement extends Statement
                   "! Recommend OCL refactoring"); 
         int melcount = (int) uses.get("MEL"); 
         uses.set("MEL", melcount+1); 
-      } 
+      } */ 
     }
  
     if (message != null)
@@ -17344,7 +17360,7 @@ class AssignStatement extends Statement
   { lhs.energyUse(uses, rUses, oUses, yUses); 
     rhs.energyUse(uses, rUses, oUses, yUses);
 
-    int syncomp = rhs.syntacticComplexity(); 
+  /*  int syncomp = rhs.syntacticComplexity(); 
     if (syncomp > TestParameters.syntacticComplexityLimit)
     { int ycount = (int) uses.get("yellow"); 
       uses.set("yellow", ycount + 1); 
@@ -17352,7 +17368,7 @@ class AssignStatement extends Statement
                 "! Recommend OCL refactoring");
       int melcount = (int) uses.get("MEL"); 
       uses.set("MEL", melcount+1); 
-    } 
+    } */  
 
     return uses; 
   }  
@@ -18939,14 +18955,14 @@ class ConditionalStatement extends Statement
 
     int res = test.syntacticComplexity();
 
-    if (res > TestParameters.syntacticComplexityLimit)
+    /* if (res > TestParameters.syntacticComplexityLimit)
     { int ycount = (int) uses.get("yellow"); 
       uses.set("yellow", ycount + 1); 
       yUses.add("! Code smell (MEL): too high expression complexity (" + res + ") for " + test + "\n" +  
                 "! Recommend OCL refactoring");
       int melcount = (int) uses.get("MEL"); 
       uses.set("MEL", melcount+1); 
-    } 
+    } */ 
 
     if (elsePart != null) 
     { elsePart.energyUse(uses, rUses, oUses, yUses); } 
@@ -19078,11 +19094,11 @@ class ConditionalStatement extends Statement
                     Statement.getLastStatement(elsePart); 
 
       if (("" + lastIfStat).equals("" + lastElseStat))
-      { oUses.add("!! Duplicated code (DC): duplicated final statement " + lastIfStat + " in conditional");
+      { oUses.add("!! Redundant code (RC): duplicated final statement " + lastIfStat + " in conditional");
         int oscore = (int) uses.get("amber"); 
         uses.set("amber", oscore + 1);
-        int dccount = (int) uses.get("DC"); 
-        uses.set("DC", dccount+1); 
+        int dccount = (int) uses.get("RC"); 
+        uses.set("RC", dccount+1); 
       }  
     } 
 

@@ -209,6 +209,7 @@ public class BehaviouralFeature extends ModelElement
                                          entities);
     if (opent == null) 
     { opent = new Entity("_Anon_Functions"); 
+      opent.setDerived(true); 
       entities.add(opent); 
     } 
 
@@ -4975,13 +4976,25 @@ int ascore = (int) res.get("amber");
 
   } // and activity
 
-  public int displayMeasures(PrintWriter out)   
+  public int displayMeasures(PrintWriter out, java.util.Map qflaws)   
   { String res = ""; 
     String nme = getName(); 
     if (entity != null) 
     { nme = entity.getName() + "::" + nme; } 
     else if (useCase != null) 
     { nme = useCase.getName() + "::" + nme; } 
+
+    qflaws.put("CC", 0); 
+    qflaws.put("EPL", 0); 
+    qflaws.put("MGN", 0); 
+    qflaws.put("EOS", 0); 
+    qflaws.put("UVA", 0); 
+    qflaws.put("RL", 0); 
+    qflaws.put("RC", 0); 
+    qflaws.put("DC", 0); 
+    qflaws.put("NTE", 0); 
+    qflaws.put("MNC", 0); 
+    qflaws.put("CBR", 0); 
 
     int pars = parameters.size(); 
 
@@ -4992,9 +5005,27 @@ int ascore = (int) res.get("amber");
     if (pars > TestParameters.numberOfParametersLimit) 
     { System.err.println("!! Code smell (EPL): too many parameters (" + pars + ") for " + nme); 
       System.err.println("!! Recommend refactoring by introducing value object for parameters or splitting operation into parts\n"); 
-      // flaws.put("EPL", 1); 
+      qflaws.put("EPL", 1); 
       System.err.println(); 
     }  
+
+    /* java.util.Map mgns = new java.util.HashMap(); 
+    this.findMagicNumbers(mgns); 
+    if (mgns.size() > 0)
+    { System.err.println("!! Magic numbers (MGN) in " + opname + ": " + mgns);  
+
+      int opmgn = 0; 
+      java.util.Set mgnkeys = opmgns.keySet(); 
+      for (Object kk : mgnkeys)
+      { String kks = (String) kk; 
+        Vector used = (Vector) opmgns.get(kks); 
+        if (used.size() >= 1) 
+        { opmgn++; } 
+      } 
+
+      if (opmgn > 0)
+      { qflaws.put("MGN", opmgn); } 
+    } */ 
 
     int complexity = 0; 
     int cyc = 0; 
@@ -5018,7 +5049,7 @@ int ascore = (int) res.get("amber");
       if (acomp > TestParameters.operationSizeLimit) 
       { System.err.println("!! Code smell (EOS): too high activity complexity (" + acomp + ") for " + nme); 
         System.err.println("!! Recommend refactoring by splitting operation"); 
-        // flaws.put("EOS", 1); 
+        qflaws.put("EOS", 1); 
         System.err.println(); 
       }  
       else if (acomp > TestParameters.operationSizeWarning) 
@@ -5033,19 +5064,48 @@ int ascore = (int) res.get("amber");
     if (cyc > TestParameters.cyclomaticComplexityLimit) 
     { System.err.println("!! Code smell (CC): high cyclomatic complexity (" + cyc + ") for " + nme);
       System.err.println("!! Recommend refactoring by splitting operation"); 
-      // flaws.put("CC", 1); 
+      qflaws.put("CC", 1); 
       System.err.println(); 
     }  
 
     if (complexity > TestParameters.operationSizeLimit) 
-    { System.err.println("!! Code smell (EHS): too high complexity (" + complexity + ") for " + nme); 
+    { System.err.println("!! Code smell (EHS): too high total complexity (" + complexity + ") for " + nme); 
       System.err.println("!! Recommend refactoring by splitting operation"); 
+      qflaws.put("EOS", 1); 
       System.err.println(); 
     }  
     else if (complexity > TestParameters.operationSizeWarning) 
     { System.err.println("! Warning: high complexity (" + complexity + ") for " + nme); 
       System.err.println(); 
     }  
+
+    if (parameters == null) 
+    { return complexity; } 
+
+    int UVA = 0; 
+    for (int i = 0; i < parameters.size(); i++) 
+    { Attribute par = (Attribute) parameters.get(i); 
+      String pname = par.getName(); 
+
+      if (activity == null && post != null)
+      { Vector puses = post.getUses(pname); 
+        if (puses.size() == 0) 
+        { System.err.println("!! Code smell (UVA): parameter " + pname + " is unused in operation " + getName() + " postcondition.");
+          UVA++; 
+          // unusedVars.add(par); 
+        } 
+      } 
+      else if (activity != null)
+      { Vector actuses = activity.getUses(pname); 
+        if (actuses.size() == 0) 
+        { System.err.println("! Code smell (UVA): parameter " + pname + " is unused in operation " + getName() + " activity.");
+          UVA++; 
+          // unusedVars.add(par); 
+        } 
+      } 
+    } 
+
+    qflaws.put("UVA", UVA); 
 
     return complexity; 
   } 

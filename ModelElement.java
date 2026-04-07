@@ -4,7 +4,7 @@ import java.util.StringTokenizer;
 import java.io.*; 
 
 /******************************
-* Copyright (c) 2003--2025 Kevin Lano
+* Copyright (c) 2003--2026 Kevin Lano
 * This program and the accompanying materials are made available under the
 * terms of the Eclipse Public License 2.0 which is available at
 * http://www.eclipse.org/legal/epl-2.0
@@ -380,6 +380,21 @@ public abstract class ModelElement implements SystemTypes
 
   public boolean isDerived()
   { return stereotypes.contains("derived"); } 
+
+  public void setDerived(boolean bb)
+  { if (bb)
+    { if (stereotypes.contains("derived")) { } 
+      else 
+      { stereotypes.add("derived"); }
+    } 
+    else // bb == false 
+    { if (stereotypes.contains("derived"))
+      { Vector rem = new Vector(); 
+        rem.add("derived"); 
+        stereotypes.removeAll(rem); 
+      } 
+    } 
+  }  
 
   public String toString()
   { return name; } 

@@ -406,13 +406,29 @@ class Map
   }
 
   public Object get(Object x)
-  { if (x == null) { return null; } 
+  { if (x == null) 
+    { return null; } 
 
     for (int i = 0; i < elements.size(); i++)
-    { if (x.equals(((Maplet) elements.elementAt(i)).source))
-      { return ((Maplet) elements.elementAt(i)).dest; } 
+    { Maplet elem = (Maplet) elements.get(i); 
+      if (elem != null && x.equals(elem.source))
+      { return elem.dest; } 
     }
+
     return null; 
+  }
+
+  public Object get(Object x, Object deflt)
+  { if (x == null) 
+    { return deflt; } 
+
+    for (int i = 0; i < elements.size(); i++)
+    { Maplet elem = (Maplet) elements.get(i); 
+      if (elem != null && x.equals(elem.source))
+      { return elem.dest; } 
+    }
+
+    return deflt; 
   }
 
   public Vector getAll(Object x)

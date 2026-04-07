@@ -1374,7 +1374,7 @@ class BasicExpression extends Expression
         dran = new BinaryExpression(":", varexp, astexp); 
       }         
       else 
-      { System.err.println("!!!! ERROR: undefined inverse of " + pivot); } 
+      { System.err.println("!!! ERROR: undefined inverse of " + pivot); } 
 
       for (int i = 0; i < parameters.size(); i++)
       { Expression pval = (Expression) parameters.get(i);
@@ -1960,7 +1960,7 @@ class BasicExpression extends Expression
     { objectRef.findClones(clones,cloneDefs,rule,op); } 
 
     if (arrayIndex != null) 
-    { objectRef.findClones(clones,cloneDefs,rule,op); } 
+    { arrayIndex.findClones(clones,cloneDefs,rule,op); } 
 
     // and parameters
   } 
@@ -18928,9 +18928,9 @@ public Statement generateDesignSubtract(Expression rhs)
     if (arrayIndex != null) 
     { arrayIndex.energyUse(res,rUses,oUses,yUses); 
       if (arrayIndex.isCollectionValued())
-      { rUses.add("!!! (OES) Expensive operation: implicit ->collect over index collection in: " + this);
-        int rscore = (int) res.get("red"); 
-        res.set("red", rscore+1);
+      { oUses.add("!! (OES) Expensive operation: implicit ->collect over index collection in: " + this);
+        int oscore = (int) res.get("amber"); 
+        res.set("amber", oscore+1);
         int oescount = (int) res.get("OES"); 
         res.set("OES", oescount+1); 
       } 
@@ -19071,7 +19071,7 @@ public Statement generateDesignSubtract(Expression rhs)
       if ((arrayIndex + "").equals("0") ||
           (arrayIndex + "").equals(data + "->size() + 1") ||
           (arrayIndex + "").equals("(" + data + ")->size() + 1"))
-      { System.err.println("!!! Invalid index reference for sequence/string: " + this);
+      { System.err.println("!!! (SEM): Invalid index reference for sequence/string: " + this);
         System.err.println(); 
       } 
     } 

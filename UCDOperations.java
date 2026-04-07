@@ -1,6 +1,6 @@
 
 /******************************
-* Copyright (c) 2003--2025 Kevin Lano
+* Copyright (c) 2003--2026 Kevin Lano
 * This program and the accompanying materials are made available under the
 * terms of the Eclipse Public License 2.0 which is available at
 * http://www.eclipse.org/legal/epl-2.0
@@ -11,9 +11,9 @@
 /*
  * Classname : UCDOperations
  * 
- * Version information : 2.4
+ * Version information : 2.5
  *
- * Date :  February 2025
+ * Date :  February 2026
  * 
  * Description: This class describes operations on class diagrams
 
@@ -3574,8 +3574,8 @@ public class UCDOperations
       Vector clonedIn = (Vector) clones.get(k); 
       if (clonedIn.size() > 1)
       { out.println("*** " + k + " is cloned in: " + clonedIn); 
-        System.err.println("!!! Code smell (DC): Clone " + k + " in " + clonedIn); 
-        System.err.println(">>> Recommend refactoring by extracting the " + clonedIn.size() + " copies as new operation"); 
+        System.err.println("!! Code smell (DC): Clone " + k + " in " + clonedIn); 
+        System.err.println("!! Recommend refactoring by extracting the " + clonedIn.size() + " copies as new operation"); 
         clonecount++; 
       } 
     }  
@@ -3775,8 +3775,8 @@ public class UCDOperations
           { out.println("*** " + me + " has no dependencies"); }
           
           if (rang.size() > TestParameters.efoLimit) 
-          { System.err.println("!!! Code smell (EFO): " + me + " uses too many operations: " + rang.size());
-            System.err.println(">>> Suggest refactoring by sequential decomposition"); 
+          { System.err.println("!! Code smell (EFO): " + me + " uses too many operations: " + rang.size());
+            System.err.println("!! Suggest refactoring by sequential decomposition"); 
           } 
           
           Map domrestr = Map.domainRestriction(rang,res); 
@@ -3818,15 +3818,15 @@ public class UCDOperations
           { String clonelocation = (String) clonedIn.get(0); 
             if (clonelocation.startsWith(ucname + "_"))
             { out.println(k + " is cloned in: " + ucname); 
-              System.err.println("!!! Code smell (DC): Clone " + k + " in " + ucname); 
-              System.err.println(">>> Suggest refactoring using Extract Function"); 
+              System.err.println("!! Code smell (DC): Clone " + k + " in " + ucname); 
+              System.err.println("!! Suggest refactoring using Extract Function"); 
 
               ucclonecount++;
             } 
             else if (rang.contains(clonelocation))
             { out.println("*** " + k + " is cloned in: " + ucname); 
-              System.err.println("!!! Code smell (DC): Clone " + k + " in " + ucname); 
-              System.err.println(">>> Suggest refactoring using Extract Function"); 
+              System.err.println("!! Code smell (DC): Clone " + k + " in " + ucname); 
+              System.err.println("!! Suggest refactoring using Extract Function"); 
               ucclonecount++;
             } 
           } 
@@ -3834,8 +3834,8 @@ public class UCDOperations
 
         if (ucclonecount > 0) 
         { out.println("*** " + ucclonecount + " clones in " + me);  
-          System.err.println("!!! Code smell (DC): " + ucclonecount + " clones in " + me); 
-          System.err.println(">>> Suggest refactoring using Extract Function"); 
+          System.err.println("!! Code smell (DC): " + ucclonecount + " clones in " + me); 
+          System.err.println("!! Suggest refactoring using Extract Function"); 
 
           System.err.println(); 
           out.println(); 

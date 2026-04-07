@@ -15123,6 +15123,9 @@ public boolean conflictsWithIn(String op, Expression el,
       } 
     } 
 
+    // also ->excludesKey, ->excludesValue, ->includesAll,
+    // ->excludesAll for maps
+
     return Statement.NORMAL; 
   } 
   
@@ -23052,7 +23055,9 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
     int synRight = right.syntacticComplexity();
     int syn = synLeft + synRight + 1; 
 
-    if (syn > TestParameters.syntacticComplexityLimit)
+    if (syn > TestParameters.syntacticComplexityLimit && 
+        synRight <= TestParameters.syntacticComplexityLimit &&
+        synLeft <= TestParameters.syntacticComplexityLimit)
     { yUses.add("! Excessive expression size (MEL) in " + this + " : try to simplify OCL expression");
       int yscore = (int) res.get("yellow"); 
       res.set("yellow", yscore+1);
@@ -23308,6 +23313,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
 
       int ascore = (int) res.get("amber"); 
       res.set("amber", ascore+1); 
+      int oescount = (int) res.get("OES"); 
+      res.set("OES", oescount+1);
     }     
     else if ("->unionAll".equals(operator) || 
              "|unionAll".equals(operator) || 
@@ -23361,11 +23368,11 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
            "->sortedBy".equals(leftop)))
       { // Inefficient expression
 
-        aUses.add("!! Energy-use flaw (OES/UOR): Redundant results computation in: " + this);
-        int ascore = (int) res.get("amber"); 
-        res.set("amber", ascore+1); 
-        int oescount = (int) res.get("OES"); 
-        res.set("OES", oescount+1); 
+        aUses.add("!!! Energy-use flaw (UOR): Redundant results computation in: " + this);
+        int ascore = (int) res.get("red"); 
+        res.set("red", ascore+1); 
+        int oescount = (int) res.get("UOR"); 
+        res.set("UOR", oescount+1); 
       } 
     } 
     else if ("->at".equals(operator) && 
@@ -23381,11 +23388,11 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
            "->tail".equals(leftop)))
       { // Inefficient expression
 
-        aUses.add("!! Energy-use flaw (OES/UOR): Redundant results computation in: " + this);
-        int ascore = (int) res.get("amber"); 
-        res.set("amber", ascore+1); 
-        int oescount = (int) res.get("OES"); 
-        res.set("OES", oescount+1); 
+        aUses.add("!!! Energy-use flaw (UOR): Redundant results computation in: " + this);
+        int ascore = (int) res.get("red"); 
+        res.set("red", ascore+1); 
+        int oescount = (int) res.get("UOR"); 
+        res.set("UOR", oescount+1); 
       } 
     } 
 
@@ -23401,8 +23408,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
     Vector vuses = variablesUsedIn(vars); 
     
     if (level > 1 && vuses.size() == 0 && !sideeffect)
-    { System.err.println("!! (LCE) flaw: The expression " + this + " may be independent of the iterator variables " + vars + "\n" + 
-          "!! Use Extract local variable to optimise.");
+    { System.err.println("!!! (LCE) flaw: The expression " + this + " may be independent of the iterator variables " + vars + "\n" + 
+          "!!! Use Extract local variable to optimise.");
       System.err.println();  
       refactorELV = true; 
     }

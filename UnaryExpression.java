@@ -944,16 +944,15 @@ public void findClones(java.util.Map clones,
 
         if (lbe.operator.equals("->sort") || 
             lbe.operator.equals("->reverse"))
-        { rUses.add("!!! OCL efficiency smell (OES): " + 
-            "Inefficient expr" + operator + 
-            " expression/unused results in: " + this + ",");  
+        { rUses.add("!!! Unused operation results (UOR)" + 
+            " in: " + this + ",");  
           rUses.add("!!! Use col->min() instead of col->sort()" + 
              operator + "(), and col->last() instead of col->reverse()" + 
              operator + "()");
           int rscore = (int) res.get("red"); 
           res.set("red", rscore+1); 
-          int oescount = (int) res.get("OES"); 
-          res.set("OES", oescount+1); 
+          int oescount = (int) res.get("UOR"); 
+          res.set("UOR", oescount+1); 
         }
       }   
       else if (argument instanceof BinaryExpression) 
@@ -961,39 +960,39 @@ public void findClones(java.util.Map clones,
 
         if (lbe.operator.equals("|") ||
             lbe.operator.equals("->select"))
-        { rUses.add("!!! OCL efficiency smell (OES): Inefficient col->select(x | P)" + 
+        { rUses.add("!!! Unused operation results (UOR): Inefficient col->select(x | P)" + 
              operator + "() expression in: " + this + ",");  
           rUses.add("!!! instead use:    col->any(x | P)");
           int rscore = (int) res.get("red"); 
           res.set("red", rscore+1); 
-          int oescount = (int) res.get("OES"); 
-          res.set("OES", oescount+1); 
+          int oescount = (int) res.get("UOR"); 
+          res.set("UOR", oescount+1); 
         }
         else if (lbe.operator.equals("|R") ||
             lbe.operator.equals("->reject"))
-        { rUses.add("!!! OCL efficiency smell (OES): Inefficient col->reject(x | P)" + 
+        { rUses.add("!!! Unused operation results (UOR): Inefficient col->reject(x | P)" + 
              operator + "() expression in " + this + ","); 
           rUses.add("!!! instead, use:   col->any(x | not(P))");
           int rscore = (int) res.get("red"); 
           res.set("red", rscore+1); 
-          int oescount = (int) res.get("OES"); 
-          res.set("OES", oescount+1); 
+          int oescount = (int) res.get("UOR"); 
+          res.set("UOR", oescount+1); 
         }
         else if (lbe.operator.equals("|C"))
-        { rUses.add("!!! OCL efficiency smell (OES): Inefficient col->collect(x | e)" + 
+        { rUses.add("!!! Unused operation results (UOR): Inefficient col->collect(x | e)" + 
              operator + "() expression in " + this + ","); 
           rUses.add("!!! instead, use:  let x = col->any() in e");
           int rscore = (int) res.get("red"); 
           res.set("red", rscore+1); 
-          int oescount = (int) res.get("OES"); 
-          res.set("OES", oescount+1); 
+          int oescount = (int) res.get("UOR"); 
+          res.set("UOR", oescount+1); 
         }
       } 
     }
     else if ("->copy".equals(operator) ||
              "->asSet".equals(operator) ||
              "->asSequence".equals(operator))
-    { yUses.add("! (OES): O(n) operator " + this);  
+    { yUses.add("! Inefficient expression (OES): O(n) operator " + this);  
 
       int yscore = (int) res.get("yellow"); 
       res.set("yellow", yscore+1); 
@@ -1076,7 +1075,7 @@ public void findClones(java.util.Map clones,
             "|sortedBy".equals(leftop) ||
             "->sortedBy".equals(leftop))
         { 
-          rUses.add("!!! OCL efficiency smell (UOR): Redundant results computation in: " + this);
+          rUses.add("!!! Unused results (UOR) computation in: " + this);
           int rscore = (int) res.get("red"); 
           res.set("red", rscore+1);
           int oescount = (int) res.get("UOR"); 

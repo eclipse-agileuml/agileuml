@@ -3531,10 +3531,10 @@ public class UCDArea extends JPanel
       if (ent.hasCycle())
       { System.err.println("!! Warning: ADP violated: class " + 
                            ent + " is self-dependent via a cycle of references!"); 
-        JOptionPane.showMessageDialog(null, 
+       /* JOptionPane.showMessageDialog(null, 
           "Warning: ADP violated: class " + 
           ent + " is self-dependent via a cycle of references!", 
-          "", JOptionPane.ERROR_MESSAGE); 
+          "", JOptionPane.ERROR_MESSAGE); */  
       } 
 
       if (ent.hasStereotype("platformSpecific")) 
@@ -3547,10 +3547,10 @@ public class UCDArea extends JPanel
         if (ref.hasStereotype("platformSpecific"))
         { System.err.println("!! Warning: Dependency rule violated: platform-independent class " + ent); 
           System.err.println(" depends on platform-specific class " + ref);
-          JOptionPane.showMessageDialog(null, 
+         /* JOptionPane.showMessageDialog(null, 
             "Warning: Dependency rule violated: platform-independent class " + ent + 
             "\ndepends on platform-specific class " + ref, 
-            "", JOptionPane.ERROR_MESSAGE); 
+            "", JOptionPane.ERROR_MESSAGE); */ 
         } 
       }
 
@@ -3573,10 +3573,10 @@ public class UCDArea extends JPanel
         else 
         { System.err.println("!! Warning: ISP violated: class " + rname + 
              " is referenced but no operation of it is used by " + ent); 
-          JOptionPane.showMessageDialog(null, 
+         /* JOptionPane.showMessageDialog(null, 
             "Warning: ISP violated: class " + rname + 
             " is referenced but no operation of it is used by " + ent, 
-            "", JOptionPane.ERROR_MESSAGE); 
+            "", JOptionPane.ERROR_MESSAGE);  */ 
         } 
       }  
     }   
@@ -3610,6 +3610,8 @@ public class UCDArea extends JPanel
     int targetClasses = 0; 
     int derivedClasses = 0; 
     int allClasses = entities.size(); 
+
+    Vector csv = new Vector(); 
 	
     for (int j = 0; j < allClasses; j++) 
     { Entity ent = (Entity) entities.get(j);
@@ -3621,10 +3623,12 @@ public class UCDArea extends JPanel
       if (ent.isDerived())
       { derivedClasses++; }
 
-      if (ent.isComponent() || ent.isExternal())
+      if (ent.isDerived() ||
+          ent.isComponent() || 
+          ent.isExternal())
       { continue; } 
 	 
-      int entsize = ent.displayMeasures(out,clones);
+      int entsize = ent.displayMeasures(out,csv,clones);
       totalClassSize = totalClassSize + entsize; 
 	   
       out.println(); 
@@ -3702,10 +3706,10 @@ public class UCDArea extends JPanel
     { Object k = keys.next();
       Vector clonedIn = (Vector) clones.get(k); 
       if (clonedIn.size() > 1)
-      { out.println("!!! (DC) flaw: " + k + " cloned in:\n" + clonedIn); 
+      { out.println("!! (DC) flaw: " + k + " cloned in:\n" + clonedIn); 
         out.println(); 
-        System.err.println("!!! (DC) flaw: " + k + " cloned in\n" + clonedIn); 
-        System.err.println("!!! Recommend refactoring by code restructing or extracting clones as a new operation");
+        System.err.println("!! (DC) flaw: " + k + " cloned in\n" + clonedIn); 
+        System.err.println("!! Recommend refactoring by code restructuring or extracting clones as a new operation");
         System.err.println();  
         clonecount++; 
       } 
@@ -3724,7 +3728,26 @@ public class UCDArea extends JPanel
     out.println(); 
 
     out.println("*** Estimated testability correction cost = " + highcost + " minutes (" + (highcost/60.0) + " hours)"); 
-    out.println("*** Estimated maintainability correction cost = " + lowcost + " minutes (" + (lowcost/60.0) + " hours)"); 
+    out.println("*** Estimated maintainability correction cost = " + lowcost + " minutes (" + (lowcost/60.0) + " hours)");
+
+    File file = new File("output/qualitySummary.csv");
+    try
+    { PrintWriter csvout = new PrintWriter(
+                              new BufferedWriter(
+                                new FileWriter(file)));
+      csvout.println("Entity, Operation, Flaws, Red, Amber, Yellow," 
+                  + 
+                  "CBR, DC, MGN, EFO, CC, EOS, UVA"); 
+
+      for (int i = 0; i < csv.size(); i++) 
+      { String mess = (String) csv.get(i); 
+        csvout.println(mess); 
+      }  
+      csvout.close();
+
+      System.out.println(">> Summary written to output/qualitySummary.csv"); 
+    } catch (Exception ex) { } 
+
   }
 
   public void simplifyOCL()
@@ -3860,21 +3883,45 @@ public class UCDArea extends JPanel
   public void energyAnalysis()
   { java.util.Map clnes = new java.util.HashMap(); 
     Vector messages = new Vector();
+    Vector csv = new Vector();
 
     // TestParameters.cloneSizeLimit = 4; 
 
-    energyAnalysis(clnes, messages);
+    energyAnalysis(clnes, messages, csv);
 
     for (int i = 0; i < messages.size(); i++) 
     { String mess = (String) messages.get(i); 
       System.err.println(mess); 
     }  
+
+    System.err.println(); 
+
+    File file = new File("output/energyUseSummary.csv");
+    try
+    { PrintWriter out = new PrintWriter(
+                              new BufferedWriter(
+                                new FileWriter(file)));
+      out.println("Entity, Operation, Flaws, Red, Amber, Yellow," 
+                  + 
+                  "DEV, LCE, UOR, RC, OES, LRC, MEL, MNC"); 
+
+      for (int i = 0; i < csv.size(); i++) 
+      { String mess = (String) csv.get(i); 
+        out.println(mess); 
+      }  
+      out.close();
+
+      System.out.println(">> Summary written to output/energyUseSummary.csv"); 
+    }
+    catch (IOException ex)
+    { System.out.println("!! Error generating summary file"); }
   } 
 
   public void energyAnalysisHTML()
   { java.util.Map clnes = new java.util.HashMap(); 
     Vector messages = new Vector(); 
-    energyAnalysis(clnes, messages);
+    Vector csv = new Vector(); 
+    energyAnalysis(clnes, messages, csv);
 
     for (int i = 0; i < messages.size(); i++) 
     { String mess = (String) messages.get(i);
@@ -3890,7 +3937,7 @@ public class UCDArea extends JPanel
   } 
 
   public Map energyAnalysis(java.util.Map clones, 
-                            Vector messages)
+                            Vector messages, Vector csv)
   { Map res = new Map(); 
 
     int redFlags = 0; 
@@ -3904,13 +3951,14 @@ public class UCDArea extends JPanel
                                 new FileWriter(file)));
           
       for (int j = 0; j < entities.size(); j++) 
-      { Entity ent = (Entity) entities.get(j); 
+      { Entity ent = (Entity) entities.get(j);
+ 
         if (ent.isDerived()) { continue; } 
 
         if (ent.isComponent() || ent.isExternal())
         { continue; } 
 
-        Map scores = ent.energyAnalysis(messages, out);
+        Map scores = ent.energyAnalysis(messages, csv, out);
  
         redFlags = redFlags + (int) scores.get("red"); 
         amberFlags = 
@@ -4084,15 +4132,15 @@ public class UCDArea extends JPanel
           { String clonelocation = (String) clonedIn.get(0); 
             if (clonelocation.startsWith(ucname + "_"))
             { out.println(k + " is cloned in: " + ucname); 
-              System.err.println("!!! Code smell (DC): Clone " + k + " in " + ucname); 
-              System.err.println("!!! Suggest refactoring using Extract Function"); 
+              System.err.println("!! Code smell (DC): Clone " + k + " in " + ucname); 
+              System.err.println("!! Suggest refactoring using Extract Function"); 
 
               ucclonecount++;
             } 
             else if (rang.contains(clonelocation))
             { out.println("*** " + k + " is cloned in: " + ucname); 
-              System.err.println("!!! Code smell (DC): Clone " + k + " in " + ucname); 
-              System.err.println("!!! Suggest refactoring using Extract Function"); 
+              System.err.println("!! Code smell (DC): Clone " + k + " in " + ucname); 
+              System.err.println("!! Suggest refactoring using Extract Function"); 
               ucclonecount++;
             } 
           } 
@@ -4100,8 +4148,8 @@ public class UCDArea extends JPanel
 
         if (ucclonecount > 0) 
         { out.println("*** " + ucclonecount + " clones in " + me);  
-          System.err.println("!!! Code smell (DC): " + ucclonecount + " clones in " + me); 
-          System.err.println("!!! Suggest refactoring using Extract Function"); 
+          System.err.println("!! Code smell (DC): " + ucclonecount + " clones in " + me); 
+          System.err.println("!! Suggest refactoring using Extract Function"); 
 
           System.err.println(); 
           out.println(); 
@@ -29406,7 +29454,9 @@ public void produceCUI(PrintWriter out)
       tt.checkEnumerationNames(); 
     } 
 
-    Vector enames = new Vector(); 
+    // Vector csv = new Vector(); 
+    Vector enames = new Vector();
+ 
     for (int i = 0; i < entities.size(); i++) 
     { Entity ent = (Entity) entities.get(i); 
 

@@ -192,7 +192,7 @@ public class Compiler2
       for (int j = i; j < i+10; j++) 
       { str = str + lexicals.get(j); } 
       if (clones.contains(str)) 
-      { System.err.println("!!! Clone: " + str + " at " + i); 
+      { System.err.println("!! Clone: " + str + " at " + i); 
         clonecount++; 
       } 
       else 
@@ -224,7 +224,7 @@ public class Compiler2
           if (k > 10) 
           { Expression e = parse_ATLexpression(0,i,i+k-1,entities,types); 
             if (e != null) 
-            { clones.add("!!! CLONE at " + i + "," + j + " SIZE= " + k + ">> " + str);  
+            { clones.add("!! CLONE at " + i + "," + j + " SIZE= " + k + ">> " + str);  
               clonecount++;
             }  
           } 
@@ -236,7 +236,7 @@ public class Compiler2
       }
 
       if (match && k > 10) 
-      { clones.add("!!! CLONE at " + i + "," + j + " SIZE= " + k + ">> " + str);  
+      { clones.add("!! CLONE at " + i + "," + j + " SIZE= " + k + ">> " + str);  
         clonecount++; 
       } 
     } 
