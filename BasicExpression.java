@@ -19212,6 +19212,7 @@ public Statement generateDesignSubtract(Expression rhs)
       { Expression par = (Expression) parameters.get(i); 
         res = res + par.syntacticComplexity(); 
       } 
+      res = res + 2; // brackets
     } 
 
     if (objectRef == null) 

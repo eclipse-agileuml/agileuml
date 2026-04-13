@@ -6183,11 +6183,14 @@ public class Entity extends ModelElement implements Comparable
       } 
 
       if (actualClones.size() > 0)
-      { messages.add("!! (DEV) flaws: Cloned expressions/statements " + actualClones + " from " + op); 
+      { messages.add("!! (DEV) flaws: Cloned expressions/statements: ");
+        for (Object aclne : actualClones)
+        { messages.add("  " + aclne); } 
+        messages.add("!! from " + op); 
         messages.add(""); 
         
-        out.println("!! (DEV) flaws: Cloned expressions/statements " + actualClones + " from " + op); 
-        out.println(); 
+        // out.println("!! (DEV) flaws: Cloned expressions/statements " + actualClones + " from " + op); 
+        // out.println(); 
 
         int opclesze = actualClones.size();
         res1.set("amber", amberop + opclesze); 
@@ -6480,12 +6483,13 @@ public class Entity extends ModelElement implements Comparable
         int lce = (int) opflaws.getOrDefault("LCE", 0);
         int uor = (int) opflaws.getOrDefault("UOR", 0); 
         int rc = (int) opflaws.getOrDefault("RC", 0); 
+        int nte = (int) opflaws.getOrDefault("NTE", 0); 
         int oes = (int) opflaws.getOrDefault("OES", 0); 
         int lrc = (int) opflaws.getOrDefault("LRC", 0);
         int mel = (int) opflaws.getOrDefault("MEL", 0); 
         int mnc = (int) opflaws.getOrDefault("MNC", 0); 
 
-        int rr = dev + lce + uor + rc; 
+        int rr = dev + lce + uor + rc + nte; 
         int aa = oes; 
         int yy = lrc + mel + mnc; 
 
@@ -6497,6 +6501,7 @@ public class Entity extends ModelElement implements Comparable
         csvline = csvline + 
                   "," + rr + "," + aa + "," + yy + "," +
                   dev + "," + lce + "," + uor + "," + rc + ","
+                  + nte + "," + 
                   + oes + "," + lrc + "," + mel + "," + mnc; 
 
         csv.add(csvline); 

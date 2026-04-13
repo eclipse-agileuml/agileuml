@@ -3889,21 +3889,34 @@ public class UCDArea extends JPanel
 
     energyAnalysis(clnes, messages, csv);
 
-    for (int i = 0; i < messages.size(); i++) 
-    { String mess = (String) messages.get(i); 
-      System.err.println(mess); 
-    }  
-
-    System.err.println(); 
-
-    File file = new File("output/energyUseSummary.csv");
+    File file = new File("output/energyUseDetails.txt");
     try
     { PrintWriter out = new PrintWriter(
                               new BufferedWriter(
                                 new FileWriter(file)));
+
+      for (int i = 0; i < messages.size(); i++) 
+      { String mess = (String) messages.get(i); 
+        out.println(mess); 
+      }  
+
+      out.println(); 
+      out.close();
+
+      System.out.println(">> Details written to output/energyUseDetails.txt"); 
+    }
+    catch (IOException ex)
+    { System.out.println("!! Error generating details file"); }
+
+
+    File sfile = new File("output/energyUseSummary.csv");
+    try
+    { PrintWriter out = new PrintWriter(
+                              new BufferedWriter(
+                                new FileWriter(sfile)));
       out.println("Entity, Operation, Flaws, Red, Amber, Yellow," 
                   + 
-                  "DEV, LCE, UOR, RC, OES, LRC, MEL, MNC"); 
+                  "DEV, LCE, UOR, RC, NTE, OES, LRC, MEL, MNC"); 
 
       for (int i = 0; i < csv.size(); i++) 
       { String mess = (String) csv.get(i); 
@@ -19225,13 +19238,9 @@ public void produceCUI(PrintWriter out)
   }
 
   public void loadZAppDevFromFile()
-  { BufferedReader br = null;
-    Vector res = new Vector();
-    String s;
-    boolean eof = false;
-
-    File file = new File("output/mm.bo.xml");  /* default */ 
-
+  { 
+    File file = new File("output/mm.bo.xml");  /* default */
+ 
     File startingpoint = new File("output");
     JFileChooser fc = new JFileChooser();
     fc.setCurrentDirectory(startingpoint);
@@ -19244,6 +19253,21 @@ public void produceCUI(PrintWriter out)
     { System.err.println("Load aborted");
       return; 
     }
+
+    loadZAppDevFromFile(file); 
+  } 
+
+  public void loadZAppDevFromFile(String fname)
+  { 
+    File file = new File(fname); 
+    loadZAppDevFromFile(file); 
+  } 
+
+  public void loadZAppDevFromFile(File file)
+  { BufferedReader br = null;
+    Vector res = new Vector();
+    String s;
+    boolean eof = false;
 
     String componentName = file.getName();  
 
@@ -19290,7 +19314,7 @@ public void produceCUI(PrintWriter out)
     Compiler2 comp = new Compiler2();  
     comp.lexicalanalysisxml(xmlstring); 
     XMLNode xml = comp.parseXML(); 
-    System.out.println(">>> Parsed business object data: " + xml); 
+    // System.out.println(">>> Parsed business object data: " + xml); 
 
     if (xml == null) 
     { return; } 
@@ -19422,7 +19446,7 @@ public void produceCUI(PrintWriter out)
                     opnode.getContent(); 
                 String km3code = 
                     parseMambaOperation(opcode, spec);
-                JOptionPane.showInputDialog("Code of " + opname + " is " + km3code);
+                // JOptionPane.showInputDialog("Code of " + opname + " is " + km3code);
  
                 Compiler2 cc = new Compiler2(); 
                 cc.nospacelexicalanalysis(km3code); 
@@ -19504,6 +19528,12 @@ public void produceCUI(PrintWriter out)
         String role2 = enode.getAttributeValue("Role2"); 
         String mult1 = enode.getAttributeValue("Multiplicity1"); 
         String mult2 = enode.getAttributeValue("Multiplicity2"); 
+
+        if ("Many".equals(mult2))
+        { // assert that role2 is a Sequence
+          ASTTerm.addStereo(role2, "Sequence"); 
+        } 
+
         int card1 = Association.zAppDevMultiplicity(mult1); 
         int card2 = Association.zAppDevMultiplicity(mult2); 
 

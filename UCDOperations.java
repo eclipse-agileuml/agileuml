@@ -3402,10 +3402,10 @@ public class UCDOperations
       if (ent.hasCycle())
       { System.err.println("!! Warning: ADP violated: class " + 
                            ent + " is self-dependent via a cycle of references!"); 
-        JOptionPane.showMessageDialog(null, 
+      /*  JOptionPane.showMessageDialog(null, 
           "Warning: ADP violated: class " + 
           ent + " is self-dependent via a cycle of references!", 
-          "", JOptionPane.ERROR_MESSAGE); 
+          "", JOptionPane.ERROR_MESSAGE); */ 
       } 
 
       if (ent.hasStereotype("platformSpecific")) 
@@ -3418,10 +3418,10 @@ public class UCDOperations
         if (ref.hasStereotype("platformSpecific"))
         { System.err.println("!! Warning: Dependency rule violated: platform-independent class " + ent); 
           System.err.println(" depends on platform-specific class " + ref);
-          JOptionPane.showMessageDialog(null, 
+          /* JOptionPane.showMessageDialog(null, 
             "Warning: Dependency rule violated: platform-independent class " + ent + 
             "\ndepends on platform-specific class " + ref, 
-            "", JOptionPane.ERROR_MESSAGE); 
+            "", JOptionPane.ERROR_MESSAGE); */  
         } 
       }
 
@@ -3444,10 +3444,10 @@ public class UCDOperations
         else 
         { System.err.println("!! Warning: ISP violated: class " + rname + 
              " is referenced but no operation of it is used by " + ent); 
-          JOptionPane.showMessageDialog(null, 
+          /* JOptionPane.showMessageDialog(null, 
             "Warning: ISP violated: class " + rname + 
             " is referenced but no operation of it is used by " + ent, 
-            "", JOptionPane.ERROR_MESSAGE); 
+            "", JOptionPane.ERROR_MESSAGE); */ 
         } 
       }  
     }   
@@ -3481,6 +3481,8 @@ public class UCDOperations
     int targetClasses = 0; 
     int derivedClasses = 0; 
     int allClasses = entities.size(); 
+
+    Vector csv = new Vector(); 
 	
     for (int j = 0; j < allClasses; j++) 
     { Entity ent = (Entity) entities.get(j);
@@ -3492,10 +3494,12 @@ public class UCDOperations
       if (ent.isDerived())
       { derivedClasses++; }
 
-      if (ent.isComponent() || ent.isExternal())
+      if (ent.isDerived() ||
+          ent.isComponent() || 
+          ent.isExternal())
       { continue; } 
 	 
-      int entsize = ent.displayMeasures(out,clones);
+      int entsize = ent.displayMeasures(out,csv,clones);
       totalClassSize = totalClassSize + entsize; 
 	   
       out.println(); 
@@ -3513,15 +3517,15 @@ public class UCDOperations
       for (int k = 0; k < ops.size(); k++) 
       { BehaviouralFeature bf = (BehaviouralFeature) ops.get(k); 
         int cyc = bf.cc();
-        if (cyc > 10) 
+        if (cyc > TestParameters.cyclomaticComplexityLimit) 
         { highcost = highcost + 30; } 
 
         int eplbf = bf.epl(); 
-        if (eplbf > 10) 
+        if (eplbf > TestParameters.numberOfParametersLimit) 
         { highcost = highcost + 30; }
 
         int bfefo = bf.efo(); 
-        if (bfefo > 5) 
+        if (bfefo > TestParameters.efoLimit) 
         { highcost = highcost + 30; }
       }  
     } 
@@ -3573,9 +3577,11 @@ public class UCDOperations
     { Object k = keys.next();
       Vector clonedIn = (Vector) clones.get(k); 
       if (clonedIn.size() > 1)
-      { out.println("*** " + k + " is cloned in: " + clonedIn); 
-        System.err.println("!! Code smell (DC): Clone " + k + " in " + clonedIn); 
-        System.err.println("!! Recommend refactoring by extracting the " + clonedIn.size() + " copies as new operation"); 
+      { out.println("!! (DC) flaw: " + k + " cloned in:\n" + clonedIn); 
+        out.println(); 
+        System.err.println("!! (DC) flaw: " + k + " cloned in\n" + clonedIn); 
+        System.err.println("!! Recommend refactoring by code restructuring or extracting clones as a new operation");
+        System.err.println();  
         clonecount++; 
       } 
     }  
@@ -3588,13 +3594,33 @@ public class UCDOperations
     out.println("*** Total number of operations in the system is: " + topscount);  
     out.println("*** Total size of transformations in the system is: " + totalsize);  
     out.println("*** Total call graph size of system is: " + cg.size());  
-    out.println("*** Total number of clones in system is: " + clonecount);  
+    out.println("*** Total number of clones (DC) in system is: " + clonecount);  
 
     out.println(); 
 
     out.println("*** Estimated testability correction cost = " + highcost + " minutes (" + (highcost/60.0) + " hours)"); 
-    out.println("*** Estimated maintainability correction cost = " + lowcost + " minutes (" + (lowcost/60.0) + " hours)"); 
+    out.println("*** Estimated maintainability correction cost = " + lowcost + " minutes (" + (lowcost/60.0) + " hours)");
+
+    File file = new File("./qualitySummary.csv");
+    try
+    { PrintWriter csvout = new PrintWriter(
+                              new BufferedWriter(
+                                new FileWriter(file)));
+      csvout.println("Entity, Operation, Flaws, Red, Amber, Yellow," 
+                  + 
+                  "CBR, DC, MGN, EFO, CC, EOS, UVA"); 
+
+      for (int i = 0; i < csv.size(); i++) 
+      { String mess = (String) csv.get(i); 
+        csvout.println(mess); 
+      }  
+      csvout.close();
+
+      System.out.println(">> Summary written to qualitySummary.csv"); 
+    } catch (Exception ex) { } 
+
   }
+
 
   public void simplifyOCL()
   { for (int j = 0; j < entities.size(); j++) 
@@ -3634,43 +3660,99 @@ public class UCDOperations
 
   public void energyAnalysis()
   { java.util.Map clnes = new java.util.HashMap(); 
-    Vector messages = new Vector(); 
-    energyAnalysis(clnes, messages); 
+    Vector messages = new Vector();
+    Vector csv = new Vector();
 
-    for (int i = 0; i < messages.size(); i++) 
-    { String mess = (String) messages.get(i); 
-      System.err.println(mess); 
-    } 
-  } // with HTML output colour-code them 
+    // TestParameters.cloneSizeLimit = 4; 
+
+    energyAnalysis(clnes, messages, csv);
+
+    File file = new File("./energyUseDetails.txt");
+    try
+    { PrintWriter out = new PrintWriter(
+                              new BufferedWriter(
+                                new FileWriter(file)));
+
+      for (int i = 0; i < messages.size(); i++) 
+      { String mess = (String) messages.get(i); 
+        out.println(mess); 
+      }  
+
+      out.println(); 
+      out.close();
+
+      System.out.println(">> Details written to energyUseDetails.txt"); 
+    }
+    catch (IOException ex)
+    { System.out.println("!! Error generating details file"); }
+
+
+    File sfile = new File("./energyUseSummary.csv");
+    try
+    { PrintWriter out = new PrintWriter(
+                              new BufferedWriter(
+                                new FileWriter(sfile)));
+      out.println("Entity, Operation, Flaws, Red, Amber, Yellow," 
+                  + 
+                  "DEV, LCE, UOR, RC, NTE, OES, LRC, MEL, MNC"); 
+
+      for (int i = 0; i < csv.size(); i++) 
+      { String mess = (String) csv.get(i); 
+        out.println(mess); 
+      }  
+      out.close();
+
+      System.out.println(">> Summary written to energyUseSummary.csv"); 
+    }
+    catch (IOException ex)
+    { System.out.println("!! Error generating summary file"); }
+  } 
 
   public Map energyAnalysis(java.util.Map clones, 
-                            Vector messages)
+                            Vector messages, Vector csv)
   { Map res = new Map(); 
 
     int redFlags = 0; 
     int amberFlags = 0; 
+    int yellowFlags = 0; 
 
-    for (int j = 0; j < entities.size(); j++) 
-    { Entity ent = (Entity) entities.get(j); 
-      if (ent.isDerived()) { continue; } 
-
-      if (ent.isComponent() || ent.isExternal())
-      { continue; } 
-
-      Map scores = ent.energyAnalysis(messages);
+    File file = new File("./energyUseSummary.txt");
+    try
+    { PrintWriter out = new PrintWriter(
+                              new BufferedWriter(
+                                new FileWriter(file)));
+          
+      for (int j = 0; j < entities.size(); j++) 
+      { Entity ent = (Entity) entities.get(j);
  
-      redFlags = redFlags + (int) scores.get("red"); 
-      amberFlags = 
-        amberFlags + (int) scores.get("amber"); 
+        if (ent.isDerived()) { continue; } 
 
-      Map cg = ent.getCallGraph(); 
-      if (cg.size() > 0) 
-      { // out.println("*** Call graph of entity " + 
-        //             ent.getName() + " is: " + cg); 
-        res = Map.union(res,cg); 
-      }  
-    } 
+        if (ent.isComponent() || ent.isExternal())
+        { continue; } 
 
+        Map scores = ent.energyAnalysis(messages, csv, out);
+ 
+        redFlags = redFlags + (int) scores.get("red"); 
+        amberFlags = 
+          amberFlags + (int) scores.get("amber"); 
+        yellowFlags = 
+          yellowFlags + (int) scores.get("yellow"); 
+
+        Map cg = ent.getCallGraph(); 
+        if (cg.size() > 0) 
+        { // out.println("*** Call graph of entity " + 
+          //             ent.getName() + " is: " + cg); 
+          res = Map.union(res,cg); 
+        }  
+      } 
+
+      out.close();
+
+      System.out.println(">> Summary written to energyUseSummary.txt"); 
+    }
+    catch (IOException ex)
+    { System.out.println("!! Error generating summary file"); }
+    
     for (int j = 0; j < useCases.size(); j++) 
     { UseCase uc = (UseCase) useCases.get(j); 
       // if (uc.isDerived()) { continue; } 
@@ -3679,41 +3761,45 @@ public class UCDOperations
       redFlags = redFlags + (int) scores.get("red"); 
       amberFlags = 
         amberFlags + (int) scores.get("amber"); 
+      yellowFlags = 
+        yellowFlags + (int) scores.get("yellow"); 
     } 
 
     // compute transitive closure of this
 
-    Map tc = new Map(); 
-    tc.elements = Map.transitiveClosure(res.elements);
+    // Map tc = new Map(); 
+    // tc.elements = Map.transitiveClosure(res.elements);
     // out.println(">>> Transitive closure of operations call graph is: " + tc);  
 
-    Vector selfcalls = tc.getSelfMaps(); 
+    // Vector selfcalls = tc.getSelfMaps(); 
     // System.out.println("!! Warning: Recursive operations: " + selfcalls);
   
-    int selfcallsn = selfcalls.size();  
+    // int selfcallsn = selfcalls.size();  
  
-    if (selfcallsn > 0) 
+    /* if (selfcallsn > 0) 
     { messages.add("!!! Red flag: " + selfcallsn + " recursive dependencies"); 
       messages.add("!!! Use Replace recursion by iteration (for tail recursions) to reduce energy cost\n    Or make operation <<cached>>"); 
 
       redFlags = redFlags + selfcallsn; 
-    }
+    } */ 
 
     java.util.Set lastfound = new java.util.HashSet(); 
     int n = res.maxPathLength(lastfound); 
 
     // System.out.println(">> Operations in maximum chain are " + lastfound); 
 
-    if (n >= 5) 
-    { messages.add("!! Maximum call chain length is " + n); 
+    if (n > TestParameters.referenceChainLimit) 
+    { messages.add("!! (MPL) flaw: Maximum call chain length is " + n); 
       messages.add("!! Amber warning: long sequence of calls"); 
       messages.add("!! Try inline expansion of the end operation(s): replace call by definition"); 
 
       amberFlags = amberFlags + 1; 
     }
 
+    messages.add(">>>>> For system " + systemName + " there are the total energy-use flaws:"); 
     messages.add(">> Red flag score: " + redFlags); 
     messages.add(">> Amber flag score: " + amberFlags); 
+    messages.add(">> Yellow flag score: " + yellowFlags); 
 
     return res;  
   }
@@ -7908,10 +7994,9 @@ public class UCDOperations
     rd.setComponent(sm);  */ 
   /* } */ 
 
-  /* 
   public Entity reconstructEntity(String nme, int xx,
-                                  int yy, String fname, String ecard,
-                                  Vector stereotypes)
+                           int yy, String fname, String ecard,
+                           Vector stereotypes)
   { String generics = ""; 
     int gsindex = nme.indexOf("<"); 
     if (gsindex > -1) 
@@ -7931,29 +8016,21 @@ public class UCDOperations
     Entity ent = new Entity(nme); // not null or empty
     ent.setTypeParameters(generics,entities,types);   
 
-    RectData rd =
-      new RectData(xx,yy,getForeground(),componentMode,
-                   rectcount);
-    rectcount++;
-    rd.setLabel(nme);
     entities.add(ent);
-    visuals.add(rd);
     componentNames.add(nme);
-    rd.setModelElement(ent);
-    // restore attributes and rolenames from fname
     if (ecard == null || ecard.equals("null") || ecard.equals(""))
     { ent.setCardinality("*"); } 
     else 
     { ent.setCardinality(ecard); }
     ent.setStereotypes(stereotypes);  
 	
-    if (ent.isRemote())
-    { addDerivedRemoteComponents(ent); }
-    else if (ent.isCloud())
-    { addDerivedCloudComponents(ent); }
+    // if (ent.isRemote())
+    // { addDerivedRemoteComponents(ent); }
+    // else if (ent.isCloud())
+    // { addDerivedCloudComponents(ent); }
 
     return ent;
-  } */ 
+  }
 
   public void addEntity(Entity ent, int xx, int yy)
   { // Version without visual elements
@@ -7975,6 +8052,26 @@ public class UCDOperations
 
     componentNames.add(nme);
   } 
+
+  public void addInheritances(Entity e, Entity[] ents)
+  { 
+    for (int i = 0; i < ents.length; i++)
+    { Entity ent = ents[i]; 
+    
+      Generalisation gen = new Generalisation(e, ent);
+
+      if (e.isInterface())
+      { gen.setRealization(true); } 
+ 
+      generalisations.add(gen);
+      Entity oldsuper = ent.getSuperclass(); 
+
+      ent.addSuperclass(e); 
+      
+      e.addSubclass(ent); 
+      formFamilies(gen);
+    }
+  }
 
 
   /*
@@ -19212,6 +19309,376 @@ public void produceCUI(PrintWriter out)
     System.out.println(); 
   } 
 
+  public void loadZAppDevFromFile(String fname)
+  { 
+    File file = new File(fname); 
+    loadZAppDevFromFile(file); 
+  } 
+
+  public void loadZAppDevFromFile(File file)
+  { BufferedReader br = null;
+    Vector res = new Vector();
+    String s;
+    boolean eof = false;
+
+    String componentName = file.getName();  
+
+    try
+    { br = new BufferedReader(new FileReader(file)); }
+    catch (FileNotFoundException e)
+    { System.err.println("!! File not found: " + file);
+      return; 
+    }
+
+    Vector preentities = new Vector(); 
+    Vector preassociations = new Vector(); 
+    Vector pregeneralisations = new Vector();
+    Vector preconstraints = new Vector(); 
+    Vector preassertions = new Vector(); 
+    Vector preops = new Vector(); 
+    Vector pucs = new Vector(); 
+    Vector preactivities = new Vector(); 
+    Vector preucinvs = new Vector(); 
+
+    String xmlstring = ""; 
+
+    while (!eof)
+    { try { s = br.readLine(); }
+      catch (IOException e)
+      { System.out.println("!! Reading business object file failed.");
+        return; 
+      }
+
+      if (s == null) 
+      { eof = true; 
+        break; 
+      }
+      else 
+      { int commindx = s.indexOf("//"); 
+        if (commindx >= 0) 
+        { s = Compiler2.beforeComment(s); } 
+        xmlstring = xmlstring + s + " "; 
+        System.out.println(s); 
+      } 
+    }
+
+
+    Compiler2 comp = new Compiler2();  
+    comp.lexicalanalysisxml(xmlstring); 
+    XMLNode xml = comp.parseXML(); 
+    // System.out.println(">>> Parsed business object data: " + xml); 
+
+    if (xml == null) 
+    { return; } 
+
+    Vector enodes = xml.getSubnodes(); 
+      // main elements: associations, entities
+
+    int delta = 200; // visual displacement 
+    int ecount = 0; 
+	
+    Vector allnodes = new Vector(); 
+
+    for (int i = 0; i < enodes.size(); i++) 
+    { XMLNode enode = (XMLNode) enodes.get(i); 
+	  
+      if ("Classes".equals(enode.getTag()))
+      { System.out.println(">>>> Classes subnode"); 
+        allnodes.addAll(enode.getSubnodes()); 
+      }  
+      else if ("Associations".equals(enode.getTag()))
+      { System.out.println(">>>> Associations subnode"); 
+        allnodes.addAll(enode.getSubnodes()); 
+      }  
+      // else 
+      // { allnodes.add(enode); }
+    } 
+
+    for (int i = 0; i < allnodes.size(); i++) 
+    { XMLNode enode = (XMLNode) allnodes.get(i); 
+	  
+      if ("Class".equals(enode.getTag()))
+      { String xsitype = enode.getAttributeValue("Stereotype"); 
+        String ename = enode.getAttributeValue("Name");
+        System.out.println(">>>> Class/type subnode: " + ename); 
+		 
+        if ("Class".equals(xsitype) && ename != null)  
+        { Entity ent = 
+            reconstructEntity(ename, 
+              40 + (ecount/3)*delta + ((ecount % 3)*delta)/2, 
+              100 + (ecount % 7)*delta, "", "*", 
+              new Vector());
+          ecount++; 
+        } 
+        else if ("Enumeration".equals(xsitype) && 
+                 ename != null) 
+        { Type dt = new Type(ename, null); 
+          types.add(dt); 
+          /* RectData rdt = 
+            new RectData(100 + 120*types.size(),
+                         20,getForeground(),
+                                 componentMode,
+                                 rectcount);
+          rectcount++;
+          rdt.setLabel(ename);
+          rdt.setModelElement(dt); 
+          visuals.add(rdt); */ 
+        } 
+      } 
+    } 
+
+    // int classcount = entities.size(); 
+
+    File mamba2uml = new File("./mamba2OCL.cstl"); 
+    Vector vbs = new Vector(); 
+    CGSpec spec = loadCSTL(mamba2uml,vbs); 
+
+    if (spec == null) 
+    { System.err.println("!! ERROR: No file " + mamba2uml.getName()); 
+      return;  
+    } 
+
+    for (int i = 0; i < allnodes.size(); i++) 
+    { XMLNode enode = (XMLNode) allnodes.get(i);
+ 
+      if ("Class".equals(enode.getTag()))
+      { String xsitype = enode.getAttributeValue("Stereotype"); 
+        String ename = enode.getAttributeValue("Name"); 
+        String idAttr = enode.getAttributeValue("PK"); 
+        String baseClass = enode.getAttributeValue("BaseClass"); 
+
+        if ("Enumeration".equals(xsitype) && ename != null)  
+        { Type typ = 
+            (Type) ModelElement.lookupByName(ename, types);
+
+          Vector edata = enode.getSubnodes(); 
+          for (int j = 0; j < edata.size(); j++) 
+          { XMLNode ed = (XMLNode) edata.get(j);
+            if ("Literals".equals(ed.getTag()))
+            { Vector ops = ed.getSubnodes();
+ 
+              for (int k = 0; k < ops.size(); k++) 
+              { XMLNode opnode = (XMLNode) ops.get(k); 
+                String opname = 
+                    opnode.getAttributeValue("Name"); 
+                typ.addValue(opname); 
+              } 
+            }
+          }
+        } 
+        else if ("Class".equals(xsitype) && ename != null)  
+        { Entity ent = 
+            (Entity) ModelElement.lookupByName(ename,entities);
+          
+          if (baseClass != null && 
+              baseClass.length() > 0)
+          { Entity supent = 
+              (Entity) ModelElement.lookupByName(baseClass,entities);
+            
+            if (supent != null) 
+            { Entity[] subents = new Entity[1]; 
+              subents[0] = ent; 
+              addInheritances(supent,subents); 
+              System.out.println(">>> Added inheritance: " + 
+                         ename + " --|> " + supent.getName()); 
+              supent.setAbstract(true);
+            } 
+          }  
+
+          Vector edata = enode.getSubnodes(); 
+          for (int j = 0; j < edata.size(); j++) 
+          { XMLNode ed = (XMLNode) edata.get(j);
+            if ("Operations".equals(ed.getTag()))
+            { Vector ops = ed.getSubnodes(); 
+              for (int k = 0; k < ops.size(); k++) 
+              { XMLNode opnode = (XMLNode) ops.get(k); 
+                String opname = 
+                    opnode.getAttributeValue("Name"); 
+                String opcode = 
+                    opnode.getContent(); 
+                String km3code = 
+                    parseMambaOperation(opcode, spec);
+                
+                Compiler2 cc = new Compiler2(); 
+                cc.nospacelexicalanalysis(km3code); 
+                BehaviouralFeature bf = 
+                  cc.parseOperationNoSemicolon(entities, types); 
+
+                if (bf != null) 
+                { ent.addOperation(bf); 
+                  bf.setEntity(ent);
+                }  
+              }  
+            } 
+            else if ("Attributes".equals(ed.getTag()))
+            { Vector attrs = ed.getSubnodes(); 
+              for (int k = 0; k < attrs.size(); k++)
+              { XMLNode anode = (XMLNode) attrs.get(k); 
+                String isInherited = 
+                     anode.getAttributeValue("IsInherited"); 
+     
+                if ("true".equals(isInherited)) 
+                { continue; } 
+
+                String dataname = 
+                     anode.getAttributeValue("Name"); 
+                String atttype = 
+                     anode.getAttributeValue("DataType"); 
+     
+                Type typ = 
+                  Type.typeFromMamba(atttype,entities,types);
+ 
+                Attribute att = 
+                  new Attribute(dataname,typ,
+                                ModelElement.INTERNAL); 
+                ent.addAttribute(att); 
+                att.setEntity(ent);
+                String init = 
+                     anode.getAttributeValue("InitValue");
+                String isStatic = 
+                     anode.getAttributeValue("IsStatic");
+
+                if (init != null) 
+                { att.setInitialValue(init);
+                  System.out.println(">-> Initial value for " + dataname + " = " + init); 
+
+                  if (typ != null && 
+                      "String".equals(typ.getName()))
+                  { Expression expr = 
+                      BasicExpression.newValueBasicExpression(
+                                         "\"" + init + "\"");
+                    expr.setType(typ); 
+                    expr.setElementType(typ);  
+                    att.setInitialExpression(expr); 
+                  }
+                  else 
+                  { Compiler2 comp2 = new Compiler2();
+                    comp2.nospacelexicalanalysis(init); 
+                    Expression expr = 
+                      comp2.parseExpression(entities,types); 
+                    if (expr != null) 
+                    { expr.setType(typ); }
+                    att.setInitialExpression(expr); 
+                  }
+                }
+
+                if ("true".equals(isStatic))
+                { att.setStatic(true); }    
+
+                if (idAttr.equals(dataname))
+                { att.setIdentity(true); } 
+              }
+            }
+          }
+        }  
+      }  
+      else if ("Association".equals(enode.getTag()))
+      { String e1name = enode.getAttributeValue("Class1"); 
+        String e2name = enode.getAttributeValue("Class2"); 
+        String role1 = enode.getAttributeValue("Role1"); 
+        String role2 = enode.getAttributeValue("Role2"); 
+        String mult1 = enode.getAttributeValue("Multiplicity1"); 
+        String mult2 = enode.getAttributeValue("Multiplicity2"); 
+        int card1 = Association.zAppDevMultiplicity(mult1); 
+        int card2 = Association.zAppDevMultiplicity(mult2); 
+
+        String delete1 = enode.getAttributeValue("OnDelete1"); 
+        String delete2 = enode.getAttributeValue("OnDelete2"); 
+
+        Entity ent1 = 
+          (Entity) ModelElement.lookupByName(e1name,entities);
+        if (ent1 == null)
+        { ent1 = 
+            reconstructEntity(e1name, 
+              40 + (ecount/3)*delta + ((ecount % 3)*delta)/2, 
+              100 + (ecount % 7)*delta, "", "*", 
+              new Vector());
+          ecount++; 
+        }
+
+        Entity ent2 = 
+          (Entity) ModelElement.lookupByName(e2name,entities);
+        if (ent2 == null)
+        { ent2 = 
+            reconstructEntity(e2name, 
+              40 + (ecount/3)*delta + ((ecount % 3)*delta)/2, 
+              100 + (ecount % 7)*delta, "", "*", 
+              new Vector());
+          ecount++; 
+        }
+ 
+        System.out.println(">> Association: " + role2 + " from " + e1name + " to " + e2name); 
+      
+        Association ast = 
+           new Association(ent1,ent2,card1,card2,role1,role2); 
+        associations.add(ast);  
+        ent1.addAssociation(ast); 
+        ast.setName("r" + associations.size());
+    
+        if ("CascadeDelete".equals(delete1))
+        { ast.setComposition(true); } 
+
+        /* int xs = 0, ys = 0, xe = 100, ye = 100;  
+        for (int m = 0; m < visuals.size(); m++)
+        { VisualData vd = (VisualData) visuals.get(m); 
+          ModelElement me = (ModelElement) vd.getModelElement(); 
+          if (me == ent1) // Entity1
+          { xs = vd.getx(); ys = vd.gety(); } 
+          else if (me == ent2) // Entity2
+          { xe = vd.getx(); ye = vd.gety(); }  
+        }
+
+        int featuresize = ent1.featureCount(); 
+        int efeaturesize = ent2.featureCount(); 
+
+        LineData sline = 
+            new LineData(xs + featuresize*4, ys+50, xe + efeaturesize*4,ye,linecount,SOLID);
+        sline.setModelElement(ast); 
+        visuals.add(sline); */ 
+      }
+    }
+
+  }
+
+  public String parseMambaOperation(String sourceCode, 
+                                    CGSpec spec)
+  { Vector auxcstls = new Vector(); 
+    ASTTerm xx = null; 
+
+    String[] args = {"Mamba3", "function_declaration"}; 
+
+    try { 
+      org.antlr.v4.gui.AntlrGUI antlr = 
+          new org.antlr.v4.gui.AntlrGUI(args); 
+
+      antlr.setText(sourceCode); 
+
+      antlr.process(); 
+
+      String asttext = antlr.getResultText(); 
+        // messageArea.setText("" + asttext);
+        // System.out.println(asttext); 
+ 
+      Compiler2 cc = new Compiler2(); 
+      xx = cc.parseGeneralAST(asttext); 
+    } 
+    catch (Exception _expt) 
+    { _expt.printStackTrace(); } 
+
+    if (xx == null) 
+    { System.out.println("!! Invalid Mamba source text !!"); 
+      System.out.println(sourceCode); 
+      return null; 
+    } 
+
+    ASTTerm.metafeatures = new java.util.HashMap(); 
+
+    
+    String reskm3 = xx.cg(spec); 
+    String arg1 = CGRule.correctNewlines(reskm3); 
+    return arg1; 
+  } 
+
   public void loadKM3FromFile()
   { File file = new File("output/mm.km3");  /* default */ 
 
@@ -30001,10 +30468,32 @@ public void produceCUI(PrintWriter out)
     return res; 
   } 
 
+  /* Use as: java -jar mambaAnalysis.jar -mambaAnalysis DTOs.bo.xml */ 
+
   public static void main(String[] args)
   { String cmd = ""; 
     UCDOperations model = new UCDOperations(); 
 
+    if (args.length == 2 && "-mambaAnalysis".equals(args[0]))
+    { String fname = args[1]; 
+      model.loadZAppDevFromFile(fname); 
+      model.typeCheck(); 
+      model.typeCheck(); 
+      try { 
+        File fout = new File("qualityDetails.txt");
+        PrintWriter qout = new PrintWriter(
+                              new BufferedWriter(
+                                new FileWriter(fout)));
+        model.displayMeasures(qout);
+        qout.close();
+      }
+      catch (IOException ex)
+      { System.out.println("!! Error generating measures"); }
+   
+      model.energyAnalysis();   
+      return; 
+    } 
+  
     while (!cmd.equals("exit"))
     { System.out.println(); 
       System.out.println("*********** AgileUML *******************"); 

@@ -2618,7 +2618,7 @@ public void findPlugins()
         new TextDisplay("Use cases","output/tmp");
       }  
       else if (label.equals("Quality measures"))
-      { File file = new File("output/tmp.txt");
+      { File file = new File("output/qualityDetails.txt");
         try
         { PrintWriter out = new PrintWriter(
                               new BufferedWriter(
@@ -2629,7 +2629,8 @@ public void findPlugins()
         catch (IOException ex)
         { System.out.println("!! Error generating measures"); }
 
-        new TextDisplay("Measures","output/tmp.txt");
+        new TextDisplay("Measures",
+                        "output/qualityDetails.txt");
       }  
       else if (label.equals("Energy analysis"))
       { ucdArea.energyAnalysis(); }  

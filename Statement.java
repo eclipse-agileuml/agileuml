@@ -17388,7 +17388,35 @@ class AssignStatement extends Statement
   { rhs.collectionOperatorUses(lev, uses, vars, flaws,
                                messages); 
     lhs.collectionOperatorUses(lev, uses, vars, flaws,
-                               messages); 
+                               messages);
+
+    if (lev > 1 && rhs instanceof BinaryExpression)  
+    { BinaryExpression rhsbe = (BinaryExpression) rhs; 
+
+      if ("->including".equals(rhsbe.getOperator()) && 
+          (lhs + "").equals(rhsbe.getLeft() + ""))
+      { messages.add("!! (OES): inefficient addition to collection by copying: " + this); 
+        messages.add("!! Use execute (" + 
+               rhsbe.getRight() + " : " + lhs + ") instead"); 
+        messages.add(""); 
+        int aScore = (int) flaws.get("amber"); 
+        flaws.set("amber", aScore+1);
+        int oescount = (int) flaws.get("OES"); 
+        flaws.set("OES", oescount+1);
+      } 
+      else if ("->union".equals(rhsbe.getOperator()) && 
+          (lhs + "").equals(rhsbe.getLeft() + ""))
+      { messages.add("!! (OES): inefficient additions to collection by copying: " + this); 
+        messages.add("!! Use execute (" + 
+               rhsbe.getRight() + " <: " + lhs + ") instead");
+        messages.add(""); 
+        int aScore = (int) flaws.get("amber"); 
+        flaws.set("amber", aScore+1);
+        int oescount = (int) flaws.get("OES"); 
+        flaws.set("OES", oescount+1); 
+      } 
+    }
+
     return uses; 
   } 
 
