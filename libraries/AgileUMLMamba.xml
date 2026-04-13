@@ -402,6 +402,18 @@
         <Attribute Name="Id" IsValueClass="false" Description="" DataType="int" BaseInfo="" Length="100" Precision="18" Scale="2" InitValue="" IsRequired="false" IsInherited="false" Persisted="true" ColumnName="" IsEncrypted="false" IsStatic="false" ReadOnly="false" IsExternal="false" CustomValidation="" IsCreditCard="false" IsURL="false" IsEmail="false" MinLength="0" MaxLength="100" MinValue="" MaxValue="" Getter="" Setter="" />
       </Attributes>
       <Operations>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="toTitleCase" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function string toTitleCase(
+	string s
+)
+{
+  return s.ToTitleCase();
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="rightTrim" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function string rightTrim(
+	string s
+)
+{
+  return s.TrimEnd(); 
+}</Operation>
         <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="padLeftWithInto" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function string padLeftWithInto(
 	string s,
 	string c,
