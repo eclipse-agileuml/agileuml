@@ -473,8 +473,10 @@ _1 ( ) |-->_1()
 
 param_list::
 out _1 _2 , _3 |-->_2 : _1, _3
+_1 _2 , _3 |-->_2 : _1, _3<when> _1`typeAsOcl Sequence <action> _2 Sequence
 _1 _2 , _3 |-->_2 : _1, _3
 out _1 _2 |-->_2 : _1
+_1 _2 |-->_2 : _1<when> _1`typeAsOcl Sequence <action> _2 Sequence
 _1 _2 |-->_2 : _1
 
 
@@ -615,6 +617,10 @@ _1 . _2 |-->execute _1.persist()<when> _2 id_or_function_call, _2`functionName S
 
 _1 . _2 |-->_1 := lambda _x : OclAny in (_1->apply(_x) & (_2`functionArguments)->apply(_x))<when> _1 Function, _2 id_or_function_call, _2`functionName And
 _1 . _2 |-->_1 := lambda _x : OclAny in (_1->apply(_x) or (_2`functionArguments)->apply(_x))<when> _1 Function, _2 id_or_function_call, _2`functionName Or
+
+_1 . _2 |-->execute (_2`functionArguments : _1)<when> _1 Sequence, _2 id_or_function_call, _2`functionName Add
+
+_1 . _2 |-->execute (_2`functionArguments <: _1)<when> _1 Sequence, _2 id_or_function_call, _2`functionName AddRange
 
 _1 . _2 |-->_1 := _1_2`mapUpdateFunctionCall<when> _1 Map, _2 id_or_function_call
 _1 . _2 |-->_1 := _1_2`updateFunctionCall<when> _2 id_or_function_call

@@ -1,0 +1,66 @@
+/* Update form of expressions, used in execute expr; */
+
+
+BasicExpression::
+_1 |-->_1`typename._1<when> _1 enumerationLiteral
+
+_1.allInstances |-->_1.GetAll()
+
+_1.insertAt(_2,_3) |-->_1`cgMamba.AddAt(_2`cgMamba-1,_3`cgMamba)
+
+_1.setAt(_2,_3) |-->_1`cgMamba.Set(_2`cgMamba-1,_3`cgMamba)
+
+_1 |-->_1
+_1._2(_3) |-->_1._2(_3`cgMamba)
+_1(_2) |-->_1(_2`cgMamba)
+_1._2 |-->_1._2
+
+
+UnaryExpression::
+_1->display() |-->DebugLib.Logger.WriteInfoLine(_1`cgMamba + "")
+_1->isDeleted() |-->_1`cgMamba = null
+
+
+
+
+BinaryExpression::
+_1 & _2 |-->_1;\n    _2 
+_1 or _2 |-->if (!(_1`cgMamba)) { _2 } 
+_1 xor _2 |-->if (!(_1`cgMamba) && !(_2`cgMamba)) { _1 } 
+
+_1 = _2 |-->_1 = _2`cgMamba
+_1 : _2 |-->_2.Add(_1`cgMamba)
+_1 /: _2 |-->_2 := _2.Subtract({_1`cgMamba})
+_1 <: _2 |-->_2.AddRange(_1`cgMamba)
+_1 /<: _2 |-->_2 = _2.Subtract(_1`cgMamba)
+
+_1->forAll(_2 | _3) |-->foreach (_2 in _1.GetAll()) { _3; }<when>_1 classId
+_1->forAll(_2 | _3) |-->foreach (_2 in _1`cgMamba) { _3; }
+
+_1->iterate(_2; _3 = _4 | _5) |-->
+
+_1->exists(_2 | _3) |-->_1 _2 = _1.Create();\n    _3<when> _1 classId
+_1->exists(_2 | _3) |-->_2`type _2 = _1`cgMamba.First(_2 => _3`cgMamba);\n
+
+
+SetExpression::
+Set{} |-->{}
+Set{_1} |-->{_1`cgMamba} 
+SortedSet{} |-->{}
+SortedSet{_1} |-->{_1`cgMamba}.OrderBy(x => x) 
+Sequence{} |-->{}
+Sequence{_1} |-->{_1`cgMamba}
+SortedSequence{} |-->{}
+SortedSequence{_1} |-->{_1`cgMamba}.OrderBy(x => x) 
+Map{} |-->
+Map{_1} |-->
+
+Ref(_1){_2} |-->{}
+Ref{_1} |-->{}
+
+
+ConditionalExpression::
+if _1 then _2 else _3 endif |-->((_1`cgMamba) ? _2 : _3)
+
+ 
+
