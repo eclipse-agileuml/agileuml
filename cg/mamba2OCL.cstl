@@ -474,9 +474,12 @@ _1 ( ) |-->_1()
 param_list::
 out _1 _2 , _3 |-->_2 : _1, _3
 _1 _2 , _3 |-->_2 : _1, _3<when> _1`typeAsOcl Sequence <action> _2 Sequence
+_1 _2 , _3 |-->_2 : _1, _3<when> _1`typeAsOcl Map <action> _2 Map
 _1 _2 , _3 |-->_2 : _1, _3
+
 out _1 _2 |-->_2 : _1
 _1 _2 |-->_2 : _1<when> _1`typeAsOcl Sequence <action> _2 Sequence
+_1 _2 |-->_2 : _1<when> _1`typeAsOcl Map <action> _2 Map
 _1 _2 |-->_2 : _1
 
 

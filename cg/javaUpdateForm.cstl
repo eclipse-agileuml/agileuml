@@ -67,7 +67,7 @@ Ref{_1} |-->(new Object[_1`cgJava8])
 
 
 ConditionalExpression::
-if _1 then _2 else _3 endif |-->((_1`cgJava8) ? _2 : _3)
+if _1 then _2 else _3 endif |-->if (_1`cgJava8) { _2; } else { _3; } 
 
  
 

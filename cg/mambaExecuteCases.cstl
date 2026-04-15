@@ -30,9 +30,9 @@ _1 xor _2 |-->if (!(_1`cgMamba) && !(_2`cgMamba)) { _1 }
 
 _1 = _2 |-->_1 = _2`cgMamba
 _1 : _2 |-->_2.Add(_1`cgMamba)
-_1 /: _2 |-->_2 := _2.Subtract({_1`cgMamba})
+_1 /: _2 |-->_2.Remove(_1`cgMamba)
 _1 <: _2 |-->_2.AddRange(_1`cgMamba)
-_1 /<: _2 |-->_2 = _2.Subtract(_1`cgMamba)
+_1 /<: _2 |-->_2 = _2.Except(_1`cgMamba)
 
 _1->forAll(_2 | _3) |-->foreach (_2 in _1.GetAll()) { _3; }<when>_1 classId
 _1->forAll(_2 | _3) |-->foreach (_2 in _1`cgMamba) { _3; }
@@ -60,7 +60,7 @@ Ref{_1} |-->{}
 
 
 ConditionalExpression::
-if _1 then _2 else _3 endif |-->((_1`cgMamba) ? _2 : _3)
+if _1 then _2 else _3 endif |-->if _1`cgMamba then _2 else (_3)
 
  
 
