@@ -95,7 +95,7 @@ abstract class Statement implements Cloneable
     // and expr is loop constant & side-effect free. 
     // Also v /: vars(expr)
 
-    if (st instanceof SequenceStatement) { } 
+    if (st != null && st instanceof SequenceStatement) { } 
     else 
     { return false; }
 
@@ -104,7 +104,7 @@ abstract class Statement implements Cloneable
     // { return false; } 
 
     Statement first = Statement.getFirstStatement(st); 
-    if (first instanceof CreationStatement) { } 
+    if (first != null && first instanceof CreationStatement) { } 
     else 
     { return false; } 
 
@@ -133,7 +133,8 @@ abstract class Statement implements Cloneable
     if (newvars.contains(vname))
     { return false; } // it is written in rem
 
-    Vector vuses = rhs.variablesUsedIn(newvars); 
+    Vector vuses = new Vector(); 
+    if (rhs != null) { vuses = rhs.variablesUsedIn(newvars); }
 
     // JOptionPane.showInputDialog("Variables " + vuses + " are used in " + rhs); 
 
@@ -11419,7 +11420,7 @@ class SequenceStatement extends Statement
 
           // JOptionPane.showInputDialog(lhs1 + " " + vuses + " " + rhs1.isSideEffecting()); 
  
-          if (vuses.size() == 0 && !rhs1.isSideEffecting())
+          if (vuses.size() == 0 && rhs1 != null && !rhs1.isSideEffecting())
           { System.err.println("!! (RC) Ineffective assignment: " + as1); 
             i++; 
             newstats.add(as2);
@@ -11438,11 +11439,12 @@ class SequenceStatement extends Statement
  
         if (var1.equals(var2))
         { Expression rhs1 = as1.getInitialisation(); 
-          Expression rhs2 = as2.getInitialisation(); 
+          Expression rhs2 = as2.getInitialisation();
+          if (rhs2 == null) { continue; } 
           Vector vvs = new Vector(); 
           vvs.add(var1); 
           Vector vuses = rhs2.variablesUsedIn(vvs); 
-          if (vuses.size() == 0 && !rhs1.isSideEffecting())
+          if (vuses.size() == 0 && rhs1 != null && !rhs1.isSideEffecting())
           { System.err.println("!! (RC) Ineffective declaration: " + as1); 
             i++; 
             newstats.add(as2);
@@ -11465,7 +11467,7 @@ class SequenceStatement extends Statement
           Vector vvs = new Vector(); 
           vvs.add(var1); 
           Vector vuses = rhs2.variablesUsedIn(vvs); 
-          if (vuses.size() == 0 && !rhs1.isSideEffecting())
+          if (vuses.size() == 0 && rhs1 != null && !rhs1.isSideEffecting())
           { System.err.println("!! (RC) Ineffective declaration initialisation: " + as1); 
             i++; 
             as1.setInitialisation(rhs2); 
@@ -11777,7 +11779,7 @@ class SequenceStatement extends Statement
           Vector vvs = new Vector(); 
           vvs.add("" + lhs1); 
           Vector vuses = rhs2.variablesUsedIn(vvs); 
-          if (vuses.size() == 0 && !rhs1.isSideEffecting())
+          if (vuses.size() == 0 && rhs1 != null && !rhs1.isSideEffecting())
           { int acount = (int) uses.get("amber"); 
             uses.set("amber", acount+1); 
             aUses.add("!! (RC) Ineffective assignment: " + as1); 
@@ -11799,11 +11801,13 @@ class SequenceStatement extends Statement
  
         if (var1.equals(var2))
         { Expression rhs1 = as1.getInitialisation(); 
-          Expression rhs2 = as2.getInitialisation(); 
+          Expression rhs2 = as2.getInitialisation();
+		  if (rhs2 == null) { continue; }
+		   
           Vector vvs = new Vector(); 
           vvs.add(var1); 
           Vector vuses = rhs2.variablesUsedIn(vvs); 
-          if (vuses.size() == 0 && !rhs1.isSideEffecting())
+          if (vuses.size() == 0 && rhs1 != null && !rhs1.isSideEffecting())
           { int acount = (int) uses.get("amber"); 
             uses.set("amber", acount+1); 
             aUses.add("!! (RC) Ineffective declaration: " + as1); 
@@ -11829,7 +11833,7 @@ class SequenceStatement extends Statement
           Vector vvs = new Vector(); 
           vvs.add(var1); 
           Vector vuses = rhs2.variablesUsedIn(vvs); 
-          if (vuses.size() == 0 && !rhs1.isSideEffecting())
+          if (vuses.size() == 0 && rhs1 != null && !rhs1.isSideEffecting())
           { int acount = (int) uses.get("amber"); 
             uses.set("amber", acount+1); 
             aUses.add("!! (RC) Ineffective declaration initialisation: " + as1); 

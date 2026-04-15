@@ -4532,7 +4532,7 @@ public class UCDArea extends JPanel
 
   public void generateMamba()
   { Vector auxcstls = new Vector(); 
-    
+    auxcstls.add("mambaExecuteCases.cstl"); 
     CGSpec cgs = loadCSTL("cgMamba.cstl",auxcstls); 
     cgs.setTypes(types); 
     cgs.setEntities(entities); 
@@ -4621,6 +4621,7 @@ public class UCDArea extends JPanel
     auxcstls.add("cgprotocol.cstl"); 
     auxcstls.add("catchTestSwift.cstl");
     auxcstls.add("swiftCopyOperation.cstl"); 
+    auxcstls.add("swiftUpdateForm.cstl"); 
     
     CGSpec cgs = loadCSTL("cgSwift.cstl",auxcstls); 
 
@@ -5138,6 +5139,7 @@ public class UCDArea extends JPanel
     auxcstls.add("cgprotocol.cstl"); 
     auxcstls.add("catchTestSwift.cstl");
     auxcstls.add("swiftCopyOperation.cstl"); 
+    auxcstls.add("swiftUpdateForm.cstl"); 
 
     java.util.Date d1 = new java.util.Date(); 
     long t1 = d1.getTime(); 
