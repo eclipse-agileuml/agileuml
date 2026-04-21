@@ -34,18 +34,19 @@ Ref |-->Array
 
 OclAny |-->Object
 OclType |-->RuntimeType
+OclFile |-->Domain.OclFile
 
-OclException |-->Exception
-ProgramException |-->Exception
-SystemException |-->Exception
-IOException |-->Exception
-CastingException |-->Exception
-NullAccessException |-->Exception
-IndexingException |-->Exception
-ArithmeticException |-->Exception
-IncorrectElementException |-->Exception
-AssertionException |-->Exception
-AccessingException |-->Exception
+OclException |-->BusinessException
+ProgramException |-->BusinessException
+SystemException |-->BusinessException
+IOException |-->BusinessException
+CastingException |-->BusinessException
+NullAccessException |-->BusinessException
+IndexingException |-->BusinessException
+ArithmeticException |-->BusinessException
+IncorrectElementException |-->BusinessException
+AssertionException |-->BusinessException
+AccessingException |-->BusinessException
 
 _1 |-->_1
 
@@ -77,16 +78,19 @@ Math_NaN |-->null
 Math_PINFINITY |-->null
 Math_NINFINITY |-->null
 
-AccessingException.newAccessingException() |-->Exception.Create()
-ArithmeticException.newArithmeticException() |-->Exception.Create()
-AssertionException.newAssertionException() |-->Exception.Create()
-ProgramException.newProgramException() |-->Exception.Create()
-SystemException.newSystemException() |-->Exception.Create()
-IOException.newIOException() |-->Exception.Create()
-CastingException.newCastingException() |-->Exception.Create()
-NullAccessException.newNullAccessException() |-->Exception.Create()
-IndexingException.newIndexingException() |-->Exception.Create()
-IncorrectElementException.newIncorrectElementException() |-->Exception.Create()
+AccessingException.newAccessingException() |-->BusinessException.Create("Access Exception")
+ArithmeticException.newArithmeticException() |-->BusinessException.Create("Arithmetic Exception")
+AssertionException.newAssertionException() |-->BusinessException.Create("Assertion Exception")
+ProgramException.newProgramException() |-->BusinessException.Create("Program Exception")
+SystemException.newSystemException() |-->BusinessException.Create("System Exception")
+IOException.newIOException() |-->BusinessException.Create("IO Exception")
+CastingException.newCastingException() |-->BusinessException.Create("Casting Exception")
+NullAccessException.newNullAccessException() |-->BusinessException.Create("Null Access Exception")
+IndexingException.newIndexingException() |-->BusinessException.Create("Indexing Exception")
+IncorrectElementException.newIncorrectElementException() |-->BusinessException.Create("Incorrect Element Exception")
+
+OclProcess.exit(0) |-->throw BusinessException.Create("Application terminated normally")
+
 
 _1.allInstances |-->_1.GetAll()
 
@@ -483,21 +487,26 @@ _1[_2] := _3 |-->    _1.Set(_2 - 1, _3);\n
 
 _1 := _2 |-->    _1 = _2;\n
 
-while _1 do _2 |-->    while (_1) {\n  _2    }\n
+while _1 do _2 |-->    while _1 {\n  _2    }\n
 
 for _1 : Integer.subrange(_2, _3) do _4 |-->    for (int _1 = _2; _1 <= _3; _1+1)\n    {\n  _4    }\n
 
-for _1 : _2 do _3 |-->   foreach _1 in _2    {\n  _3    }\n
+for _1 : _2 do _3 |-->   foreach _1 in _2 {\n  _3    }\n
 
-if _1 then _2 else _3 |-->    if (_1) {\n  _2    }\n    else {\n  _3    }\n
+if _1 then _2 else skip |-->    if _1 {\n  _2    }\n
+
+if _1 then _2 else _3 |-->    if _1 {\n  _2    }\n    else {\n  _3    }\n
 
 _1 ; _2 |-->_1_2
-skip |-->    {}\n
+skip |-->    
+
 return _1 |-->    return _1;\n
 return |-->   return;\n
 continue |-->    continue;\n
 break |-->    break;\n
+
 call _1 |-->    _1;\n 
+
 execute _1 |-->    _1`mambaExecuteCases;\n
 
 assert _1 do _2 |-->    Debug.Assert(_1, _2);\n

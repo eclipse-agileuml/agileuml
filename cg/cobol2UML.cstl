@@ -3672,13 +3672,13 @@ TALLYING _1 |-->      _1 := _unstringTally
 
 
 writeStatement::
-WRITE _1 _2 END-WRITE  |-->    _1`ownerFile_Position := _1`ownerFile_Position + 1 ;\n    if _1`ownerFile_Position >= _1`ownerFile->size() then _1`ownerFile := _1`ownerFile->append(_1) else (_1`ownerFile[_1`ownerFile_Position] := _1) ;\n    _1`ownerFile := _1`ownerFile->concatenate(Integer.subrange(1,_2`advancingAfterIncrement)->collect(" "));\n    _1`ownerFile_Position := _1`ownerFile_Position + _2`advancingAfterIncrement ;\n<when> _2 writeAdvancingPhrase
+WRITE _1 _2 END-WRITE  |-->    _1`ownerFile_Position := _1`ownerFile_Position + 1 ;\n    if _1`ownerFile_Position >= _1`ownerFile->size() then execute (_1 : _1`ownerFile) else (_1`ownerFile[_1`ownerFile_Position] := _1) ;\n    execute (Integer.subrange(1,_2`advancingAfterIncrement)->collect(" ") <: _1`ownerFile);\n    _1`ownerFile_Position := _1`ownerFile_Position + _2`advancingAfterIncrement ;\n<when> _2 writeAdvancingPhrase
 
-WRITE _1 _2  |-->    _1`ownerFile_Position := _1`ownerFile_Position + 1 ;\n    if _1`ownerFile_Position >= _1`ownerFile->size() then _1`ownerFile := _1`ownerFile->append(_1) else (_1`ownerFile[_1`ownerFile_Position] := _1) ;\n    _1`ownerFile := _1`ownerFile->concatenate(Integer.subrange(1,_2`advancingAfterIncrement)->collect(" "));\n    _1`ownerFile_Position := _1`ownerFile_Position + _2`advancingAfterIncrement ;\n<when> _2 writeAdvancingPhrase
+WRITE _1 _2  |-->    _1`ownerFile_Position := _1`ownerFile_Position + 1 ;\n    if _1`ownerFile_Position >= _1`ownerFile->size() then execute (_1 : _1`ownerFile) else (_1`ownerFile[_1`ownerFile_Position] := _1) ;\n    execute (Integer.subrange(1,_2`advancingAfterIncrement)->collect(" ") <: _1`ownerFile);\n    _1`ownerFile_Position := _1`ownerFile_Position + _2`advancingAfterIncrement ;\n<when> _2 writeAdvancingPhrase
 
-WRITE _1 END-WRITE  |-->    _1`ownerFile_Position := _1`ownerFile_Position + 1 ;\n    if _1`ownerFile_Position >= _1`ownerFile->size() then _1`ownerFile := _1`ownerFile->append(_1) else (_1`ownerFile[_1`ownerFile_Position] := _1) ;\n
+WRITE _1 END-WRITE  |-->    _1`ownerFile_Position := _1`ownerFile_Position + 1 ;\n    if _1`ownerFile_Position >= _1`ownerFile->size() then execute (_1 : _1`ownerFile) else (_1`ownerFile[_1`ownerFile_Position] := _1) ;\n
 
-WRITE _1  |-->    _1`ownerFile_Position := _1`ownerFile_Position + 1 ;\n    if _1`ownerFile_Position >= _1`ownerFile->size() then _1`ownerFile := _1`ownerFile->append(_1) else (_1`ownerFile[_1`ownerFile_Position] := _1) ;\n    self.initialise_1`ownerFile_Index();\n<when> _1`isIndexed true
+WRITE _1  |-->    _1`ownerFile_Position := _1`ownerFile_Position + 1 ;\n    if _1`ownerFile_Position >= _1`ownerFile->size() then execute(_1 : _1`ownerFile) else (_1`ownerFile[_1`ownerFile_Position] := _1) ;\n    self.initialise_1`ownerFile_Index();\n<when> _1`isIndexed true
 
 WRITE _1  |-->    _1`ownerFile_Position := _1`ownerFile_Position + 1 ;\n    (if _1`ownerFile_Position >= _1`ownerFile->size() then _1`ownerFile := _1`ownerFile->append(_1) else _1`ownerFile[_1`ownerFile_Position] := _1) ;\n
 
