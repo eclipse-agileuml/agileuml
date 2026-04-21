@@ -1,0 +1,863 @@
+<BusinessObject DateCreated="03/11/2026" Model_Name="AgileUML" Model_Description="" Version="" Comments="" Model_Creator="">
+  <Associations />
+  <Classes>
+    <Class ModelName="AgileUML" Name="Ocl" ShadowModel="" ShadowClass="" Description="" Stereotype="Class" PK="Id" ConcurencyControl="true" AutoAssignPrimaryKey="true" IdGeneratorType="HiLoGenerator" IsPersisted="true" IsStatic="false" BaseClass="" TableName="" BaseClasses="" BaseModel="">
+      <DiagramInfo IsExpanded="true" Width="180" Height="180" Top="71" Left="59" />
+      <Attributes>
+        <Attribute Name="Id" IsValueClass="false" Description="" DataType="int" BaseInfo="" Length="100" Precision="18" Scale="2" InitValue="" IsRequired="false" IsInherited="false" Persisted="true" ColumnName="" IsEncrypted="false" IsStatic="false" ReadOnly="false" IsExternal="false" CustomValidation="" IsCreditCard="false" IsURL="false" IsEmail="false" MinLength="0" MaxLength="100" MinValue="" MaxValue="" Getter="" Setter="" />
+      </Attributes>
+      <Operations>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="getTime" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function long getTime() 
+{  DateTime now = DateTime.Now();
+   return now.ToUnixTime();
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="SelectMap" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function Dictionary[string,Object] SelectMap(Dictionary[string,Object] m, Predicate[Object] f) 
+{
+      Dictionary[string,Object] result;
+      Collection[string] keys = m.GetKeys();
+      foreach (key in keys)
+      { Object value = m.Get(key);
+        
+        Collection[Object] single = {value}; 
+        if (single.Any(f)) {
+          result.Add(key, value);
+        } 
+      } 
+      
+      return result;
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="RejectMap" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function Dictionary[string,Object] RejectMap(Dictionary[string,Object] m, Func[Object,bool] f) 
+{   Dictionary[string,Object] result;
+   /* Collection[string] keys = m.GetKeys();
+    foreach key in keys {
+        Object value = m.Get(key);
+        Collection[Object] single = {value}; 
+        if (single.Any(f)) { } 
+        else {
+          result.Add(key, value);
+        } 
+      } */ 
+      
+    return result;
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="CollectMap" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function Dictionary[string,Object] CollectMap(Dictionary[string,Object] m, Func[Object,Object] f) 
+{ Dictionary[string, Object] result;
+  Collection[string] keys = m.GetKeys();
+  // foreach (key in keys) {
+  //    Object value = m.Get(key);
+  //    Collection[Object] vals = ({value}).Select(f); 
+  //    result.Add(key, vals.Single(x =&gt; true));
+  // } // obscure coding because f.Invoke(value) does not validate
+
+  return result;
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="Exists1" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function bool Exists1(Collection[Object] col, Func[Object,bool] f)
+{
+      bool found = false;
+      /* foreach (tmp in col) {
+        Collection[Object] single = {tmp}; 
+        if (single.Any(f)) {
+          if (found) {
+            return false;
+          }
+          found = true;
+        } 
+      } */ 
+      
+      return found; 
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="Before" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function string Before(string s, string sep) 
+{
+      if (sep.Length == 0) { 
+        return s; 
+      }
+      bool flag = s.Contains(sep);
+      if (flag == false) {
+        return s;
+      }
+      int ind = s.IndexOf(sep);
+      return s.Substring(0, ind); 
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="After" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function string After(string s, string sep) 
+{
+      if (sep.Length == 0) { 
+        return ""; 
+      }
+      bool flag = s.Contains(sep);
+      if (flag == false) {
+        return "";
+      }
+      int ind = s.IndexOf(sep);
+      return s.Substring(ind + sep.Length); 
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="Log" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function double Log(double y) 
+{ double x = (y-1)/(y+1); 
+  double x2 = x*x; 
+  double result = x;
+        
+  for (int i = 1; i &lt;= 200; i+1) {
+    int j = 2*i + 1;
+    x = x*x2;
+    result = result + x/j;
+  }
+        
+  return 2*result;
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="Log10" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function double Log10(double x) 
+{ double ln10 = 2.302585092994046; // Constant value for ln(10)
+  double y = Log(x);        
+  return y / ln10;
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="Gcd" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function long Gcd(long xx, long yy) 
+{ long x = CommonLib.Math.Abs(xx) as long; 
+  long y = CommonLib.Math.Abs(yy) as long; 
+  while (x != 0 &amp;&amp; y != 0) { 
+      long z = y; 
+      y = x % y; 
+      x = z; 
+  } 
+        
+  if (y == 0) { 
+      return x; 
+  } 
+
+  if (x == 0) { 
+      return y; 
+  } 
+
+  return 0; 
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="integerSubrange" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function Collection[int] integerSubrange(int i, int j) 
+{ Collection[int] res; 
+  for (int x = i; x &lt;= j; x+1) { 
+  	res.Add(x); 
+  } 
+  return res; 
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="Characters" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function Collection[string] Characters(string s) 
+{
+  Collection[string] res; 
+  for (int i = 0; i &lt; s.Length; i+1) { 
+  	res.Add("" + s.CharAt(i)); 
+  } 
+  return res; 
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="Sinh" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function double Sinh(double x) 
+{ double y = CommonLib.Math.Pow(2.718281828, x); 
+  return 0.5*(y - (1/y)); 
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="Cosh" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function double Cosh(double x) 
+{ double y = CommonLib.Math.Pow(2.718281828, x); 
+  return 0.5*(y + (1/y));
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="Tanh" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function double Tanh(double x) 
+{ double y = CommonLib.Math.Pow(2.718281828, x); 
+  y = y*y; 
+  return (y - 1)/(y + 1);
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="Prddouble" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function double Prddouble(Collection[double] col) 
+{ double res = 1.0; 
+  foreach (x in col) { 
+  	res = res*x; 
+  }
+  return res; 
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="Prdlong" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function long Prdlong(Collection[long] col) 
+{ long res = 1; 
+  foreach (x in col) { 
+  	res = res*x; 
+  }
+  return res;
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="Prdint" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function int Prdint(Collection[int] col) 
+{ int res = 1; 
+  foreach (x in col) { 
+  	res = res*x; 
+  }
+  return res;
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="AllMatches" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function Collection[string] AllMatches(string str, string regex) 
+{
+   try {
+     RegExpLib.VerbalExpressions expressions;
+     Array[string] result = expressions.GetMatches(str, regex);
+     return result.ToCollection();
+   } 
+   catch Exception e {
+       return null;
+   }
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="FirstMatch" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function string FirstMatch(string str, string regex) 
+{
+      try {
+        RegExpLib.VerbalExpressions expressions;
+        string result = expressions.GetMatch(str, regex);
+        return result;
+      } 
+      catch Exception e {
+            return null;
+      }
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="StringSubtract" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function string StringSubtract(string s1, string s2) 
+{ string res = ""; 
+  for (int i = 0; i &lt; s1.Length; i+1)
+  { string ch = "" + s1.CharAt(i); 
+    if (s2.IndexOf(ch) &lt; 0)
+    { res = res + ch; } 
+  } 
+  return res; 
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="IsInteger" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function bool IsInteger(string str) 
+{  try { 
+     int x = int.Parse(str); 
+     return (x + "") == str; 
+   }
+   catch Exception e {
+     return false; 
+   }
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="IsReal" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function bool IsReal(string str) 
+{
+  try { 
+    double d = double.Parse(str); 
+    if (d == null) {
+       return false;
+    }
+    
+    if (d + "") == str
+    { return true; } 
+    return false; 
+  }
+  catch Exception e {
+    return false; 
+  }
+  
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="IsLong" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function bool IsLong(string str) 
+{
+  try { 
+    long l = long.Parse(str); 
+    if (l == null) {
+      return false;
+    }
+    
+    if (l + "") == str
+    { return true; } 
+    return false; 
+  }
+  catch Exception e {
+    return false; 
+  }
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="HasMatch" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function bool HasMatch(string str, string regex) 
+{
+  try {
+    RegExpLib.VerbalExpressions expressions;
+    string result = expressions.Then(regex).GetMatch(str, "");
+    if (result.Length != 0) {
+        return true;
+    }
+    return false;
+  } 
+  catch Exception e {
+        return false;
+  }
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="main" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function int main() 
+{
+    /* Dictionary[string,int] data;
+    data.Add("a",1); 
+    data.Add("b",2); 
+    data.Add("c",3); 
+    // int value = data.HasKey("key")?data.Get("key"):0;
+    
+    // RuntimeType rt = RuntimeType.GetTypeOf(value); 
+    Predicate[int] pred;
+    pred = pred.Create(x =&gt; x &gt; 1); 
+    
+    Dictionary[string,int] sel = 
+           (Domain.Ocl.SelectMap(data, pred) as Dictionary[string,int]); 
+
+    return sel.GetKeys().Length; // Domain.Ocl.Prdint({12, 3, 5}); */ 
+    return 0; 
+
+}</Operation>
+      </Operations>
+    </Class>
+    <Class ModelName="AgileUML" Name="Excel" ShadowModel="" ShadowClass="" Description="" Stereotype="Class" PK="Id" ConcurencyControl="true" AutoAssignPrimaryKey="true" IdGeneratorType="HiLoGenerator" IsPersisted="true" IsStatic="false" BaseClass="" TableName="" BaseClasses="" BaseModel="">
+      <DiagramInfo IsExpanded="true" Width="180" Height="180" Top="68" Left="354" />
+      <Attributes>
+        <Attribute Name="Id" IsValueClass="false" Description="" DataType="int" BaseInfo="" Length="100" Precision="18" Scale="2" InitValue="" IsRequired="false" IsInherited="false" Persisted="true" ColumnName="" IsEncrypted="false" IsStatic="false" ReadOnly="false" IsExternal="false" CustomValidation="" IsCreditCard="false" IsURL="false" IsEmail="false" MinLength="0" MaxLength="100" MinValue="" MaxValue="" Getter="" Setter="" />
+      </Attributes>
+      <Operations>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="NormalDist" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function double NormalDist(double x, double mu, double sigma) 
+{ 
+  double disp = (x-mu)/sigma; 
+  double twopi = 2 * CommonLib.Math.Pi(); 
+  double result = (1.0/(sigma* CommonLib.Math.Sqrt(twopi))) * 
+                  CommonLib.Math.Pow(2.718281828, -0.5*disp*disp); 
+  return result; 
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="cumulativeNormalDist" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function double cumulativeNormalDist(double x, double m, double sigma) 
+{
+  double k = ( 1 / ( 1 + 0.2316419 * ( x - m ) ) ); 
+  double poly = ( 0.31938153 * k ) + ( -0.356563782 * k * k ) + 
+               ( 1.781477937 * k * k * k ) + ( -1.821255978 * k * k * k * k ) + 
+               ( 1.330274429 * k * k * k * k * k ); 
+  double result = 1 - NormalDist(x,m,sigma) * poly;
+  return result; 
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="Norm_S_Dist" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function double Norm_S_Dist(double x, bool cum) 
+{ double result; 
+  if cum == false 
+  { result = NormalDist(x,0,1); } 
+  else 
+  { result = cdfNormalDist(x,0,1); }
+  return result; 
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="cdfNormalDist" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function double cdfNormalDist(double x, double m, double sigma) 
+{ double result; 
+  if x &gt;= m 
+  { result = cumulativeNormalDist(x,m,sigma); } 
+  else 
+  { result = 1 - cumulativeNormalDist(m + (m-x),m,sigma); }
+  return result; 
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="Ln" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function double Ln(double y) 
+{
+  double x = (y-1)/(y+1); 
+  double x2 = x*x; 
+  double result = x;
+        
+  for (int i = 1; i &lt;= 200; i+1) {
+    int j = 2*i + 1;
+    x = x*x2;
+    result = result + x/j;
+  }
+        
+  return 2*result;
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="D1" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function double D1(double S, double K, double Vol, double R, double Q, double T) 
+{
+    double result;
+    double D1;
+    D1 = ((Ln((S / (1.0 * K))) + (((R - Q) + ((Vol * Vol) / ((1.0 * 2) as double))) * T)) / 
+               (1.0 * (Vol * CommonLib.Math.Sqrt(T))));
+    return D1;
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="D2" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function double D2(double S, double K, double Vol, double R, double Q, double T) 
+{
+    double result;
+    double D2;
+    D2 = (D1(S, K, Vol, R, Q, T) - (Vol * CommonLib.Math.Sqrt(T)));
+    return D2;
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="BS_Call" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function double BS_Call(double S, double K, double Vol, double R, double Q, double T) 
+{
+  double result;
+  double BS_Call;
+  BS_Call = (((S * CommonLib.Math.Pow(2.718281828, (-1 * Q * T))) * 
+            Norm_S_Dist(D1(S, K, Vol, R, Q, T), true)) - ((K * CommonLib.Math.Pow(2.718281828, (-1 * R * T))) * Norm_S_Dist(D2(S, K, Vol, R, Q, T), true)));
+  return BS_Call;
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="BS_Put" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function double BS_Put(double S, double K, double Vol, double R, double Q, double T) 
+{
+  double result;
+  double BS_Put;
+  BS_Put = (((K * CommonLib.Math.Pow(2.718281828, (-1 * R * T))) * Norm_S_Dist(-1 * D2(S, K, Vol, R, Q, T), true)) - ((S * CommonLib.Math.Pow(2.718281828, (-1 * Q * T))) * 
+           Norm_S_Dist(-1 * D1(S, K, Vol, R, Q, T), true)));
+  return BS_Put;
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="Max" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function double Max(Collection[double] col) 
+{ 
+  double res = col.Get(0); 
+  foreach x in col {
+  	if (x &gt; res) { res = x; } 
+  }
+  return res; 
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="EBinCall" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function double EBinCall(double N) 
+{
+    double S = 100; 
+    double K = 40; 
+    double Sigma = 0.35; 
+    double R = 0.05; 
+    double Q = 0; 
+    double T = 0.75; 
+
+    double EBinCall = 0.0;
+    double Dt = 0.0;
+    double U = 0.0;
+    double D = 0.0;
+    double Pu = 0.0;
+    double Pd = 0.0;
+    double U2 = 0.0;
+    double Prob = 0.0;
+    double CallV = 0.0;
+    double I = 0.0;
+    Dt = T / (1.0 * N);
+    U = CommonLib.Math.Pow(2.718281828, (Sigma * CommonLib.Math.Sqrt(Dt)));
+    D = 1 / (1.0 * U);
+    Pu = (CommonLib.Math.Pow(2.718281828, ((( R - Q )) * Dt)) - D) / (1.0 * (( U - D )));
+    Pd = (1 - Pu);
+    U2 = U * U;
+    S = S * CommonLib.Math.Pow(D, N);
+    Prob = CommonLib.Math.Pow(Pd, N);
+    CallV = Prob * Domain.Excel.Max({(( S - K )),0});
+    I = 1;
+    while (I &lt;= N)    {
+      S = S * U2;
+      Prob = Prob * (Pu / (1.0 * Pd)) * ((( N - I )) + 1) / (1.0 * I);
+      CallV = (CallV + Prob * Domain.Excel.Max({(( S - K )),0}));
+      I = I + 1;
+    }
+    EBinCall = (CommonLib.Math.Pow(2.718281828, (-1 * R * T))) * CallV;
+    return EBinCall; 
+}</Operation>
+      </Operations>
+    </Class>
+    <Class ModelName="AgileUML" Name="StringLib" ShadowModel="" ShadowClass="" Description="" Stereotype="Class" PK="Id" ConcurencyControl="true" AutoAssignPrimaryKey="true" IdGeneratorType="HiLoGenerator" IsPersisted="true" IsStatic="false" BaseClass="" TableName="" BaseClasses="" BaseModel="">
+      <DiagramInfo IsExpanded="true" Width="180" Height="180" Top="144" Left="893" />
+      <Attributes>
+        <Attribute Name="Id" IsValueClass="false" Description="" DataType="int" BaseInfo="" Length="100" Precision="18" Scale="2" InitValue="" IsRequired="false" IsInherited="false" Persisted="true" ColumnName="" IsEncrypted="false" IsStatic="false" ReadOnly="false" IsExternal="false" CustomValidation="" IsCreditCard="false" IsURL="false" IsEmail="false" MinLength="0" MaxLength="100" MinValue="" MaxValue="" Getter="" Setter="" />
+      </Attributes>
+      <Operations>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="toTitleCase" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function string toTitleCase(
+	string s
+)
+{
+  return s.ToTitleCase();
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="rightTrim" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function string rightTrim(
+	string s
+)
+{
+  return s.TrimEnd(); 
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="padLeftWithInto" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function string padLeftWithInto(
+	string s,
+	string c,
+	int n
+)
+{
+  string result = "";
+
+  result = pad(n - s.Length, c) + s;
+  return result;
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="rightAlignInto" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function string rightAlignInto(
+	string s,
+	int n
+)
+{ 
+  string result = "";
+
+  if (n &lt;= s.Length)
+  { result = s.Substring(0, n); }
+  else
+  { result = pad(n - s.Length, " ") + s; }
+  return result;
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="capitalise" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function string capitalise(
+	string str
+)
+{ 
+  if (str.Length &gt; 0)
+  { string s1 = str.CharAt(0) + "";
+    return s1.ToUpper() + str.Substring(1, str.Length - 1);
+  }
+  return str; 
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="swapCase" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function string swapCase(
+	string s
+)
+{
+  int ind = 1;
+  string res = "";
+
+  while (ind &lt;= s.Length)
+  { string chr = "" + s.CharAt(ind - 1);
+    if (chr.Equals(chr.ToUpper()))
+    { res = res + chr.ToLower(); }
+    else
+    { res = res + chr.ToUpper(); }
+    ind = ind + 1;
+  }
+
+  return res;
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="padRightWithInto" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function string padRightWithInto(
+	string s,
+	string c,
+	int n
+)
+{
+  string result = "";
+  result = s + pad(n - s.Length, c);
+  return result;
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="leftAlignInto" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function string leftAlignInto(
+	string s,
+	int n
+)
+{
+  string result = "";
+
+  if (n &lt;= s.Length)
+  { result = s.Substring(0, n); }
+  else 
+  { result = s + pad(n - s.Length, " "); }
+  return result;
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="pad" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function string pad(
+	int n,
+	string c
+)
+{
+  string res = ""; 
+  for (int i = 0; i &lt; n; i+1)
+  { res = res + c; }
+  return res;
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="nCopies" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function string nCopies(
+	string s,
+	int n
+)
+{
+  string result = "";
+  for (int i = 0; i &lt; n; i+1)
+  {
+    result = result + s;
+  }
+
+  return result;
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="sumStringsWithSeparator" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function string sumStringsWithSeparator(
+	Collection[string] lst,
+	string sep
+)
+{
+  string res = "";
+  for (int i = 0; i &lt; lst.Length; i+1)
+  { string xx = lst.Get(i);
+    res = res + xx;
+    if (i &lt; lst.Length - 1)
+    { res = res + sep; }
+  }
+  return res;
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="leftTrimWith" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function string leftTrimWith(string str, string ch)
+{
+  if (str == null || str.Length == 0) 
+  { return str; }
+  
+  for (int i = 0; i &lt; str.Length; i+1)  
+  { if (ch.Equals("" + str.CharAt(i)))
+    { } 
+    else 
+    { string trm = str.Substring(i); 
+      return trm;
+    }
+  }
+  return ""; 
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="newString" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function string newString(Object s)
+{
+   return "" + s; 
+}</Operation>
+      </Operations>
+    </Class>
+    <Class ModelName="AgileUML" Name="cobolPerformThru" ShadowModel="" ShadowClass="" Description="" Stereotype="Class" PK="Id" ConcurencyControl="true" AutoAssignPrimaryKey="true" IdGeneratorType="HiLoGenerator" IsPersisted="true" IsStatic="false" BaseClass="" TableName="" BaseClasses="" BaseModel="">
+      <DiagramInfo IsExpanded="true" Width="234.4625244140625" Height="180" Top="315" Left="88" />
+      <Attributes>
+        <Attribute Name="Id" IsValueClass="false" Description="" DataType="int" BaseInfo="" Length="100" Precision="18" Scale="2" InitValue="" IsRequired="false" IsInherited="false" Persisted="true" ColumnName="" IsEncrypted="false" IsStatic="false" ReadOnly="false" IsExternal="false" CustomValidation="" IsCreditCard="false" IsURL="false" IsEmail="false" MinLength="0" MaxLength="100" MinValue="" MaxValue="" Getter="" Setter="" />
+        <Attribute Name="CNT" IsValueClass="false" Description="" DataType="int" BaseInfo="" Length="100" Precision="18" Scale="2" InitValue="" IsRequired="false" IsInherited="false" Persisted="true" ColumnName="" IsEncrypted="false" IsStatic="false" ReadOnly="false" IsExternal="false" CustomValidation="" IsCreditCard="false" IsURL="false" IsEmail="false" MinLength="0" MaxLength="100" MinValue="" MaxValue="" Getter="" Setter="" />
+      </Attributes>
+      <Operations>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="MainCall" Description="" Syntax="" BaseInfo="" IsStatic="false" IsInherited="false" IsExternal="false">function void MainCall() 
+{
+  this.P1Call();
+  this.P2Call();
+  this.P3Call();
+  this.P4Call();
+  this.P5Call();
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="P1Call" Description="" Syntax="" BaseInfo="" IsStatic="false" IsInherited="false" IsExternal="false">function void P1Call() 
+{
+    CNT = 0;
+    this.P2thruP3();
+
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="P2Call" Description="" Syntax="" BaseInfo="" IsStatic="false" IsInherited="false" IsExternal="false">function void P2Call() 
+{
+    this.P3Call();
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="P3Call" Description="" Syntax="" BaseInfo="" IsStatic="false" IsInherited="false" IsExternal="false">function void P3Call() 
+{
+    CNT = (CNT + 1);
+    if ((CNT == 5)) {
+      CNT = 0;
+    }
+    CNT = (CNT + 3);
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="P4Call" Description="" Syntax="" BaseInfo="" IsStatic="false" IsInherited="false" IsExternal="false">function void P4Call() 
+{
+    DebugLib.Logger.WriteInfoLine(("" + CNT) + "");
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="P5Call" Description="" Syntax="" BaseInfo="" IsStatic="false" IsInherited="false" IsExternal="false">function void P5Call() 
+{
+    throw BusinessException.Create("Application terminated normally");
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="MAIN" Description="" Syntax="" BaseInfo="" IsStatic="false" IsInherited="false" IsExternal="false">function void MAIN() 
+{
+    CNT = 0;
+    this.P2thruP3();
+    this.P3Call();
+    CNT = (CNT + 1);
+    if ((CNT == 5)) {
+      CNT = 0;
+    }
+    CNT = (CNT + 3);
+    DebugLib.Logger.WriteInfoLine(("" + CNT) + "");
+    throw BusinessException.Create("Application terminated normally");
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="P1" Description="" Syntax="" BaseInfo="" IsStatic="false" IsInherited="false" IsExternal="false">function void P1() 
+{
+    this.P1Call();
+    this.P2();
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="P2" Description="" Syntax="" BaseInfo="" IsStatic="false" IsInherited="false" IsExternal="false">function void P2() 
+{
+    this.P2Call();
+    this.P3();
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="P3" Description="" Syntax="" BaseInfo="" IsStatic="false" IsInherited="false" IsExternal="false">function void P3() 
+{
+    this.P3Call();
+    this.P4();
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="P4" Description="" Syntax="" BaseInfo="" IsStatic="false" IsInherited="false" IsExternal="false">function void P4() 
+{
+    this.P4Call();
+    this.P5();
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="P5" Description="" Syntax="" BaseInfo="" IsStatic="false" IsInherited="false" IsExternal="false">function void P5() 
+{
+    this.P5Call();
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="P2thruP3" Description="" Syntax="" BaseInfo="" IsStatic="false" IsInherited="false" IsExternal="false">function void P2thruP3() 
+{
+    this.P2Call();
+    this.P3Call();
+}</Operation>
+      </Operations>
+    </Class>
+    <Class ModelName="AgileUML" Name="OclFile" ShadowModel="" ShadowClass="" Description="" Stereotype="Class" PK="Id" ConcurencyControl="true" AutoAssignPrimaryKey="true" IdGeneratorType="HiLoGenerator" IsPersisted="true" IsStatic="false" BaseClass="" TableName="" BaseClasses="" BaseModel="">
+      <DiagramInfo IsExpanded="true" Width="180" Height="180" Top="80" Left="612" />
+      <Attributes>
+        <Attribute Name="Id" IsValueClass="false" Description="" DataType="int" BaseInfo="" Length="100" Precision="18" Scale="2" InitValue="" IsRequired="false" IsInherited="false" Persisted="true" ColumnName="" IsEncrypted="false" IsStatic="false" ReadOnly="false" IsExternal="false" CustomValidation="" IsCreditCard="false" IsURL="false" IsEmail="false" MinLength="0" MaxLength="100" MinValue="" MaxValue="" Getter="" Setter="" />
+        <Attribute Name="name" IsValueClass="false" Description="" DataType="string" BaseInfo="" Length="100" Precision="18" Scale="2" InitValue="" IsRequired="false" IsInherited="false" Persisted="true" ColumnName="" IsEncrypted="false" IsStatic="false" ReadOnly="false" IsExternal="false" CustomValidation="" IsCreditCard="false" IsURL="false" IsEmail="false" MinLength="0" MaxLength="100" MinValue="" MaxValue="" Getter="" Setter="" />
+        <Attribute Name="path" IsValueClass="false" Description="" DataType="string" BaseInfo="" Length="100" Precision="18" Scale="2" InitValue="" IsRequired="false" IsInherited="false" Persisted="true" ColumnName="" IsEncrypted="false" IsStatic="false" ReadOnly="false" IsExternal="false" CustomValidation="" IsCreditCard="false" IsURL="false" IsEmail="false" MinLength="0" MaxLength="100" MinValue="" MaxValue="" Getter="" Setter="" />
+      </Attributes>
+      <Operations>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="newOclFile" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function Domain.OclFile newOclFile(string nme) 
+{
+    Domain.OclFile f = Domain.OclFile.Create(); 
+    f.name = nme; 
+    f.path = CommonLib.Utilities.GetUploadsPath(nme);
+    return f;
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="newOclFileWrite" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function Domain.OclFile newOclFileWrite(Domain.OclFile f)
+{
+  return f; 
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="newOclFileRead" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function Domain.OclFile newOclFileRead(Domain.OclFile f) 
+{
+  return f; 
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="canWrite" Description="" Syntax="" BaseInfo="" IsStatic="false" IsInherited="false" IsExternal="false">function bool canWrite()
+{
+  return FileIOLib.File.Exists(name); 
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="canRead" Description="" Syntax="" BaseInfo="" IsStatic="false" IsInherited="false" IsExternal="false">function bool canRead() 
+{
+  return FileIOLib.File.Exists(name); 
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="exists" Description="" Syntax="" BaseInfo="" IsStatic="false" IsInherited="false" IsExternal="false">function bool exists()
+{
+  return FileIOLib.File.Exists(name); 
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="closeFile" Description="" Syntax="" BaseInfo="" IsStatic="false" IsInherited="false" IsExternal="false">function void closeFile() 
+{
+
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="getPath" Description="" Syntax="" BaseInfo="" IsStatic="false" IsInherited="false" IsExternal="false">function string getPath()
+{
+  return CommonLib.Utilities.GetUploadsPath(name);
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="getAbsolutePath" Description="" Syntax="" BaseInfo="" IsStatic="false" IsInherited="false" IsExternal="false">function string getAbsolutePath() 
+{
+  return CommonLib.Utilities.GetUploadsPath(name);
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="deleteFile" Description="" Syntax="" BaseInfo="" IsStatic="true" IsInherited="false" IsExternal="false">static function bool deleteFile(string nme)
+{
+    try 
+    { FileIOLib.File.Delete(nme); 
+      return true;   
+    }  
+    catch Exception ex 
+    { return false; }
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="delete" Description="" Syntax="" BaseInfo="" IsStatic="false" IsInherited="false" IsExternal="false">function bool delete() 
+{
+    try 
+    { FileIOLib.File.Delete(path); 
+      return true;   
+    }  
+    catch Exception ex 
+    { return false; }
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="getName" Description="" Syntax="" BaseInfo="" IsStatic="false" IsInherited="false" IsExternal="false">function string getName() 
+{
+  return name; 
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="write" Description="" Syntax="" BaseInfo="" IsStatic="false" IsInherited="false" IsExternal="false">function void write(string s) 
+{
+  FileIOLib.File.AppendAllTo(path, s); 
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="append" Description="" Syntax="" BaseInfo="" IsStatic="false" IsInherited="false" IsExternal="false">function Domain.OclFile append(string s) 
+{
+  FileIOLib.File.AppendAllTo(path, s);
+  return this; 
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="writeN" Description="" Syntax="" BaseInfo="" IsStatic="false" IsInherited="false" IsExternal="false">function void writeN(Collection[string] s, int n) 
+{
+  string text = ""; 
+  for (int i = 0; i &lt; n; i+1)
+  { text = text + s.Get(i) + "\n"; } 
+  FileIOLib.File.AppendAllTo(path, text);
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="writeAllLines" Description="" Syntax="" BaseInfo="" IsStatic="false" IsInherited="false" IsExternal="false">function void writeAllLines(Collection[string] sq) 
+{
+    string text = ""; 
+    for (int i = 0; i &lt; sq.Length; i+1)
+    { text = text + sq.Get(i) + "\n"; } 
+    FileIOLib.File.AppendAllTo(path, text);
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="writeln" Description="" Syntax="" BaseInfo="" IsStatic="false" IsInherited="false" IsExternal="false">function void writeln(string s) 
+{
+  FileIOLib.File.AppendAllTo(path, s + "\n");
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="flush" Description="" Syntax="" BaseInfo="" IsStatic="false" IsInherited="false" IsExternal="false">function void flush() 
+{
+
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="readAll" Description="" Syntax="" BaseInfo="" IsStatic="false" IsInherited="false" IsExternal="false">function string readAll() 
+{
+  return FileIOLib.File.ReadAllFrom(path);
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="readAllLines" Description="" Syntax="" BaseInfo="" IsStatic="false" IsInherited="false" IsExternal="false">function Collection[string] readAllLines() 
+{
+  string text = FileIOLib.File.ReadAllFrom(path);
+  Array[string] lines = text.Split('\n'); 
+  return lines.ToCollection();
+}</Operation>
+      </Operations>
+    </Class>
+    <Class ModelName="AgileUML" Name="cobolFiles1" ShadowModel="" ShadowClass="" Description="" Stereotype="Class" PK="Id" ConcurencyControl="true" AutoAssignPrimaryKey="true" IdGeneratorType="HiLoGenerator" IsPersisted="true" IsStatic="false" BaseClass="" TableName="" BaseClasses="" BaseModel="">
+      <DiagramInfo IsExpanded="true" Width="237.97021484375" Height="238" Top="294" Left="441" />
+      <Attributes>
+        <Attribute Name="Id" IsValueClass="false" Description="" DataType="int" BaseInfo="" Length="100" Precision="18" Scale="2" InitValue="" IsRequired="false" IsInherited="false" Persisted="true" ColumnName="" IsEncrypted="false" IsStatic="false" ReadOnly="false" IsExternal="false" CustomValidation="" IsCreditCard="false" IsURL="false" IsEmail="false" MinLength="0" MaxLength="100" MinValue="" MaxValue="" Getter="" Setter="" />
+        <Attribute Name="DISKINPosition" IsValueClass="false" Description="" DataType="int" BaseInfo="" Length="100" Precision="18" Scale="2" InitValue="" IsRequired="false" IsInherited="false" Persisted="true" ColumnName="" IsEncrypted="false" IsStatic="false" ReadOnly="false" IsExternal="false" CustomValidation="" IsCreditCard="false" IsURL="false" IsEmail="false" MinLength="0" MaxLength="100" MinValue="" MaxValue="" Getter="" Setter="" />
+        <Attribute Name="DISKINRecord" IsValueClass="false" Description="" DataType="string" BaseInfo="" Length="100" Precision="18" Scale="2" InitValue="" IsRequired="false" IsInherited="false" Persisted="true" ColumnName="" IsEncrypted="false" IsStatic="false" ReadOnly="false" IsExternal="false" CustomValidation="" IsCreditCard="false" IsURL="false" IsEmail="false" MinLength="0" MaxLength="100" MinValue="" MaxValue="" Getter="" Setter="" />
+        <Attribute Name="DISKREC" IsValueClass="false" Description="" DataType="string" BaseInfo="" Length="100" Precision="18" Scale="2" InitValue="" IsRequired="false" IsInherited="false" Persisted="true" ColumnName="" IsEncrypted="false" IsStatic="false" ReadOnly="false" IsExternal="false" CustomValidation="" IsCreditCard="false" IsURL="false" IsEmail="false" MinLength="0" MaxLength="100" MinValue="" MaxValue="" Getter="" Setter="" />
+        <Attribute Name="PRINTOUTPosition" IsValueClass="false" Description="" DataType="int" BaseInfo="" Length="100" Precision="18" Scale="2" InitValue="" IsRequired="false" IsInherited="false" Persisted="true" ColumnName="" IsEncrypted="false" IsStatic="false" ReadOnly="false" IsExternal="false" CustomValidation="" IsCreditCard="false" IsURL="false" IsEmail="false" MinLength="0" MaxLength="100" MinValue="" MaxValue="" Getter="" Setter="" />
+        <Attribute Name="PRINTOUTRecord" IsValueClass="false" Description="" DataType="string" BaseInfo="" Length="100" Precision="18" Scale="2" InitValue="" IsRequired="false" IsInherited="false" Persisted="true" ColumnName="" IsEncrypted="false" IsStatic="false" ReadOnly="false" IsExternal="false" CustomValidation="" IsCreditCard="false" IsURL="false" IsEmail="false" MinLength="0" MaxLength="100" MinValue="" MaxValue="" Getter="" Setter="" />
+        <Attribute Name="ALINE" IsValueClass="false" Description="" DataType="string" BaseInfo="" Length="100" Precision="18" Scale="2" InitValue="" IsRequired="false" IsInherited="false" Persisted="true" ColumnName="" IsEncrypted="false" IsStatic="false" ReadOnly="false" IsExternal="false" CustomValidation="" IsCreditCard="false" IsURL="false" IsEmail="false" MinLength="0" MaxLength="100" MinValue="" MaxValue="" Getter="" Setter="" />
+      </Attributes>
+      <Operations>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="MAINCall" Description="" Syntax="" BaseInfo="" IsStatic="false" IsInherited="false" IsExternal="false">function void MAINCall() 
+{
+  DISKINPosition = 0;
+  PRINTOUTPosition = 0;
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="READARECORDCall" Description="" Syntax="" BaseInfo="" IsStatic="false" IsInherited="false" IsExternal="false">function void READARECORDCall(Collection[string] DISKIN, Collection[string] PRINTOUT) 
+{
+    DISKINPosition = DISKINPosition + 1;
+    if DISKINPosition &gt; DISKIN.Length {
+      this.CLOSEFILES(DISKIN, PRINTOUT);
+      throw BusinessException.Create("Application terminated normally");
+    }
+    else {
+      DISKREC = (DISKIN).Get(DISKINPosition - 1);
+    }
+    ALINE = Domain.StringLib.leftAlignInto("" + DISKREC, 80);
+    PRINTOUTPosition = PRINTOUTPosition + 1;
+    if PRINTOUTPosition &gt;= PRINTOUT.Length {
+      PRINTOUT.Add(ALINE);
+    }
+    else {
+      PRINTOUT.Set(PRINTOUTPosition - 1, ALINE);
+    }
+    PRINTOUT.AddRange(Domain.Ocl.integerSubrange(1,(2 - 1)).Select(var1 =&gt; " "));
+    PRINTOUTPosition = PRINTOUTPosition + (2 - 1);
+    this.READARECORD(DISKIN, PRINTOUT);
+    throw BusinessException.Create("Application terminated normally");
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="CLOSEFILESCall" Description="" Syntax="" BaseInfo="" IsStatic="false" IsInherited="false" IsExternal="false">function void CLOSEFILESCall(Collection[string] DISKIN, Collection[string] PRINTOUT) 
+{
+    /* Domain.OclFile DISKINResult = Domain.OclFile.newOclFileWrite(Domain.OclFile.newOclFile("DISKIN.txt"));
+    DISKINResult.writeAllLines(DISKIN);
+    DISKINResult.flush();
+    DISKINResult.closeFile();
+    Domain.OclFile PRINTOUTResult = Domain.OclFile.newOclFileWrite(Domain.OclFile.newOclFile("PRINTOUT.txt"));
+    PRINTOUTResult.writeAllLines(PRINTOUT);
+    PRINTOUTResult.flush();
+    PRINTOUTResult.closeFile();
+    throw BusinessException.Create("Application terminated normally"); */ 
+
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="MAIN" Description="" Syntax="" BaseInfo="" IsStatic="false" IsInherited="false" IsExternal="false">function void MAIN(Collection[string] DISKIN, Collection[string] PRINTOUT) 
+{  
+    this.MAINCall();
+    // this.READARECORD(DISKIN, PRINTOUT);
+    this.OptimisedREADARECORD(DISKIN, PRINTOUT); 
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="READARECORD" Description="" Syntax="" BaseInfo="" IsStatic="false" IsInherited="false" IsExternal="false">function void READARECORD(Collection[string] DISKIN, Collection[string] PRINTOUT) 
+{
+    this.READARECORDCall(DISKIN, PRINTOUT);
+    this.CLOSEFILES(DISKIN, PRINTOUT);
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="CLOSEFILES" Description="" Syntax="" BaseInfo="" IsStatic="false" IsInherited="false" IsExternal="false">function void CLOSEFILES(Collection[string] DISKIN, Collection[string] PRINTOUT) 
+{
+    this.CLOSEFILESCall(DISKIN,PRINTOUT);
+}</Operation>
+        <Operation RuleType="Default" EventName="" ApplyToAttribute="" Name="OptimisedREADARECORD" Description="" Syntax="" BaseInfo="" IsStatic="false" IsInherited="false" IsExternal="false">function void OptimisedREADARECORD(Collection[string] DISKIN, Collection[string] PRINTOUT) 
+{
+    while true {
+      DISKINPosition = (DISKINPosition + 1);
+    if DISKINPosition &gt; DISKIN.Length {
+      this.CLOSEFILES(DISKIN, PRINTOUT);
+    throw BusinessException.Create("Application terminated normally");
+    break;
+    }
+    DISKREC = (DISKIN).Get(DISKINPosition - 1);
+    ALINE = Domain.StringLib.leftAlignInto(("" + DISKREC), 80);
+    PRINTOUTPosition = (PRINTOUTPosition + 1);
+    if PRINTOUTPosition &gt;= PRINTOUT.Length {
+      PRINTOUT.Add(ALINE);
+    }
+    else {
+      PRINTOUT.Set(PRINTOUTPosition - 1, ALINE);
+    break;
+    }
+    PRINTOUT.AddRange(Domain.Ocl.integerSubrange(1,1).Select(var5 =&gt; " "));
+    PRINTOUTPosition = (PRINTOUTPosition + 1);
+    continue;
+  }
+}</Operation>
+      </Operations>
+    </Class>
+  </Classes>
+  <Resources />
+</BusinessObject>
