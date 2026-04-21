@@ -1558,6 +1558,82 @@ abstract class Statement implements Cloneable
     return (st instanceof ReturnStatement); 
   } 
 
+  public static boolean isBooleanAssignmentPair(Statement sif, 
+                                                Statement selse)
+  { // v := true, v := false or vice-versa for same v
+
+    if (selse == null) 
+    { return false; } 
+
+    if (sif instanceof AssignStatement && 
+        selse instanceof AssignStatement) { } 
+    else 
+    { return false; } 
+
+    AssignStatement asgn1 = (AssignStatement) sif; 
+    AssignStatement asgn2 = (AssignStatement) selse; 
+
+    Expression lhs1 = asgn1.getLhs(); 
+    Expression lhs2 = asgn2.getLhs(); 
+
+    if ((lhs1 + "").equals(lhs2 + "")) { } 
+    else 
+    { return false; } 
+
+    Expression rhs1 = asgn1.getRhs(); 
+    Expression rhs2 = asgn2.getRhs(); 
+
+    if ("true".equals("" + rhs1) && "false".equals("" + rhs2))
+    { return true; } 
+
+    if ("false".equals("" + rhs1) && "true".equals("" + rhs2))
+    { return true; } 
+
+    return false; 
+  } 
+
+  public static Statement convertBooleanAssignmentPair(
+                                        Expression cond,
+                                        Statement sif, 
+                                        Statement selse)
+  { // v := true, v := false or vice-versa becomes v := cond
+    // or v := not(cond)
+
+    if (selse == null) 
+    { return null; } 
+
+    if (sif instanceof AssignStatement && 
+        selse instanceof AssignStatement) { } 
+    else 
+    { return null; } 
+
+    AssignStatement asgn1 = (AssignStatement) sif; 
+    AssignStatement asgn2 = (AssignStatement) selse; 
+
+    Expression lhs1 = asgn1.getLhs(); 
+    Expression lhs2 = asgn2.getLhs(); 
+
+    if ((lhs1 + "").equals(lhs2 + "")) { } 
+    else 
+    { return null; } 
+
+    Expression rhs1 = asgn1.getRhs(); 
+    Expression rhs2 = asgn2.getRhs(); 
+
+    if ("true".equals("" + rhs1) && "false".equals("" + rhs2))
+    { cond.setBrackets(true); 
+      return new AssignStatement(lhs1, cond); 
+    } 
+
+    if ("false".equals("" + rhs1) && "true".equals("" + rhs2))
+    { cond.setBrackets(true); 
+      return new AssignStatement(lhs1, 
+                new UnaryExpression("not", cond)); 
+    } 
+
+    return null; 
+  } 
+
   public static boolean isSingleValueReturn(Statement st)
   { if (st == null) 
     { return false; } 
@@ -2549,6 +2625,16 @@ abstract class Statement implements Cloneable
     if (st instanceof InvocationStatement)
     { String called = 
         "" + ((InvocationStatement) st).getCallExpression();
+ 
+      if (called.startsWith("OclProcess.exit("))
+      { return true; }
+      return false; 
+    }  // OclProcess.exit(n)
+
+    if (st instanceof ImplicitInvocationStatement)
+    { String called = 
+        "" + 
+        ((ImplicitInvocationStatement) st).getCallExpression();
  
       if (called.startsWith("OclProcess.exit("))
       { return true; }
@@ -6606,6 +6692,9 @@ class ImplicitInvocationStatement extends Statement
   { return "execute"; } 
 
   public Expression getCallExp() 
+  { return callExp; } 
+
+  public Expression getCallExpression() 
   { return callExp; } 
 
   public boolean isSkip()
@@ -11420,8 +11509,9 @@ class SequenceStatement extends Statement
 
           // JOptionPane.showInputDialog(lhs1 + " " + vuses + " " + rhs1.isSideEffecting()); 
  
-          if (vuses.size() == 0 && rhs1 != null && !rhs1.isSideEffecting())
-          { System.err.println("!! (RC) Ineffective assignment: " + as1); 
+          if (vuses.size() == 0 && rhs1 != null && 
+              !rhs1.isSideEffecting())
+          { System.err.println("!! (OES) Ineffective assignment: " + as1); 
             i++; 
             newstats.add(as2);
             continue;  
@@ -11444,8 +11534,9 @@ class SequenceStatement extends Statement
           Vector vvs = new Vector(); 
           vvs.add(var1); 
           Vector vuses = rhs2.variablesUsedIn(vvs); 
-          if (vuses.size() == 0 && rhs1 != null && !rhs1.isSideEffecting())
-          { System.err.println("!! (RC) Ineffective declaration: " + as1); 
+          if (vuses.size() == 0 && rhs1 != null && 
+              !rhs1.isSideEffecting())
+          { System.err.println("!! (OES) Ineffective declaration: " + as1); 
             i++; 
             newstats.add(as2);
             continue;  
@@ -11468,7 +11559,7 @@ class SequenceStatement extends Statement
           vvs.add(var1); 
           Vector vuses = rhs2.variablesUsedIn(vvs); 
           if (vuses.size() == 0 && rhs1 != null && !rhs1.isSideEffecting())
-          { System.err.println("!! (RC) Ineffective declaration initialisation: " + as1); 
+          { System.err.println("!! (OES) Ineffective declaration initialisation: " + as1); 
             i++; 
             as1.setInitialisation(rhs2); 
             newstats.add(as1);
@@ -11782,9 +11873,9 @@ class SequenceStatement extends Statement
           if (vuses.size() == 0 && rhs1 != null && !rhs1.isSideEffecting())
           { int acount = (int) uses.get("amber"); 
             uses.set("amber", acount+1); 
-            aUses.add("!! (RC) Ineffective assignment: " + as1); 
-            int rccount = (int) uses.get("RC"); 
-            uses.set("RC", rccount+1);
+            aUses.add("!! (OES) Ineffective assignment: " + as1); 
+            int rccount = (int) uses.get("OES"); 
+            uses.set("OES", rccount+1);
             i++; 
             continue;  
           }
@@ -11810,9 +11901,9 @@ class SequenceStatement extends Statement
           if (vuses.size() == 0 && rhs1 != null && !rhs1.isSideEffecting())
           { int acount = (int) uses.get("amber"); 
             uses.set("amber", acount+1); 
-            aUses.add("!! (RC) Ineffective declaration: " + as1); 
-            int rccount = (int) uses.get("RC"); 
-            uses.set("RC", rccount+1);
+            aUses.add("!! (OES) Ineffective declaration: " + as1); 
+            int rccount = (int) uses.get("OES"); 
+            uses.set("OES", rccount+1);
             i++; 
             continue;  
           } // rhs not side-effecting
@@ -11836,9 +11927,9 @@ class SequenceStatement extends Statement
           if (vuses.size() == 0 && rhs1 != null && !rhs1.isSideEffecting())
           { int acount = (int) uses.get("amber"); 
             uses.set("amber", acount+1); 
-            aUses.add("!! (RC) Ineffective declaration initialisation: " + as1); 
-            int rccount = (int) uses.get("RC"); 
-            uses.set("RC", rccount+1);
+            aUses.add("!! (OES) Ineffective declaration initialisation: " + as1); 
+            int rccount = (int) uses.get("OES"); 
+            uses.set("OES", rccount+1);
             i++; 
             continue;  
           } 
@@ -11918,6 +12009,15 @@ class SequenceStatement extends Statement
 
       if (stat.isSkip()) 
       { continue; } 
+
+      if (stat instanceof BreakStatement || 
+          stat instanceof ContinueStatement ||
+          stat instanceof ReturnStatement || 
+          stat instanceof ErrorStatement ||
+          Statement.endsWithExit(stat))
+      { newstats.add(stat);
+        break;
+      } 
       
       Statement newstat = stat.optimiseOCL();
 
@@ -18784,12 +18884,14 @@ class ConditionalStatement extends Statement
     if (elsePart == null) 
     { return new ConditionalStatement(test, statif, elsePart); } 
 
-    Statement statelse = elsePart.removeIneffectiveStatements(); 
+    Statement statelse = 
+       elsePart.removeIneffectiveStatements(); 
 
     if (Statement.ineffectiveFirstStatement(statif) && 
         Statement.ineffectiveFirstStatement(statelse))
     { Statement iffirst = Statement.getFirstStatement(statif); 
-      Statement elfirst = Statement.getFirstStatement(statelse); 
+      Statement elfirst = 
+            Statement.getFirstStatement(statelse); 
 
       // the declared variable should not occur in test
       if (iffirst instanceof CreationStatement)
@@ -18805,9 +18907,10 @@ class ConditionalStatement extends Statement
       } 
 
       if (("" + iffirst).equals("" + elfirst))
-      { Statement remif = Statement.removeFirstStatement(statif); 
-        Statement remelse = 
-                       Statement.removeFirstStatement(statelse);
+      { Statement 
+           remif = Statement.removeFirstStatement(statif); 
+        Statement remelse =             
+           Statement.removeFirstStatement(statelse);
         remelse.setBrackets(true);  
       
         ConditionalStatement res = 
@@ -18818,7 +18921,7 @@ class ConditionalStatement extends Statement
         ss.addStatement(res); 
         ss.setBrackets(true); // because first is a declaration
 
-        System.err.println("!! (RC): ineffective declarations " + iffirst + " moved before conditional test"); 
+        System.err.println("!! (OES): ineffective declarations " + iffirst + " moved before conditional test"); 
           
         return ss;
       }  
@@ -18855,12 +18958,121 @@ class ConditionalStatement extends Statement
       Expression v2 = Statement.getReturnExpression(elsec); 
       Expression cond = 
           new ConditionalExpression(testc, v1, v2);
-      cond.setBrackets(true);  
+      cond.setBrackets(true);
+  
+      System.err.println(">>> Transforming conditional statement to conditional return"); 
       return new ReturnStatement(cond); 
     } 
 
+    if (Statement.isBooleanAssignmentPair(ifc, elsec))
+    { // rewrite as assignment of testc/not(testc)
+      System.err.println(">>> Transforming conditional statement to assignment"); 
+
+      Statement assign = 
+           Statement.convertBooleanAssignmentPair(
+                                      testc,ifc,elsec); 
+      if (assign != null) 
+      { return assign; } 
+    } 
+
+
+    if (ifc instanceof ConditionalStatement && 
+        testc.isConjunctOf( 
+              ((ConditionalStatement) ifc).getTest()))
+    { // rewrite as if testc then ifc.ifPart else elsec
+
+      Statement stat1 = 
+             ((ConditionalStatement) ifc).getIfPart(); 
+      ConditionalStatement newcond = 
+          new ConditionalStatement(testc, stat1, elsec);
+      System.err.println(">>> Program reduction: removing unreachable code"); 
+      return newcond; 
+    } 
+
+    if (elsec != null && 
+        elsec instanceof ConditionalStatement && 
+        testc.isConjunctOf( 
+              ((ConditionalStatement) elsec).getTest()))
+    { // rewrite as if testc then ifc else elsec.elsePart
+      Statement stat2 = 
+             ((ConditionalStatement) elsec).getElsePart(); 
+      ConditionalStatement newcond = 
+          new ConditionalStatement(testc, ifc, stat2);
+      System.err.println(">>> Program reduction: removing unreachable code"); 
+      return newcond; 
+    } 
+
+    Expression nottest = new UnaryExpression("not", testc); 
+    Expression ntest = Expression.negate(testc); 
+
+    if (elsec != null && 
+        elsec instanceof ConditionalStatement && 
+        nottest.isConjunctOf( 
+              ((ConditionalStatement) elsec).getTest()))
+    { // rewrite as if testc then ifc else elsec.ifPart
+      Statement stat2 = 
+             ((ConditionalStatement) elsec).getIfPart(); 
+      ConditionalStatement newcond = 
+          new ConditionalStatement(testc, ifc, stat2);
+      System.err.println(">>> Program reduction: removing unreachable code"); 
+      return newcond; 
+    } 
+
+    if (elsec != null && 
+        elsec instanceof ConditionalStatement && 
+        ntest.isConjunctOf( 
+              ((ConditionalStatement) elsec).getTest()))
+    { // rewrite as if testc then ifc else elsec.ifPart
+      Statement stat2 = 
+             ((ConditionalStatement) elsec).getIfPart(); 
+      ConditionalStatement newcond = 
+          new ConditionalStatement(testc, ifc, stat2);
+      System.err.println(">>> Program reduction: removing unreachable code"); 
+      return newcond; 
+    } 
+
+    Statement ifStat = 
+       Statement.getFirstStatement(ifPart); 
     Statement elseStat = 
        Statement.getFirstStatement(elsePart); 
+
+    if (ifStat instanceof ConditionalStatement && 
+        testc.isConjunctOf( 
+              ((ConditionalStatement) ifStat).getTest()))
+    { // rewrite as if testc then ifc.ifPart; rem1 else elsec
+
+      Statement stat1 = 
+             ((ConditionalStatement) ifStat).getIfPart();
+      Statement rem1 = Statement.removeFirstStatement(ifPart); 
+      SequenceStatement newifpart = new SequenceStatement(); 
+      newifpart.addStatement(stat1); 
+      newifpart.addStatement(rem1); 
+    
+      ConditionalStatement newcond = 
+          new ConditionalStatement(testc, newifpart, elsec);
+      System.err.println(">>> Program reduction: removing unreachable code"); 
+      return newcond; 
+    } 
+
+    if (elseStat != null && 
+        elseStat instanceof ConditionalStatement && 
+        testc.isConjunctOf( 
+              ((ConditionalStatement) elseStat).getTest()))
+    { // rewrite as if testc then ifc else elsec.elsePart
+      Statement stat2 = 
+             ((ConditionalStatement) elseStat).getElsePart(); 
+      Statement rem2 = 
+          Statement.removeFirstStatement(elsePart); 
+      SequenceStatement newelsepart = new SequenceStatement(); 
+      newelsepart.addStatement(stat2); 
+      newelsepart.addStatement(rem2); 
+      newelsepart.setBrackets(true); 
+
+      ConditionalStatement newcond = 
+          new ConditionalStatement(testc, ifc, newelsepart);
+      System.err.println(">>> Program reduction: removing unreachable code"); 
+      return newcond; 
+    } 
  
     // if st->includes(x) then skip else (st := st->including(x))
     // is just st := st->including(x) for set st
@@ -18884,8 +19096,6 @@ class ConditionalStatement extends Statement
         return elseStat; 
       } // valid for Set and SortedSet, not OrderedSet 
     } 
-
-    Statement ifStat = Statement.getFirstStatement(ifPart); 
 
     // if st->excludes(x) then st := st->including(x) else skip
     // is just st := st->including(x) for set st
@@ -18999,35 +19209,149 @@ class ConditionalStatement extends Statement
     if (elsePart != null) 
     { elsePart.energyUse(uses, rUses, oUses, yUses); } 
 
-    if ("true".equals(test + "")) 
-    { int acount = (int) uses.get("amber"); 
-      uses.set("amber", acount + 1); 
-      oUses.add("!! Redundant code (RC), true conditional test: " + this);
+    if ("true".equals(test + "") || 
+        "(true)".equals(test + "")) 
+    { int rcount = (int) uses.get("red"); 
+      uses.set("red", rcount + 1); 
+      rUses.add("!!! Redundant unreachable else code (RC), true conditional test: " + this);
       int rccount = (int) uses.get("RC"); 
       uses.set("RC", rccount+1); 
     } 
-    else if ("false".equals(test + "")) 
-    { int acount = (int) uses.get("amber"); 
-      uses.set("amber", acount + 1); 
-      oUses.add("!! Redundant code (RC), false conditional test: " + this); 
+    else if ("false".equals(test + "") || 
+             "(false)".equals(test + "")) 
+    { int rcount = (int) uses.get("red"); 
+      uses.set("red", rcount + 1); 
+      rUses.add("!!! Redundant unreachable if code (RC), false conditional test: " + this); 
       int rccount = (int) uses.get("RC"); 
       uses.set("RC", rccount+1); 
     } 
 
     if (ifPart.isSkip() && 
         (elsePart == null || elsePart.isSkip()))
-    { int acount = (int) uses.get("amber"); 
-      uses.set("amber", acount + 1); 
-      oUses.add("!! Redundant code, empty conditional statement (RC): " + this);
+    { int rcount = (int) uses.get("red"); 
+      uses.set("red", rcount + 1); 
+      rUses.add("!!! Redundant code, empty conditional statement (RC): " + this);
       int rccount = (int) uses.get("RC"); 
       uses.set("RC", rccount+1); 
 
       return uses; 
     } 
 
+    if (Statement.isSingleValueReturn(ifPart) && 
+        Statement.isSingleValueReturn(elsePart))
+    { // rewrite as return (if testc then v1 else v2 endif)
+
+      int acount = (int) uses.get("amber"); 
+      uses.set("amber", acount + 1); 
+      oUses.add("!! Unnecessary conditional, can be replaced by return (OES): " + this);
+      int rccount = (int) uses.get("OES"); 
+      uses.set("OES", rccount+1); 
+    } 
+
+    if (Statement.isBooleanAssignmentPair(ifPart, elsePart))
+    { // rewrite as assignment of testc/not(testc)
+
+      int acount = (int) uses.get("amber"); 
+      uses.set("amber", acount + 1); 
+      oUses.add("!! Unnecessary conditional, can be replaced by assignment (OES): " + this);
+      int rccount = (int) uses.get("OES"); 
+      uses.set("OES", rccount+1); 
+    } 
+
+    if (ifPart instanceof ConditionalStatement && 
+        test.isConjunctOf( 
+              ((ConditionalStatement) ifPart).getTest()))
+    { // The inner if is redundant
+      ConditionalStatement innerCond = 
+             (ConditionalStatement) ifPart; 
+ 
+      int rcount = (int) uses.get("red"); 
+      uses.set("red", rcount + 1); 
+      rUses.add("!!! Duplicated expression and unreachable code (DEV): " + 
+                test + " " + innerCond.getElsePart());
+      int rccount = (int) uses.get("DEV"); 
+      uses.set("DEV", rccount+1); 
+
+      return uses; 
+    } 
+
+    if (elsePart != null && 
+        elsePart instanceof ConditionalStatement && 
+        test.isConjunctOf( 
+              ((ConditionalStatement) elsePart).getTest()))
+    { // rewrite as if testc then ifc else elsec.elsePart
+      ConditionalStatement innerCond = 
+             (ConditionalStatement) elsePart; 
+
+      int rcount = (int) uses.get("red"); 
+      uses.set("red", rcount + 1); 
+      rUses.add("!!! Duplicated expression and unreachable code (DEV): " + test + " " +  
+                innerCond.getIfPart());
+      int rccount = (int) uses.get("DEV"); 
+      uses.set("DEV", rccount+1); 
+
+      return uses; 
+    } 
+
+    Expression nottest = new UnaryExpression("not", test); 
+    Expression ntest = Expression.negate(test); 
+
+    if (elsePart != null && 
+        elsePart instanceof ConditionalStatement && 
+        (nottest.isConjunctOf( 
+              ((ConditionalStatement) elsePart).getTest()) || 
+         ntest.isConjunctOf( 
+              ((ConditionalStatement) elsePart).getTest())))
+    { // rewrite as if testc then ifc else elsec.ifPart
+
+      int rcount = (int) uses.get("red"); 
+      uses.set("red", rcount + 1); 
+      rUses.add("!!! Duplicated expression and unreachable code (DEV): " + this);
+      int rccount = (int) uses.get("DEV"); 
+      uses.set("DEV", rccount+1); 
+
+      return uses; 
+    } 
+
+
     Statement elseStat = 
                      Statement.getFirstStatement(elsePart); 
     Statement ifStat = Statement.getFirstStatement(ifPart); 
+
+    if (ifStat instanceof ConditionalStatement && 
+        test.isConjunctOf( 
+              ((ConditionalStatement) ifStat).getTest()))
+    { // The inner if is redundant
+      ConditionalStatement innerCond = 
+             (ConditionalStatement) ifStat; 
+ 
+      int rcount = (int) uses.get("red"); 
+      uses.set("red", rcount + 1); 
+      rUses.add("!!! Duplicated expression and unreachable code (DEV): " + 
+                test + " " + innerCond.getElsePart());
+      int rccount = (int) uses.get("DEV"); 
+      uses.set("DEV", rccount+1); 
+
+      return uses; 
+    } 
+
+    if (elseStat != null && 
+        elseStat instanceof ConditionalStatement && 
+        test.isConjunctOf( 
+              ((ConditionalStatement) elseStat).getTest()))
+    { // rewrite as if testc then ifc else elsec.elsePart
+      ConditionalStatement innerCond = 
+             (ConditionalStatement) elseStat; 
+
+      int rcount = (int) uses.get("red"); 
+      uses.set("red", rcount + 1); 
+      rUses.add("!!! Duplicated expression and unreachable code (DEV): " + test + " " +  
+                innerCond.getIfPart());
+      int rccount = (int) uses.get("DEV"); 
+      uses.set("DEV", rccount+1); 
+
+      return uses; 
+    } 
  
     // JOptionPane.showInputDialog("Code: " + elseStat + " " + test); 
 
@@ -19065,12 +19389,12 @@ class ConditionalStatement extends Statement
           uses.set("OES", oescount+1); 
         } 
         else if (testbeLeft.hasSetType())
-        { oUses.add("!! (RC) Redundant test on additions to the set " + testbeLeft + " in: " + this); 
+        { oUses.add("!! (OES) Redundant test on additions to the set " + testbeLeft + " in: " + this); 
 
           int oscore = (int) uses.get("amber"); 
           uses.set("amber", oscore + 1);
-          int rccount = (int) uses.get("RC"); 
-          uses.set("RC", rccount+1); 
+          int rccount = (int) uses.get("OES"); 
+          uses.set("OES", rccount+1); 
         } 
       } 
       else if ("->includes".equals(testbe.getOperator()) && 
@@ -19108,12 +19432,12 @@ class ConditionalStatement extends Statement
           uses.set("OES", oescount+1); 
         } 
         else if (testbeLeft.hasSetType())
-        { oUses.add("!! (RC) Redundant test on additions to the set " + testbeLeft + " in: " + this); 
+        { oUses.add("!! (OES) Redundant test on additions to the set " + testbeLeft + " in: " + this); 
 
           int oscore = (int) uses.get("amber"); 
           uses.set("amber", oscore + 1);
-          int rccount = (int) uses.get("RC"); 
-          uses.set("RC", rccount+1); 
+          int rccount = (int) uses.get("OES"); 
+          uses.set("OES", rccount+1); 
         } 
       } 
     } 
@@ -19126,9 +19450,9 @@ class ConditionalStatement extends Statement
                     Statement.getLastStatement(elsePart); 
 
       if (("" + lastIfStat).equals("" + lastElseStat))
-      { oUses.add("!! Redundant code (RC): duplicated final statement " + lastIfStat + " in conditional");
-        int oscore = (int) uses.get("amber"); 
-        uses.set("amber", oscore + 1);
+      { rUses.add("!!! Redundant code (RC): duplicated final statement " + lastIfStat + " in conditional");
+        int rscore = (int) uses.get("red"); 
+        uses.set("red", rscore + 1);
         int dccount = (int) uses.get("RC"); 
         uses.set("RC", dccount+1); 
       }  
@@ -19151,11 +19475,11 @@ class ConditionalStatement extends Statement
         { return uses; }
 
         if (("" + iffirst).equals("" + elfirst))
-        { oUses.add("!! Redundant code (RC): " + 
+        { rUses.add("!!! Redundant code (RC): " + 
              "duplicated initial statement " + iffirst + 
              " in conditional");
-          int oscore = (int) uses.get("amber"); 
-          uses.set("amber", oscore + 1);
+          int rscore = (int) uses.get("red"); 
+          uses.set("red", rscore + 1);
           int rccount = (int) uses.get("RC"); 
           uses.set("RC", rccount+1);
         }

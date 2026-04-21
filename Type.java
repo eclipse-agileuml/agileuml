@@ -2821,6 +2821,7 @@ public class Type extends ModelElement
     { return new Type("long",null); } 
 
     if (etype.endsWith("double") || 
+        etype.endsWith("float") || 
         etype.endsWith("decimal"))
     { return new Type("double",null); } 
 
@@ -3614,6 +3615,103 @@ public class Type extends ModelElement
         { res = res + ","; }
       }
       res = res + ">"; 
+      return res; 
+    } 
+
+    return nme; 
+  } 
+
+  public String getMamba()  
+  { String nme = getName();
+
+    if (nme.equals("Ref"))
+    { String restype = "Array"; 
+      if (elementType != null) 
+      { restype = elementType.getCSharp();
+        if (isBasicType(elementType) ||
+            elementType.isStructEntityType() ||  
+            "Ref".equals(elementType.getName()) || 
+            "void".equals(elementType.getName()))
+        { return restype + "[" + elementType.getMamba() + "]"; } 
+        else 
+        { return elementType.getMamba(); }
+      }  
+      else 
+      { return "Array[object]"; } 
+    } 
+
+    if (nme.equals("Sequence"))
+    { if (elementType != null) 
+      { return "Collection[" + elementType.getMamba() + "]"; }
+      return "Collection[object]"; 
+    } 
+
+    if (nme.equals("Set") && elementType != null)
+    { return "Collection[" + elementType.getMamba() + "]"; }
+
+    if (nme.equals("Set") && elementType == null)
+    { return "Collection[object]"; }
+
+    if (nme.equals("Map"))
+    { String key = "object"; 
+      if (keyType != null) 
+      { key = keyType.getMamba(); }
+      String restype = "object"; 
+      if (elementType != null) 
+      { restype = elementType.getMamba(); } 
+
+      return "Dictionary[" + key + "," + 
+                             restype + "]"; 
+    }
+
+    if (nme.equals("Function"))
+    { String key = "object"; 
+      if (keyType != null) 
+      { key = keyType.getMamba(); }
+      String restype = "object"; 
+      if (elementType != null) 
+      { restype = elementType.getMamba(); } 
+
+      return "Func[" + key + "," + restype + "]"; 
+    }
+
+    if (nme.equals("String")) { return "string"; }  
+    if (nme.equals("boolean")) { return "bool"; } 
+    if (nme.equals("long")) { return "long"; }
+
+    if (alias != null)    // For datatypes
+    { return alias.getMamba(); } 
+ 
+    if (nme.equals("OclDate"))
+    { return "OclDate"; } 
+    if (nme.equals("OclAny"))
+    { return "object"; } 
+    if (nme.equals("OclType"))
+    { return "RuntimeType"; } 
+    if (nme.equals("OclRandom"))
+    { return "OclRandom"; } 
+    if (nme.equals("OclIterator"))
+    { return "OclIterator"; } 
+    if (nme.equals("OclProcess"))
+    { return "OclProcess"; } 
+    if (nme.equals("OclFile"))
+    { return "OclFile"; } 
+
+    String jex = (String) exceptions2csharp.get(nme); 
+    if (jex != null) 
+    { return "BusinessException"; } 
+
+    if (entity != null && 
+        entity.isGeneric())
+    { String res = nme + "["; 
+      Vector v = entity.getTypeParameters(); 
+      for (int i = 0; i < v.size(); i++) 
+      { Type tt = (Type) v.get(i); 
+        res = res + tt.getName(); 
+        if (i < v.size() - 1)
+        { res = res + ","; }
+      }
+      res = res + "]"; 
       return res; 
     } 
 

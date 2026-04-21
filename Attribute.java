@@ -1904,7 +1904,7 @@ public class Attribute extends ModelElement
     out.println("      {"); 
     out.println("        \"Name\": \"" + nme + "\","); 
     out.println("        \"Description\": \"\",");
-    out.println("        \"DataType\": \"" + type.getCSharp() + "\",");
+    out.println("        \"DataType\": \"" + type.getMamba() + "\",");
     out.println("        \"Readonly\": " + isFrozen() + ","); 
     out.println("        \"IsRequired\": true,");
     out.println("        \"IsPersisted\": true,");
@@ -1960,7 +1960,7 @@ public class Attribute extends ModelElement
     out.print("      <Attribute"); 
     out.print(" Name = \"" + nme + "\" IsValueClass = \"false\""); 
     out.print(" Description = \"\"");
-    out.print(" DataType = \"" + type.getCSharp() + "\"");
+    out.print(" DataType = \"" + type.getMamba() + "\"");
     out.print(" ReadOnly = \"" + isFrozen() + "\""); 
     out.print(" IsRequired = \"true\"");
     out.print(" IsPersisted = \"true\"");

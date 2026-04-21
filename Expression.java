@@ -1274,9 +1274,32 @@ abstract class Expression
     return e; 
   } 
 
+  public boolean isConjunctOf(Expression conj)
+  { if ((this + "").equals(conj + ""))
+    { return true; } 
+
+    if (("(" + this + ")").equals(conj + ""))
+    { return true; } 
+
+    if ((this + "").equals("(" + conj + ")"))
+    { return true; } 
+
+    if (conj instanceof BinaryExpression) 
+    { BinaryExpression be = (BinaryExpression) conj; 
+      if (this.isConjunctOf(be.getLeft()))
+      { return true; } 
+      return this.isConjunctOf(be.getRight()); 
+    } 
+
+    return false; 
+  } 
+
+
   public static Expression conjoin(Vector exps)
-  { if (exps.size() == 0) { return new BasicExpression(true); } 
-    if (exps.size() == 1) { return (Expression) exps.get(0); } 
+  { if (exps.size() == 0) 
+    { return new BasicExpression(true); } 
+    if (exps.size() == 1) 
+    { return (Expression) exps.get(0); } 
     Vector tail = new Vector(); 
     Expression head = (Expression) exps.get(0);
     tail.addAll(exps); 

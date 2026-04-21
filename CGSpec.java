@@ -933,6 +933,9 @@ public class CGSpec
       else if (op.equals("call") && trimmedlhs.startsWith(op))
       { Vector args = ((InvocationStatement) e).cgparameters();
         // System.out.println(">>> Call statement " + e + " matches rule " + r); 
+
+        // if (("call " + e).equals(trimmedlhs))
+        // { return r; } 
 		 
         if (r.satisfiesConditions(args,entities,this))
         { return r; }
