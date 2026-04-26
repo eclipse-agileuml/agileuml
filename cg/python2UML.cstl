@@ -277,7 +277,7 @@ len _1 |-->_1->size()
 
 list _1 |-->_1->characters()<when> _1`ocltype String
 list _1 |-->_1->keys()->asSequence()<when> _1`ocltype Map
-list _1 |-->_1
+list _1 |-->_1->asSequence()
 
 SortedList _1 |-->SortedSequence{}->union(_1->characters())<when> _1`ocltype String
 SortedList _1 |-->SortedSequence{}->union(_1->keys()->asSequence())<when> _1`ocltype Map
@@ -1221,7 +1221,8 @@ trailer::
 . upper _1 |-->->toUpperCase()
 . lower _1 |-->->toLowerCase()
 . strip _1 |-->->trim()
-. split _1 |-->->split_1
+. split _1 |-->->split_1`splitArguments
+
 . replace _1 |-->.replace_1
 . find _1 |-->_1`findQualifier->indexOf(_1`firstArg) - 1
 . startswith _1 |-->->hasPrefix_1
@@ -2314,6 +2315,11 @@ _1 , _2 , -1 |-->Integer.subrange(_2 + 1, _1)->reverse()
 _1 , _2 , _3 |-->Integer.subrange(_1, _2-1)->select( $x | ($x - _1) mod _3 = 0 )
 
 
+splitArguments::
+( ) |-->(" ")
+( _1 ) |-->(_1)
+
+
 tupleArguments::
 ( ) |-->Sequence{}
 ( _1 ) |-->_1`tupleArguments
@@ -2914,7 +2920,7 @@ ocltype::
 = _1 |-->Bag<when> _1`isBagExpression true
 = _1 |-->_1`ocltype
 
-
+{ } |-->OclAny
 True |-->boolean
 False |-->boolean
 inf |-->double
