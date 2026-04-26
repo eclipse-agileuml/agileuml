@@ -92,6 +92,28 @@ public class SetExpression extends Expression
   public void setElements(Vector elems)
   { this.elements = elems; } 
 
+  public boolean isEqualTo(Expression other)
+  { if (other instanceof SetExpression) { } 
+    else 
+    { return false; } 
+
+    SetExpression se = (SetExpression) other; 
+
+    if (se.size() == this.size()) { } 
+    else 
+    { return false; } 
+
+    for (int i = 0; i < elements.size(); i++) 
+    { Expression elem = (Expression) elements.get(i); 
+      Expression oelem = (Expression) se.elements.get(i); 
+      if (elem.isEqualTo(oelem)) { } 
+      else 
+      { return false; } 
+    } 
+
+    return true; 
+  } 
+
   public static SetExpression mergeSetExpressions(
                                 SetExpression left, 
                                 SetExpression right)

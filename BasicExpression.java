@@ -356,6 +356,51 @@ class BasicExpression extends Expression
     } 
   } 
 
+  public boolean isEqualTo(Expression other)
+  { if (other instanceof BasicExpression) { } 
+    else 
+    { return false; } 
+
+    BasicExpression be = (BasicExpression) other; 
+
+    if (data.equals(be.data)) { } 
+    else 
+    { return false; } 
+
+    if (be.objectRef == null && objectRef == null)
+    { } 
+    else if (be.objectRef != null && objectRef != null && 
+             objectRef.isEqualTo(be.objectRef))
+    { } 
+    else 
+    { return false; } 
+
+    if (be.arrayIndex == null && arrayIndex == null)
+    { } 
+    else if (be.arrayIndex != null && arrayIndex != null && 
+             arrayIndex.isEqualTo(be.arrayIndex))
+    { } 
+    else 
+    { return false; } 
+
+    if (be.parameters == null && parameters == null)
+    { } 
+    else if (be.parameters != null && parameters != null &&
+             parameters.size() == be.parameters.size())
+    { for (int i = 0; i < parameters.size(); i++) 
+      { Expression par = (Expression) parameters.get(i); 
+        Expression bepar = (Expression) be.parameters.get(i); 
+        if (par.isEqualTo(bepar)) { } 
+        else 
+        { return false; } 
+      } 
+    } 
+    else 
+    { return false; }  
+
+    return true; 
+  } 
+
   public boolean isNotLocalVariable() 
   { if (umlkind == VARIABLE && objectRef == null) 
     { return false; } 
@@ -364,6 +409,20 @@ class BasicExpression extends Expression
 
   public boolean isSingleIdentifier() 
   { if (objectRef == null && arrayIndex == null && 
+        parameters == null) 
+    { return true; }
+ 
+    return false; 
+  } 
+
+  public boolean isSimpleVariableRef() 
+  { if (objectRef == null) { } 
+    else if (objectRef instanceof BasicExpression && 
+      ((BasicExpression) objectRef).isSimpleVariableRef()) { } 
+    else 
+    { return false; } 
+ 
+    if (arrayIndex == null && 
         parameters == null) 
     { return true; }
  
@@ -3001,6 +3060,14 @@ class BasicExpression extends Expression
   public Expression definedness(Map uses, Vector messages)
   { Expression res = new BasicExpression(true);
 
+    if ("invalid".equals(data))
+    { messages.add("!! (SEM): invalid should not be used directly in a specification."); 
+      messages.add("!! Use expr->oclIsInvalid() to test for this."); 
+      int ascore = (int) uses.get("amber");
+      uses.set("amber", ascore+1); 
+      return new BasicExpression(false); 
+    } 
+
     // for E[ind] for E entity with primary key key, ind : E.key
     if (umlkind == CLASSID)
     { if (arrayIndex != null && entity != null)
@@ -3010,7 +3077,15 @@ class BasicExpression extends Expression
         res = arrayIndex.definedness(uses, messages);  
         BasicExpression edom = new BasicExpression(pkname); 
         edom.setObjectRef(new BasicExpression(data)); 
-        Expression indom = new BinaryExpression(":",arrayIndex,edom);
+        Expression indom = 
+            new BinaryExpression(":",arrayIndex,edom);
+        
+        messages.add("! (SEM): Condition " + indom + " needed for " + this); 
+         
+        int yscore = (int) uses.get("yellow");
+        uses.set("yellow", yscore+1); 
+
+        indom.setBrackets(true); 
         res = simplify("&",res,indom,null); 
       } 
 
@@ -3062,6 +3137,13 @@ class BasicExpression extends Expression
       Expression inrange = 
          Expression.simplifyAnd(lbnd.simplify(),
                                 ubnd.simplify()); 
+
+      messages.add("! (SEM): Condition " + inrange + " needed for " + this); 
+         
+      int yscore = (int) uses.get("yellow");
+      uses.set("yellow", yscore+1); 
+
+      inrange.setBrackets(true); 
       return simplify("&",res,inrange,null);
     } 
     else if (arrayIndex != null) 
@@ -3070,7 +3152,14 @@ class BasicExpression extends Expression
       
       Expression nonnull = new BinaryExpression("/=", 
                      newdata, 
-                     new BasicExpression("null")); 
+                     new BasicExpression("null"));
+
+      messages.add("! (SEM): Condition " + nonnull + " needed for " + this); 
+         
+      int yscore = (int) uses.get("yellow");
+      uses.set("yellow", yscore+1); 
+
+      nonnull.setBrackets(true); 
       res = Expression.simplifyAnd(res, nonnull); 
     } 
 
@@ -3122,7 +3211,8 @@ class BasicExpression extends Expression
       BehaviouralFeature bf = entity.getDefinedOperation(data);
 
       if (bf != null) 
-      { Expression spre = bf.definedness(parameters); 
+      { Vector vv = new Vector(); 
+        Expression spre = bf.definedness(parameters, vv); 
         return simplify("&",res,spre,null);
       }  
     } 
@@ -3136,19 +3226,36 @@ class BasicExpression extends Expression
     { Expression zero = new BasicExpression(0);
       if ("sqrt".equals(data))
       { Expression nneg = new BinaryExpression(">=",objectRef,zero);
-        return simplify("&",nneg,res,null);
+
+        Expression sneg = nneg.simplifyOCL(); 
+
+        messages.add("! (SEM): Condition " + nneg + " needed for " + this); 
+         
+        int yscore = (int) uses.get("yellow");
+        uses.set("yellow", yscore+1); 
+
+        return simplify("&",sneg,res,null);
       }
       else if ("log".equals(data) || "log10".equals(data))
       { if ("0".equals(objectRef + "") || 
             "0.0".equals(objectRef + ""))
-       { messages.add("!!! (SEM): explicit 0 argument of " + this); 
+        { messages.add("!!! (SEM): explicit 0 argument of " + this); 
          int rscore = (int) uses.get("red");
          uses.set("red", rscore+1);
          return new BasicExpression(false); 
        } 
 
-       Expression pos = new BinaryExpression(">",objectRef,zero);
-        return simplify("&",pos,res,null);
+        Expression pos = 
+            new BinaryExpression(">",objectRef,zero);
+        Expression spos = pos.simplifyOCL(); 
+
+        messages.add("! (SEM): Condition " + pos + " needed for " + this); 
+         
+        int yscore = (int) uses.get("yellow");
+        uses.set("yellow", yscore+1); 
+
+        // pos.setBrackets(true); 
+        return simplify("&",spos,res,null);
       }
       else if ("acos".equals(data) || "asin".equals(data))
       { Expression minus1 = new BasicExpression(-1); 
@@ -3165,6 +3272,13 @@ class BasicExpression extends Expression
       { UnaryExpression orsize = new UnaryExpression("->size",objectRef);
         Expression pos = 
           new BinaryExpression(">",orsize,zero);
+
+        messages.add("! (SEM): Condition " + pos + " needed for " + this); 
+         
+        int yscore = (int) uses.get("yellow");
+        uses.set("yellow", yscore+1); 
+
+        pos.setBrackets(true); 
         return simplify("&",pos,res,null);
       }
       else if ("toReal".equals(data))
@@ -3222,10 +3336,12 @@ class BasicExpression extends Expression
       } 
     } 
 
-    if ((umlkind == UPDATEOP || umlkind == QUERY) && entity != null) 
+    if ((umlkind == UPDATEOP || umlkind == QUERY) && 
+         entity != null) 
     { BehaviouralFeature bf = entity.getDefinedOperation(data);
       if (bf != null) 
-      { Expression spre = bf.determinate(parameters); 
+      { Vector vv = new Vector(); 
+        Expression spre = bf.determinate(parameters,vv); 
         return simplify("&",res,spre,null);
       }  
     } 
@@ -3822,7 +3938,7 @@ class BasicExpression extends Expression
       if (arrayIndex != null) 
       { // System.out.println(">>It has array index " + arrayIndex); 
         arrayIndex.typeCheck(types,entities,contexts,env); 
-      }
+      } // must be an integer
       return true;
     }
 
@@ -3961,9 +4077,57 @@ class BasicExpression extends Expression
     { boolean res1 = 
         arrayIndex.typeInference(types,entities,contexts,
                                  env,vartypes);
-      arrayType = type; 
+      // arrayType = type; 
       res = res && res1;
-    } // might reduce multiplicity to ONE - although not for --* qualified roles 
+
+      if (Type.isSequenceType(arrayType) || 
+          Type.isMapType(arrayType) || 
+          Type.isStringType(arrayType)) 
+      { }
+      else 
+      { System.err.println("!! Array part of " + this + " must be a sequence, string or map!"); 
+      } 
+
+      if (Type.hasNonIntegerType(arrayIndex))
+      { // left must be a Map
+
+        if (Type.isMapType(arrayType)) { } 
+        else 
+        { System.err.println("!! Argument of " + this + " must be a Map");
+          Type ltype = new Type("Map", null);
+          Type elemType = this.getType();  
+          ltype.keyType = arrayIndex.getType();
+          ltype.elementType = elemType;  
+          arrayType = ltype; 
+          
+          BasicExpression left = 
+               (BasicExpression) this.clone();
+          left.arrayIndex = null;  
+          String vname = left.basicString(); 
+          vartypes.put(vname, ltype);  
+          return true; 
+        } 
+      }
+        
+      if (Type.isStringType(arrayType) && 
+          arrayIndex.isInt()) 
+      { } 
+      else if (Type.isSequenceType(arrayType) && 
+               arrayIndex.isInt()) 
+      { } 
+      else if (Type.isStringType(arrayType) || 
+               Type.isSequenceType(arrayType))
+      { System.err.println("!! Index of " + this + " must be an integer"); 
+        arrayIndex.setType(new Type("int", null)); 
+        if (arrayIndex instanceof BasicExpression)
+        { String vname = 
+                 ((BasicExpression) arrayIndex).basicString(); 
+          vartypes.put(vname, arrayIndex.getType()); 
+        } 
+      } 
+      
+      // type = left.elementType; 
+    }  // and right for map must be of keytype of left.
 
     Vector context = new Vector(); 
 

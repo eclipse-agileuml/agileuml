@@ -125,6 +125,21 @@ class BinaryExpression extends Expression
     return res; 
   } 
 
+  public boolean isEqualTo(Expression other)
+  { if (other instanceof BinaryExpression) { } 
+    else 
+    { return false; } 
+
+    BinaryExpression be = (BinaryExpression) other; 
+    
+    if (operator.equals(be.operator) && 
+        left.isEqualTo(be.getLeft()) && 
+        right.isEqualTo(be.getRight()))
+    { return true; } 
+
+    return false;
+  } 
+
   /* 
   public Object clone()
   { BinaryExpression be = new BinaryExpression(operator,
@@ -741,12 +756,34 @@ class BinaryExpression extends Expression
     Expression srcDefined = 
       new BinaryExpression("/=", left, 
                 new BasicExpression("null")); 
+
+    if ("#".equals(operator) || "!".equals(operator) || 
+        "#1".equals(operator) || "|".equals(operator) || 
+        "|R".equals(operator) || "|C".equals(operator) ||
+        "|A".equals(operator) || "|sortedBy".equals(operator) ||
+        "|unionAll".equals(operator) || 
+        operator.equals("|concatenateAll") ||
+        "|intersectAll".equals(operator) || 
+        "|selectMaximals".equals(operator) || 
+        "|selectMinimals".equals(operator))
+    { BinaryExpression beleft = (BinaryExpression) left; 
+      Expression col = beleft.getRight(); 
+
+      srcDefined = 
+        new BinaryExpression("/=", col, 
+                new BasicExpression("null"));
+    }
+ 
     srcDefined.setBrackets(true); 
 
     if ("->append".equals(operator) || 
         "->prepend".equals(operator) || 
         "->concatenate".equals(operator))
     { res = Expression.simplifyAnd(res, srcDefined); 
+
+      int acount = (int) uses.get("yellow"); 
+      uses.set("yellow", acount+1); 
+      messages.add("! (SEM): Condition " + srcDefined + " needed for " + this);  
 
       if (left.hasSequenceType()) { } 
       else 
@@ -767,6 +804,10 @@ class BinaryExpression extends Expression
         "->restrict".equals(operator) ||
         "->antirestrict".equals(operator))
     { res = Expression.simplifyAnd(res, srcDefined); 
+
+      int acount = (int) uses.get("yellow"); 
+      uses.set("yellow", acount+1); 
+      messages.add("! (SEM): Condition " + srcDefined + " needed for " + this);  
 
       if (left.hasMapType()) { } 
       else 
@@ -984,6 +1025,10 @@ class BinaryExpression extends Expression
     if ("->at".equals(operator))
     { res = Expression.simplifyAnd(res, srcDefined); 
 
+      int acount = (int) uses.get("yellow"); 
+      uses.set("yellow", acount+1); 
+      messages.add("! (SEM): Condition " + srcDefined + " needed for " + this);  
+
       if ("String".equals(right.getType() + "") || 
           left.isMap())
       { UnaryExpression kexp = new UnaryExpression("->keys", left); 
@@ -1008,19 +1053,52 @@ class BinaryExpression extends Expression
       Expression lbnd = new BinaryExpression("<=", new BasicExpression(1), right); 
       Expression ubnd = new BinaryExpression("<=", right, selfsize); 
       Expression inrange = new BinaryExpression("&",lbnd,ubnd); 
+      inrange.setBrackets(true); 
       return simplify("&",res,inrange,null);
     } 
 
     if ("->exists".equals(operator) || 
         "->forAll".equals(operator) || 
-        "->any".equals(operator) || 
         "->select".equals(operator) || 
         "->reject".equals(operator) || 
         "->collect".equals(operator) || 
         "->including".equals(operator) || 
         "->excluding".equals(operator))
-    { res = Expression.simplifyAnd(res, srcDefined); }
+    { res = Expression.simplifyAnd(res, srcDefined);
+      int acount = (int) uses.get("yellow"); 
+      uses.set("yellow", acount+1); 
+      messages.add("! (SEM): Condition " + srcDefined + " needed for " + this);  
+    }
     
+    if ("->any".equals(operator)) 
+    { Expression nonempty = 
+        new BinaryExpression("->exists", left, right);
+ 
+      int yscore = (int) uses.get("yellow",0); 
+      uses.set("yellow", yscore+1); 
+      messages.add("! (SEM): Conditions " + srcDefined + 
+                   " and " + nonempty + " needed for " + this);
+      res = Expression.simplifyAnd(res, srcDefined);
+      res = Expression.simplifyAnd(res, nonempty);
+    } 
+        
+    if ("|A".equals(operator))
+    { BinaryExpression src = (BinaryExpression) left; 
+      // Expression var = src.getLeft(); 
+      // Expression coll = src.getRight(); 
+      // col1->exists(var | right) needed 
+
+      Expression nonempty = 
+        new BinaryExpression("#", src, right);
+ 
+      int yscore = (int) uses.get("yellow",0); 
+      uses.set("yellow", yscore+1); 
+      messages.add("! (SEM): Conditions " + srcDefined + 
+          " and " + nonempty + " needed for " + this);
+      res = Expression.simplifyAnd(res, srcDefined);
+      res = Expression.simplifyAnd(res, nonempty);
+    } 
+      
     return res;
   }
 
@@ -5148,6 +5226,26 @@ public void findClones(java.util.Map clones,
       { System.err.println("!! Left hand side of ->at must be a sequence, string or map!"); 
       } 
 
+      if (Type.hasNonIntegerType(right))
+      { // left must be a Map
+        if (left.isMap()) { } 
+        else 
+        { System.err.println("!! Argument of " + this + " must be a Map");
+          Type ltype = new Type("Map", null);
+          Type elemType = left.getElementType();  
+          ltype.keyType = right.getType();
+          ltype.elementType = elemType;  
+          left.setType(ltype); 
+          
+          if (left instanceof BasicExpression)
+          { String vname = 
+               ((BasicExpression) left).basicString(); 
+            vartypes.put(vname, ltype); 
+          } 
+        } 
+        return true; 
+      }
+        
       if (left.isString() && right.isInt()) { } 
       else if (left.isSequence() && right.isInt()) { } 
       else if (left.isString() || left.isSequence())
@@ -5421,6 +5519,8 @@ public void findClones(java.util.Map clones,
           vartypes.put(vname, ftype); 
         } 
       } 
+
+      // JOptionPane.showInputDialog("Type of " + this + " is " + type); 
     } 
     else if ("->restrict".equals(operator) || 
              "->antirestrict".equals(operator))
@@ -5713,7 +5813,7 @@ public void findClones(java.util.Map clones,
         else 
         { type = new Type("boolean", null); } 
       }
-      else if (left.isCollection() && right.isCollection())
+      else if (left.isCollection())
       { if (operator.equals("\\/") || 
             operator.equals("->union") || 
             operator.equals("->symmetricDifference") || 
@@ -5723,12 +5823,30 @@ public void findClones(java.util.Map clones,
           etypes.add(left); 
           etypes.add(right); 
           elementType = Type.determineElementType(etypes);
+          /* JOptionPane.showInputDialog("Deduced element type " + 
+                 elementType + " from " + left.getType() + " " + 
+                 right.getType()); */ 
+ 
           type = new Type(lftype.getName(), null); 
           type.setSorted(lftype.isSorted()); 
           type.setElementType(elementType); 
         } 
         else 
-        { type = new Type("boolean", null); } 
+        { type = new Type("boolean", null); }
+
+        if (!right.isCollection())
+        { System.err.println("!! RHS of " + this + 
+                           " must be collection"); 
+          Type newrtype = new Type(lftype.getName(), null);
+          newrtype.elementType = right.getElementType(); 
+          right.setType(newrtype); 
+
+          if (right instanceof BasicExpression)
+          { String vname = 
+              ((BasicExpression) right).basicString(); 
+            vartypes.put(vname, newrtype); 
+          } 
+        }  
       }
       else if (left.isMap() && !right.isMap())
       { System.err.println("!! RHS of " + this + 
@@ -5786,28 +5904,6 @@ public void findClones(java.util.Map clones,
         { String vname = 
             ((BasicExpression) left).basicString(); 
           vartypes.put(vname, left.getType()); 
-        } 
-      }
-      else if (left.isCollection() && !right.isCollection())
-      { System.err.println("!! RHS of " + this + 
-                           " must be collection"); 
-        right.setType(lftype);
- 
-        if (operator.equals("\\/") || 
-            operator.equals("->union") || 
-            operator.equals("->symmetricDifference") || 
-            operator.equals("->intersection") || 
-            operator.equals("/\\"))
-        { type = lftype; 
-          elementType = left.getElementType();
-        } 
-        else 
-        { type = new Type("boolean", null); } 
-
-        if (right instanceof BasicExpression)
-        { String vname = 
-            ((BasicExpression) right).basicString(); 
-          vartypes.put(vname, right.getType()); 
         } 
       }
       else if (!left.isCollection() && right.isCollection())
@@ -5937,8 +6033,9 @@ public void findClones(java.util.Map clones,
         left.setElementType(elementType); 
 
         if (left instanceof BasicExpression)
-        { String vname = 
-            ((BasicExpression) left).basicString(); 
+        { Expression lbe = (Expression) left.clone(); 
+          lbe.setBrackets(false); 
+          String vname = ("" + lbe); 
           vartypes.put(vname, left.getType()); 
         } 
       } 
@@ -6009,7 +6106,6 @@ public void findClones(java.util.Map clones,
         { leftTyp.setKeyType(right.getType()); }  
       } // deduce type of one side from that of other
     } 
-
     else if (operator.equals("&") || operator.equals("<=>") || 
              operator.equals("xor") ||  
              operator.equals("or") || operator.equals("=>"))
@@ -22098,6 +22194,19 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       return Expression.simplifyCollect(lvar, lcoll, rexpr); 
     } 
 
+    if ("|sortedBy".equals(operator))
+    { BinaryExpression beleft = (BinaryExpression) lexpr; 
+      // Expression lvar = beleft.getLeft(); 
+      Expression lcoll = beleft.getRight(); 
+      if (Expression.isLiteralValue(rexpr)) 
+      { return lcoll; } 
+    } // or right is independent of lvar. 
+
+    if ("->sortedBy".equals(operator))
+    { if (Expression.isLiteralValue(rexpr)) 
+      { return lexpr; }
+    } 
+
     if ("->union".equals(operator) && 
         lexpr instanceof SetExpression && 
         rexpr instanceof SetExpression)
@@ -23309,7 +23418,11 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
     }
     else if ("->sortedBy".equals(operator) || 
              "|sortedBy".equals(operator))
-    { aUses.add("!! OCL efficiency smell (OES): n*log(n) sorting algorithm used for " + this); 
+    { 
+      if (Expression.isLiteralValue(right))
+      { aUses.add("!! OCL efficiency smell (OES): redundant ->sortedBy operator in " + this); } 
+      else 
+      { aUses.add("!! OCL efficiency smell (OES): n*log(n) sorting algorithm used for " + this); } 
 
       int ascore = (int) res.get("amber"); 
       res.set("amber", ascore+1); 

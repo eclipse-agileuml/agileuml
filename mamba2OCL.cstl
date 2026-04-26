@@ -474,9 +474,12 @@ _1 ( ) |-->_1()
 param_list::
 out _1 _2 , _3 |-->_2 : _1, _3
 _1 _2 , _3 |-->_2 : _1, _3<when> _1`typeAsOcl Sequence <action> _2 Sequence
+_1 _2 , _3 |-->_2 : _1, _3<when> _1`typeAsOcl Map <action> _2 Map
 _1 _2 , _3 |-->_2 : _1, _3
+
 out _1 _2 |-->_2 : _1
 _1 _2 |-->_2 : _1<when> _1`typeAsOcl Sequence <action> _2 Sequence
+_1 _2 |-->_2 : _1<when> _1`typeAsOcl Map <action> _2 Map
 _1 _2 |-->_2 : _1
 
 
@@ -746,11 +749,11 @@ Where ( _1 ) |-->->select( _x | _1->apply(_x) )
 
 Except ( _1 ) |--> - _1
 
-First ( ) |-->.first
+First ( ) |-->->first()
 First ( _1 ) |-->->any( _1`directLambdaTranslation )<when> _1`isDirectLambda true
 First ( _1 ) |-->->any( _x | _1->apply(_x) )
 
-Last ( ) |-->.last
+Last ( ) |-->->last()
 Last ( _1 ) |-->->reverse()->any( _1`directLambdaTranslation )<when> _1`isDirectLambda true
 Last ( _1 ) |-->->reverse()->any( _x | _1->apply(_x) )
 

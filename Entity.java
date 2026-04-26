@@ -5071,18 +5071,19 @@ public class Entity extends ModelElement implements Comparable
     } 
   } 
 
-  public void checkDeterminacy()
+  public void checkDeterminacy(Vector messages)
   { if (isComponent() || isExternal()) 
     { return; } 
 
     for (int i = 0; i < operations.size(); i++)
-    { BehaviouralFeature op = (BehaviouralFeature) operations.get(i);
+    { BehaviouralFeature op = 
+           (BehaviouralFeature) operations.get(i);
     
       Vector args = op.getParameterExpressions(); 
-      op.definedness(args);
+      op.definedness(args, messages);
       System.err.println(); 
 
-      op.determinate(args); 
+      op.determinate(args, messages); 
       System.err.println(); 
     }
   }
@@ -6183,7 +6184,9 @@ public class Entity extends ModelElement implements Comparable
       } 
 
       if (actualClones.size() > 0)
-      { messages.add("!! (DEV) flaws: Cloned expressions/statements: ");
+      { messages.add("!! (DEV/DC) flaws: " + 
+           actualClones.size() + 
+           " Cloned expressions/statements: ");
         for (Object aclne : actualClones)
         { messages.add("  " + aclne); } 
         messages.add("!! from " + op); 
@@ -6454,7 +6457,14 @@ public class Entity extends ModelElement implements Comparable
     } 
 
     if (entityClones.size() > 0)
-    { messages.add("!! (DEV) flaw: Cloned expressions/statements " + entityClones + " from " + name); 
+    { messages.add("!! (DEV/DC) flaw: " + 
+          entityClones.size() + 
+          " Cloned expressions/statements from " + name);
+      for (Object aclne : entityClones)
+      { messages.add("  " + aclne); } 
+      messages.add("!! cloned in " + name); 
+      messages.add(""); 
+ 
       messages.add(""); 
       int ambercount = (int) res.get("amber");
       // int ecsze = entityClones.size(); 

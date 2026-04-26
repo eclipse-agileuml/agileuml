@@ -763,6 +763,18 @@ public class Type extends ModelElement
     return Type.isIntegerType(t);  
   } 
 
+  public static boolean hasNonIntegerType(Expression expr)
+  { if (expr == null) 
+    { return false; } 
+    Type t = expr.getType();
+    if (t == null) 
+    { return false; } 
+    String tname = t.getName(); 
+    if ("OclAny".equals(tname) || "void".equals(tname))
+    { return false; }  
+    return !t.isIntegerType();  
+  } 
+
   public static boolean isIntegerType(Type t)
   { if (t == null) { return false; } 
     String tname = t.getName(); 
@@ -5350,18 +5362,24 @@ public class Type extends ModelElement
 
       System.out.println(">> Element type of " + be + " = " + t); 
 
-      if (t == null) { }
-      else if (expectedType == null)
+      if (t == null) 
+      { continue; }
+
+      String tn2 = t.getName(); 
+
+      if (expectedType == null || 
+          "OclAny".equals(expectedType.getName()))
       { expectedType = t; }
       else if (expectedType.equals(t)) { }
       else
       { String tn1 = expectedType.getName();
-        String tn2 = t.getName();
-        if (tn1.equals("double") && (tn2.equals("int") || tn2.equals("long")))
+        if (tn1.equals("double") && 
+            (tn2.equals("int") || tn2.equals("long")))
         { }
         else if (tn1.equals("long") && tn2.equals("int"))
         { }
-        else if (tn2.equals("double") && (tn1.equals("int") || tn1.equals("long")))
+        else if (tn2.equals("double") && 
+                 (tn1.equals("int") || tn1.equals("long")))
         { expectedType = t; }
         else if (tn2.equals("long") && tn1.equals("int"))
         { expectedType = t; }
@@ -5385,7 +5403,8 @@ public class Type extends ModelElement
                  expectedType.isSortedMapType())
         { Type expectedKeyType = null; 
           if (t.getKeyType() != null && 
-              t.getKeyType().equals(expectedType.getKeyType()))
+              t.getKeyType().equals(
+                      expectedType.getKeyType()))
           { expectedKeyType = t.getKeyType(); }
           expectedType = new Type("Map", null); 
           expectedType.setKeyType(expectedKeyType);
@@ -5395,7 +5414,8 @@ public class Type extends ModelElement
                  Type.isMapType(expectedType))
         { Type expectedKeyType = null; 
           if (t.getKeyType() != null && 
-              t.getKeyType().equals(expectedType.getKeyType()))
+              t.getKeyType().equals(
+                      expectedType.getKeyType()))
           { expectedKeyType = t.getKeyType(); }
           expectedType = new Type("Map", null); 
           expectedType.setKeyType(expectedKeyType);
@@ -5418,6 +5438,7 @@ public class Type extends ModelElement
         }
       }
     }
+
     return expectedType;
   }
 

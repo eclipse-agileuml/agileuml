@@ -57,6 +57,27 @@ public class ConditionalExpression extends Expression
   public Expression getInnerObjectRef()
   { return this; } 
 
+  public boolean isEqualTo(Expression other)
+  { if (other instanceof ConditionalExpression) { } 
+    else 
+    { return false; } 
+
+    ConditionalExpression be = (ConditionalExpression) other; 
+    
+    if (elseExp == null && be.elseExp == null) { } 
+    else if (elseExp != null && be.elseExp != null && 
+             elseExp.isEqualTo(be.elseExp))
+    { } 
+    else 
+    { return false; } 
+
+    if (test.isEqualTo(be.test) && 
+        ifExp.isEqualTo(be.getIfExp()))
+    { return true; } 
+
+    return false;
+  } 
+
   public boolean isSideEffecting()
   { if (test.isSideEffecting())
     { return true; } 

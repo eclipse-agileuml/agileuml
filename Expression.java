@@ -1274,8 +1274,9 @@ abstract class Expression
     return e; 
   } 
 
-  public boolean isConjunctOf(Expression conj)
-  { if ((this + "").equals(conj + ""))
+  public abstract boolean isEqualTo(Expression conj);
+
+ /* { if ((this + "").equals(conj + ""))
     { return true; } 
 
     if (("(" + this + ")").equals(conj + ""))
@@ -1283,9 +1284,29 @@ abstract class Expression
 
     if ((this + "").equals("(" + conj + ")"))
     { return true; } 
+    
+    return false; 
+  } */  
+
+  public boolean isConjunctOf(Expression conj)
+  { /* if ((this + "").equals(conj + ""))
+    { return true; } 
+
+    if (("(" + this + ")").equals(conj + ""))
+    { return true; } 
+
+    if ((this + "").equals("(" + conj + ")"))
+    { return true; } */ 
+
+    if (this.isEqualTo(conj))
+    { return true; } 
 
     if (conj instanceof BinaryExpression) 
-    { BinaryExpression be = (BinaryExpression) conj; 
+    { BinaryExpression be = (BinaryExpression) conj;
+      if ("&".equals(be.getOperator())) { } 
+      else 
+      { return false; } 
+ 
       if (this.isConjunctOf(be.getLeft()))
       { return true; } 
       return this.isConjunctOf(be.getRight()); 
@@ -1294,6 +1315,29 @@ abstract class Expression
     return false; 
   } 
 
+  public Expression removeConjunct(Expression conj)
+  { if ((this + "").equals(conj + ""))
+    { return new BasicExpression(true); } 
+
+    if (("(" + this + ")").equals(conj + ""))
+    { return new BasicExpression(true); } 
+
+    if ((this + "").equals("(" + conj + ")"))
+    { return new BasicExpression(true); } 
+
+    if (conj instanceof BinaryExpression) 
+    { BinaryExpression be = (BinaryExpression) conj; 
+      if ("&".equals(be.getOperator())) { } 
+      else 
+      { return null; } 
+
+      Expression lcon = this.removeConjunct(be.getLeft());
+      Expression rcon = this.removeConjunct(be.getRight());
+      return simplifyAnd(lcon,rcon);  
+    } 
+
+    return null; 
+  } 
 
   public static Expression conjoin(Vector exps)
   { if (exps.size() == 0) 
@@ -3618,10 +3662,12 @@ abstract class Expression
   public static Expression simplifyNot(Expression e1) 
   { if (e1 == null) { return e1; } 
 
-    if ("false".equals("" + e1))
+    if ("false".equals("" + e1) || 
+        "(false)".equals("" + e1))
     { return new BasicExpression(true); } 
 
-    if ("true".equals("" + e1))
+    if ("true".equals("" + e1) ||
+        "(true)".equals("" + e1))
     { return new BasicExpression(false); }
  
     return new UnaryExpression("not", e1); 
@@ -4629,6 +4675,15 @@ abstract class Expression
       return uarg; 
     } 
 
+    if (src instanceof BasicExpression &&
+        ((BasicExpression) src).getData().equals("subrange") &&
+        "Integer".equals(
+           ((BasicExpression) src).getObjectRef() + ""))
+    { BasicExpression lcol = (BasicExpression) src; 
+      Vector pars = lcol.getParameters(); 
+      return (Expression) pars.get(1); 
+    } 
+
     if (src instanceof BasicExpression && 
         Expression.isStringValue(
             ((BasicExpression) src).getData()))
@@ -4767,6 +4822,15 @@ abstract class Expression
  
       return uarg; 
     }
+
+    if (src instanceof BasicExpression &&
+        ((BasicExpression) src).getData().equals("subrange") &&
+        "Integer".equals(
+           ((BasicExpression) src).getObjectRef() + ""))
+    { BasicExpression lcol = (BasicExpression) src; 
+      Vector pars = lcol.getParameters(); 
+      return (Expression) pars.get(0); 
+    } 
 
     if (src instanceof BasicExpression && 
         Expression.isStringValue(
@@ -4910,6 +4974,150 @@ abstract class Expression
     return new UnaryExpression("->first", src); 
   } 
 
+  public static Expression simplifyMin(Expression src)
+  { // sq->reverse()->min() is  sq->min()
+    // Sequence{x1}->min()  is  x1
+    // s->sortedBy(x | e)->min()  is  s->min() 
+    // s->sort()->min() is s->min()
+    // Integer.subrange(a,b)->min() is a
+
+    if (src instanceof SetExpression)
+    { SetExpression usrc = (SetExpression) src; 
+      Expression uarg = usrc.min(); 
+ 
+      return uarg; 
+    }
+       
+    if (src instanceof UnaryExpression && 
+        "->reverse".equals(
+           ((UnaryExpression) src).getOperator()))
+    { UnaryExpression usrc = (UnaryExpression) src; 
+      Expression uarg = usrc.getArgument();
+      System.err.println("!! OES: Inefficient ->min operation: " + src + "->min()"); 
+
+      return Expression.simplifyMin(uarg); 
+    } 
+
+    if (src instanceof UnaryExpression && 
+        "->sort".equals(
+           ((UnaryExpression) src).getOperator()))
+    { UnaryExpression usrc = (UnaryExpression) src; 
+      Expression uarg = usrc.getArgument();
+      System.err.println("!! OES: Inefficient ->min operation: " + src + "->min()"); 
+
+      return Expression.simplifyMin(uarg); 
+    } 
+
+    if (src instanceof BinaryExpression && 
+        "->sortedBy".equals(
+           ((BinaryExpression) src).getOperator()))
+    { BinaryExpression collexpr = (BinaryExpression) src; 
+      Expression srccoll = collexpr.getLeft(); 
+  
+      System.err.println("!! OES: Inefficient ->min operation: " + src + "->min()"); 
+
+      return Expression.simplifyMin(srccoll); 
+    } 
+
+    if (src instanceof BinaryExpression && 
+        "|sortedBy".equals(
+           ((BinaryExpression) src).getOperator()))
+    { BinaryExpression collexpr = (BinaryExpression) src; 
+      BinaryExpression indom = 
+            (BinaryExpression) collexpr.getLeft();
+      Expression valexpr = collexpr.getRight(); 
+
+      Expression varexpr = indom.getLeft();
+      Expression srccoll = indom.getRight(); 
+  
+      System.err.println("!! OES: Inefficient ->min operation: " + src + "->min()"); 
+
+      return Expression.simplifyMin(srccoll); 
+    } 
+
+    if (src instanceof BasicExpression &&
+        ((BasicExpression) src).getData().equals("subrange") &&
+        "Integer".equals(
+           ((BasicExpression) src).getObjectRef() + ""))
+    { BasicExpression lcol = (BasicExpression) src; 
+      Vector pars = lcol.getParameters(); 
+      return (Expression) pars.get(0); 
+    } 
+
+    return new UnaryExpression("->min", src); 
+  } 
+
+  public static Expression simplifyMax(Expression src)
+  { // sq->reverse()->max() is  sq->max()
+    // Sequence{x1}->max()  is  x1
+    // s->sortedBy(x | x)->max()  is  s->max() 
+    // s->sort()->max() is s->max()
+    // Integer.subrange(a,b)->max() is b
+
+    if (src instanceof SetExpression)
+    { SetExpression usrc = (SetExpression) src; 
+      Expression uarg = usrc.max(); 
+ 
+      return uarg; 
+    }
+       
+    if (src instanceof UnaryExpression && 
+        "->reverse".equals(
+           ((UnaryExpression) src).getOperator()))
+    { UnaryExpression usrc = (UnaryExpression) src; 
+      Expression uarg = usrc.getArgument();
+      System.err.println("!! OES: Inefficient ->max operation: " + src + "->max()"); 
+
+      return Expression.simplifyMax(uarg); 
+    } 
+
+    if (src instanceof UnaryExpression && 
+        "->sort".equals(
+           ((UnaryExpression) src).getOperator()))
+    { UnaryExpression usrc = (UnaryExpression) src; 
+      Expression uarg = usrc.getArgument();
+      System.err.println("!! OES: Inefficient ->max operation: " + src + "->max()"); 
+
+      return Expression.simplifyMax(uarg); 
+    } 
+
+    if (src instanceof BinaryExpression && 
+        "|sortedBy".equals(
+           ((BinaryExpression) src).getOperator()))
+    { BinaryExpression collexpr = (BinaryExpression) src; 
+      BinaryExpression indom = 
+            (BinaryExpression) collexpr.getLeft();
+
+      Expression srccoll = indom.getRight(); 
+  
+      System.err.println("!! OES: Inefficient ->max operation: " + src + "->max()"); 
+
+      return Expression.simplifyMax(srccoll); 
+    } 
+
+    if (src instanceof BinaryExpression && 
+        "->sortedBy".equals(
+           ((BinaryExpression) src).getOperator()))
+    { BinaryExpression collexpr = (BinaryExpression) src; 
+      Expression srccoll = collexpr.getLeft(); 
+  
+      System.err.println("!! OES: Inefficient ->max operation: " + src + "->max()"); 
+
+      return Expression.simplifyMax(srccoll); 
+    } 
+
+    if (src instanceof BasicExpression &&
+        ((BasicExpression) src).getData().equals("subrange") &&
+        "Integer".equals(
+           ((BasicExpression) src).getObjectRef() + ""))
+    { BasicExpression lcol = (BasicExpression) src; 
+      Vector pars = lcol.getParameters(); 
+      return (Expression) pars.get(1); 
+    } 
+
+    return new UnaryExpression("->max", src); 
+  } 
+
   public static Expression simplifyCollect(Expression var, 
                               Expression src, Expression expr)
   { // sq->collect(x|x) is sq for sequence sq
@@ -5015,6 +5223,26 @@ abstract class Expression
     //    independent of x
     // sq->collect(e)->sum() is (sq->size())*e when e
     //    independent of sq elements
+
+    if (src instanceof SetExpression)
+    { SetExpression setexpr = (SetExpression) src; 
+      return setexpr.sum(); 
+    } 
+
+    if (src instanceof UnaryExpression &&
+        src.getElementType() != null && 
+        !("String".equals(src.getElementType().getName())) &&  
+        "->sort".equals(((UnaryExpression) src).getOperator()))
+    { UnaryExpression ue = (UnaryExpression) src; 
+      return Expression.simplifySum(ue.getArgument()); 
+    } 
+
+    if (src instanceof BinaryExpression && 
+        "->sortedBy".equals(
+                 ((BinaryExpression) src).getOperator()))
+    { BinaryExpression be = (BinaryExpression) src; 
+      return Expression.simplifySum(be.getLeft()); 
+    } 
 
     if (src instanceof BasicExpression &&
         ((BasicExpression) src).getData().equals("subrange") &&
@@ -5184,6 +5412,24 @@ abstract class Expression
     //    MathLib.factorial(b) div MathLib.factorial(a-1)
     // sq->collect(x|e)->prd() is (e)->pow(sq->size()) when e
     //    independent of x
+
+    if (src instanceof SetExpression)
+    { SetExpression setexpr = (SetExpression) src; 
+      return setexpr.prd(); 
+    } 
+
+    if (src instanceof UnaryExpression && 
+        "->sort".equals(((UnaryExpression) src).getOperator()))
+    { UnaryExpression ue = (UnaryExpression) src; 
+      return Expression.simplifyPrd(ue.getArgument()); 
+    } 
+
+    if (src instanceof BinaryExpression && 
+        "->sortedBy".equals(
+                 ((BinaryExpression) src).getOperator()))
+    { BinaryExpression be = (BinaryExpression) src; 
+      return Expression.simplifyPrd(be.getLeft()); 
+    } 
 
     if (src instanceof BinaryExpression &&
         "|C".equals(((BinaryExpression) src).getOperator()))

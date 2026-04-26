@@ -53,14 +53,9 @@ class CC :
 
 
 
-  def tailrec(self, x) :
-    result = 0
-    if x <= 1 :
-      result = 1
-    else :
-      if x > 1 :
-        result = self.tailrec(x - 1)
-    return result
+  def op(self) :
+    sq = [5,4,2,3]
+    print(sorted(sq, key = lambda x : 1))
 
   def killCC(cc_x) :
     cc_instances = ocl.excludingSet(cc_instances, cc_x)
@@ -78,4 +73,6 @@ cc_OclType = createByPKOclType("CC")
 cc_OclType.instance = createCC()
 cc_OclType.actualMetatype = type(cc_OclType.instance)
 
+cx = CC()
+cx.op()
 

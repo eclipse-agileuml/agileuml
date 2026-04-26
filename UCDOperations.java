@@ -1681,8 +1681,8 @@ public class UCDOperations
     boolean tc2 = effect.typeCheck(types,entities,contexts,vars); 
     if (!tc2) 
     { System.err.println("! Warning: Unable to type-check postcondition " + effect); 
-      JOptionPane.showMessageDialog(null, "Cannot type-check postcondition " + effect, "", 
-                                    JOptionPane.ERROR_MESSAGE);  
+      // JOptionPane.showMessageDialog(null, "Cannot type-check postcondition " + effect, "", 
+      //                              JOptionPane.ERROR_MESSAGE);  
     }
     else 
     { System.out.println(">>> Definedness condition: " + effect.definedness()); 
@@ -16408,6 +16408,42 @@ public void produceCUI(PrintWriter out)
     { System.err.println("!! Error generating C++"); } 
   } 
 
+  public void determinacyCheck()
+  { Vector messages = new Vector(); 
+
+    for (int i = 0; i < entities.size(); i++) 
+    { Entity ent = (Entity) entities.get(i); 
+
+      if (ent.isDerived() || 
+          ent.isComponent() || 
+          ent.isExternal()) 
+      { continue; } 
+
+      ent.checkDeterminacy(messages); 
+    } 
+
+    try
+    { PrintWriter mtout = 
+          new PrintWriter(
+            new BufferedWriter(
+              new FileWriter("semanticFlaws.txt")));
+
+      mtout.println(); 
+      mtout.println("--- Semantic issues and flaws for system  " + systemName); 
+      mtout.println(""); 
+      for (int k = 0; k < messages.size(); k++) 
+      { String mtest = (String) messages.get(k); 
+        mtout.println(mtest);
+        mtout.println();  
+      }
+      mtout.println("");  
+      mtout.close(); 
+    } 
+    catch (Exception _x) { } 
+   
+    System.out.println("*** Semantic issues/flaws written to semanticFlaws.txt"); 
+  } 
+
   public void loadFromJavaAST(String sourcefile)
   { BufferedReader br = null; 
 
@@ -19638,6 +19674,16 @@ public void produceCUI(PrintWriter out)
       }
     }
 
+    File outfile = new File("./mm.km3");
+    try
+    { PrintWriter out =
+          new PrintWriter(
+            new BufferedWriter(new FileWriter(outfile)));
+      saveKM3(out); 
+      out.flush(); 
+      out.close(); 
+    }
+    catch (Exception _ex) { }  
   }
 
   public String parseMambaOperation(String sourceCode, 
@@ -30474,11 +30520,18 @@ public void produceCUI(PrintWriter out)
   { String cmd = ""; 
     UCDOperations model = new UCDOperations(); 
 
-    if (args.length == 2 && "-mambaAnalysis".equals(args[0]))
+    if (args.length >= 2 && "-mambaAnalysis".equals(args[0]))
     { String fname = args[1]; 
-      model.loadZAppDevFromFile(fname); 
+      try { 
+        model.loadZAppDevFromFile(fname); 
+      } 
+      catch (Exception _e)
+      { System.out.println("!! Error loading file " + fname); 
+        return; 
+      } 
       model.typeCheck(); 
       model.typeCheck(); 
+      model.determinacyCheck(); 
       try { 
         File fout = new File("qualityDetails.txt");
         PrintWriter qout = new PrintWriter(

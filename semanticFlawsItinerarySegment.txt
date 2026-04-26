@@ -1,0 +1,59 @@
+
+--- Semantic issues and flaws for system  app
+
+***> Determinacy obligation for operation IsInRole of class Passenger is:
+( true => true )
+
+***> Determinacy obligation for operation HasPermission of class Passenger is:
+( true => true )
+
+***> Determinacy obligation for operation AddChild of class TreeNode is:
+( true => true )
+
+***> Determinacy obligation for operation GetLeafs of class TreeNode is:
+( true => true )
+
+***> Determinacy obligation for operation GetLeafsInner of class TreeNode is:
+( true => true )
+
+***> Determinacy obligation for operation AddResponseList of class TreeNode is:
+( true => true )
+
+***> Determinacy obligation for operation ParseTree of class TreeNode is:
+( true => true )
+
+***> Determinacy obligation for operation TreeParseInner of class TreeNode is:
+( true => true )
+
+***> Determinacy obligation for operation GetLowerLeaves of class TreeNode is:
+( true => true )
+
+***> Determinacy obligation for operation GetLeavesLevels of class TreeNode is:
+( true => true )
+
+***> Determinacy obligation for operation GetLeavesLevelInner of class TreeNode is:
+( true => true )
+
+***> Determinacy obligation for operation GetLeavesPaths of class TreeNode is:
+( true => true )
+
+***> Determinacy obligation for operation TreeParsePathReverse of class TreeNode is:
+( true => true )
+
+***> Determinacy obligation for operation initNode of class TreeNode is:
+( true => true )
+
+***> Determinacy obligation for operation IsEmpty of class Solution is:
+( true => true )
+
+! (SEM): Condition itinerarySegments->sortedBy( x | x.ItinerarySequenceNumber )->notEmpty() needed for itinerarySegments->sortedBy( x | x.ItinerarySequenceNumber )->first()
+
+***> Determinacy obligation for operation GetFirst of class Solution is:
+( true => true )
+
+! (SEM): Condition itinerarySegments->sortedBy( x | x.ItinerarySequenceNumber )->notEmpty() needed for itinerarySegments->sortedBy( x | x.ItinerarySequenceNumber )->last()
+
+***> Determinacy obligation for operation GetLast of class Solution is:
+( true => true )
+
+

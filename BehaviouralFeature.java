@@ -3311,7 +3311,8 @@ public class BehaviouralFeature extends ModelElement
   public Expression getPost()
   { return post; } 
 
-  public Expression definedness(Vector arguments) 
+  public Expression definedness(Vector arguments, 
+                                Vector messages) 
   { // pre & (pre => def(post))
     Expression res;
 
@@ -3323,7 +3324,8 @@ public class BehaviouralFeature extends ModelElement
     Map uses = new Map(); 
     uses.set("amber", 0); 
     uses.set("red", 0); 
-    Vector messages = new Vector(); 
+    uses.set("yellow", 0); 
+    // Vector messages = new Vector(); 
 
     if (post != null)  
     { if (pre != null) 
@@ -3345,10 +3347,6 @@ public class BehaviouralFeature extends ModelElement
     // JOptionPane.showMessageDialog(null, "Definedness obligation for " + getName() + " is:\n" + res,
     //   "Internal consistency condition", JOptionPane.INFORMATION_MESSAGE); 
 
-    System.err.println(); 
-    System.err.println("***> Definedness obligation for " + getName() + " specification is:\n" + res); 
-    System.err.println(); 
-
     if (activity != null) 
     { Vector calls = 
           Statement.getOperationCalls(activity);
@@ -3366,38 +3364,67 @@ public class BehaviouralFeature extends ModelElement
       { 
         System.err.println("!! Warning (NTE): possible infinite recursion: " + 
            selfexpr + " is in calls of activity: " + calls);
+
+        int acount = (int) uses.get("amber"); 
+        uses.set("amber", acount+1); 
+        messages.add("!! Warning (NTE): possible infinite recursion: " + 
+           selfexpr + " is in calls of activity: " + calls); 
       } 
 
       if (VectorUtil.containsEqualString(selfexpr, returns) ||
           VectorUtil.containsEqualString(selfexpr1, returns))
       { 
+        int acount = (int) uses.get("amber"); 
+        uses.set("amber", acount+1); 
+
         System.err.println("!! Warning (NTE): possible infinite recursion: " + 
+            selfexpr + " is in returned values: " + returns);
+        messages.add("!! Warning (NTE): possible infinite recursion: " + 
             selfexpr + " is in returned values: " + returns);
       }   
 
       Expression def = activity.definedness(uses,messages); 
-      System.err.println(">> Activity definedness: " + def); 
-      System.err.println(""); 
+      // System.err.println(">> Activity definedness: " + def); 
+      // System.err.println(""); 
+      def.setBrackets(true); 
+      res = Expression.simplify("&", res, def, null); 
     }
+
+    System.err.println(); 
+
+    Expression sres = res.simplifyOCL(); 
+    System.err.println("***> Definedness obligation for operation " + nme + " of class " + entity + " is:\n" + sres); 
+    System.err.println(); 
 
     for (int i = 0; i < messages.size(); i++)
     { String mess = (String) messages.get(i); 
       System.err.println(mess + "\n"); 
     }  
 
+    int ycount = (int) uses.get("yellow"); 
     int ocount = (int) uses.get("amber"); 
     int rcount = (int) uses.get("red"); 
 
+    if (ycount > 0)
+    { System.err.println("! There are " + ycount + " possible semantic issues in operation " + nme);
+      messages.add("! There are " + ycount + " possible semantic issues in operation " + nme);
+    } 
+
     if (ocount > 0)
-    { System.err.println("!! There are " + ocount + " semantic flaws in operation " + nme); } 
+    { System.err.println("!! There are " + ocount + " semantic warnings in operation " + nme);
+      messages.add("!! There are " + ocount + " semantic warnings in operation " + nme); 
+    } 
 
     if (rcount > 0)
-    { System.err.println("!!! There are " + rcount + " semantic errors in operation " + nme); } 
+    { System.err.println("!!! There are " + rcount + " semantic errors in operation " + nme);
+      messages.add("!!! There are " + rcount + " semantic errors in operation " + nme);
+    } 
 
     return substituteParameters(res, arguments);  
   } 
 
-  public Expression determinate(Vector arguments) 
+  public Expression determinate(Vector arguments, 
+                                Vector messages) 
   { // (pre => det(post))
     if (detcond != null) 
     { return substituteParameters(detcond, arguments); } 
@@ -3418,7 +3445,11 @@ public class BehaviouralFeature extends ModelElement
  
       // JOptionPane.showMessageDialog(null, "Determinacy obligation for " + getName() + " is:\n" + imp, 
       // "Internal consistency condition", JOptionPane.INFORMATION_MESSAGE); 
-      System.out.println("***> Determinacy obligation for " + getName() + " is:\n" + imp); 
+      System.out.println("***> Determinacy obligation for operation " + 
+         getName() + " of class " + entity + " is:\n" + imp); 
+      messages.add("***> Determinacy obligation for operation " + 
+                   getName() + " of class " + entity + 
+                   " is:\n" + imp); 
       detcond = imp; 
       return substituteParameters(imp, arguments);
     }  
@@ -4053,7 +4084,7 @@ public class BehaviouralFeature extends ModelElement
               (CreationStatement) localVars.get(i); 
       Type newvartype = 
          (Type) localvartypes.get(dec.getVar());
-      if (Type.isVacuousType(dec.getType()) && 
+      if (!Type.isVacuousType(newvartype) && 
           newvartype != null)
       { dec.setType(newvartype);
         Expression ini = newvartype.getDefaultValueExpression(); 

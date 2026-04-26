@@ -18844,13 +18844,27 @@ class ConditionalStatement extends Statement
   { Expression testd = test.definedness(uses, messages); 
     // must be boolean
 
-    Expression ifdef = ifPart.definedness(uses, messages); 
+    Expression ifdef = ifPart.definedness(uses, messages);
+    
+    Expression ifimp = 
+      Expression.simplify("=>", test, ifdef, null); 
+    ifimp.setBrackets(true); 
+
     Expression res = 
-      Expression.simplify("&", testd, ifdef, null); 
+      Expression.simplify("&", testd, ifimp, null); 
+
     if (elsePart != null) 
-    { res = 
+    { Expression elsedef = 
+          elsePart.definedness(uses, messages);
+      Expression ntest = Expression.negate(test); 
+      ntest.setBrackets(true); 
+      Expression elseimp = 
+          Expression.simplify("=>", ntest, elsedef, null); 
+      elseimp.setBrackets(true); 
+
+      res = 
         Expression.simplify("&", res, 
-           elsePart.definedness(uses, messages), null); 
+                            elseimp, null); 
     }
 
     return res; 
@@ -18950,6 +18964,12 @@ class ConditionalStatement extends Statement
       return elsec; 
     } 
 
+    String ifString = ifc + ""; 
+    String elseString = elsec + ""; 
+    if (ifString.equals(elseString) ||
+        ("(" + ifString + ")").equals(elseString))
+    { return ifc; } 
+
     if (Statement.isSingleValueReturn(ifc) && 
         Statement.isSingleValueReturn(elsec))
     { // rewrite as return (if testc then v1 else v2 endif)
@@ -19007,8 +19027,10 @@ class ConditionalStatement extends Statement
 
     if (elsec != null && 
         elsec instanceof ConditionalStatement && 
-        nottest.isConjunctOf( 
-              ((ConditionalStatement) elsec).getTest()))
+        (nottest.isEqualTo( 
+              ((ConditionalStatement) elsec).getTest()) ||
+         ntest.isEqualTo( 
+              ((ConditionalStatement) elsec).getTest())))
     { // rewrite as if testc then ifc else elsec.ifPart
       Statement stat2 = 
              ((ConditionalStatement) elsec).getIfPart(); 
@@ -19022,11 +19044,32 @@ class ConditionalStatement extends Statement
         elsec instanceof ConditionalStatement && 
         ntest.isConjunctOf( 
               ((ConditionalStatement) elsec).getTest()))
-    { // rewrite as if testc then ifc else elsec.ifPart
+    { // rewrite as if testc then ifc else 
+      //    if test1 then elsec.ifPart else elsec.elsePart
+      ConditionalStatement cond2 = (ConditionalStatement) elsec; 
+
+      Expression test1 = 
+              cond2.getTest().removeConjunct(ntest);
       Statement stat2 = 
-             ((ConditionalStatement) elsec).getIfPart(); 
+             new ConditionalStatement(test1, 
+                                  cond2.getIfPart(), 
+                                  cond2.getElsePart()); 
       ConditionalStatement newcond = 
           new ConditionalStatement(testc, ifc, stat2);
+      System.err.println(">>> Program reduction: removing duplicated test " + testc); 
+      return newcond; 
+    } 
+
+    if (ifc instanceof ConditionalStatement && 
+        (nottest.isConjunctOf( 
+              ((ConditionalStatement) ifc).getTest()) || 
+         ntest.isConjunctOf( 
+              ((ConditionalStatement) ifc).getTest())))
+    { // rewrite as if testc then ifc.elsePart else elsec
+      Statement stat1 = 
+             ((ConditionalStatement) ifc).getElsePart(); 
+      ConditionalStatement newcond = 
+          new ConditionalStatement(testc, stat1, elsec);
       System.err.println(">>> Program reduction: removing unreachable code"); 
       return newcond; 
     } 
@@ -19213,7 +19256,7 @@ class ConditionalStatement extends Statement
         "(true)".equals(test + "")) 
     { int rcount = (int) uses.get("red"); 
       uses.set("red", rcount + 1); 
-      rUses.add("!!! Redundant unreachable else code (RC), true conditional test: " + this);
+      rUses.add("!!! Redundant conditional (RC), true conditional test: " + this);
       int rccount = (int) uses.get("RC"); 
       uses.set("RC", rccount+1); 
     } 
@@ -19221,7 +19264,7 @@ class ConditionalStatement extends Statement
              "(false)".equals(test + "")) 
     { int rcount = (int) uses.get("red"); 
       uses.set("red", rcount + 1); 
-      rUses.add("!!! Redundant unreachable if code (RC), false conditional test: " + this); 
+      rUses.add("!!! Redundant conditional (RC), false conditional test: " + this); 
       int rccount = (int) uses.get("RC"); 
       uses.set("RC", rccount+1); 
     } 
@@ -19236,6 +19279,20 @@ class ConditionalStatement extends Statement
 
       return uses; 
     } 
+
+    String ifString = ifPart + ""; 
+    String elseString = elsePart + ""; 
+    if (ifString.equals(elseString) ||
+        ("(" + ifString + ")").equals(elseString))
+    { int rcount = (int) uses.get("red"); 
+      uses.set("red", rcount + 1); 
+      rUses.add("!!! Redundant code, duplicate if/else parts (RC): " + this);
+      int rccount = (int) uses.get("RC"); 
+      uses.set("RC", rccount+1); 
+
+      return uses; 
+    } 
+     
 
     if (Statement.isSingleValueReturn(ifPart) && 
         Statement.isSingleValueReturn(elsePart))
@@ -19306,13 +19363,28 @@ class ConditionalStatement extends Statement
 
       int rcount = (int) uses.get("red"); 
       uses.set("red", rcount + 1); 
-      rUses.add("!!! Duplicated expression and unreachable code (DEV): " + this);
+      rUses.add("!!! Duplicated test expression (DEV) in: " + this);
       int rccount = (int) uses.get("DEV"); 
       uses.set("DEV", rccount+1); 
 
       return uses; 
     } 
 
+    if (ifPart instanceof ConditionalStatement && 
+        (nottest.isConjunctOf( 
+              ((ConditionalStatement) ifPart).getTest()) || 
+         ntest.isConjunctOf( 
+              ((ConditionalStatement) ifPart).getTest())))
+    { // rewrite as if testc then ifc.elsePart else elsec
+
+      int rcount = (int) uses.get("red"); 
+      uses.set("red", rcount + 1); 
+      rUses.add("!!! Duplicated test expression (DEV) in: " + this);
+      int rccount = (int) uses.get("DEV"); 
+      uses.set("DEV", rccount+1); 
+
+      return uses; 
+    } 
 
     Statement elseStat = 
                      Statement.getFirstStatement(elsePart); 

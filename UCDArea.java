@@ -29577,7 +29577,9 @@ public void produceCUI(PrintWriter out)
   }  
 
   public void determinacyCheck()
-  { for (int i = 0; i < entities.size(); i++) 
+  { Vector messages = new Vector(); 
+
+    for (int i = 0; i < entities.size(); i++) 
     { Entity ent = (Entity) entities.get(i); 
 
       if (ent.isDerived() || 
@@ -29585,8 +29587,29 @@ public void produceCUI(PrintWriter out)
           ent.isExternal()) 
       { continue; } 
 
-      ent.checkDeterminacy(); 
+      ent.checkDeterminacy(messages); 
     } 
+
+    try
+    { PrintWriter mtout = 
+          new PrintWriter(
+            new BufferedWriter(
+              new FileWriter("semanticFlaws.txt")));
+
+      mtout.println(); 
+      mtout.println("--- Semantic issues and flaws for system  " + systemName); 
+      mtout.println(""); 
+      for (int k = 0; k < messages.size(); k++) 
+      { String mtest = (String) messages.get(k); 
+        mtout.println(mtest);
+        mtout.println();  
+      }
+      mtout.println("");  
+      mtout.close(); 
+    } 
+    catch (Exception _x) { } 
+   
+    System.out.println("*** Semantic issues/flaws written to semanticFlaws.txt"); 
   } 
 
   public void loadFromJavaScript()
