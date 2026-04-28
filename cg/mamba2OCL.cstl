@@ -617,6 +617,15 @@ _1 ( ) |-->execute _1()
 _1 . _2 |-->execute (_1.new_1(_2`functionArguments))<when> _2 id_or_function_call, _2`functionName Create
 
 _1 . _2 |-->execute _1.persist()<when> _2 id_or_function_call, _2`functionName Save
+_1 . _2 |-->execute _1.persist()<when> _2 id_or_function_call, _2`functionName Insert
+_1 . _2 |-->execute _1.persist()<when> _2 id_or_function_call, _2`functionName Update
+_1 . _2 |-->execute _1.persist()<when> _2 id_or_function_call, _2`functionName Merge
+
+_1 . _2 |-->execute _1.retrieve()<when> _2 id_or_function_call, _2`functionName Refresh
+
+_1 . _2 |-->execute _1->isDeleted()<when> _2 id_or_function_call, _2`functionName Delete
+_1 . _2 |-->execute _1->isDeleted()<when> _2 id_or_function_call, _2`functionName DeleteAll
+
 
 _1 . _2 |-->_1 := lambda _x : OclAny in (_1->apply(_x) & (_2`functionArguments)->apply(_x))<when> _1 Function, _2 id_or_function_call, _2`functionName And
 _1 . _2 |-->_1 := lambda _x : OclAny in (_1->apply(_x) or (_2`functionArguments)->apply(_x))<when> _1 Function, _2 id_or_function_call, _2`functionName Or
