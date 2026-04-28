@@ -19100,6 +19100,14 @@ public Statement generateDesignSubtract(Expression rhs)
       } 
     } 
 
+    if ("allInstances".equals(data))
+    { oUses.add("!! (OES) Expensive operation: retrieving all instances of entity: " + this);
+      int oscore = (int) res.get("amber"); 
+      res.set("amber", oscore+1);
+      int oescount = (int) res.get("OES"); 
+      res.set("OES", oescount+1); 
+    } 
+
     if (parameters != null) 
     { for (int i = 0; i < parameters.size(); i++) 
       { Expression par = (Expression) parameters.get(i); 
@@ -19109,11 +19117,15 @@ public Statement generateDesignSubtract(Expression rhs)
       if (arrayIndex != null && this.isOperationCall())
       { // redundant results computation
 
-        rUses.add("!!! Energy-use flaw (UOR): Redundant results computation in: " + this);
-        int rscore = (int) res.get("red"); 
-        res.set("red", rscore+1);
-        int oescount = (int) res.get("UOR"); 
-        res.set("UOR", oescount+1); 
+        Expression indx = arrayIndex.simplifyOCL(); 
+        indx.setBrackets(false); 
+        if (Expression.isLiteralValue(indx))
+        { rUses.add("!!! Energy-use flaw (UOR): Redundant results computation in: " + this);
+          int rscore = (int) res.get("red"); 
+          res.set("red", rscore+1);
+          int oescount = (int) res.get("UOR"); 
+          res.set("UOR", oescount+1);
+        }  
       } 
     } 
 
@@ -19172,7 +19184,7 @@ public Statement generateDesignSubtract(Expression rhs)
   } 
 
   public java.util.Map collectionOperatorUses(int level, 
-                                java.util.Map res, Vector vars)
+                            java.util.Map res, Vector vars)
   { //  level |-> [x.setAt(i,y), etc]
 
     boolean sideeffect = isSideEffecting(); 
@@ -19212,7 +19224,13 @@ public Statement generateDesignSubtract(Expression rhs)
 
          data.equals("reshape") ||
          data.equals("unsqueeze") || 
-         data.equals("squeezeAll") || 
+         data.equals("squeezeAll") ||
+
+         data.equals("persist") ||  
+         data.equals("retrieve") || 
+         data.equals("allInstances") ||
+         data.equals("Find") || // language.equals("Mamba")  
+         data.equals("Copy") || // language.equals("Mamba")  
          
          data.equals("executeQuery") ||
          data.equals("executeMany") || 
@@ -19311,6 +19329,13 @@ public Statement generateDesignSubtract(Expression rhs)
          ("MatrixLib".equals(oref) && data.equals("unsqueeze")) || 
          ("MatrixLib".equals(oref) && data.equals("squeezeAll")) 
         || 
+   
+          data.equals("persist") ||  
+          data.equals("retrieve") || 
+          data.equals("allInstances") ||  
+          data.equals("Find") || // language.equals("Mamba")  
+          data.equals("Copy") || // language.equals("Mamba")  
+         
           data.equals("executeQuery") ||
           data.equals("executeMany") || 
           data.equals("createStatement")))

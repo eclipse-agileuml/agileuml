@@ -6152,9 +6152,12 @@ public class Entity extends ModelElement implements Comparable
       java.util.Map opclones = new java.util.HashMap(); 
       java.util.Map opcdefs = new java.util.HashMap(); 
 
+      Vector opmessages = new Vector(); 
+
       Vector redDetails = new Vector(); 
       Vector amberDetails = new Vector(); 
-      Vector yellowDetails = new Vector(); 
+      Vector yellowDetails = new Vector();
+ 
       Map res1 = 
         op.energyAnalysis(redDetails,amberDetails,
                           yellowDetails);
@@ -6174,8 +6177,8 @@ public class Entity extends ModelElement implements Comparable
         if (cs.size() > 1) 
         { actualClones.add(k); } 
         if (cs.size() > 4) 
-        { messages.add("!! Cloned expression/statement with multiple copies: " + k + " from " + op);
-          messages.add(""); 
+        { amberDetails.add("!! Cloned expression/statement with multiple copies: " + k + " from " + op);
+          amberDetails.add(""); 
  
           // amberop = amberop + 1; 
           // res1.set("amber", amberop); 
@@ -6184,13 +6187,13 @@ public class Entity extends ModelElement implements Comparable
       } 
 
       if (actualClones.size() > 0)
-      { messages.add("!! (DEV/DC) flaws: " + 
+      { amberDetails.add("!! (DEV/DC) flaws in " + op + ": " + 
            actualClones.size() + 
            " Cloned expressions/statements: ");
         for (Object aclne : actualClones)
-        { messages.add("  " + aclne); } 
-        messages.add("!! from " + op); 
-        messages.add(""); 
+        { amberDetails.add("  " + aclne); } 
+        amberDetails.add("!! from " + op); 
+        amberDetails.add(""); 
         
         // out.println("!! (DEV) flaws: Cloned expressions/statements " + actualClones + " from " + op); 
         // out.println(); 
@@ -6205,18 +6208,33 @@ public class Entity extends ModelElement implements Comparable
       Vector collVars = new Vector(); 
                         // iterator vars in scope
       op.collectionOperatorUses(1, collOps, collVars, 
-                                res1, messages); 
+                                res1, opmessages); 
  
       redop = (int) res1.get("red"); 
       amberop = (int) res1.get("amber"); 
       yellowop = (int) res1.get("yellow"); 
 
       // JOptionPane.showInputDialog(redop + " for " + op); 
-      
-      if (redop > 0) 
-      { messages.add("!!! Red flags for operation " + opname + ":");
-        messages.add(""); 
 
+      for (int h = 0; h < opmessages.size(); h++) 
+      { String mess = (String) opmessages.get(h); 
+        if (mess.startsWith("!!!"))
+        { redDetails.add(mess); } 
+        else if (mess.startsWith("!!"))
+        { amberDetails.add(mess); } 
+        else if (mess.startsWith("!"))
+        { yellowDetails.add(mess); } 
+      } 
+      
+      if (redDetails.size() > 0) 
+      { messages.add("--- --- --- --- --- --- --- --- --- ---");
+        messages.add("!!! Red flags for operation " + opname + ":");
+        messages.add("");
+        
+        out.println("--- --- --- --- --- --- --- --- --- ---");
+        out.println("!!! Red flags for operation " + opname + ":");
+        out.println("");
+    
         for (int j = 0; j < redDetails.size(); j++) 
         { String redmess = (String) redDetails.get(j); 
           messages.add(redmess); 
@@ -6229,9 +6247,12 @@ public class Entity extends ModelElement implements Comparable
         res.set("red", redscore + redop); 
       } 
      
-      if (amberop > 0) 
+      if (amberDetails.size() > 0) 
       { messages.add("!! Amber flags for operation " + opname + ":"); 
         messages.add(""); 
+
+        // out.println("!! Amber flags for operation " + opname + ":"); 
+        // out.println(""); 
 
         for (int j = 0; j < amberDetails.size(); j++) 
         { messages.add(amberDetails.get(j)); 
@@ -6242,7 +6263,7 @@ public class Entity extends ModelElement implements Comparable
         res.set("amber", amberscore + amberop); 
       } 
 
-      if (yellowop > 0) 
+      if (yellowDetails.size() > 0) 
       { messages.add("! Yellow flags for operation " + opname + ":"); 
         messages.add(""); 
 
@@ -6429,7 +6450,7 @@ public class Entity extends ModelElement implements Comparable
           attr.hasIndexingOperation(collOps); 
 
         if (indexUse == false)
-        { messages.add("! (OES): No use of indexes with sequence-valued attribute " + attr + "\n! It may be more efficient to use a SortedSet or Bag\n"); 
+        { messages.add("! (OEW): No use of indexes with sequence-valued attribute " + attr + "\n! It may be more efficient to use a SortedSet or Bag\n"); 
           snicount++;  
         } 
       } 
@@ -6438,7 +6459,8 @@ public class Entity extends ModelElement implements Comparable
     if (snicount > 0)
     { int yellowscore = (int) res.get("yellow"); 
       res.set("yellow", yellowscore + snicount);
-      res.set("SNI", snicount); 
+      int oew = (int) res.get("OEW"); 
+      res.set("OEW", oew + snicount); 
     }
   
     java.util.Set ks = clones.keySet(); 
@@ -6498,10 +6520,11 @@ public class Entity extends ModelElement implements Comparable
         int lrc = (int) opflaws.getOrDefault("LRC", 0);
         int mel = (int) opflaws.getOrDefault("MEL", 0); 
         int mnc = (int) opflaws.getOrDefault("MNC", 0); 
+        int oew = (int) opflaws.getOrDefault("OEW", 0); 
 
         int rr = dev + lce + uor + rc + nte; 
         int aa = oes; 
-        int yy = lrc + mel + mnc; 
+        int yy = lrc + mel + mnc + oew; 
 
         int optotalflaws = rr + aa + yy; 
  
@@ -6512,7 +6535,8 @@ public class Entity extends ModelElement implements Comparable
                   "," + rr + "," + aa + "," + yy + "," +
                   dev + "," + lce + "," + uor + "," + rc + ","
                   + nte + "," + 
-                  + oes + "," + lrc + "," + mel + "," + mnc; 
+                  + oes + "," + lrc + "," + mel + "," + 
+                  mnc + "," + oew; 
 
         csv.add(csvline); 
 

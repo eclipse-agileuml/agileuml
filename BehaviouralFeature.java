@@ -4707,6 +4707,7 @@ public class BehaviouralFeature extends ModelElement
     res.set("LRC", 0); 
     res.set("MEL", 0); 
     res.set("OES", 0); 
+    res.set("OEW", 0); 
     res.set("UVA", 0); 
     res.set("UOR", 0); 
     res.set("RL", 0); 

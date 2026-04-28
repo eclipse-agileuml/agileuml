@@ -22224,7 +22224,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         synLeft > synRight)
     { BinaryExpression res = 
         new BinaryExpression(operator, rexpr, lexpr); 
-      System.err.println("! Possible OCL efficiency smell (OES): Inefficient logical combination: " + this);
+      System.err.println("! Possible OCL efficiency smell (OEW): Inefficient logical combination: " + this);
       return res; 
     } 
 
@@ -23210,11 +23210,11 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
        
     if (("&".equals(operator) || "or".equals(operator)) && 
         synLeft > synRight)
-    { yUses.add("! OCL efficiency smell (OES): Possibly inefficient execution order: " + this + "\n! c(left) = " + synLeft + ", c(right) = " + synRight);
+    { yUses.add("! OCL efficiency warning (OEW): Possibly inefficient execution order: " + this + "\n! c(left) = " + synLeft + ", c(right) = " + synRight);
       int yscore = (int) res.get("yellow"); 
       res.set("yellow", yscore+1);
-      int oescount = (int) res.get("OES"); 
-      res.set("OES", oescount+1); 
+      int oescount = (int) res.get("OEW"); 
+      res.set("OEW", oescount+1); 
     } 
 
     if (operator.equals("=") && "0".equals(right + "") && 
@@ -23246,6 +23246,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         aUses.add("!! OCL efficiency smell (OES): Inefficient comparison: " + this + "\n!! More efficient to use ->isEmpty");
         int ascore = (int) res.get("amber"); 
         res.set("amber", ascore+1);
+        int oesscore = (int) res.get("OES"); 
+        res.set("OES", oesscore+1);
       } */ 
     }
     else if (operator.equals("=") && "0".equals(right + "") && 
@@ -23316,6 +23318,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         aUses.add("!! OCL efficiency smell (OES): Inefficient comparison: " + this + "\n!! More efficient to use ->notEmpty");
         int ascore = (int) res.get("amber"); 
         res.set("amber", ascore+1);
+        int oescount = (int) res.get("OES"); 
+        res.set("OES", oescount+1); 
       } */ 
     }
     else if (((operator.equals(">") && "0".equals(right + "")) ||
@@ -23481,7 +23485,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
            "->sortedBy".equals(leftop)))
       { // Inefficient expression
 
-        aUses.add("!!! Energy-use flaw (UOR): Redundant results computation in: " + this);
+        rUses.add("!!! Energy-use flaw (UOR): Redundant results computation in: " + this);
         int ascore = (int) res.get("red"); 
         res.set("red", ascore+1); 
         int oescount = (int) res.get("UOR"); 
@@ -23501,9 +23505,9 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
            "->tail".equals(leftop)))
       { // Inefficient expression
 
-        aUses.add("!!! Energy-use flaw (UOR): Redundant results computation in: " + this);
-        int ascore = (int) res.get("red"); 
-        res.set("red", ascore+1); 
+        rUses.add("!!! Energy-use flaw (UOR): Redundant results computation in: " + this);
+        int rscore = (int) res.get("red"); 
+        res.set("red", rscore+1); 
         int oescount = (int) res.get("UOR"); 
         res.set("UOR", oescount+1); 
       } 
@@ -23654,6 +23658,12 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
 
       right.collectionOperatorUses(level+1, res, newvars); 
     } 
+
+    if (level > 1 && "+".equals(operator) && 
+        left.isString())
+    { System.err.println("! (OES) flaw: string concatenation " + this + " executed in loop, can be expensive.");
+      System.err.println(); 
+    }
 
     if ("->firstMatch".equals(operator) ||
         "->isMatch".equals(operator) ||
@@ -23864,6 +23874,16 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         int oescount = (int) uses.get("OES"); 
         uses.set("OES", oescount+1);   
       }
+    }
+
+    if (level > 1 && "+".equals(operator) && 
+        left.isString())
+    { messages.add("! (OEW) warning: string concatenation " + this + " executed in loop, can be expensive.");
+      messages.add("");
+      int yScore = (int) uses.get("yellow"); 
+      uses.set("yellow", yScore+1);
+      int oescount = (int) uses.get("OEW"); 
+      uses.set("OEW", oescount+1);    
     }
 
     Vector oldvars = new Vector();

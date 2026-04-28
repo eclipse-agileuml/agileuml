@@ -3694,7 +3694,7 @@ public class UCDOperations
                                 new FileWriter(sfile)));
       out.println("Entity, Operation, Flaws, Red, Amber, Yellow," 
                   + 
-                  "DEV, LCE, UOR, RC, NTE, OES, LRC, MEL, MNC"); 
+                  "DEV, LCE, UOR, RC, NTE, OES, LRC, MEL, MNC, OEW"); 
 
       for (int i = 0; i < csv.size(); i++) 
       { String mess = (String) csv.get(i); 

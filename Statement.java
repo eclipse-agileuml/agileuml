@@ -6763,9 +6763,9 @@ class ImplicitInvocationStatement extends Statement
 
     if (callExp.isSideEffecting()) { } 
     else 
-    { int auses = (int) uses.get("amber"); 
-      uses.set("amber", auses+1); 
-      oUses.add("!! Redundant code (RC): invocation of expression: " + callExp + " with no effect");
+    { int auses = (int) uses.get("red"); 
+      uses.set("red", auses+1); 
+      rUses.add("!!! Redundant code (RC): invocation of expression: " + callExp + " with no effect");
       int rccount = (int) uses.get("RC"); 
       uses.set("RC", rccount+1);     
     } 
@@ -7738,11 +7738,11 @@ class WhileStatement extends Statement
       else 
       { int ycount = (int) uses.get("yellow"); 
         uses.set("yellow", ycount + 1); 
-        yUses.add("! (OES) Unbounded loops can be inefficient: " + 
+        yUses.add("! (OEW) Unbounded loops can be inefficient: " + 
             loopSummary() + 
             "\n! Recommend replacing by a bounded loop\n");
-        int oescount = (int) uses.get("OES"); 
-        uses.set("OES", oescount+1);    
+        int oescount = (int) uses.get("OEW"); 
+        uses.set("OEW", oescount+1);    
       }  
     } 
 
@@ -7755,9 +7755,9 @@ class WhileStatement extends Statement
     } // or indeed if there is a collection iteration expr
     else if (loopKind == FOR && 
              Statement.isCumulativeBody(loopVar,body))
-    { int rcount = (int) uses.get("amber"); 
-      uses.set("amber", rcount + 1); 
-      aUses.add("!! (RC): Possible code reduction of loop to assignment(s): " + loopSummary() + "\n");
+    { int rcount = (int) uses.get("red"); 
+      uses.set("red", rcount + 1); 
+      aUses.add("!!! (RC): Possible code reduction of loop to assignment(s): " + loopSummary() + "\n");
       int rccount = (int) uses.get("RC"); 
       uses.set("RC", rccount+1);    
     }
@@ -19452,11 +19452,11 @@ class ConditionalStatement extends Statement
       { // adds to testbeLeft only if not in there already
 
         if (testbeLeft.hasSequenceType())
-        { rUses.add("!!! (OES) Possibly using sequence " + testbeLeft + " as set in: " + this); 
-          rUses.add("!!! Recommend declaring " + testbeLeft + " as a Set or SortedSet"); 
+        { oUses.add("!! (OES) Possibly using sequence " + testbeLeft + " as set in: " + this); 
+          oUses.add("!! Recommend declaring " + testbeLeft + " as a Set or SortedSet"); 
 
-          int rscore = (int) uses.get("red"); 
-          uses.set("red", rscore + 1);
+          int rscore = (int) uses.get("amber"); 
+          uses.set("amber", rscore + 1);
           int oescount = (int) uses.get("OES"); 
           uses.set("OES", oescount+1); 
         } 
@@ -19477,11 +19477,11 @@ class ConditionalStatement extends Statement
       { // adds to testbeLeft only if not in there already
 
         if (testbeLeft.hasSequenceType())
-        { rUses.add("!!! (OES) Possibly using sequence " + testbeLeft + " as set in: " + this);  
-          rUses.add("!!! Recommend declaring " + testbeLeft + " as a Set or SortedSet"); 
+        { oUses.add("!! (OES) Possibly using sequence " + testbeLeft + " as set in: " + this);  
+          oUses.add("!! Recommend declaring " + testbeLeft + " as a Set or SortedSet"); 
 
-          int rscore = (int) uses.get("red"); 
-          uses.set("red", rscore + 1); 
+          int rscore = (int) uses.get("amber"); 
+          uses.set("amber", rscore + 1); 
           int oescount = (int) uses.get("OES"); 
           uses.set("OES", oescount+1); 
         } 
@@ -19495,11 +19495,11 @@ class ConditionalStatement extends Statement
       { // adds to testbeLeft only if not in there already
 
         if (testbeLeft.hasSequenceType())
-        { rUses.add("!!! (OES) Possibly using sequence " + testbeLeft + " as set in: " + this); 
-          rUses.add("!!! Recommend declaring " + testbeLeft + " as a Set or SortedSet"); 
+        { oUses.add("!! (OES) Possibly using sequence " + testbeLeft + " as set in: " + this); 
+          oUses.add("!! Recommend declaring " + testbeLeft + " as a Set or SortedSet"); 
 
-          int rscore = (int) uses.get("red"); 
-          uses.set("red", rscore + 1); 
+          int rscore = (int) uses.get("amber"); 
+          uses.set("amber", rscore + 1); 
           int oescount = (int) uses.get("OES"); 
           uses.set("OES", oescount+1); 
         } 

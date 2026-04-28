@@ -996,17 +996,32 @@ public void findClones(java.util.Map clones,
     } 
 
     if ("->last".equals(operator) || 
+        "->any".equals(operator) || 
         "->first".equals(operator))
     { // redundant results computation
 
-      if (argument instanceof UnaryExpression) 
+      if (argument instanceof BasicExpression)
+      { BasicExpression be = (BasicExpression) argument;
+
+        if ("allInstances".equals(be.getData()) || 
+            "subrange".equals(be.getData()))
+        { rUses.add("!!! (UOR) flaw: " + 
+            "Unused results in: " + this + ",");  
+          int rscore = (int) res.get("red"); 
+          res.set("red", rscore+1); 
+          int oescount = (int) res.get("UOR"); 
+          res.set("UOR", oescount+1); 
+          return res; 
+        }
+      }
+      else if (argument instanceof UnaryExpression) 
       { UnaryExpression lbe = (UnaryExpression) argument;
 
         if (lbe.operator.equals("->sort") || 
             lbe.operator.equals("->reverse"))
         { rUses.add("!!! (UOR) flaw: " + 
             "Unused results in: " + this + ",");  
-          rUses.add("!!! Use col->min() instead of col->sort()->first(), col->max() for col->sort()->last(), col->first() for col->reverse()->last(), and col->last() instead of col->reverse()->first()");
+          rUses.add("!!! Use col->min() instead of col->sort()->first() or ->any(), col->max() for col->sort()->last(), col->first() for col->reverse()->last(), and col->last() instead of col->reverse()->first() or ->any()");
           int rscore = (int) res.get("red"); 
           res.set("red", rscore+1); 
           int oescount = (int) res.get("UOR"); 
@@ -1168,38 +1183,38 @@ public void findClones(java.util.Map clones,
     if ("->copy".equals(operator) ||
         "->asSet".equals(operator) ||
         "->asSequence".equals(operator))
-    { yUses.add("! Inefficient expression (OES): O(n) operator " + this);  
+    { yUses.add("! Inefficient expression (OEW): O(n) operator " + this);  
 
       int yscore = (int) res.get("yellow"); 
       res.set("yellow", yscore+1); 
-      int oescount = (int) res.get("OES"); 
-      res.set("OES", oescount+1);
+      int oescount = (int) res.get("OEW"); 
+      res.set("OEW", oescount+1);
       return res;  
     } 
     
     if ("->sort".equals(operator))
     { if (argument.isSorted())
-      { aUses.add("!! (RC): Redundant ->sort operation: " + this + 
-            "\n!! Argument is already sorted.");
-        int ascore = (int) res.get("amber"); 
-        res.set("amber", ascore+1); 
+      { aUses.add("!!! (RC): Redundant ->sort operation: " + this + 
+            "\n!!! Argument is already sorted.");
+        int rscore = (int) res.get("red"); 
+        res.set("red", rscore+1); 
         int rccount = (int) res.get("RC"); 
         res.set("RC", rccount+1); 
       }
       else if (argument.isSet()) 
-      { yUses.add("! (OES) n*log(n) sorting algorithm used for " + this + 
+      { yUses.add("! (OEW) n*log(n) sorting algorithm used for " + this + 
             "\n! It may be more efficient to use a SortedSet type.");
         int yscore = (int) res.get("yellow"); 
         res.set("yellow", yscore+1);
-        int oescount = (int) res.get("OES"); 
-        res.set("OES", oescount+1);  
+        int oescount = (int) res.get("OEW"); 
+        res.set("OEW", oescount+1);  
       }
       else 
-      { yUses.add("! (OES) n*log(n) sorting algorithm used for " + this);
+      { yUses.add("! (OEW) n*log(n) sorting algorithm used for " + this);
         int yscore = (int) res.get("yellow"); 
         res.set("yellow", yscore+1);
-        int oescount = (int) res.get("OES"); 
-        res.set("OES", oescount+1); 
+        int oescount = (int) res.get("OEW"); 
+        res.set("OEW", oescount+1); 
       }
       return res;  
     } 
@@ -1572,6 +1587,7 @@ public void findClones(java.util.Map clones,
           operator.equals("->intersectAll") || 
           operator.equals("->concatenateAll") ||
           operator.equals("->copy") ||
+          operator.equals("->isDeleted") ||
           operator.equals("->sum") ||
           operator.equals("->prd") ||
           operator.equals("->front") ||
@@ -1589,7 +1605,7 @@ public void findClones(java.util.Map clones,
     } 
 
     if (operator.equals("->display") && level > 1)
-    { System.err.println("! (OES): I/O within loop can be inefficient: " + this); 
+    { System.err.println("! (OEW): I/O within loop can be inefficient: " + this); 
       System.err.println(); 
     } 
  
@@ -1625,6 +1641,7 @@ public void findClones(java.util.Map clones,
         operator.equals("->intersectAll") || 
         operator.equals("->concatenateAll") ||
         operator.equals("->any") ||
+        operator.equals("->copy") ||
         operator.equals("->reverse") ||
         operator.equals("->front") ||
         operator.equals("->tail") ||
@@ -1647,6 +1664,7 @@ public void findClones(java.util.Map clones,
         operator.equals("->intersectAll") || 
         operator.equals("->concatenateAll") ||
         operator.equals("->copy") ||
+        operator.equals("->isDeleted") ||
         operator.equals("->reverse") ||
         operator.equals("->front") ||
         operator.equals("->tail") ||
@@ -1661,18 +1679,18 @@ public void findClones(java.util.Map clones,
         messages.add(""); 
         int aScore = (int) uses.get("amber"); 
         uses.set("amber", aScore + 1);
-        int oescount = (int) uses.get("UOR"); 
-        uses.set("UOR", oescount+1); 
+        int oescount = (int) uses.get("OES"); 
+        uses.set("OES", oescount+1); 
       }
     }
 
     if (operator.equals("->display") && level > 1)
-    { messages.add("! (OES): I/O within loop can be inefficient: " + this); 
+    { messages.add("! (OEW) warning: I/O within loop can be inefficient: " + this); 
       messages.add("");
       int yScore = (int) uses.get("yellow"); 
       uses.set("yellow", yScore + 1);
-      int oescount = (int) uses.get("OES"); 
-      uses.set("OES", oescount+1);  
+      int oescount = (int) uses.get("OEW"); 
+      uses.set("OEW", oescount+1);  
     } 
 
     return res; 
