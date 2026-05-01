@@ -37,7 +37,7 @@ boolean
 s String 
  query static
 true
-( s = "double" => result = true ) & ( s = "long" => result = true ) & ( s = "String" => result = true ) & ( s = "boolean" => result = true ) & ( s = "int" => result = true ) & (s = "OclType" => result = true) & (s = "OclVoid" => result = true)
+( s = "double" => result = true ) & ( s = "long" => result = true ) & ( s = "String" => result = true ) & ( s = "boolean" => result = true ) & ( s = "int" => result = true ) & (s = "OclType" => result = true) & (s = "OclVoid" => result = true) & (s = "OclAny" => result = true)
 
 
 
@@ -169,7 +169,7 @@ String
 
  query
 true
-( name = "double" => result = "float" ) & ( name = "long" => result = "int" ) & ( name = "String" => result = "str" ) & ( name = "boolean" => result = "bool" ) & (name = "OclType" => result = "type") & (name = "OclVoid" => result = "None") & (name = "OclException" => result = "BaseException") & ( true => result = name )
+( name = "double" => result = "float" ) & ( name = "long" => result = "int" ) & ( name = "String" => result = "str" ) & ( name = "boolean" => result = "bool" ) & (name = "OclType" => result = "type") & (name = "OclAny" => result = "Any") & (name = "OclVoid" => result = "None") & (name = "OclException" => result = "BaseException") & ( true => result = name )
 
 
 
@@ -277,6 +277,16 @@ result = "None"
 
 
 Operation:
+toPython
+Entity
+String
+
+ query
+true
+result = name
+
+
+Operation:
 initialisations
 Entity
 String
@@ -342,7 +352,7 @@ String
 
  query
 true
-result = "  " + name.toLowerCase() + "_instances = []\n" + "  " + name.toLowerCase() + "_index = dict({})\n" + allProperties()->select( x | x.isStatic )->collect( y | "  " + y.name + " = " + y.type.defaultInitialValue() + "\n" )->sum() + allStaticCaches()
+result = "  " + name.toLowerCase() + "_instances = []\n" + "  " + name.toLowerCase() + "_index = dict({})\n" + allProperties()->select( x | x.isStatic )->collect( y | "  " + y.name + " : " + y.type.toPython() + " = " + y.type.defaultInitialValue() + "\n" )->sum() + allStaticCaches()
 
 
 
@@ -480,6 +490,15 @@ true
 ( name = "Sequence" & isSorted = false => result = "[]" ) & ( name = "Sequence" & isSorted = true => result = "SortedList([])") & ( name = "Set" & isSorted = true => result = "SortedSet({})") & ( name = "Set" => result = "set({})" ) & ( name = "Map" & isSorted = true => result = "SortedDict({})" ) & ( name = "Map" => result = "dict({})" ) & (name = "Function" => result = "None") & ( name = "Ref" => result = "[" + elementType.defaultInitialValue() + "]" )
 
 
+Operation:
+toPython
+CollectionType
+String
+
+query
+true
+( name = "Sequence" & isSorted = false => result = "list[" + elementType.toPython() + "]" ) & ( name = "Sequence" & isSorted = true => result = "SortedList") & ( name = "Set" & isSorted = true => result = "SortedSet") & ( name = "Set" => result = "set[" + elementType.toPython() + "]" ) & ( name = "Map" & isSorted = true => result = "SortedDict" ) & ( name = "Map" => result = "dict" ) & (name = "Function" => result = "function") & ( name = "Ref" => result = "object" )
+
 
 Entity:
 Expression 268 -110
@@ -499,13 +518,13 @@ true
 
 
 Operation:
-toLambdaList
+toLambdaListStrings
 Expression
 String
 vbl String s Sequence(String)
 query static
 true
-( s.size = 0 => result = "") & ( s.size = 1 => result = "lambda " + vbl + " : " + s->first()) & (s.size > 1 => result = "lambda " + vbl + " : " + s->first() + ", " + Expression.toLambdaList(vbl, s->tail()) )
+( s.size = 0 => result = "") & ( s.size = 1 => result = "lambda " + vbl + " : " + s->first()) & (s.size > 1 => result = "lambda " + vbl + " : " + s->first() + ", " + Expression.toLambdaListStrings(vbl, s->tail()) )
 
 
 Operation:
@@ -796,7 +815,7 @@ boolean
 fname String 
  query static
 true
-( fname = "->min" or fname = "->max" or fname = "->sum" or fname = "->prd" ) => result = true
+( fname = "->min" or fname = "->max" or fname = "->sum" or fname = "->prd" or fname = "->average" ) => result = true
 
 
 Operation:
@@ -1201,7 +1220,7 @@ String
 arg String tn String et Type
  query
 true
-( operator = "->sum" & et->oclIsUndefined() => result = "ocl.sum(" + arg + ")") & ( operator = "->sum" & et.isStringType() => result = "ocl.sumString(" + arg + ")" ) & ( operator = "->sum" & not(et.isStringType()) => result = "ocl.sum(" + arg + ")" ) & ( operator = "->prd" => result = "ocl.prd(" + arg + ")" ) & ( operator = "->max" => result = "ocl.max" + tn + "(" + arg + ")" ) & ( operator = "->min" => result = "ocl.min" + tn + "(" + arg + ")" )
+( operator = "->sum" & et->oclIsUndefined() => result = "ocl.sum(" + arg + ")") & ( operator = "->sum" & et.isStringType() => result = "ocl.sumString(" + arg + ")" ) & ( operator = "->sum" & not(et.isStringType()) => result = "ocl.sum(" + arg + ")" ) & ( operator = "->prd" => result = "ocl.prd(" + arg + ")" ) & ( operator = "->average" => result = "ocl.average(" + arg + ")" ) & ( operator = "->max" => result = "ocl.max" + tn + "(" + arg + ")" ) & ( operator = "->min" => result = "ocl.min" + tn + "(" + arg + ")" )
 
 
 Operation:
@@ -1211,7 +1230,7 @@ String
 arg String tn String 
  query
 true
-( operator = "->size" => result = "len(" + arg + ")" ) & ( operator = "->isEmpty" => result = "(len(" + arg + ") == 0)" ) & ( operator = "->notEmpty" => result = "(len(" + arg + ") > 0)" ) & ( operator = "->asSet" => result = "set(" + arg + ")" ) & ( operator = "->asSequence" => result = "list(" + arg + ")" ) & ( operator = "->asOrderedSet" => result = "ocl.asOrderedSet(" + arg + ")" ) & ( operator = "->asBag" => result = "ocl.sortSequence(" + arg + ")" ) & ( operator = "->unionAll" & type.name = "Sequence" => result = "ocl.concatenateAll(" + arg + ")" ) & ( operator = "->unionAll" & type.name = "Set" => result = "ocl.unionAll(" + arg + ")" ) & ( operator = "->unionAll" & type.name = "Map" => result = "ocl.unionAllMap(" + arg + ")" ) & ( operator = "->intersectAll" => result = "ocl.intersectAll" + type.name + "(" + arg + ")" ) & ( operator = "->concatenateAll" => result = "ocl.concatenateAll(" + arg + ")" ) & ( operator = "->isUnique" => result = "ocl.isUnique(" + arg + ")" ) & ( operator = "->isDeleted" => result = "del " + arg ) & ( operator = "->copy" => result = "copy.copy(" + arg + ")" ) & ( operator = "->any" => result = "ocl.any(" + arg + ")" ) & ( operator = "->reverse" => result = "ocl.reverse" + tn + "(" + arg + ")" ) & ( operator = "->front" => result = "(" + arg + ")[0:-1]" ) & ( operator = "->tail" => result = "(" + arg + ")[1:]" ) & ( operator = "->first" => result = "(" + arg + ")[0]" ) & ( operator = "->last" => result = "(" + arg + ")[-1]" ) & ( operator = "->sort" => result = "ocl.sort" + tn + "(" + arg + ")" ) & ( operator = "->display" => result = "print(str(" + arg + "))" )
+( operator = "->size" => result = "len(" + arg + ")" ) & ( operator = "->isEmpty" => result = "(len(" + arg + ") == 0)" ) & ( operator = "->notEmpty" => result = "(len(" + arg + ") > 0)" ) & ( operator = "->asSet" => result = "set(" + arg + ")" ) & ( operator = "->asSequence" => result = "list(" + arg + ")" ) & ( operator = "->oclAsSet" => result = "set(" + arg + ")" ) & ( operator = "->oclAsSequence" => result = "list(" + arg + ")" ) & ( operator = "->asOrderedSet" => result = "ocl.asOrderedSet(" + arg + ")" ) & ( operator = "->asBag" => result = "ocl.sortSequence(" + arg + ")" ) & ( operator = "->unionAll" & type.name = "Sequence" => result = "ocl.concatenateAll(" + arg + ")" ) & ( operator = "->unionAll" & type.name = "Set" => result = "ocl.unionAll(" + arg + ")" ) & ( operator = "->unionAll" & type.name = "Map" => result = "ocl.unionAllMap(" + arg + ")" ) & ( operator = "->intersectAll" => result = "ocl.intersectAll" + type.name + "(" + arg + ")" ) & ( operator = "->concatenateAll" => result = "ocl.concatenateAll(" + arg + ")" ) & ( operator = "->isUnique" => result = "ocl.isUnique(" + arg + ")" ) & ( operator = "->isDeleted" => result = "del " + arg ) & ( operator = "->copy" => result = "copy.copy(" + arg + ")" ) & ( operator = "->any" => result = "ocl.any(" + arg + ")" ) & ( operator = "->reverse" => result = "ocl.reverse" + tn + "(" + arg + ")" ) & ( operator = "->front" => result = "(" + arg + ")[0:-1]" ) & ( operator = "->tail" => result = "(" + arg + ")[1:]" ) & ( operator = "->first" => result = "(" + arg + ")[0]" ) & ( operator = "->last" => result = "(" + arg + ")[-1]" ) & ( operator = "->sort" => result = "ocl.sort" + tn + "(" + arg + ")" ) & ( operator = "->display" => result = "print(str(" + arg + "))" )
 
 
 
@@ -1222,7 +1241,7 @@ String
 arg String tn String
  query
 true
-( operator = "->size" => result = "len(" + arg + ")" ) & ( operator = "->isEmpty" => result = "(len(" + arg + ") == 0)" ) & ( operator = "->notEmpty" => result = "(len(" + arg + ") > 0)" ) & ( operator = "->asSet" => result = "set(" + arg + ")" ) & ( operator = "->asSequence" => result = "list(" + arg + ")" ) & ( operator = "->asOrderedSet" => result = "ocl.asOrderedSet(" + arg + ")" ) & ( operator = "->asBag" => result = "ocl.mapAsBag(" + arg + ")" ) & ( operator = "->unionAll" & type.name = "Sequence" => result = "ocl.concatenateAll(" + arg + ")" ) & ( operator = "->unionAll" & type.name = "Set" => result = "ocl.unionAll(" + arg + ")" ) & ( operator = "->unionAll" & type.name = "Map" => result = "ocl.unionAllMap(" + arg + ")" ) & ( operator = "->intersectAll" => result = "ocl.intersectAll" + type.name + "(" + arg + ")" ) & ( operator = "->concatenateAll" => result = "ocl.concatenateAll(" + arg + ")" ) & ( operator = "->isUnique" => result = "ocl.isUnique(" + arg + ")" ) & ( operator = "->isDeleted" => result = "del " + arg ) & ( operator = "->copy" => result = "copy.copy(" + arg + ")" ) & ( operator = "->any" => result = "ocl.anyMap(" + arg + ")" ) & ( operator = "->reverse" => result = "ocl.reverse" + tn + "(" + arg + ")" ) & ( operator = "->front" => result = "ocl.frontSortedMap(" + arg + ")" ) & ( operator = "->tail" => result = "ocl.tailSortedMap(" + arg + ")" ) & ( operator = "->first" => result = "ocl.firstSortedMap(" + arg + ")" ) & ( operator = "->last" => result = "ocl.lastSortedMap(" + arg + ")" ) & ( operator = "->sort" => result = "ocl.sort" + tn + "(" + arg + ")" ) & ( operator = "->display" => result = "print(str(" + arg + "))" )
+( operator = "->size" => result = "len(" + arg + ")" ) & ( operator = "->isEmpty" => result = "(len(" + arg + ") == 0)" ) & ( operator = "->notEmpty" => result = "(len(" + arg + ") > 0)" ) & ( operator = "->asSet" => result = "set(" + arg + ")" ) & ( operator = "->asSequence" => result = "list(" + arg + ")" ) & ( operator = "->oclAsSet" => result = "set(" + arg + ")" ) & ( operator = "->oclAsSequence" => result = "list(" + arg + ")" ) & ( operator = "->asOrderedSet" => result = "ocl.asOrderedSet(" + arg + ")" ) & ( operator = "->asBag" => result = "ocl.mapAsBag(" + arg + ")" ) & ( operator = "->unionAll" & type.name = "Sequence" => result = "ocl.concatenateAll(" + arg + ")" ) & ( operator = "->unionAll" & type.name = "Set" => result = "ocl.unionAll(" + arg + ")" ) & ( operator = "->unionAll" & type.name = "Map" => result = "ocl.unionAllMap(" + arg + ")" ) & ( operator = "->intersectAll" => result = "ocl.intersectAll" + type.name + "(" + arg + ")" ) & ( operator = "->concatenateAll" => result = "ocl.concatenateAll(" + arg + ")" ) & ( operator = "->isUnique" => result = "ocl.isUnique(" + arg + ")" ) & ( operator = "->isDeleted" => result = "del " + arg ) & ( operator = "->copy" => result = "copy.copy(" + arg + ")" ) & ( operator = "->any" => result = "ocl.anyMap(" + arg + ")" ) & ( operator = "->reverse" => result = "ocl.reverse" + tn + "(" + arg + ")" ) & ( operator = "->front" => result = "ocl.frontSortedMap(" + arg + ")" ) & ( operator = "->tail" => result = "ocl.tailSortedMap(" + arg + ")" ) & ( operator = "->first" => result = "ocl.firstSortedMap(" + arg + ")" ) & ( operator = "->last" => result = "ocl.lastSortedMap(" + arg + ")" ) & ( operator = "->sort" => result = "ocl.sort" + tn + "(" + arg + ")" ) & ( operator = "->display" => result = "print(str(" + arg + "))" )
 
 
 
@@ -1337,7 +1356,7 @@ String
 vbl String
 query
 true
-result = Expression.toLambdaList(vbl, elements.toPython())
+result = Expression.toLambdaListStrings(vbl, elements.toPython())
 
 
 
@@ -1718,7 +1737,7 @@ String
 
  query
 true
-(type->oclIsUndefined() => result = "    self." + name + " = None\n") & ( qualifier.size > 0 => result = "    self." + name + " = dict({})\n" ) & ( qualifier.size = 0 & initialValue->oclIsUndefined() => result = "    self." + name + " = " + type.defaultInitialValue() + "\n" ) & ( qualifier.size = 0 => result = "    self." + name + " = " + initialValue.toPython() + "\n" )
+(type->oclIsUndefined() => result = "    self." + name + " = None\n") & ( qualifier.size > 0 => result = "    self." + name + " = dict({})\n" ) & ( qualifier.size = 0 & initialValue->oclIsUndefined() => result = "    self." + name + " : " + type.toPython() + " = " + type.defaultInitialValue() + "\n" ) & ( qualifier.size = 0 => result = "    self." + name + " : " + type.toPython() + " = " + initialValue.toPython() + "\n" )
 
 
 
@@ -1912,10 +1931,18 @@ void
 indent int 
 
 true
-(isCached = true & parameters.size = 1 => displayInstanceCachedOperation(indent,parameters[1].name,"self")) & ( (isCached = false or parameters.size /= 1) => ( Statement.tab(indent) + "def " + name + "(self" + parameters->collect( p | ", " + p.name )->sum() + ") :" )->display() & activity.toPython(indent + 2)->display() ) 
+(isCached = true & parameters.size = 1 => displayInstanceCachedOperation(indent,parameters[1].name,"self")) & ( (isCached = false or parameters.size /= 1) => ( Statement.tab(indent) + "def " + name + "(self" + parameters->collect( p | ", " + p.name + " : " + p.type.toPython() )->sum() + ") :" )->display() & activity.toPython(indent + 2)->display() )
 
 
 
+Operation:
+displayNullOperation
+Operation
+void
+indent int
+
+true
+(Statement.tab(indent) + "def " + name + "(self" + parameters->collect( p | ", " + p.name + " : " + p.type.toPython() )->sum() + ") :" )->display() & "    pass\n"->display()
 
 
 
@@ -1923,10 +1950,10 @@ Operation:
 displayOperation
 Operation
 void
-indent int 
+indent int
 
 true
-(isStatic = true => displayStaticOperation(indent) ) &  (isStatic = false => displayInstanceOperation(indent) ) 
+(activity->oclIsUndefined() => self.displayNullOperation(indent)) & (activity /= null & isStatic = true => self.displayStaticOperation(indent) ) & (activity /= null & isStatic = false => self.displayInstanceOperation(indent) )
 
 
 
@@ -2147,7 +2174,7 @@ String
 indent int 
  query
 true
-( type->oclIsUndefined() => result = Statement.tab(indent) + assignsTo + " = None\n" ) & ( initialExpression->size() > 0 => result = Statement.tab(indent) + assignsTo + " = " + initialExpression.any.toPython() + "\n" ) & ( type : Entity => result = Statement.tab(indent) + assignsTo + " = None\n" ) &  ( true => result = Statement.tab(indent) + assignsTo + " = " + type.defaultInitialValue() + "\n" )
+( type->oclIsUndefined() => result = Statement.tab(indent) + assignsTo + " = None\n" ) & ( initialExpression->size() > 0 => result = Statement.tab(indent) + assignsTo + " : " + type.toPython() + " = " + initialExpression.any.toPython() + "\n" ) & ( type : Entity => result = Statement.tab(indent) + assignsTo + " : " + type.name + " = None\n" ) &  ( true => result = Statement.tab(indent) + assignsTo + " : " + type.toPython() + " = " + type.defaultInitialValue() + "\n" )
 
 
 

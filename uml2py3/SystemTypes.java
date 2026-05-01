@@ -54,7 +54,7 @@ public interface SystemTypes
     }
 
     public static double truncateN(double x, int n)
-    { if (n < 0) 
+    { if (n <= 0) 
       { return (int) x; }
       double y = x*Math.pow(10,n); 
       return ((int) y)/Math.pow(10,n);
@@ -394,23 +394,23 @@ public interface SystemTypes
   }
 
   public static List collect_15(List _l)
-  { // implements: allProperties()->select( x | x.isStatic )->collect( y | "  " + y.name + " = " + y.type.defaultInitialValue() + "\n" )
+  { // implements: allProperties()->select( x | x.isStatic )->collect( y | "  " + y.name + " : " + y.type.toPython() + " = " + y.type.defaultInitialValue() + "\n" )
     List _results_15 = new Vector();
     for (int _i = 0; _i < _l.size(); _i++)
     { Property y = (Property) _l.get(_i);
-      String collect_x = "  " + y.getname() + " = " + y.gettype().defaultInitialValue() + "\n";
+      String collect_x = "  " + y.getname() + " : " + y.gettype().toPython() + " = " + y.gettype().defaultInitialValue() + "\n";
       if (collect_x != null) { _results_15.add(collect_x); }
     }
     return _results_15;
   }
 
   public static HashMap collect_15(Map _l)
-  { // implements: allProperties()->select( x | x.isStatic )->collect( y | "  " + y.name + " = " + y.type.defaultInitialValue() + "\n" )
+  { // implements: allProperties()->select( x | x.isStatic )->collect( y | "  " + y.name + " : " + y.type.toPython() + " = " + y.type.defaultInitialValue() + "\n" )
     HashMap _results_15 = new HashMap();
     java.util.Set _keys = _l.keySet();
     for (Object _i : _keys)
     { Property y = (Property) _l.get(_i);
-      String collect_x = "  " + y.getname() + " = " + y.gettype().defaultInitialValue() + "\n";
+      String collect_x = "  " + y.getname() + " : " + y.gettype().toPython() + " = " + y.gettype().defaultInitialValue() + "\n";
       if (collect_x != null) { _results_15.put(_i,collect_x); }
     }
     return _results_15;
@@ -486,23 +486,23 @@ public interface SystemTypes
   }
 
   public static List collect_21(List _l)
-  { // implements: parameters->collect( p | ", " + p.name )
+  { // implements: parameters->collect( p | ", " + p.name + " : " + p.type.toPython() )
     List _results_21 = new Vector();
     for (int _i = 0; _i < _l.size(); _i++)
     { Property p = (Property) _l.get(_i);
-      String collect_x = ", " + p.getname();
+      String collect_x = ", " + p.getname() + " : " + p.gettype().toPython();
       if (collect_x != null) { _results_21.add(collect_x); }
     }
     return _results_21;
   }
 
   public static HashMap collect_21(Map _l)
-  { // implements: parameters->collect( p | ", " + p.name )
+  { // implements: parameters->collect( p | ", " + p.name + " : " + p.type.toPython() )
     HashMap _results_21 = new HashMap();
     java.util.Set _keys = _l.keySet();
     for (Object _i : _keys)
     { Property p = (Property) _l.get(_i);
-      String collect_x = ", " + p.getname();
+      String collect_x = ", " + p.getname() + " : " + p.gettype().toPython();
       if (collect_x != null) { _results_21.put(_i,collect_x); }
     }
     return _results_21;
@@ -753,7 +753,8 @@ public interface SystemTypes
     { Integer x = (Integer) a.get(i); 
       if (x != null) { sum += x.intValue(); }
     } 
-    return sum; }
+    return sum;
+  }
 
   public static double sumdouble(List a)
   { double sum = 0.0; 
@@ -761,7 +762,8 @@ public interface SystemTypes
     { Double x = (Double) a.get(i); 
       if (x != null) { sum += x.doubleValue(); }
     } 
-    return sum; }
+    return sum;
+  }
 
   public static long sumlong(List a)
   { long sum = 0; 
@@ -769,14 +771,16 @@ public interface SystemTypes
     { Long x = (Long) a.get(i); 
       if (x != null) { sum += x.longValue(); }
     } 
-    return sum; }
+    return sum;
+  }
 
   public static String sumString(List a)
   { String sum = ""; 
     for (int i = 0; i < a.size(); i++)
     { Object x = a.get(i); 
       sum = sum + x; }
-    return sum;  }
+    return sum;
+  }
 
   public static int sumint(Map m)
   { List range = new Vector();
@@ -797,6 +801,11 @@ public interface SystemTypes
   { List range = new Vector();
     range.addAll(m.values());
     return sumString(range);  }
+
+  public static double average(List a)
+  { double sumd = Set.sumdouble(a); 
+    return sumd/a.size(); 
+  }
 
 
 

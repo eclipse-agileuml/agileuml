@@ -807,10 +807,15 @@ class PrimitiveType
   {   result = true;
  
   }  else
-      if (((String) s).equals("OclVoid")) 
+      {   if (((String) s).equals("OclVoid")) 
+  {   result = true;
+ 
+  }  else
+      if (((String) s).equals("OclAny")) 
   {   result = true;
  
   }   
+   } 
    } 
    } 
    } 
@@ -900,6 +905,10 @@ class PrimitiveType
   {   result = "type";
  
   }  else
+      {   if (((String) name).equals("OclAny")) 
+  {   result = "Any";
+ 
+  }  else
       {   if (((String) name).equals("OclVoid")) 
   {   result = "None";
  
@@ -912,6 +921,7 @@ class PrimitiveType
   {   result = name;
  
   }   
+   } 
    } 
    } 
    } 
@@ -1504,6 +1514,14 @@ class Entity
   }
 
 
+    public String toPython()
+  {   String result = "";
+ 
+  result = name;
+    return result;
+  }
+
+
     public String initialisations()
   {   String result = "";
  
@@ -1888,6 +1906,50 @@ class CollectionType
   }
 
 
+    public String toPython()
+  {   String result = "";
+ 
+  if (((String) name).equals("Sequence") && isSorted == false) 
+  {   result = "list[" + elementType.toPython() + "]";
+ 
+  }  else
+      {   if (((String) name).equals("Sequence") && isSorted == true) 
+  {   result = "SortedList";
+ 
+  }  else
+      {   if (((String) name).equals("Set") && isSorted == true) 
+  {   result = "SortedSet";
+ 
+  }  else
+      {   if (((String) name).equals("Set")) 
+  {   result = "set[" + elementType.toPython() + "]";
+ 
+  }  else
+      {   if (((String) name).equals("Map") && isSorted == true) 
+  {   result = "SortedDict";
+ 
+  }  else
+      {   if (((String) name).equals("Map")) 
+  {   result = "dict";
+ 
+  }  else
+      {   if (((String) name).equals("Function")) 
+  {   result = "function";
+ 
+  }  else
+      if (((String) name).equals("Ref")) 
+  {   result = "object";
+ 
+  }   
+   } 
+   } 
+   } 
+   } 
+   } 
+   }     return result;
+  }
+
+
 
 }
 
@@ -2107,7 +2169,7 @@ abstract class Expression
   }
 
 
-    public static String toLambdaList(String vbl,List s)
+    public static String toLambdaListStrings(String vbl,List s)
   {   String result = "";
  
   if (s.size() == 0) 
@@ -2119,7 +2181,7 @@ abstract class Expression
  
   }  else
       if (s.size() > 1) 
-  {   result = "lambda " + vbl + " : " + ((String) Set.first(s)) + ", " + Expression.toLambdaList(vbl,Set.tail(s));
+  {   result = "lambda " + vbl + " : " + ((String) Set.first(s)) + ", " + Expression.toLambdaListStrings(vbl,Set.tail(s));
  
   }   
    }     return result;
@@ -3956,7 +4018,7 @@ class UnaryExpression
     public static boolean isReduceOp(String fname)
   {   boolean result = false;
  
-  if (( ((String) fname).equals("->min") || ((String) fname).equals("->max") || ((String) fname).equals("->sum") || ((String) fname).equals("->prd") )) 
+  if (( ((String) fname).equals("->min") || ((String) fname).equals("->max") || ((String) fname).equals("->sum") || ((String) fname).equals("->prd") || ((String) fname).equals("->average") )) 
   {   result = true;
  
   }    return result;
@@ -4180,6 +4242,10 @@ class UnaryExpression
   {   result = "ocl.prd(" + arg + ")";
  
   }  else
+      {   if (((String) operator).equals("->average")) 
+  {   result = "ocl.average(" + arg + ")";
+ 
+  }  else
       {   if (((String) operator).equals("->max")) 
   {   result = "ocl.max" + tn + "(" + arg + ")";
  
@@ -4188,6 +4254,7 @@ class UnaryExpression
   {   result = "ocl.min" + tn + "(" + arg + ")";
  
   }   
+   } 
    } 
    } 
    } 
@@ -4215,6 +4282,14 @@ class UnaryExpression
  
   }  else
       {   if (((String) operator).equals("->asSequence")) 
+  {   result = "list(" + arg + ")";
+ 
+  }  else
+      {   if (((String) operator).equals("->oclAsSet")) 
+  {   result = "set(" + arg + ")";
+ 
+  }  else
+      {   if (((String) operator).equals("->oclAsSequence")) 
   {   result = "list(" + arg + ")";
  
   }  else
@@ -4310,6 +4385,8 @@ class UnaryExpression
    } 
    } 
    } 
+   } 
+   } 
    }     return result;
   }
 
@@ -4334,6 +4411,14 @@ class UnaryExpression
  
   }  else
       {   if (((String) operator).equals("->asSequence")) 
+  {   result = "list(" + arg + ")";
+ 
+  }  else
+      {   if (((String) operator).equals("->oclAsSet")) 
+  {   result = "set(" + arg + ")";
+ 
+  }  else
+      {   if (((String) operator).equals("->oclAsSequence")) 
   {   result = "list(" + arg + ")";
  
   }  else
@@ -4409,6 +4494,8 @@ class UnaryExpression
   {   result = "print(str(" + arg + "))";
  
   }   
+   } 
+   } 
    } 
    } 
    } 
@@ -4890,7 +4977,7 @@ class CollectionExpression
     public String toLambdaList(String vbl)
   {   String result = "";
  
-  result = Expression.toLambdaList(vbl,  Controller.inst().AllExpressiontoPython(elements));
+  result = Expression.toLambdaListStrings(vbl,  Controller.inst().AllExpressiontoPython(elements));
     return result;
   }
 
@@ -6542,11 +6629,11 @@ class Property
  
   }  else
       {   if (qualifier.size() == 0 && (initialValue == null)) 
-  {   result = "    self." + name + " = " + type.defaultInitialValue() + "\n";
+  {   result = "    self." + name + " : " + type.toPython() + " = " + type.defaultInitialValue() + "\n";
  
   }  else
       if (qualifier.size() == 0) 
-  {   result = "    self." + name + " = " + initialValue.toPython() + "\n";
+  {   result = "    self." + name + " : " + type.toPython() + " = " + initialValue.toPython() + "\n";
  
   }   
    } 
@@ -7447,10 +7534,19 @@ class Operation
 }
   }
 
+    public void displayNullOperation(int indent)
+  {   System.out.println("" + ( Statement.tab(indent) + "def " + this.getname() + "(self" + Set.sumString(Set.collect_21(this.getparameters())) + ") :" ));
+
+      System.out.println("" + "    pass\n");
+
+  }
+
     public void displayOperation(int indent)
-  {   if (this.getisStatic() == true) 
+  {   if ((this.getactivity() == null)) 
+  { this.displayNullOperation(indent);}
+      if (this.getactivity() != null && this.getisStatic() == true) 
   { this.displayStaticOperation(indent);}
-      if (this.getisStatic() == false) 
+      if (this.getactivity() != null && this.getisStatic() == false) 
   { this.displayInstanceOperation(indent);}
   }
 
@@ -9144,15 +9240,15 @@ class CreationStatement
  
   }  else
       {   if ((initialExpression).size() > 0) 
-  {   result = Statement.tab(indent) + assignsTo + " = " + ((Expression) Set.any(initialExpression)).toPython() + "\n";
+  {   result = Statement.tab(indent) + assignsTo + " : " + type.toPython() + " = " + ((Expression) Set.any(initialExpression)).toPython() + "\n";
  
   }  else
       {   if ((type instanceof Entity)) 
-  {   result = Statement.tab(indent) + assignsTo + " = None\n";
+  {   result = Statement.tab(indent) + assignsTo + " : " + type.getname() + " = None\n";
  
   }  else
       if (true) 
-  {   result = Statement.tab(indent) + assignsTo + " = " + type.defaultInitialValue() + "\n";
+  {   result = Statement.tab(indent) + assignsTo + " : " + type.toPython() + " = " + type.defaultInitialValue() + "\n";
  
   }   
    } 
@@ -16873,6 +16969,16 @@ public void setisStatic(BehaviouralFeature behaviouralfeaturex, boolean isStatic
     return result; 
   }
 
+  public  List AllEntitytoPython(List entityxs)
+  { 
+    List result = new Vector();
+    for (int _i = 0; _i < entityxs.size(); _i++)
+    { Entity entityx = (Entity) entityxs.get(_i);
+      result.add(entityx.toPython());
+    }
+    return result; 
+  }
+
   public  List AllEntityinitialisations(List entityxs)
   { 
     List result = new Vector();
@@ -17033,6 +17139,16 @@ public void setisStatic(BehaviouralFeature behaviouralfeaturex, boolean isStatic
     for (int _i = 0; _i < collectiontypexs.size(); _i++)
     { CollectionType collectiontypex = (CollectionType) collectiontypexs.get(_i);
       result.add(collectiontypex.defaultInitialValue());
+    }
+    return result; 
+  }
+
+  public  List AllCollectionTypetoPython(List collectiontypexs)
+  { 
+    List result = new Vector();
+    for (int _i = 0; _i < collectiontypexs.size(); _i++)
+    { CollectionType collectiontypex = (CollectionType) collectiontypexs.get(_i);
+      result.add(collectiontypex.toPython());
     }
     return result; 
   }
@@ -18060,6 +18176,20 @@ public void setisStatic(BehaviouralFeature behaviouralfeaturex, boolean isStatic
     for (int _i = 0; _i < operationxs.size(); _i++)
     { Operation operationx = (Operation) operationxs.get(_i);
       displayInstanceOperation(operationx,indent);
+    }
+    return result; 
+  }
+
+  public void displayNullOperation(Operation operationx,int indent)
+  {   operationx.displayNullOperation(indent);
+   }
+
+  public  List AllOperationdisplayNullOperation(List operationxs,int indent)
+  { 
+    List result = new Vector();
+    for (int _i = 0; _i < operationxs.size(); _i++)
+    { Operation operationx = (Operation) operationxs.get(_i);
+      displayNullOperation(operationx,indent);
     }
     return result; 
   }
@@ -19756,6 +19886,7 @@ public void setisStatic(BehaviouralFeature behaviouralfeaturex, boolean isStatic
 
     System.err.println(">>> Time for model load = " + (t1-t0) + " Time for transformation: " + (t2-t1));  
   }  
+
 
  
 }
