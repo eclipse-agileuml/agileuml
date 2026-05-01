@@ -6225,13 +6225,14 @@ public class Entity extends ModelElement implements Comparable
         else if (mess.startsWith("!"))
         { yellowDetails.add(mess); } 
       } 
-      
+	  
+      messages.add("--- --- --- --- --- --- --- --- --- ---");
+      out.println("--- --- --- --- --- --- --- --- --- ---");
+	    
       if (redDetails.size() > 0) 
-      { messages.add("--- --- --- --- --- --- --- --- --- ---");
-        messages.add("!!! Red flags for operation " + opname + ":");
+      { messages.add("!!! Red flags for operation " + opname + ":");
         messages.add("");
         
-        out.println("--- --- --- --- --- --- --- --- --- ---");
         out.println("!!! Red flags for operation " + opname + ":");
         out.println("");
     
@@ -6351,6 +6352,8 @@ public class Entity extends ModelElement implements Comparable
                 // System.err.println();
                 int yellowscore = (int) res.get("yellow"); 
                 res.set("yellow", yellowscore + 1); 
+                int oew = (int) res.get("OEW",0); 
+                res.set("OEW", oew + 1); 
               }
               else if ("->max".equals(oper) || 
                        "->min".equals(oper))
@@ -6361,6 +6364,8 @@ public class Entity extends ModelElement implements Comparable
                   messages.add("");
                   int yellowscore = (int) res.get("yellow"); 
                   res.set("yellow", yellowscore + 1); 
+                  int oew = (int) res.get("OEW",0); 
+                  res.set("OEW", oew + 1); 
                 }
               }
 
@@ -6376,6 +6381,8 @@ public class Entity extends ModelElement implements Comparable
                   "! in the sum S of sizes of the argument elements. \n"); 
                 int yellowscore = (int) res.get("yellow"); 
                 res.set("yellow", yellowscore + 1); 
+                int oew = (int) res.get("OEW",0); 
+                res.set("OEW", oew + 1); 
               }  
               else if ("|".equals(oper) || 
                   "->select".equals(oper) ||
@@ -6393,18 +6400,24 @@ public class Entity extends ModelElement implements Comparable
               { messages.add("! Warning: " + maxop + " is a >= O(n) operation in the size of the LHS collection/map. \n"); 
                 int yellowscore = (int) res.get("yellow"); 
                 res.set("yellow", yellowscore + 1); 
+                int oew = (int) res.get("OEW",0); 
+                res.set("OEW", oew + 1); 
               }  
               else if ("->union".equals(oper) || 
                   "->symmetricDifference".equals(oper))
               { messages.add("! Warning: " + maxop + " is an O(n) operation in the sum of sizes of the arguments. \n"); 
                 int yellowscore = (int) res.get("yellow"); 
                 res.set("yellow", yellowscore + 1); 
+                int oew = (int) res.get("OEW",0); 
+                res.set("OEW", oew + 1); 
               }  
               else if ("->sortedBy".equals(oper) || 
                   "|sortedBy".equals(oper))
               { messages.add("! Warning: " + maxop + " is an O(n*log(n)) operation in the size of the LHS. \n"); 
                 int yellowscore = (int) res.get("yellow"); 
                 res.set("yellow", yellowscore + 1); 
+                int oew = (int) res.get("OEW",0); 
+                res.set("OEW", oew + 1); 
               } 
  
               if (be.getLeft().isSequence())
@@ -6415,6 +6428,8 @@ public class Entity extends ModelElement implements Comparable
                     "! Set, Bag, SortedSet or SortedBag can be more efficient if no indexing is needed\n"); 
                   int yellowscore = (int) res.get("yellow"); 
                   res.set("yellow", yellowscore + 1); 
+                  int oew = (int) res.get("OEW",0); 
+                  res.set("OEW", oew + 1); 
                 } 
                 else if ("->including".equals(oper))
                 { messages.add("! Warning: " + oper + 
@@ -6422,6 +6437,8 @@ public class Entity extends ModelElement implements Comparable
                     "! Set or Bag can be more efficient if no indexing is needed\n");
                   int yellowscore = (int) res.get("yellow"); 
                   res.set("yellow", yellowscore + 1); 
+                  int oew = (int) res.get("OEW",0); 
+                  res.set("OEW", oew + 1); 
                 } 
                 else if ("->excluding".equals(oper) ||
                          "->count".equals(oper))
@@ -6430,6 +6447,8 @@ public class Entity extends ModelElement implements Comparable
                     "! Set or SortedSet can be more efficient if no indexing or duplicates are needed\n"); 
                   int yellowscore = (int) res.get("yellow"); 
                   res.set("yellow", yellowscore + 1); 
+                  int oew = (int) res.get("OEW",0); 
+                  res.set("OEW", oew + 1); 
                 }              
               }
             } 
@@ -6459,7 +6478,7 @@ public class Entity extends ModelElement implements Comparable
     if (snicount > 0)
     { int yellowscore = (int) res.get("yellow"); 
       res.set("yellow", yellowscore + snicount);
-      int oew = (int) res.get("OEW"); 
+      int oew = (int) res.get("OEW",0); 
       res.set("OEW", oew + snicount); 
     }
   
@@ -6562,9 +6581,14 @@ public class Entity extends ModelElement implements Comparable
        messages.add("++++++++++++++++++++++++++++++++++++++++++++++++++++++++"); 
     messages.add(""); 
 
-    res.set("red", totalred); 
-    res.set("amber", totalamber); 
-    res.set("yellow", totalyellow); 
+    int classred = (int) res.get("red", 0); 
+    res.set("red", totalred + classred);
+ 
+    int classamber = (int) res.get("amber", 0); 
+    res.set("amber", totalamber + classamber);
+ 
+    int classyellow = (int) res.get("yellow", 0); 
+    res.set("yellow", totalyellow + classyellow); 
 
     return res; 
   } 

@@ -586,6 +586,7 @@ public class UnaryExpression extends Expression
         "->reverse".equals(operator) || 
         "->sort".equals(operator) || 
         "->sum".equals(operator) || 
+        "->average".equals(operator) || 
         "->prd".equals(operator))
     { res = Expression.simplifyAnd(res, argDefined);
 
@@ -870,6 +871,8 @@ public void findClones(java.util.Map clones,
         operator.equals("->iterator") || 
         operator.equals("->asSequence") || 
         operator.equals("->asSet") || 
+        operator.equals("->oclAsSequence") || 
+        operator.equals("->oclAsSet") || 
         operator.equals("->asBag") || 
         operator.equals("->asOrderedSet") ||
         operator.equals("->min") || operator.equals("->sort"))
@@ -892,7 +895,9 @@ public void findClones(java.util.Map clones,
           if (operator.equals("->front") || 
               operator.equals("->tail") || 
               operator.equals("->sort") ||
-              operator.equals("->reverse") || 
+              operator.equals("->reverse") ||
+              operator.equals("->oclAsSequence") || 
+              operator.equals("->oclAsSet") || 
               operator.equals("->asSet") || 
               operator.equals("->asBag") || 
               operator.equals("->flatten") ||
@@ -1181,6 +1186,8 @@ public void findClones(java.util.Map clones,
     }
     
     if ("->copy".equals(operator) ||
+        operator.equals("->oclAsSequence") || 
+        operator.equals("->oclAsSet") || 
         "->asSet".equals(operator) ||
         "->asSequence".equals(operator))
     { yUses.add("! Inefficient expression (OEW): O(n) operator " + this);  
@@ -1318,6 +1325,9 @@ public void findClones(java.util.Map clones,
 
     if (operator.equals("->sum"))
     { return Expression.simplifySum(arg); } 
+
+    if (operator.equals("->average"))
+    { return Expression.simplifyAverage(arg); } 
 
     if (operator.equals("->prd"))
     { return Expression.simplifyPrd(arg); } 
@@ -1555,9 +1565,12 @@ public void findClones(java.util.Map clones,
         operator.equals("->copy") ||
         operator.equals("->asSet") ||
         operator.equals("->asSequence") ||
+        operator.equals("->oclAsSequence") || 
+        operator.equals("->oclAsSet") || 
         operator.equals("->first") ||
         operator.equals("->last") ||
         operator.equals("->sum") ||
+        operator.equals("->average") ||
         operator.equals("->size") ||
         operator.equals("->front") ||
         operator.equals("->tail") ||
@@ -1589,10 +1602,13 @@ public void findClones(java.util.Map clones,
           operator.equals("->copy") ||
           operator.equals("->isDeleted") ||
           operator.equals("->sum") ||
+          operator.equals("->average") ||
           operator.equals("->prd") ||
           operator.equals("->front") ||
           operator.equals("->tail") ||
-          operator.equals("->reverse") || 
+          operator.equals("->reverse") ||
+          operator.equals("->oclAsSequence") || 
+          operator.equals("->oclAsSet") || 
           operator.equals("->asSet") ||
           operator.equals("->asSequence") ||
           (operator.equals("->max") && !argument.isSorted()) ||
@@ -1642,6 +1658,8 @@ public void findClones(java.util.Map clones,
         operator.equals("->concatenateAll") ||
         operator.equals("->any") ||
         operator.equals("->copy") ||
+        operator.equals("->oclAsSet") ||
+        operator.equals("->oclAsSequence") ||
         operator.equals("->reverse") ||
         operator.equals("->front") ||
         operator.equals("->tail") ||
@@ -1650,6 +1668,7 @@ public void findClones(java.util.Map clones,
         operator.equals("->last") ||
         operator.equals("->max") ||
         operator.equals("->min") ||
+        operator.equals("->average") ||
         operator.equals("->sum") ||
         operator.equals("->prd"))
     { Vector opers = (Vector) res.get(level); 
@@ -1669,7 +1688,10 @@ public void findClones(java.util.Map clones,
         operator.equals("->front") ||
         operator.equals("->tail") ||
         operator.equals("->sum") ||
+        operator.equals("->average") ||
         operator.equals("->prd") ||
+        operator.equals("->oclAsSet") ||
+        operator.equals("->oclAsSequence") ||
         operator.equals("->asSet") ||
         operator.equals("->asSequence") ||
         (operator.equals("->max") && !argument.isSorted()) ||
@@ -1961,6 +1983,7 @@ public void findClones(java.util.Map clones,
       return be.updateForm(language, env, local);
     }
     else if ("->sort".equals(operator) || 
+             "->oclAsSequence".equals(operator) ||
              "->asSequence".equals(operator))
     { if (Type.isSequenceType(argument.getType()))
       { BinaryExpression assign = new BinaryExpression("=", argument, var); 
@@ -1993,6 +2016,8 @@ public void findClones(java.util.Map clones,
 public String updateFormNotIn(String language, java.util.Map env, Expression var, boolean local)
 { if ("->asSet".equals(operator) || 
       "->asSequence".equals(operator) || 
+      operator.equals("->oclAsSequence") || 
+      operator.equals("->oclAsSet") || 
       "->asOrderedSet".equals(operator) || 
       "->sort".equals(operator))
   { Expression e1 = new BinaryExpression("/:", var, argument);
@@ -2035,7 +2060,9 @@ public String updateFormNotIn(String language, java.util.Map env, Expression var
 
 public String updateFormIn(String language, java.util.Map env, Expression var, boolean local)
 { if ("->asSet".equals(operator) || 
-      "->asSequence".equals(operator) || 
+      "->asSequence".equals(operator) ||
+      operator.equals("->oclAsSequence") || 
+      operator.equals("->oclAsSet") || 
       "->asOrderedSet".equals(operator) || 
       "->sort".equals(operator))
   { Expression e1 = new BinaryExpression(":", var, argument);
@@ -2085,6 +2112,8 @@ public String updateFormSubtract(String language, java.util.Map env, Expression 
 { if ("->asSet".equals(operator) || 
       "->asSequence".equals(operator) ||
       "->asOrderedSet".equals(operator) ||
+      operator.equals("->oclAsSequence") || 
+      operator.equals("->oclAsSet") || 
       "->sort".equals(operator))
   { Expression e1 = new BinaryExpression("->excludesAll", argument, var);
     return e1.updateForm(language,env,local);
@@ -2123,6 +2152,8 @@ public String updateFormSubtract(String language, java.util.Map env, Expression 
 public String updateFormSubset(String language, java.util.Map env, Expression var, boolean local)
 { if ("->asSet".equals(operator) || 
       "->asSequence".equals(operator) ||
+      operator.equals("->oclAsSequence") || 
+      operator.equals("->oclAsSet") || 
       "->asOrderedSet".equals(operator) ||
       "->sort".equals(operator))
   { Expression e1 = new BinaryExpression("<:", var, argument);
@@ -2514,6 +2545,27 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
       } 
 
       return new UnaryExpression(operator, arg); 
+    } 
+
+    if (operator.equals("->average"))
+    { Expression arg = argument.evaluate(sigma, beta); 
+      if (arg instanceof SetExpression) 
+      { return ((SetExpression) arg).average(); } 
+    } 
+
+
+    if (operator.equals("->oclAsSet") || 
+        operator.equals("->asSet"))
+    { Expression arg = argument.evaluate(sigma, beta); 
+      if (arg instanceof SetExpression) 
+      { return SetExpression.asSet((SetExpression) arg); } 
+    } 
+
+    if (operator.equals("->oclAsSequence") || 
+        operator.equals("->asSequence"))
+    { Expression arg = argument.evaluate(sigma, beta); 
+      if (arg instanceof SetExpression) 
+      { return SetExpression.asSequence((SetExpression) arg); } 
     } 
 
     if (operator.equals("lambda") && accumulator != null)
@@ -3387,6 +3439,7 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
     if ("->front".equals(operator) || 
         "->tail".equals(operator) || 
         operator.equals("->copy") || 
+        "->oclAsSequence".equals(operator) ||
         "->asSequence".equals(operator)) 
         // || "->reverse".equals(operator))
     { return argument.isSorted(); } 
@@ -3411,8 +3464,10 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
     if ("->front".equals(operator) || 
         "->tail".equals(operator) ||
         "->asBag".equals(operator) || 
-        "->asSequence".equals(operator) ||
-        "->asOrderedSet".equals(operator) || "->sort".equals(operator))
+        "->asSequence".equals(operator) ||          
+        "->oclAsSequence".equals(operator) || 
+        "->asOrderedSet".equals(operator) || 
+        "->sort".equals(operator))
     { return true; } 
 
     if ("->reverse".equals(operator) || 
@@ -3656,7 +3711,8 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
         operator.equals("->last") ||
         operator.equals("->first") || 
         operator.equals("->max") ||
-        operator.equals("->min") || 
+        operator.equals("->min") ||
+        operator.equals("->average") || 
         operator.equals("->sum") || operator.equals("!") ||
         operator.equals("->prd"))
     { if (argument.elementType != null) 
@@ -3949,7 +4005,8 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
       return res; 
     } 
 
-    if (operator.equals("->asSet"))
+    if (operator.equals("->asSet") ||
+        operator.equals("->oclAsSet"))
     { type = new Type("Set",null); 
       elementType = argument.elementType;
       if (argument.isMap())
@@ -4006,7 +4063,8 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
       return res; 
     } 
 
-    if (operator.equals("->asSequence"))
+    if (operator.equals("->asSequence") || 
+        operator.equals("->oclAsSequence"))
     { type = new Type("Sequence",null); 
       elementType = argument.elementType;
       if (argument.isMap())
@@ -4037,6 +4095,7 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
     if (operator.equals("->toReal") || 
         operator.equals("->sqrt") || 
         operator.equals("->sqr") || 
+        operator.equals("->average") || 
         operator.equals("->log") ||
         operator.equals("->cbrt") || 
         operator.equals("->log10") ||
@@ -4733,7 +4792,8 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
       return res; 
     } 
 
-    if (operator.equals("->asSet"))
+    if (operator.equals("->asSet") ||
+        operator.equals("->oclAsSet"))
     { type = new Type("Set",null); 
       elementType = argument.elementType;
 
@@ -4802,8 +4862,7 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
           entity = ent; 
           if (ast == null)   // something very bad has happened
           { System.err.println("TYPE ERROR: Undefined role: " + argument); 
-            JOptionPane.showMessageDialog(null, "Undefined role " + argument, "Type error",
-			                                         JOptionPane.ERROR_MESSAGE);  
+            /* JOptionPane.showMessageDialog(null, "Undefined role " + argument, "Type error", JOptionPane.ERROR_MESSAGE); */  
             return false; 
           } 
           multiplicity = ast.getCard2();
@@ -4823,7 +4882,8 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
       }
     } 
 
-    if (operator.equals("->asSequence"))
+    if (operator.equals("->asSequence") || 
+        operator.equals("->oclAsSequence"))
     { type = new Type("Sequence",null); 
       elementType = argument.elementType;
       if (argument.isMap())
@@ -5005,7 +5065,8 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
       return res; 
     } 
 
-    if (operator.equals("->prd"))
+    if (operator.equals("->prd") || 
+        operator.equals("->average"))
     { type = argument.getElementType();
 
       if (Type.isVacuousType(type))
@@ -5036,6 +5097,9 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
           vartypes.put(vname, argument.type); 
         }
       } 
+
+      if ("->average".equals(operator))
+      { type = new Type("double", null); } 
 
       return res; 
     } 
@@ -5163,11 +5227,13 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
         operator.equals("->concatenateAll") || 
         operator.equals("->closure") || 
         operator.equals("->asSet") || 
+        operator.equals("->oclAsSet") || 
         operator.equals("->values") ||
         operator.equals("->flatten") || 
         operator.equals("->characters") || 
         operator.equals("->keys") ||
         operator.equals("->asSequence") ||
+        operator.equals("->oclAsSequence") ||
         operator.equals("->asOrderedSet") ||
         operator.equals("->asBag") || 
         operator.equals("->sort"))  
@@ -5326,13 +5392,15 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
       return "false"; 
     } 
 
-    if (operator.equals("->asSequence")) 
+    if (operator.equals("->asSequence") || 
+        operator.equals("->oclAsSequence")) 
     { if (argument.isMap())
       { return "Set.mapAsSequence(" + qf + ")"; } 
       return qf; 
     }  
 
-    if (operator.equals("->asSet")) 
+    if (operator.equals("->asSet") ||
+        operator.equals("->oclAsSet")) 
     { if (argument.isMap())
       { return "Set.mapAsSet(" + qf + ")"; } 
       return "Set.asSet(" + qf + ")"; 
@@ -5531,14 +5599,15 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
              data.equals("toLowerCase"))
     { return pre + "." + data + "()"; } 
     else if (data.equals("sum"))
-    { Type sumtype = argument.getElementType();  // was getType(); -- correct below 
-      // System.out.println("SUM with " + sumtype + " " + type); 
+    { Type sumtype = argument.getElementType();  
+       // was getType(); -- correct below 
+       // System.out.println("SUM with " + sumtype + " " + type); 
 
       if (sumtype == null) 
       { sumtype = type; } 
 
       if (sumtype == null) 
-      { JOptionPane.showMessageDialog(null, "No element type for: " + argument, "Type error", JOptionPane.ERROR_MESSAGE);
+      { // JOptionPane.showMessageDialog(null, "No element type for: " + argument, "Type error", JOptionPane.ERROR_MESSAGE);
         return "Set.sumString(" + pre + ")"; 
       } 
 
@@ -5549,20 +5618,23 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
           "String".equals(tname))
       { return "Set.sum" + tname + "(" + pre + ")"; } 
       else
-      { JOptionPane.showMessageDialog(null, "Incorrect type " + tname + " for summation in " + this, "Type error", JOptionPane.ERROR_MESSAGE);
+      { // JOptionPane.showMessageDialog(null, "Incorrect type " + tname + " for summation in " + this, "Type error", JOptionPane.ERROR_MESSAGE);
         return ""; 
       }  
-    } 
+    }
+    else if (data.equals("average"))
+    { return "Set.average(" + pre + ")"; }
     else if (data.equals("prd"))
-    { Type prdtype = argument.getElementType();  // was getType(); -- correct below 
+    { Type prdtype = argument.getElementType();  
+              // was getType(); -- correct below 
 
       if (prdtype == null) 
       { prdtype = type; } 
 
       if (prdtype == null) 
-      { JOptionPane.showMessageDialog(null, 
-          "No element type for: " + argument, 
-          "Type error", JOptionPane.ERROR_MESSAGE);
+      { // JOptionPane.showMessageDialog(null, 
+        //  "No element type for: " + argument, 
+        //  "Type error", JOptionPane.ERROR_MESSAGE);
         return "Set.prddouble(" + pre + ")"; 
       } 
 
@@ -5573,9 +5645,9 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
           "double".equals(tname))
       { return "Set.prd" + tname + "(" + pre + ")"; } 
       else 
-      { JOptionPane.showMessageDialog(null, 
-            "Incorrect type " + tname + " for product in " + this, 
-            "Type error", JOptionPane.ERROR_MESSAGE);
+      { // JOptionPane.showMessageDialog(null, 
+        //   "Incorrect type " + tname + " for product in " + this, 
+        //   "Type error", JOptionPane.ERROR_MESSAGE);
         return ""; 
       }  
     } 
@@ -5830,14 +5902,16 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
       return "(" + wqf + ").getClass()"; 
     }  
 
-    if (operator.equals("->asSequence")) 
+    if (operator.equals("->asSequence") ||
+        operator.equals("->oclAsSequence")) 
     { if (argument.isMap())
       { return "Set.mapAsSequence(" + qf + ")"; } 
       return "Set.asSequence(" + qf + ")"; 
     }  
     // but maps cannot be converted 
 
-    if (operator.equals("->asSet")) 
+    if (operator.equals("->asSet") ||
+        operator.equals("->oclAsSet")) 
     { if (argument.isMap())
       { return "Set.mapAsSet(" + qf + ")"; } 
       return "Set.asSet(" + qf + ")"; 
@@ -5954,18 +6028,20 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
     else if (data.equals("sum"))
     { Type sumtype = argument.getElementType();  // int, double, long, String 
       if (sumtype == null) 
-      { JOptionPane.showMessageDialog(null, "!! No type for: " + this, 
-                                      "Type error", JOptionPane.ERROR_MESSAGE);
+      { // JOptionPane.showMessageDialog(null, "!! No type for: " + this, 
+        //  "Type error", JOptionPane.ERROR_MESSAGE);
         return ""; // "Set." + data + "(" + pre + ")"; 
       } 
       String tname = sumtype.getName(); 
       return "Set.sum" + tname + "(" + pre + ")"; 
     } 
+    else if (data.equals("average"))
+    { return "Set.average(" + pre + ")"; }
     else if (data.equals("prd"))
     { Type sumtype = argument.getElementType();  // int, double, long 
       if (sumtype == null) 
-      { JOptionPane.showMessageDialog(null, "No type for: " + this, 
-                                      "Type error", JOptionPane.ERROR_MESSAGE);
+      { // JOptionPane.showMessageDialog(null, "No type for: " + this, 
+        //   "Type error", JOptionPane.ERROR_MESSAGE);
         return ""; // "Set." + data + "(" + pre + ")"; 
       }
       String tname = sumtype.getName(); 
@@ -6225,11 +6301,13 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
       return "(" + wqf + ").getClass()"; 
     }  
 
-    if (operator.equals("->asSequence")) 
+    if (operator.equals("->asSequence") || 
+        operator.equals("->oclAsSequence")) 
     { return "Ocl.asSequence(" + qf + ")"; }
     // but maps cannot be converted 
 
-    if (operator.equals("->asSet")) 
+    if (operator.equals("->asSet") || 
+        operator.equals("->oclAsSet")) 
     { return "Ocl.asSet(" + qf + ")"; }
 
     if (operator.equals("->asOrderedSet")) 
@@ -6350,24 +6428,36 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
     else if (operator.equals("->round") || 
              operator.equals("->ceil") || operator.equals("->floor"))
     { return "((int) Math." + data + "(" + pre + "))"; } 
-    else if (data.equals("toUpperCase") || data.equals("toLowerCase") || data.equals("trim"))
+    else if (data.equals("toUpperCase") || 
+             data.equals("toLowerCase") || data.equals("trim"))
     { return pre + "." + data + "()"; } 
     else if (data.equals("sum"))
     { Type sumtype = argument.getElementType();  // int, double, long, String 
       if (sumtype == null) 
-      { JOptionPane.showMessageDialog(null, 
-             "No type for: " + this, 
-             "Type error", JOptionPane.ERROR_MESSAGE);
+      { // JOptionPane.showMessageDialog(null, 
+        //      "No type for: " + this, 
+        //      "Type error", JOptionPane.ERROR_MESSAGE);
         return ""; // "Ocl." + data + "(" + pre + ")"; 
       } 
       String tname = sumtype.getName(); 
       return "Ocl.sum" + tname + "(" + pre + ")"; 
     } 
+    else if (data.equals("average"))
+    { Type sumtype = argument.getElementType();  // int, double, long 
+      if (sumtype == null) 
+      { // JOptionPane.showMessageDialog(null, 
+        //      "No type for: " + this, 
+        //      "Type error", JOptionPane.ERROR_MESSAGE);
+        return ""; // "Ocl." + data + "(" + pre + ")"; 
+      } 
+      String tname = sumtype.getName(); 
+      return "Ocl.average" + tname + "(" + pre + ")"; 
+    }
     else if (data.equals("prd"))
     { Type sumtype = argument.getElementType();  // int, double, long 
       if (sumtype == null) 
-      { JOptionPane.showMessageDialog(null, "No type for: " + this, 
-                                      "Type error", JOptionPane.ERROR_MESSAGE);
+      { // JOptionPane.showMessageDialog(null, "No type for: " + this, 
+        //   "Type error", JOptionPane.ERROR_MESSAGE);
         return ""; // "Ocl." + data + "(" + pre + ")"; 
       }
       String tname = sumtype.getName(); 
@@ -6549,7 +6639,8 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
       }  
     } 
 
-    if (operator.equals("->asSequence")) 
+    if (operator.equals("->asSequence") || 
+        operator.equals("->oclAsSequence")) 
     { if (argument.isRef())
       { return "SystemTypes.asSequence(" + qf + ")"; }
       
@@ -6567,6 +6658,14 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
     { return qf; } 
 
     if (operator.equals("->asSet") && type != null && 
+        type.isSequence())
+    { return "SystemTypes.asSet(" + qf + ")"; } 
+
+    if (operator.equals("->oclAsSet") && type != null && 
+        type.isSet())
+    { return qf; } 
+
+    if (operator.equals("->oclAsSet") && type != null && 
         type.isSequence())
     { return "SystemTypes.asSet(" + qf + ")"; } 
 
@@ -6749,9 +6848,11 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
     }  // could be long for double arguments 
     else if (operator.equals("->ceil"))
     { return "((int) Math.Ceiling(" + pre + "))"; } 
-    else if (data.equals("toUpperCase") || data.equals("toUpper")) 
+    else if (data.equals("toUpperCase") || 
+             data.equals("toUpper")) 
     { return pre + ".ToUpper()"; } 
-    else if (data.equals("toLowerCase") || data.equals("toLower"))
+    else if (data.equals("toLowerCase") || 
+             data.equals("toLower"))
     { return pre + ".ToLower()"; } 
     else if (data.equals("trim"))
     { return pre + ".Trim()"; } 
@@ -6760,23 +6861,25 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
       // must be int, double, long, String
  
       if (sumtype == null) 
-      { JOptionPane.showMessageDialog(null, 
-              "No type for: " + this, 
-              "Type error", JOptionPane.ERROR_MESSAGE);
+      { // JOptionPane.showMessageDialog(null, 
+        //      "No type for: " + this, 
+        //      "Type error", JOptionPane.ERROR_MESSAGE);
         return ""; 
       }
 
       String tname = sumtype.getName(); 
       return "SystemTypes.sum" + tname + "(" + pre + ")"; 
     } 
+    else if (data.equals("average"))
+    { return "SystemTypes.average(" + pre + ")"; }  
     else if (data.equals("prd"))
     { Type sumtype = argument.getElementType();  
       // must be int, double, long
  
       if (sumtype == null) 
-      { JOptionPane.showMessageDialog(null, 
-                     "No type for: " + this, 
-                     "Type error", JOptionPane.ERROR_MESSAGE);
+      { // JOptionPane.showMessageDialog(null, 
+        //              "No type for: " + this, 
+        //              "Type error", JOptionPane.ERROR_MESSAGE);
         return ""; 
       }
       String tname = sumtype.getName(); 
@@ -7391,7 +7494,8 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
       { return new BUnaryExpression("union", psimp); } 
       return psimp; 
     } // but only goes one level down. 
-    else if (operator.equals("->asSet"))
+    else if (operator.equals("->asSet") || 
+             operator.equals("->oclAsSet"))
     { if (argument.isOrderedB() || 
           Type.isSequenceType(argument.getType()))
       { return new BUnaryExpression("ran",psimp); }  
@@ -7713,7 +7817,8 @@ private BExpression subcollectionsBinvariantForm(BExpression bsimp)
     if (operator.equals("not"))
     { return new BUnaryExpression("not",psimp); } 
 
-    if (operator.equals("->asSet"))
+    if (operator.equals("->asSet") || 
+        operator.equals("->oclAsSet"))
     { if (argument.isOrderedB() || 
           Type.isSequenceType(argument.getType()))
       { return new BUnaryExpression("ran",psimp); }  

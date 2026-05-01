@@ -500,7 +500,14 @@ class BasicExpression extends Expression
   } 
 
   public boolean isSideEffecting()
-  { return isConstructorCall() || 
+  { if ("Find".equals(data) || "retrieve".equals(data))
+    { return false; } // database queries
+
+    if ("Sequence".equals(data) || "Set".equals(data) ||
+        "Map".equals(data) || "Function".equals(data))
+    { return false; } // types
+
+    return isConstructorCall() || 
            isUpdateOperationCall(); 
   } 
 
@@ -19267,6 +19274,8 @@ public Statement generateDesignSubtract(Expression rhs)
                             Map uses, Vector messages)
   { //  level |-> [x.setAt(i,y), etc]
 
+    /* JOptionPane.showInputDialog("Collection uses of " + this + " " + level + " " + objectRef + " " + parameters);  */ 
+
     if (objectRef != null || parameters != null ||
         arrayIndex != null)
     { boolean sideeffect = isSideEffecting(); 
@@ -19275,7 +19284,7 @@ public Statement generateDesignSubtract(Expression rhs)
  
       /* JOptionPane.showInputDialog("Complexity of " + this + 
           " = " + syncom + " uses = " + vuses + 
-          " level: " + level + " sideeffect: " + sideeffect); */
+          " level: " + level + " sideeffect: " + sideeffect); */ 
 
       if (syncom >= TestParameters.energyCloneSizeLimit &&
           level > 1 && vuses.size() == 0 && !sideeffect)

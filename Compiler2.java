@@ -348,7 +348,8 @@ public class Compiler2
         str.equals("excludingValue") || 
         str.equals("intersection") || 
         str.equals("union") ||
-        str.equals("unionAll") || str.equals("intersectAll") || 
+        str.equals("unionAll") || 
+        str.equals("intersectAll") || 
         str.equals("at") ||
         str.equals("apply") || 
         str.equals("selectMaximals") || 
@@ -365,7 +366,8 @@ public class Compiler2
         str.equals("xor") ||
         str.equals("toLowerCase") || str.equals("toUpperCase") || 
         str.equals("Sum") ||
-        str.equals("Prd") || str.equals("symmetricDifference") || 
+        str.equals("Prd") || 
+        str.equals("symmetricDifference") || 
         str.equals("oclIsUndefined") ||
         str.equals("oclIsInvalid") ||
         str.equals("oclAsType") || 
@@ -389,7 +391,10 @@ public class Compiler2
         str.equals("isLong") || str.equals("toLong") || 
         str.equals("closure") || 
         str.equals("asSet") || str.equals("asSequence") || 
+        str.equals("oclAsSet") || 
+        str.equals("oclAsSequence") || 
         str.equals("asOrderedSet") ||
+        str.equals("asBag") || 
         str.equals("asArray") || 
         str.equals("resizeTo") || 
         str.equals("sequenceRange") || 
@@ -3427,11 +3432,14 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
              "isDeleted".equals(ss2) ||
              "display".equals(ss2) || 
              "min".equals(ss2) || "max".equals(ss2) ||
-             "sum".equals(ss2) || "sort".equals(ss2) || 
+             "sum".equals(ss2) || "sort".equals(ss2) ||
+             "average".equals(ss2) ||  
              "asSet".equals(ss2) || "asBag".equals(ss2) ||
              "asOrderedSet".equals(ss2) || 
              "sqrt".equals(ss2) || "sqr".equals(ss2) || 
              "asSequence".equals(ss2) ||
+             "oclAsSet".equals(ss2) ||
+             "oclAsSequence".equals(ss2) ||
              "asArray".equals(ss2) || // "asMap" also
              "last".equals(ss2) || "first".equals(ss2) || 
              "closure".equals(ss2) ||
@@ -3827,11 +3835,23 @@ public Expression parse_lambda_expression(int bc, int st, int en, Vector entitie
           // System.out.println(">> Parsed new unary -> expression: " + be); 
           return be; 
         } 
-        else if (i + 3 <= pend) // && "(".equals(lexicals.get(i+2) + "") &&
-                                //   ")".equals(lexicals.get(pend) + "")) 
-        // this should allow new Binary operators 
-        { // System.out.println(">> Trying to parse at " + ss2); 
-          Expression ee1 = parse_expression(bc+1,i+3,pend-1,entities,types); 
+        else if (i + 3 <= pend) 
+          // && "(".equals(lexicals.get(i+2) + "") &&
+          //   ")".equals(lexicals.get(pend) + "")) 
+          // this should allow new Binary operators 
+        { // System.out.println(">> Trying to parse at " + ss2);
+          Expression ee1 = null; 
+
+          if ("oclAsType".equals(ss2) || 
+              "oclIsTypeOf".equals(ss2) || 
+              "oclIsKindOf".equals(ss2))
+          { Type tt = parseType(i+3,pend-1,entities,types); 
+            if (tt == null) { continue; } 
+            ee1 = new BasicExpression(tt); 
+          } 
+            
+          ee1 = parse_expression(bc+1,i+3,pend-1,entities,types); 
+
           if (ee1 == null) { continue; } 
 
           Expression ee2 = 
@@ -6999,6 +7019,11 @@ public Vector parseAttributeDecsInit(Vector entities, Vector types)
         return "arg->prd()"; 
       }
 
+      if ("->average".startsWith(st))
+      { mess[0] = "Average operator on sets & sequences of numbers"; 
+        return "arg->average()"; 
+      }
+
       if ("->pow".startsWith(st))
       { mess[0] = "Power operator on numbers"; 
         return "arg->pow(exponent)"; 
@@ -7020,12 +7045,14 @@ public Vector parseAttributeDecsInit(Vector entities, Vector types)
         return "f->apply(x)"; 
       } 
 
-      if ("->asSet".startsWith(st))
+      if ("->oclAsSet".startsWith(st) || 
+          "->asSet".startsWith(st))
       { mess[0] = "Converts collection to a set"; 
         return "x->asSet()"; 
       }
 
-      if ("->asSequence".startsWith(st))
+      if ("->oclAsSequence".startsWith(st) || 
+          "->asSequence".startsWith(st))
       { mess[0] = "Converts collection to sequence"; 
         return "x->asSequence()"; 
       }
@@ -7624,7 +7651,9 @@ public Vector parseAttributeDecsInit(Vector entities, Vector types)
 
         boolean bb = balancedBrackets(s,i-1); 
         if (bb == false) 
-        { continue; } 
+        { System.err.println("! unbalanced brackets in statement " + showLexicals(s,i-1)); 
+          continue; 
+        } 
 
         // System.out.println(">>> Parsing at: " + showLexicals(s,i-1)); 
 
@@ -7930,15 +7959,28 @@ public Vector parseAttributeDecsInit(Vector entities, Vector types)
       for (int j = s+4; j < e; j++) 
       { String chr = lexicals.get(j) + ""; 
         if (":=".equals(chr))
-        { Type typ1 = parseType(s+3,j-1,entities,types); 
-          Expression expr = parse_expression(0,j+1,e,entities,types); 
-          if (typ1 != null && expr != null) 
-          { System.out.println(">>> Creation statement var " + varname + " : " + typ1 + " with initialisation " + expr);
-            CreationStatement cs1 = new CreationStatement(typ1 + "",varname); 
+        { Type typ1 = parseType(s+3,j-1,entities,types);
+
+          Compiler2 newc = new Compiler2(); 
+          Vector lexics = getLexicals(j+1,e); 
+          newc.copyLexicals(lexics); 
+          Expression ee = 
+             newc.parseExpression(entities,types); 
+ 
+          if (ee == null)
+          { ee = parse_expression(0,j+1,e,entities,types); }
+ 
+          if (ee != null) 
+          { // JOptionPane.showInputDialog(">>> Creation statement var " + varname + " : " + typ1 + " with initialisation " + ee);
+            CreationStatement cs1 = new CreationStatement(typ1 + "",varname);
+
+            if (typ1 == null) 
+            { typ1 = new Type("OclAny", null); }  
+
             cs1.setType(typ1); 
             cs1.setKeyType(typ1.getKeyType()); 
             cs1.setElementType(typ1.getElementType());  
-            cs1.setInitialisation(expr);
+            cs1.setInitialisation(ee);
             return cs1;
           }   
         }
@@ -12205,7 +12247,7 @@ private Vector parseUsingClause(int st, int en, Vector entities, Vector types)
                                                 // above.
 
     // c.nospacelexicalanalysis("Domain.Order.Find(lambda v : Order in (v.Year = year & v.Month = month))");
-    c.nospacelexicalanalysis("let x : boolean = a in (x & b)");  
+    c.nospacelexicalanalysis("Domain.Lead.Find(lambda l : OclAny in (l.LeadType = self.LeadType & l.DateCreated >= self.DateFrom & l.DateCreated <= self.DateTo))");  
     Expression expr = c.parseExpression(); 
 
     System.out.println(expr); 

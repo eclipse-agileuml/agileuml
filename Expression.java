@@ -2288,6 +2288,9 @@ abstract class Expression
     return "";
   }
   
+  public boolean hasBrackets()
+  { return needsBracket; } 
+
   public boolean hasBasicType()
   { return Type.isBasicType(type); } 
 
@@ -4282,9 +4285,18 @@ abstract class Expression
   { if (e1 == null) { return null; } 
     if (e2 == null) { return null; } 
 
+    boolean br1 = e1.hasBrackets(); 
+    boolean br2 = e2.hasBrackets(); 
+
+    e1.setBrackets(false); 
+    e2.setBrackets(false); 
+
     if (isInteger("" + e1) && isInteger("" + e2))
     { int v1 = convertInteger("" + e1); 
       int v2 = convertInteger("" + e2);
+
+      e1.setBrackets(br1); 
+      e2.setBrackets(br2); 
 
       if (v2 == 0 && v1 > 0)
       { return new BasicExpression("Math_PINFINITY"); } 
@@ -4301,6 +4313,9 @@ abstract class Expression
     { double v1 = convertNumber("" + e1); 
       double v2 = convertNumber("" + e2); 
 
+      e1.setBrackets(br1); 
+      e2.setBrackets(br2); 
+
       if (v2 == 0 && v1 > 0)
       { return new BasicExpression("Math_PINFINITY"); } 
       if (v2 == 0 && v1 < 0)
@@ -4312,6 +4327,8 @@ abstract class Expression
       return new BasicExpression(v1 / v2); 
     } 
 
+    e1.setBrackets(br1); 
+    e2.setBrackets(br2); 
     return new BinaryExpression("/", e1, e2); 
   }  
 
@@ -5394,13 +5411,120 @@ abstract class Expression
       if (vnames.contains("self") || 
           vuses.size() > 0) { } 
       else 
-      { System.err.println("!! OES flaw: " + vset + " not used in " + expr);
+      { System.err.println("!! OES flaw: iterator variable " + vset + " not used in " + expr);
         return new BinaryExpression("*", 
                      Expression.simplifySize(col), expr);  
       } 
     } 
 
     return new UnaryExpression("->sum", src); 
+  } 
+
+  public static Expression simplifyAverage(Expression src)
+  { // Integer.subrange(1,n)->average() is (1+n)/2.0
+    // Integer.subrange(a,b)->average() is (a+b)/2.0
+
+    // sq->collect(x|e)->average() is e when e
+    //    independent of x
+    // sq->collect(e)->average() is e when e
+    //    independent of sq elements
+
+    if (src instanceof SetExpression)
+    { SetExpression setexpr = (SetExpression) src; 
+      return setexpr.average(); 
+    } 
+
+    if (src instanceof UnaryExpression &&  
+        "->sort".equals(((UnaryExpression) src).getOperator()))
+    { UnaryExpression ue = (UnaryExpression) src; 
+      return Expression.simplifyAverage(ue.getArgument()); 
+    } 
+
+    if (src instanceof BinaryExpression && 
+        "->sortedBy".equals(
+                 ((BinaryExpression) src).getOperator()))
+    { BinaryExpression be = (BinaryExpression) src; 
+      return Expression.simplifyAverage(be.getLeft()); 
+    } 
+
+    if (src instanceof BasicExpression &&
+        ((BasicExpression) src).getData().equals("subrange") &&
+        "Integer".equals(
+           ((BasicExpression) src).getObjectRef() + ""))
+    { BasicExpression lcol = (BasicExpression) src; 
+      Vector pars = lcol.getParameters(); 
+  
+      if (pars != null && pars.size() >= 2)
+      { Expression par1 = (Expression) pars.get(0); 
+        Expression par2 = (Expression) pars.get(1); 
+
+        Expression sum1 = new BinaryExpression("+", par1, 
+                                    par2); 
+        sum1.setBrackets(true);
+        Expression res = 
+             new BinaryExpression("/", sum1, 
+               new BasicExpression(2.0)); 
+          return res; 
+      } 
+    }     
+  
+
+    if (src instanceof BinaryExpression &&
+        "|C".equals(((BinaryExpression) src).getOperator()))
+    { BinaryExpression colexpr = 
+              (BinaryExpression) src; 
+      BinaryExpression inrange = 
+              (BinaryExpression) colexpr.getLeft(); 
+
+      BasicExpression var = 
+          (BasicExpression) inrange.getLeft(); 
+      Expression col = inrange.getRight(); 
+      Expression expr = colexpr.getRight();
+      Vector vset = new Vector(); 
+      vset.add(var + ""); 
+ 
+      Vector vnames = expr.allVariableNames();
+      Vector vuses = expr.variablesUsedIn(vset); 
+ 
+      if (vnames.contains(var + "") || 
+          vuses.size() > 0) { } 
+      else 
+      { System.err.println("!! OES flaw: iterator variable " + var + " not used in " + expr);
+        return expr;  
+      } 
+    } 
+
+    if (src instanceof BinaryExpression &&
+        "->collect".equals(
+             ((BinaryExpression) src).getOperator()))
+    { BinaryExpression colexpr = 
+              (BinaryExpression) src; 
+      Expression col = 
+              colexpr.getLeft(); 
+      Vector vset = new Vector(); 
+      vset.add("self"); 
+
+      Type etyp = col.getElementType(); 
+      if (etyp != null && etyp.isEntity())
+      { Entity ent = etyp.getEntity(); 
+        Vector ffs = ent.allDefinedFeatureNames(); 
+        vset.addAll(ffs); 
+      } 
+
+      Expression expr = colexpr.getRight();
+ 
+      Vector vnames = expr.allVariableNames(); 
+      Vector vuses = expr.variablesUsedIn(vset); 
+      
+      if (vnames.contains("self") || 
+          vuses.size() > 0) { } 
+      else 
+      { System.err.println("!! OES flaw: iterator variable " + vset + " not used in " + expr);
+        return expr;  
+      } 
+    } 
+
+    return new UnaryExpression("->average", src); 
   } 
 
   public static Expression simplifyPrd(Expression src)

@@ -8200,27 +8200,31 @@ public class BSystemTypes extends BComponent
       "    { Integer x = (Integer) a.get(i); \n" +
       "      if (x != null) { sum += x.intValue(); }\n" + 
       "    } \n" + 
-      "    return sum; }\n\n";
+      "    return sum;\n" + 
+      "  }\n\n";
     res = res + "  public static double sumdouble(List a)\n" +
       "  { double sum = 0.0; \n" +
       "    for (int i = 0; i < a.size(); i++)\n" +
       "    { Double x = (Double) a.get(i); \n" +
       "      if (x != null) { sum += x.doubleValue(); }\n" + 
       "    } \n" + 
-      "    return sum; }\n\n";
+      "    return sum;\n" + 
+      "  }\n\n";
     res = res + "  public static long sumlong(List a)\n" +
       "  { long sum = 0; \n" +
       "    for (int i = 0; i < a.size(); i++)\n" +
       "    { Long x = (Long) a.get(i); \n" +
       "      if (x != null) { sum += x.longValue(); }\n" + 
       "    } \n" + 
-      "    return sum; }\n\n";
+      "    return sum;\n" + 
+      "  }\n\n";
     res = res + "  public static String sumString(List a)\n" +
       "  { String sum = \"\"; \n" +
       "    for (int i = 0; i < a.size(); i++)\n" +
       "    { Object x = a.get(i); \n" +
       "      sum = sum + x; }\n" + 
-      "    return sum;  }\n\n";
+      "    return sum;\n" + 
+      "  }\n\n";
     res = res + "  public static int sumint(Map m)\n" + 
       "  { List range = new Vector();\n" +  
       "    range.addAll(m.values());\n" +  
@@ -8237,6 +8241,11 @@ public class BSystemTypes extends BComponent
       "  { List range = new Vector();\n" +  
       "    range.addAll(m.values());\n" +  
       "    return sumString(range);  }\n\n"; 
+    res = res + "  public static double average(List a)\n" +
+      "  { double sumd = Set.sumdouble(a); \n" +
+      "    return sumd/a.size(); \n" + 
+      "  }\n\n";
+
     return res;  
   } 
 
@@ -8306,6 +8315,12 @@ public class BSystemTypes extends BComponent
       "    for (Object x : a)\n" +
       "    { sum = sum + x; }\n" + 
       "    return sum;  }\n\n";
+
+    res = res + "  public static double average(List a)\n" +
+      "  { double sumd = sumdouble(a); \n" +
+      "    return sumd/a.size(); \n" + 
+      "  }\n\n";
+
     return res;
   } // and for maps
 
@@ -8359,6 +8374,28 @@ public class BSystemTypes extends BComponent
       "    for (String x : a)\n" +
       "    { sum = sum + x; }\n" + 
       "    return sum;  }\n\n";
+
+    res = res + "  public static double averagedouble(Collection<Double> col)\n" +
+    "  { double res = 0.0;\n" + 
+    "    for (Object x : col)\n" +
+    "    { res = res + (double) x; }\n" + 
+    "    return res/col.size(); \n" +
+    "  }\n\n";
+
+    res = res + "  public static double averageint(Collection<Integer> col)\n" +
+    "  { double res = 0.0;\n" + 
+    "    for (Object x : col)\n" +
+    "    { res = res + (int) x; }\n" + 
+    "    return res/col.size(); \n" +
+    "  }\n\n";
+
+    res = res + "  public static double averagelong(Collection<Long> col)\n" +
+    "  { double res = 0.0;\n" + 
+    "    for (Object x : col)\n" +
+    "    { res = res + (long) x; }\n" + 
+    "    return res/col.size(); \n" +
+    "  }\n\n";
+
     return res;
   } // maps
 
@@ -8460,6 +8497,11 @@ public class BSystemTypes extends BComponent
       "    { sum = sum + x; }\n" +
       "    return sum;\n" +
       "  }\n\n"; 
+
+    res = res + "  public static double average(ArrayList a)\n" +
+      "  { double sumd = SystemTypes.sumdouble(a); \n" +
+      "    return sumd/a.Count; \n" + 
+      "  }\n\n";
 
     return res;
   } // maps

@@ -199,6 +199,14 @@ public class SetExpression extends Expression
     return true; 
   } 
 
+  public static SetExpression asSequence(
+                                SetExpression arg) 
+  { SetExpression res = new SetExpression(true); 
+    res.elements.addAll(arg.getElements()); 
+    res.setElementType(arg.getElementType()); 
+    return res; 
+  } 
+
   public static SetExpression asSet(
                                 SetExpression arg) 
   { // ->asSet 
@@ -1052,6 +1060,27 @@ public class SetExpression extends Expression
     }
 
     return res;  
+  } 
+
+  public Expression average()
+  { Expression res = null; 
+
+    if (elements.size() == 0)
+    { return new BasicExpression("invalid"); } 
+
+    res = new BasicExpression(0.0);
+
+    int sze = elements.size(); 
+
+    for (int i = 0; i < sze; i++) 
+    { Expression elem = (Expression) elements.get(i); 
+      res = Expression.simplifyPlus(res, elem);  
+    }
+
+    res.setBrackets(true); 
+
+    return Expression.simplifyDivide(res,
+                         new BasicExpression(sze));  
   } 
 
   public Expression prd()

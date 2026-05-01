@@ -23700,6 +23700,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       uses.set("red", rScore+1);  
       int lcecount = (int) uses.get("LCE"); 
       uses.set("LCE", lcecount+1); 
+      return res; 
     }
 
     if (operator.equals("->including") ||
