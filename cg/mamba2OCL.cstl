@@ -773,7 +773,10 @@ Any ( ) |-->->notEmpty()
 Any ( _1 ) |-->->exists( _1`directLambdaTranslation )<when> _1`isDirectLambda true 
 Any ( _1 ) |-->->exists( _x | _1->apply(_x) )
 
+Sum ( _1 ) |-->->collect( _1`directLambdaTranslation )->sum()<when> _1`isDirectLambda true 
 Sum ( _1 ) |-->->collect( _x | _1->apply(_x) )->sum()
+
+Average ( _1 ) |-->->collect( _1`directLambdaTranslation )->average()<when> _1`isDirectLambda true 
 Average ( _1 ) |-->->collect( _x | _1->apply(_x) )->average()
 
 OrderBy ( _1 ) |-->->sortedBy( _1`directLambdaTranslation )<when> _1`isDirectLambda true

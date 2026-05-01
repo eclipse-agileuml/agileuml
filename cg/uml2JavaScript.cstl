@@ -29,8 +29,12 @@ _1 ->min ( ) |-->Ocl.minCollection(_1)
 _1 ->sum ( ) |-->Ocl.sumString(_1)<when> _1`oclelemtype String
 _1 ->sum ( ) |-->Ocl.sumNumeric(_1)
 _1 ->prd ( ) |-->Ocl.prd(_1)
+_1 ->average ( ) |-->Ocl.average(_1)
 
 _1 ->copy ( ) |-->Ocl.copy(_1)
+
+_1 ->asSet ( ) |-->Ocl.asSet(_1)
+_1 ->oclAsSet ( ) |-->Ocl.asSet(_1)
 
 _1 ->any ( ) |-->Ocl.anyMap(_1)<when> _1`ocltype Map
 _1 ->any ( ) |-->Ocl.any(_1)
