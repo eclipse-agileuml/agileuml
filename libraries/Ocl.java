@@ -787,6 +787,26 @@ class OclMaplet<K,T>
     return true;
   }
 
+  public static double averagedouble(Collection<Double> col)
+  { double res = 0.0; 
+    for (Object x : col)
+    { res = res + (double) x; } 
+    return res/col.size(); 
+  } 
+
+  public static double averageint(Collection<Integer> col)
+  { double res = 0.0; 
+    for (Object x : col)
+    { res = res + (int) x; } 
+    return res/col.size(); 
+  } 
+
+  public static double averagelong(Collection<Long> col)
+  { double res = 0.0; 
+    for (Object x : col)
+    { res = res + (long) x; } 
+    return res/col.size(); 
+  } 
 
   public static int sumint(Collection<Integer> a)
   { int sum = 0; 

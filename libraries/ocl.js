@@ -1326,6 +1326,16 @@ class Ocl
     }
     return result;
   } // for sets, sequences
+
+  static average(col) 
+  { var result = 0;
+    var count = 0; 
+    for (var x of col) 
+    { result = result + x; 
+      count++; 
+    }
+    return result/count;
+  }
  
   static sumNumeric(col) 
   { var result = 0;

@@ -1050,6 +1050,12 @@ def maxSet(col) :
       result = x
   return result
 
+def average(col) : 
+  if col : 
+    res = sum(col)
+    return res/len(col)
+  else : 
+    return None
 
 def sum(col) : 
   result = 0
@@ -1281,6 +1287,7 @@ def values(m) :
 # print(bg)
 
 # tt = SortedList([2,3,5,6,6])
+# print(average(tt))
 
 # print(includesAllSortedSequence(ss,tt))
 
