@@ -975,7 +975,11 @@ public void findClones(java.util.Map clones,
         String argop = arg.getOperator(); 
  
         if ("->reverse".equals(argop) ||
-            "->sort".equals(argop))
+            "->sort".equals(argop) ||
+            "->asSet".equals(argop) ||
+            "->asSequence".equals(argop) ||
+            "->oclAsSet".equals(argop) || 
+            "->oclAsSequence".equals(argop))
         { aUses.add("!! OCL efficiency smell (OES): Inefficient expression in: " + this + ",");  
           aUses.add("!! Instead use " + arg.getArgument() + operator + "()");
           int ascore = (int) res.get("amber"); 
@@ -1023,7 +1027,11 @@ public void findClones(java.util.Map clones,
       { UnaryExpression lbe = (UnaryExpression) argument;
 
         if (lbe.operator.equals("->sort") || 
-            lbe.operator.equals("->reverse"))
+            lbe.operator.equals("->reverse") ||
+            lbe.operator.equals("->asSet") || 
+            lbe.operator.equals("->asSequence") ||
+            lbe.operator.equals("->oclAsSet") ||
+            lbe.operator.equals("->oclAsSequence"))
         { rUses.add("!!! (UOR) flaw: " + 
             "Unused results in: " + this + ",");  
           rUses.add("!!! Use col->min() instead of col->sort()->first() or ->any(), col->max() for col->sort()->last(), col->first() for col->reverse()->last(), and col->last() instead of col->reverse()->first() or ->any()");
@@ -1201,7 +1209,7 @@ public void findClones(java.util.Map clones,
     
     if ("->sort".equals(operator))
     { if (argument.isSorted())
-      { aUses.add("!!! (RC): Redundant ->sort operation: " + this + 
+      { rUses.add("!!! (RC): Redundant ->sort operation: " + this + 
             "\n!!! Argument is already sorted.");
         int rscore = (int) res.get("red"); 
         res.set("red", rscore+1); 
@@ -1346,6 +1354,40 @@ public void findClones(java.util.Map clones,
       } 
    
       return new UnaryExpression(operator, arg); 
+    } 
+
+    if (operator.equals("->notEmpty") && 
+        arg instanceof UnaryExpression)
+    { UnaryExpression expr = (UnaryExpression) arg; 
+      String eop = expr.getOperator(); 
+
+      if ("->reverse".equals(eop) || 
+          "->sort".equals(eop) || 
+          "->asSet".equals(eop) || 
+          "->oclAsSet".equals(eop) || 
+          "->asSequence".equals(eop) || 
+          "->oclAsSequence".equals(eop)) 
+      { System.out.println("!! OCL efficiency smell (OES): redundant operator: " + eop + " in " + this);
+        return new UnaryExpression("->notEmpty", 
+                             expr.getArgument()); 
+      } 
+    } 
+
+    if (operator.equals("->isEmpty") && 
+        arg instanceof UnaryExpression)
+    { UnaryExpression expr = (UnaryExpression) arg; 
+      String eop = expr.getOperator(); 
+
+      if ("->reverse".equals(eop) || 
+          "->sort".equals(eop) || 
+          "->asSet".equals(eop) || 
+          "->oclAsSet".equals(eop) || 
+          "->asSequence".equals(eop) || 
+          "->oclAsSequence".equals(eop)) 
+      { System.out.println("!! OCL efficiency smell (OES): redundant operator: " + eop + " in " + this);
+        return new UnaryExpression("->isEmpty", 
+                             expr.getArgument()); 
+      } 
     } 
 
     if (operator.equals("->notEmpty") && 

@@ -1038,6 +1038,13 @@ public void findPlugins()
     convertatt.addActionListener(this);
     qualityMenu.add(convertatt);
 
+    JMenuItem hoistDecsop = 
+      new JMenuItem("Hoist local declarations"); 
+    hoistDecsop.addActionListener(this);
+    hoistDecsop.setToolTipText(
+      "Hoists local declarations to start of operation code");
+    qualityMenu.add(hoistDecsop);
+
     ((JMenu) qualityMenu).addSeparator(); 
 
     JMenuItem energyMenu = new JMenu("Energy use refactoring"); 
@@ -1099,12 +1106,12 @@ public void findPlugins()
       "Moves/combines statements to simplify code");
     energyMenu.add(removeIneffectiveStats);
 
-    JMenuItem hoistDecsop = 
-      new JMenuItem("Hoist local declarations"); 
-    hoistDecsop.addActionListener(this);
-    hoistDecsop.setToolTipText(
-      "Hoists local declarations to start of operation code");
-    energyMenu.add(hoistDecsop);
+    JMenuItem propagateAssignments = 
+      new JMenuItem("Forward propagate assignments"); 
+    propagateAssignments.addActionListener(this);
+    propagateAssignments.setToolTipText(
+      "Substitutes assigned values into statement after assignment");
+    energyMenu.add(propagateAssignments);
 
     JMenuItem reduceNestingop = 
       new JMenuItem("Reduce code nesting"); 
@@ -1487,11 +1494,11 @@ public void findPlugins()
       "Python 3 with type annotations"); 
     buildMenu.add(pyMenu); 
 
-    JMenuItem py3Menu = new JMenuItem("Generate Untyped Python3"); 
+    /* JMenuItem py3Menu = new JMenuItem("Generate Untyped Python3"); 
     py3Menu.addActionListener(this);
     py3Menu.setToolTipText(
       "Untyped Python 3"); 
-    buildMenu.add(py3Menu);
+    buildMenu.add(py3Menu); */ 
 
     JMenuItem jsMenu = new JMenuItem("Generate JavaScript"); 
     jsMenu.addActionListener(this);
@@ -2314,7 +2321,7 @@ public void findPlugins()
       { ucdArea.saveModelToFile("output/model.txt"); 
 
 
-        RunApp rapp1 = new RunApp("uml2py"); 
+        RunApp rapp1 = new RunApp("uml2py3"); 
 
         try
         { rapp1.setFile("app.py"); 
@@ -2322,7 +2329,7 @@ public void findPlugins()
           appthread.start(); 
         } 
         catch (Exception ee2) 
-        { System.err.println("!! Unable to run uml2py.jar"); } 
+        { System.err.println("!! Unable to run uml2py3.jar"); } 
 
         File pythonTests = new File("tester.py"); 
         try
@@ -2344,7 +2351,7 @@ public void findPlugins()
         { System.out.println("!! Error generating Python tests"); }
         
       }
-      else if (label.equals("Generate Untyped Python3"))
+   /* else if (label.equals("Generate Untyped Python3"))
       { ucdArea.saveModelToFile("output/model.txt"); 
 
         // java.util.Date d1 = new java.util.Date(); 
@@ -2385,7 +2392,7 @@ public void findPlugins()
         // java.util.Date d2 = new java.util.Date(); 
         // long t2 = d2.getDate(); 
         // System.out.println(">>> Code generation took " + (t2-t1) + "ms"); 
-      }
+      }  */ 
       else if (label.equals("Generate JavaScript"))
       { ucdArea.generateJavaScript(); } 
       else if (label.equals("Generate Go"))
@@ -3012,6 +3019,8 @@ public void findPlugins()
       { this.hoistOperationLocalDecs(); } 
       else if (label.equals("Reduce code nesting"))
       { this.reduceCodeNesting(); } 
+      else if (label.equals("Forward propagate assignments"))
+      { this.propagateAssignments(); } 
       else if (label.equals("Simplify OCL"))
       { ucdArea.simplifyOCL(); } 
       else if (label.equals("Value Object"))
@@ -3901,6 +3910,27 @@ public void findPlugins()
       ent.removeIneffectiveStatements();
     } 
   }
+
+  private void propagateAssignments()
+  { if (listShowDialog == null)
+    { listShowDialog = new ListShowDialog(this);
+      listShowDialog.pack();
+      listShowDialog.setLocationRelativeTo(this); 
+    }
+    listShowDialog.setOldFields(ucdArea.getEntities()); // getClasses?
+    thisLabel.setText("Select entity to propagate assignments"); 
+    System.out.println(">> Select entity to propagate assignments");
+
+    listShowDialog.setVisible(true); 
+
+    Object[] vals = listShowDialog.getSelectedValues();
+    if (vals != null && vals.length > 0 &&
+        vals[0] instanceof Entity)
+    { Entity ent = (Entity) vals[0];
+      ent.propagateAssignments();
+    } 
+  }
+
 
   private void replaceCallByDefinition()
   { if (listShowDialog == null)

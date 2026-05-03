@@ -22168,6 +22168,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
 
     // and other simplifications for energy-efficiency & quality
 
+    // System.out.println(">> Simplifying " + this); 
 
     Expression lexpr = left.simplifyOCL(); 
     Expression rexpr = right.simplifyOCL(); 
@@ -22182,10 +22183,13 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
     { return Expression.simplifyApply(lexpr, rexpr); } 
 
     if ("+".equals(operator)) 
-    { return Expression.simplifyPlus(lexpr, rexpr); } 
+    { return Expression.simplify("+", lexpr, rexpr, needsBracket); } 
 
     if ("-".equals(operator)) 
-    { return Expression.simplifyMinus(lexpr, rexpr); } 
+    { return Expression.simplify("-", lexpr, rexpr, needsBracket); } 
+
+    if ("*".equals(operator)) 
+    { return Expression.simplify("*", lexpr, rexpr, needsBracket); } 
 
     if ("|C".equals(operator))
     { BinaryExpression beleft = (BinaryExpression) lexpr; 

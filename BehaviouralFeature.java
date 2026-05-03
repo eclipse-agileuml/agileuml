@@ -4689,6 +4689,11 @@ public class BehaviouralFeature extends ModelElement
     { activity = activity.removeIneffectiveStatements(); }  
   } 
 
+  public void propagateAssignments() 
+  { if (activity != null) 
+    { activity = activity.forwardPropagateAssignments(); }  
+  } 
+
   public Map energyAnalysis(Vector redUses, Vector amberUses, 
                             Vector yellowUses)
   { // Scan the postcondition/activity for energy expensive

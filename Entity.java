@@ -6045,6 +6045,16 @@ public class Entity extends ModelElement implements Comparable
     } 
   } 
 
+  public void propagateAssignments()
+  { int n = operations.size(); 
+
+    for (int i = 0; i < n; i++) 
+    { BehaviouralFeature op = 
+          (BehaviouralFeature) operations.get(i); 
+      op.propagateAssignments(); 
+    } 
+  } 
+
 
   public Map energyAnalysis(Vector messages, Vector csv, 
                             PrintWriter out)

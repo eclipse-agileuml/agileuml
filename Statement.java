@@ -143,7 +143,118 @@ abstract class Statement implements Cloneable
 
     return false; 
   }  
+
+  public static Statement substituteEqFirst(String var,
+                              Expression expr, Statement st)
+  { // replace var by expr in first statement(s) of st
+
+    if (st instanceof AssignStatement)
+    { AssignStatement asgn = (AssignStatement) st; 
+      Expression lhs = asgn.getLhs(); 
+      Expression rhs = asgn.getRhs(); 
+      Expression newrhs = rhs.substituteEq(var, expr);
+      System.out.println(">> Propagated " + var + " = " + expr + " to " + asgn); 
  
+      return new AssignStatement(lhs, newrhs); 
+    } 
+
+    if (st instanceof CreationStatement)
+    { CreationStatement asgn = (CreationStatement) st; 
+      CreationStatement newcre = 
+                           (CreationStatement) asgn.clone();
+      Expression rhs = asgn.getInitialisation(); 
+      Expression newrhs = rhs.substituteEq(var, expr); 
+      newcre.setInitialisation(newrhs); 
+      System.out.println(">> Propagated " + var + " = " + expr + " to " + asgn); 
+      return newcre; 
+    } 
+
+    if (st instanceof ConditionalStatement) 
+    { ConditionalStatement cs = (ConditionalStatement) st; 
+
+      Expression tst = cs.getTest(); 
+      Statement st1 = cs.getIf(); 
+      Statement st2 = cs.getElse(); 
+
+      Expression newtest = tst.substituteEq(var, expr); 
+      Statement newst1 = 
+                Statement.substituteEqFirst(var, expr, st1); 
+      Statement newst2 = 
+                Statement.substituteEqFirst(var, expr, st2); 
+      System.out.println(">> Propagated " + var + " = " + expr + " to " + cs); 
+      return new ConditionalStatement(newtest, newst1, newst2); 
+    } 
+
+    if (st instanceof SequenceStatement)
+    { SequenceStatement sq = (SequenceStatement) st; 
+      Vector stats = sq.getStatements(); 
+      if (stats.size() > 0)
+      { Statement st0 = (Statement) stats.get(0); 
+        Statement ns0 = 
+                  Statement.substituteEqFirst(var,expr,st0); 
+        Vector newstats = new Vector(); 
+        newstats.add(ns0); 
+        for (int i = 1; i < stats.size(); i++) 
+        { newstats.add(stats.get(i)); } 
+        return new SequenceStatement(newstats); 
+      } 
+
+      return st; 
+    } 
+
+    // if a call, replace in parameter expressions
+
+    if (st instanceof InvocationStatement) 
+    { InvocationStatement call = (InvocationStatement) st; 
+      Expression cexpr = call.getCallExpression();
+       
+      if (cexpr != null && cexpr instanceof BasicExpression)
+      { BasicExpression be = (BasicExpression) cexpr;
+        BasicExpression nbe = (BasicExpression) be.clone(); 
+ 
+        if (be.arrayIndex != null) 
+        { Expression indx = 
+            be.arrayIndex.substituteEq(var,expr); 
+          nbe.arrayIndex = indx; 
+        } 
+
+        if (be.getParameters() != null) 
+        { Vector pars = be.getParameters(); 
+          Vector npars = new Vector(); 
+
+          for (int i = 0; i < pars.size(); i++) 
+          { Expression par = 
+                       (Expression) pars.get(i);
+            Expression npar = par.substituteEq(var,expr); 
+            npars.add(npar); 
+          }
+
+          nbe.setParameters(npars); 
+        } 
+        
+        System.out.println(">> Propagated " + var + " = " + expr + " to " + call); 
+        return new InvocationStatement(nbe); 
+      } 
+
+      return st; 
+    }   
+
+    if (st instanceof ReturnStatement) 
+    { ReturnStatement rs = (ReturnStatement) st; 
+      if (rs.value != null) 
+      { Expression newvalue = rs.value.substituteEq(var,expr);
+
+        System.out.println(">> Propagated " + var + " = " + expr + " to " + rs); 
+
+        return new ReturnStatement(newvalue); 
+      } 
+
+      return st; 
+    } 
+
+    return st; 
+  } 
+
   public static boolean isOclBasicStatement(Statement st)
   { if (st instanceof ContinueStatement) 
     { return true; } 
@@ -645,6 +756,9 @@ abstract class Statement implements Cloneable
 
     return stat; 
   } 
+
+  public Statement forwardPropagateAssignments()
+  { return this; } 
 
   public Statement removeIneffectiveStatements()
   { return this; } 
@@ -4619,7 +4733,28 @@ abstract class Statement implements Cloneable
 
   abstract public Vector equivalentsUsedIn(); 
 
-  abstract public String toEtl(); 
+  abstract public String toEtl();
+
+  public static void main(String[] args)
+  { BasicExpression v1 = new BasicExpression("x"); 
+    BasicExpression e1 = new BasicExpression(100); 
+    AssignStatement as1 = new AssignStatement(v1,e1);  
+    BasicExpression v2 = new BasicExpression("y"); 
+    BasicExpression e2 = new BasicExpression("x"); 
+    AssignStatement as2 = new AssignStatement(v2,
+           new BinaryExpression("+", new BasicExpression(1), 
+                                e2));
+    Statement sk = new InvocationStatement("skip"); 
+
+    SequenceStatement ss = new SequenceStatement(); 
+    ss.addStatement(as1); 
+    ss.addStatement(as2); 
+    ss.addStatement(sk); 
+   
+    System.out.println(ss); 
+    Statement rs = ss.forwardPropagateAssignments(); 
+    System.out.println(rs); 
+  }  
 }
 
 
@@ -4712,7 +4847,7 @@ class ReturnStatement extends Statement
     { return uses; } 
     value.energyUse(uses, rUses, oUses, yUses); 
 
-    int syncomp = value.syntacticComplexity(); 
+    // int syncomp = value.syntacticComplexity(); 
 
     /* if (syncomp > TestParameters.syntacticComplexityLimit)
     { yUses.add("! Code smell (MEL): too high expression complexity (" + syncomp + ") for " + value); 
@@ -11558,7 +11693,8 @@ class SequenceStatement extends Statement
           Vector vvs = new Vector(); 
           vvs.add(var1); 
           Vector vuses = rhs2.variablesUsedIn(vvs); 
-          if (vuses.size() == 0 && rhs1 != null && !rhs1.isSideEffecting())
+          if (vuses.size() == 0 && rhs1 != null && 
+              !rhs1.isSideEffecting())
           { System.err.println("!! (OES) Ineffective declaration initialisation: " + as1); 
             i++; 
             as1.setInitialisation(rhs2); 
@@ -11576,6 +11712,73 @@ class SequenceStatement extends Statement
       } 
       else 
       { newstats.add(newstat); } 
+    } 
+
+    return new SequenceStatement(newstats); 
+  } 
+
+  public Statement forwardPropagateAssignments()
+  { Vector newstats = new Vector(); 
+
+    Vector fstatements = flattenSequenceStatement(); 
+    
+    for (int i = 0; i < fstatements.size(); i++) 
+    { Statement stat = (Statement) fstatements.get(i);
+
+      if (stat instanceof AssignStatement &&
+          i < fstatements.size()-1 &&  
+          Expression.isLiteralValue(
+              ((AssignStatement) stat).getRhs()))
+      { AssignStatement as1 = (AssignStatement) stat; 
+        Statement as2 = 
+              (Statement) fstatements.get(i+1);
+        Expression lhs1 = as1.getLhs(); 
+        Expression rhs1 = as1.getRhs();
+
+        Statement newstat = 
+           Statement.substituteEqFirst(lhs1+"", rhs1, as2);
+
+        newstats.add(as1); 
+        if (("" + as2).equals(newstat + ""))
+        { } 
+        else 
+        { newstats.add(newstat);
+          i++;
+        }  
+        continue;  
+      } 
+
+      if (stat instanceof CreationStatement &&
+        i < fstatements.size()-1 &&  
+        ((CreationStatement) stat).getInitialisation() != null &&
+        Expression.isLiteralValue(
+              ((CreationStatement) stat).getInitialisation()))
+      { CreationStatement as1 = (CreationStatement) stat; 
+        Statement as2 = 
+              (Statement) fstatements.get(i+1);
+        String lhs1 = as1.getVariable(); 
+        Expression rhs1 = as1.getInitialisation();
+
+        Statement newstat = 
+           Statement.substituteEqFirst(lhs1, rhs1, as2);
+
+        newstats.add(as1); 
+        if (("" + as2).equals(newstat + ""))
+        { } 
+        else 
+        { newstats.add(newstat);
+          i++;
+        }
+        continue;  
+      } 
+
+      if (stat instanceof SequenceStatement && 
+          stat.brackets == false)
+      { SequenceStatement ss = (SequenceStatement) stat; 
+        newstats.addAll(ss.statements); 
+      } 
+      else 
+      { newstats.add(stat); } 
     } 
 
     return new SequenceStatement(newstats); 
@@ -12015,7 +12218,8 @@ class SequenceStatement extends Statement
           stat instanceof ReturnStatement || 
           stat instanceof ErrorStatement ||
           Statement.endsWithExit(stat))
-      { newstats.add(stat);
+      { Statement nstat = stat.optimiseOCL();
+        newstats.add(nstat);
         break;
       } 
       
