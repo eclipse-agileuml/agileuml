@@ -8233,6 +8233,45 @@ private BExpression subcollectionsBinvariantForm(BExpression bsimp)
     if ("->size".equals(operator))
     { return simplifySize(argsimp); } 
 
+    if ("->isEmpty".equals(operator))
+    { return Expression.simplifyIsEmpty(argsimp,null); } 
+
+    if ("->notEmpty".equals(operator))
+    { return Expression.simplifyNotEmpty(argsimp,null); } 
+
+    if ("->sort".equals(operator))
+    { return Expression.simplifySort(argsimp); } 
+
+    if ("->reverse".equals(operator))
+    { return Expression.simplifyReverse(argsimp); } 
+
+    if ("->first".equals(operator))
+    { return Expression.simplifyFirst(argsimp); } 
+
+    if ("->last".equals(operator))
+    { return Expression.simplifyLast(argsimp); } 
+
+    if ("->front".equals(operator))
+    { return Expression.simplifyFront(argsimp); } 
+
+    if ("->tail".equals(operator))
+    { return Expression.simplifyTail(argsimp); } 
+
+    if ("->max".equals(operator))
+    { return Expression.simplifyMax(argsimp); } 
+
+    if ("->min".equals(operator))
+    { return Expression.simplifyMin(argsimp); } 
+
+    if ("->sum".equals(operator))
+    { return Expression.simplifySum(argsimp); } 
+
+    if ("->prd".equals(operator))
+    { return Expression.simplifyPrd(argsimp); } 
+
+    if ("->average".equals(operator))
+    { return Expression.simplifyAverage(argsimp); } 
+
     UnaryExpression clne = (UnaryExpression) clone(); 
     clne.argument = argsimp; 
     return clne; 
