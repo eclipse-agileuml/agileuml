@@ -3313,7 +3313,9 @@ abstract class Expression
       return SetExpression.values(se); 
     } 
 
-    if (op.equals("->asSet") && arg instanceof SetExpression)
+    if ((op.equals("->asSet") || 
+         op.equals("->oclAsSet")) && 
+        arg instanceof SetExpression)
     { SetExpression se = (SetExpression) arg; 
       return SetExpression.asSet(se); 
     } 
@@ -3322,6 +3324,19 @@ abstract class Expression
     { SetExpression se = (SetExpression) arg; 
       boolean emp = se.isEmpty();
       return new BasicExpression(emp);  
+    } 
+
+    if (op.equals("->notEmpty") && arg instanceof SetExpression)
+    { SetExpression se = (SetExpression) arg; 
+      boolean emp = se.notEmpty();
+      return new BasicExpression(emp);  
+    } 
+
+    if ((op.equals("->asSequence") || 
+         op.equals("->oclAsSequence")) && 
+        arg instanceof SetExpression)
+    { SetExpression se = (SetExpression) arg; 
+      return SetExpression.asSequence(se);
     } 
 
     if (op.equals("->notEmpty") && arg instanceof SetExpression)
@@ -6730,8 +6745,71 @@ abstract class Expression
       { return new BasicExpression(true); } 
     }
 
-    return new UnaryExpression("not",e); 
+    return new UnaryExpression("not", e); 
   } // and other cases
+
+
+  protected static Expression simplifyAsSet(
+                                       Expression re)
+  { if (re instanceof SetExpression)
+    { SetExpression rse = (SetExpression) re;
+
+      return SetExpression.asSet(rse); 
+    }
+
+    if (re instanceof UnaryExpression)
+    { UnaryExpression ue = (UnaryExpression) re; 
+      String uop = ue.getOperator(); 
+
+      if ("->reverse".equals(uop) || "->sort".equals(uop) ||
+          "->asSet".equals(uop) || "->oclAsSet".equals(uop)) 
+      { return simplifyAsSet(ue.getArgument()); } 
+    } 
+
+    if (re instanceof BinaryExpression)
+    { BinaryExpression ue = 
+                 (BinaryExpression) re; 
+      String uop = ue.getOperator(); 
+
+      if ("->sortedBy".equals(uop))
+      { return simplifyAsSet(ue.getLeft()); } 
+
+      if ("|sortedBy".equals(uop))
+      { BinaryExpression arg = 
+                   (BinaryExpression) ue.getLeft();
+        return simplifyAsSet(arg.getRight()); 
+      } 
+    } 
+
+    return new UnaryExpression("->asSet",re);
+  }
+
+  protected static Expression simplifyAsSequence(
+                                       Expression re)
+  { if (re instanceof SetExpression)
+    { SetExpression rse = (SetExpression) re;
+
+      return SetExpression.asSequence(rse); 
+    }
+
+    if (re instanceof UnaryExpression)
+    { UnaryExpression ue = (UnaryExpression) re; 
+      String uop = ue.getOperator(); 
+      if ("->asSequence".equals(uop) || 
+          "->oclAsSequence".equals(uop)) 
+      { return simplifyAsSequence(ue.getArgument()); } 
+    } 
+
+    if (re instanceof BasicExpression &&
+        ((BasicExpression) re).getData().equals("subrange") &&
+        "Integer".equals(
+           ((BasicExpression) re).getObjectRef() + ""))
+    { return re; } 
+
+
+    return new UnaryExpression("->asSequence",re);
+  }
+
 
   protected static Expression simplifyIsEmpty(
                                        Expression re,

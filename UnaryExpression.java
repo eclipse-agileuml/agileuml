@@ -8272,6 +8272,17 @@ private BExpression subcollectionsBinvariantForm(BExpression bsimp)
     if ("->average".equals(operator))
     { return Expression.simplifyAverage(argsimp); } 
 
+    if ("->max".equals(operator))
+    { return Expression.simplifyMax(argsimp); } 
+
+    if ("->oclAsSet".equals(operator) || 
+        "->asSet".equals(operator))
+    { return Expression.simplifyAsSet(argsimp); } 
+
+    if ("->oclAsSequence".equals(operator) || 
+        "->asSequence".equals(operator))
+    { return Expression.simplifyAsSequence(argsimp); } 
+
     UnaryExpression clne = (UnaryExpression) clone(); 
     clne.argument = argsimp; 
     return clne; 
