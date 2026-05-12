@@ -780,7 +780,7 @@ abstract class Statement implements Cloneable
       // s := s * var, s := s - var, s := s / var
       // s := s & var, s := s or var
       // s := s->including(var), s := s->excluding(var),
-      // s := s->append(var)
+      // s := s->append(var), s := s->prepend(var)
       // Also same with expr instead of var,
       // not involving var or s. 
 
@@ -790,7 +790,8 @@ abstract class Statement implements Cloneable
       Expression rhs = asm.getRight();
       rhs.setBrackets(false); 
 
-      if ((lhs + " + " + var).equals("" + rhs))
+      if (Expression.isSumOf(rhs, lhs, var))
+      // ((lhs + " + " + var).equals("" + rhs))
       { // lhs := lhs + loopRange->sum()
 
         Expression smm = new UnaryExpression("->sum", rng); 
@@ -800,7 +801,7 @@ abstract class Statement implements Cloneable
       } 
       else if (rhs instanceof BinaryExpression && 
         ((BinaryExpression) rhs).getOperator().equals("+") &&
-        (((BinaryExpression) rhs).getLeft() + "").equals(lhs + ""))
+        ((BinaryExpression) rhs).getLeft().isEqualTo(lhs))
       { // lhs := lhs + expr
         Expression expr = ((BinaryExpression) rhs).getRight(); 
         Vector vuses = expr.getVariableUses();
@@ -810,6 +811,7 @@ abstract class Statement implements Cloneable
 
         if (VectorUtil.containsEqualString(var+"", vuses))
         { // lhs := lhs + rng->collect(var|expr)->sum()
+
           Expression coll = 
             new BinaryExpression("|C", 
               new BinaryExpression(":", var, rng), expr); 
@@ -828,7 +830,8 @@ abstract class Statement implements Cloneable
               new BinaryExpression("*", expr, sze)); 
         return new AssignStatement(lhs, newrhs); 
       }         
-      else if ((lhs + " - " + var).equals("" + rhs))
+      else if (Expression.isDifferenceOf(rhs, lhs, var))
+      // (lhs + " - " + var).equals("" + rhs))
       { // lhs := lhs - loopRange->sum()
 
         Expression smm = new UnaryExpression("->sum", rng); 
@@ -838,7 +841,7 @@ abstract class Statement implements Cloneable
       } 
       else if (rhs instanceof BinaryExpression && 
         ((BinaryExpression) rhs).getOperator().equals("-") &&
-        (((BinaryExpression) rhs).getLeft() + "").equals(lhs + ""))
+        ((BinaryExpression) rhs).getLeft().isEqualTo(lhs))
       { // lhs := lhs - expr
         Expression expr = ((BinaryExpression) rhs).getRight(); 
         Vector vuses = expr.getVariableUses();
@@ -866,7 +869,8 @@ abstract class Statement implements Cloneable
               new BinaryExpression("*", expr, sze)); 
         return new AssignStatement(lhs, newrhs); 
       }         
-      else if ((lhs + " * " + var).equals("" + rhs))
+      else if (Expression.isProductOf(rhs, lhs, var))
+      // (lhs + " * " + var).equals("" + rhs))
       { // lhs := lhs * loopRange->prd()
 
         Expression prd = new UnaryExpression("->prd", rng); 
@@ -876,7 +880,7 @@ abstract class Statement implements Cloneable
       }   
       else if (rhs instanceof BinaryExpression && 
         ((BinaryExpression) rhs).getOperator().equals("*") &&
-        (((BinaryExpression) rhs).getLeft() + "").equals(lhs + ""))
+        ((BinaryExpression) rhs).getLeft().isEqualTo(lhs))
       { // lhs := lhs * expr
         Expression expr = ((BinaryExpression) rhs).getRight(); 
         Vector vuses = expr.getVariableUses();
@@ -904,7 +908,8 @@ abstract class Statement implements Cloneable
               new BinaryExpression("->pow", expr, sze)); 
         return new AssignStatement(lhs, newrhs); 
       }         
-      else if ((lhs + " / " + var).equals("" + rhs))
+      else if (Expression.isDivisionOf(rhs, lhs, var))
+      // (lhs + " / " + var).equals("" + rhs))
       { // lhs := lhs / loopRange->prd()
 
         Expression prd = new UnaryExpression("->prd", rng); 
@@ -914,7 +919,7 @@ abstract class Statement implements Cloneable
       }   
       else if (rhs instanceof BinaryExpression && 
         ((BinaryExpression) rhs).getOperator().equals("/") &&
-        (((BinaryExpression) rhs).getLeft() + "").equals(lhs + ""))
+        ((BinaryExpression) rhs).getLeft().isEqualTo(lhs))
       { // lhs := lhs / expr
         Expression expr = ((BinaryExpression) rhs).getRight(); 
         Vector vuses = expr.getVariableUses();
@@ -942,7 +947,8 @@ abstract class Statement implements Cloneable
               new BinaryExpression("->pow", expr, sze)); 
         return new AssignStatement(lhs, newrhs); 
       }         
-      else if ((lhs + " & " + var).equals("" + rhs))
+      else if (Expression.isCombinationOf(rhs, "&", lhs, var))
+      // (lhs + " & " + var).equals("" + rhs))
       { // lhs := lhs & loopRange->forAll(self)
 
         Type elemt = rng.getElementType(); 
@@ -957,7 +963,7 @@ abstract class Statement implements Cloneable
       }   
       else if (rhs instanceof BinaryExpression && 
         ((BinaryExpression) rhs).getOperator().equals("&") &&
-        (((BinaryExpression) rhs).getLeft() + "").equals(lhs + ""))
+        ((BinaryExpression) rhs).getLeft().isEqualTo(lhs))
       { // lhs := lhs & expr
         Expression expr = ((BinaryExpression) rhs).getRight(); 
         Vector vuses = expr.getVariableUses();
@@ -974,7 +980,8 @@ abstract class Statement implements Cloneable
             new BinaryExpression("&", lhs, coll); 
         return new AssignStatement(lhs, newrhs);
       }         
-      else if ((lhs + " or " + var).equals("" + rhs))
+      else if (Expression.isCombinationOf(rhs, "or", lhs, var))
+      // (lhs + " or " + var).equals("" + rhs))
       { // lhs := lhs or loopRange->exists(self)
 
         Type elemt = rng.getElementType(); 
@@ -989,7 +996,7 @@ abstract class Statement implements Cloneable
       }   
       else if (rhs instanceof BinaryExpression && 
         ((BinaryExpression) rhs).getOperator().equals("or") &&
-        (((BinaryExpression) rhs).getLeft() + "").equals(lhs + ""))
+        ((BinaryExpression) rhs).getLeft().isEqualTo(lhs))
       { // lhs := lhs or expr
         Expression expr = ((BinaryExpression) rhs).getRight(); 
         Vector vuses = expr.getVariableUses();
@@ -1006,20 +1013,18 @@ abstract class Statement implements Cloneable
             new BinaryExpression("or", lhs, coll); 
         return new AssignStatement(lhs, newrhs);
       }
-      else if ((lhs + "->including(" + var + ")").equals("" + rhs))
+      else if (Expression.isCombinationOf(
+                      rhs, "->including", lhs, var))
+      // (lhs + "->including(" + var + ")").equals("" + rhs))
       { // lhs := lhs->union(loopRange)
 
-        Type elemt = rng.getElementType(); 
-        BasicExpression selfvar = 
-          BasicExpression.newVariableBasicExpression(
-                                             "self",elemt); 
         Expression newrhs = 
             new BinaryExpression("->union", lhs, rng); 
         return new AssignStatement(lhs, newrhs); 
       }   
       else if (rhs instanceof BinaryExpression && 
         ((BinaryExpression) rhs).getOperator().equals("->including") &&
-        (((BinaryExpression) rhs).getLeft() + "").equals(lhs + ""))
+        ((BinaryExpression) rhs).getLeft().isEqualTo(lhs))
       { // lhs := lhs->append(expr)
         Expression expr = ((BinaryExpression) rhs).getRight(); 
         Vector vuses = expr.getVariableUses();
@@ -1036,20 +1041,18 @@ abstract class Statement implements Cloneable
             new BinaryExpression("->union", lhs, coll); 
         return new AssignStatement(lhs, newrhs);
       }         
-      else if ((lhs + "->append(" + var + ")").equals("" + rhs))
+      else if (Expression.isCombinationOf(rhs, 
+                                    "->append", lhs, var))
+      // (lhs + "->append(" + var + ")").equals("" + rhs))
       { // lhs := lhs->union(loopRange)
 
-        Type elemt = rng.getElementType(); 
-        BasicExpression selfvar = 
-          BasicExpression.newVariableBasicExpression(
-                                             "self",elemt); 
         Expression newrhs = 
             new BinaryExpression("->concatenate", lhs, rng); 
         return new AssignStatement(lhs, newrhs); 
       }   
       else if (rhs instanceof BinaryExpression && 
         ((BinaryExpression) rhs).getOperator().equals("->append") &&
-        (((BinaryExpression) rhs).getLeft() + "").equals(lhs + ""))
+        ((BinaryExpression) rhs).getLeft().isEqualTo(lhs))
       { // lhs := lhs->including(expr)
         Expression expr = ((BinaryExpression) rhs).getRight(); 
         Vector vuses = expr.getVariableUses();
@@ -1066,20 +1069,45 @@ abstract class Statement implements Cloneable
             new BinaryExpression("->concatenate", lhs, coll); 
         return new AssignStatement(lhs, newrhs);
       }         
-      else if ((lhs + "->excluding(" + var + ")").equals("" + rhs))
-      { // lhs := lhs - loopRange
+      else if (Expression.isCombinationOf(rhs, 
+                                    "->prepend", lhs, var))
+      { // lhs := loopRange->reverse()->union(lhs)
 
-        Type elemt = rng.getElementType(); 
-        BasicExpression selfvar = 
-          BasicExpression.newVariableBasicExpression(
-                                             "self",elemt); 
+        Expression rev = new UnaryExpression("->reverse", rng); 
+        Expression newrhs = 
+            new BinaryExpression("->concatenate", rev, lhs); 
+        return new AssignStatement(lhs, newrhs); 
+      }   
+      else if (rhs instanceof BinaryExpression && 
+        ((BinaryExpression) rhs).getOperator().equals("->prepend") &&
+        ((BinaryExpression) rhs).getLeft().isEqualTo(lhs))
+      { Expression expr = ((BinaryExpression) rhs).getRight(); 
+        Vector vuses = expr.getVariableUses();
+
+        if (VectorUtil.containsEqualString(lhs+"", vuses))
+        { return null; } 
+
+        // lhs := rng->reverse()->collect(var|expr)->union(lhs)
+        Expression rev = new UnaryExpression("->reverse", rng); 
+        Expression coll = 
+            new BinaryExpression("|C", 
+              new BinaryExpression(":", var, rev), expr); 
+        Expression newrhs = 
+            new BinaryExpression("->concatenate", coll, lhs); 
+        return new AssignStatement(lhs, newrhs);
+      }         
+      else if (Expression.isCombinationOf(rhs, 
+                                    "->excluding", lhs, var))
+      // lhs + "->excluding(" + var + ")").equals("" + rhs))
+      { // lhs := lhs - loopRange
+ 
         Expression newrhs = 
             new BinaryExpression("-", lhs, rng); 
         return new AssignStatement(lhs, newrhs); 
       }   
       else if (rhs instanceof BinaryExpression && 
         ((BinaryExpression) rhs).getOperator().equals("->excluding") &&
-        (((BinaryExpression) rhs).getLeft() + "").equals(lhs + ""))
+        ((BinaryExpression) rhs).getLeft().isEqualTo(lhs))
       { // lhs := lhs->excluding(expr)
         Expression expr = ((BinaryExpression) rhs).getRight(); 
         Vector vuses = expr.getVariableUses();
@@ -1096,65 +1124,94 @@ abstract class Statement implements Cloneable
             new BinaryExpression("-", lhs, coll); 
         return new AssignStatement(lhs, newrhs);
       }         
-    /*  else if (rhs instanceof BinaryExpression && 
-        (((BinaryExpression) rhs).getLeft() + "").equals(
-                                                    lhs + ""))
-      { BinaryExpression brhs = (BinaryExpression) rhs; 
-        Expression expr = brhs.getRight();
-        String oper = brhs.getOperator(); 
- 
-        Vector vars = expr.getVariableUses(); 
-
-        if (VectorUtil.containsEqualString(var + "", vars) || 
-            VectorUtil.containsEqualString(lhs + "", vars))
-        { return null; } 
-
-        if ("+".equals(oper))
-        { // lhs := lhs + expr*(loopRange->size())
-
-          Expression smm = Expression.simplifySize(rng);
-          smm.setBrackets(true); 
- 
-          Expression newrhs = 
-            new BinaryExpression("+", lhs, 
-              new BinaryExpression("*", expr, smm)); 
-          return new AssignStatement(lhs, newrhs); 
-        } 
-        else if ("-".equals(oper))
-        { // lhs := lhs - expr*(loopRange->size())
-
-          Expression smm = Expression.simplifySize(rng);
-          smm.setBrackets(true); 
- 
-          Expression newrhs = 
-            new BinaryExpression("-", lhs, 
-              new BinaryExpression("*", expr, smm)); 
-          return new AssignStatement(lhs, newrhs); 
-        } 
-        else if ("*".equals(oper))
-        { // lhs := lhs * expr->pow(loopRange->size())
-
-          Expression smm = Expression.simplifySize(rng);
-          // smm.setBrackets(true); 
- 
-          Expression newrhs = 
-            new BinaryExpression("*", lhs, 
-              new BinaryExpression("->pow", expr, smm)); 
-          return new AssignStatement(lhs, newrhs); 
-        } 
-        else if ("/".equals(oper))
-        { // lhs := lhs / expr->pow(loopRange->size())
-
-          Expression smm = Expression.simplifySize(rng);
-          // smm.setBrackets(true); 
- 
-          Expression newrhs = 
-            new BinaryExpression("/", lhs, 
-              new BinaryExpression("->pow", expr, smm)); 
-          return new AssignStatement(lhs, newrhs); 
-        } 
-      } */ 
     }
+    else if (st instanceof ImplicitInvocationStatement)
+    { // execute expr
+      Expression expr = 
+         ((ImplicitInvocationStatement) st).getCallExpression(); 
+  
+      if (expr instanceof BinaryExpression) 
+      { BinaryExpression be = (BinaryExpression) expr;
+        String beop = be.getOperator();
+        Expression lhs = be.getLeft();  
+        Expression rhs = be.getRight();  
+
+        Vector luses = lhs.getVariableUses();
+        Vector ruses = rhs.getVariableUses();
+
+        if (VectorUtil.containsEqualString(lhs+"", ruses))
+        { return null; } // not valid statement
+ 
+        if (":".equals(beop))
+        { if (var.isEqualTo(lhs))
+          { // execute loopRange <: rhs  
+            Expression newrhs = 
+                new BinaryExpression("<:", rng, rhs); 
+            return new ImplicitInvocationStatement(newrhs);
+          }  
+          else if (VectorUtil.containsEqualString(var+"", luses))
+          { // execute rng->collect(var|lhs) <: rhs
+            Expression coll = 
+              new BinaryExpression("|C", 
+                new BinaryExpression(":", var, rng), lhs); 
+            Expression newrhs = 
+              new BinaryExpression("<:", coll, rhs); 
+            return new ImplicitInvocationStatement(newrhs);
+          }
+        }
+        else if ("/:".equals(beop))
+        { if (var.isEqualTo(lhs))
+          { // execute loopRange <: rhs  
+            Expression newrhs = 
+                new BinaryExpression("/<:", rng, rhs); 
+            return new ImplicitInvocationStatement(newrhs);
+          }  
+          else if (VectorUtil.containsEqualString(var+"", luses))
+          { // execute rng->collect(var|lhs) <: rhs
+            Expression coll = 
+              new BinaryExpression("|C", 
+                new BinaryExpression(":", var, rng), lhs); 
+            Expression newrhs = 
+              new BinaryExpression("/<:", coll, rhs); 
+            return new ImplicitInvocationStatement(newrhs);
+          }
+        }
+      } 
+    }         
+    else if (st instanceof ConditionalStatement)
+    { ConditionalStatement cst = (ConditionalStatement) st;
+
+      Expression test = cst.getTest();   
+      Statement ifstat = cst.getIf();
+      Statement elseStat = cst.getElse(); 
+
+      if (elseStat == null || elseStat.isSkip())
+      { // var should occur in test, otherwise it is 
+        // an LCE case and moved outside the loop.
+
+        Expression coll = 
+            new BinaryExpression("|", 
+              new BinaryExpression(":", var, rng), test); 
+           
+        Statement ifs = 
+            Statement.cumulativeCode(var, coll, ifstat);
+        return ifs; 
+      } 
+      else if (ifstat == null || ifstat.isSkip())
+      { // var should occur in test, otherwise it is 
+        // an LCE case and moved outside the loop.
+
+        Expression coll = 
+            new BinaryExpression("|R", 
+              new BinaryExpression(":", var, rng), test); 
+           
+        Statement ss = 
+            Statement.cumulativeCode(var, coll, elseStat);
+        return ss; 
+      } 
+
+      return null; 
+    } 
     else if (st instanceof SequenceStatement) 
     { SequenceStatement sq = (SequenceStatement) st; 
 
@@ -1173,6 +1230,12 @@ abstract class Statement implements Cloneable
         { return Statement.cumulativeCode(var,rng,stat0); } 
 
         if (stat0 instanceof AssignStatement) 
+        { return Statement.cumulativeCode(var,rng,stat0); }
+
+        if (stat0 instanceof ConditionalStatement) 
+        { return Statement.cumulativeCode(var,rng,stat0); }
+
+        if (stat0 instanceof ImplicitInvocationStatement) 
         { return Statement.cumulativeCode(var,rng,stat0); }
 
         return null; 
@@ -1201,9 +1264,9 @@ abstract class Statement implements Cloneable
           Expression lhs2 = ast2.getLeft(); 
           Expression rhs2 = ast2.getRight();
 
-          if ((var + "").equals("" + lhs1) || 
-              (var + "").equals("" + lhs2))
-          { return null; } 
+          if (var.isEqualTo(lhs1) || 
+              var.isEqualTo(lhs2))
+          { return null; } // invalid statement
 
           Vector vars1 = rhs1.getVariableUses(); 
           Vector vars2 = rhs2.getVariableUses(); 
@@ -1217,8 +1280,9 @@ abstract class Statement implements Cloneable
 
           // JOptionPane.showInputDialog("**** Potential code reduction of loop: " + lhs1 + " := " + rhs1 + " ; " + lhs2 + " ; " + rhs2);
 
-          if ((lhs1 + " + 1").equals("" + rhs1) && 
-              (lhs2 + " + " + lhs1).equals("" + rhs2))
+          if (Expression.isSumOf(rhs1, lhs1, 
+                                 new BasicExpression(1)) && 
+              Expression.isSumOf(rhs2, lhs2, lhs1))
           { // I := I + 1; V := V + I
             // reduces to V := V + n*I + (n*(n+1))/2; 
             //            I := I + n
@@ -1252,8 +1316,9 @@ abstract class Statement implements Cloneable
  
             return ss;    
           } 
-          else if ((lhs2 + " + 1").equals("" + rhs2) && 
-              (lhs1 + " + " + lhs2).equals("" + rhs1))
+          else if (Expression.isSumOf(rhs2, lhs2, 
+                                new BasicExpression(1)) &&
+                   Expression.isSumOf(rhs1, lhs1, lhs2))
           { // V := V + I ; I := I + 1
             // reduces to V := V + n*I + (n*(n-1))/2; 
             //            I := I + n
@@ -1290,7 +1355,7 @@ abstract class Statement implements Cloneable
             return ss;    
           } 
           else if ((lhs1 + " + 1").equals("" + rhs1) && 
-              (lhs2 + " - " + lhs1).equals("" + rhs2))
+             Expression.isDifferenceOf(rhs2, lhs2, lhs1))
           { // I := I + 1; V := V - I
             // reduces to V := V - n*I - (n*(n+1))/2; 
             //            I := I + n
@@ -1325,7 +1390,7 @@ abstract class Statement implements Cloneable
             return ss;    
           } 
           else if ((lhs2 + " + 1").equals("" + rhs2) && 
-              (lhs1 + " - " + lhs2).equals("" + rhs1))
+              Expression.isDifferenceOf(rhs1, lhs1, lhs2))
           { // V := V - I ; I := I + 1
             // reduces to V := V - n*I - (n*(n-1))/2; 
             //            I := I + n
@@ -1363,7 +1428,7 @@ abstract class Statement implements Cloneable
             return ss;    
           } 
           else if ((lhs1 + " + 1").equals("" + rhs1) && 
-              (lhs2 + " * " + lhs1).equals("" + rhs2))
+             Expression.isProductOf(rhs2, lhs2, lhs1))
           { // I := I + 1; V := V * I
             // reduces to V := V * MathLib.factorial(I + n)/
             //                       MathLib.factorial(I); 
@@ -1374,11 +1439,13 @@ abstract class Statement implements Cloneable
             Expression rsize1 = 
                          new BinaryExpression("+", lhs1, rsize);
             Expression fact1 = 
-              BasicExpression.newStaticCallExpression("MathLib",
-                                            "factorial", rsize1);
+              BasicExpression.newStaticCallExpression(
+                         "MathLib",
+                         "factorial", rsize1);
             Expression fact2 = 
-              BasicExpression.newStaticCallExpression("MathLib",
-                                            "factorial", lhs1);
+              BasicExpression.newStaticCallExpression(
+                         "MathLib",
+                         "factorial", lhs1);
             
             BinaryExpression idiv = 
               new BinaryExpression("/", fact1, fact2);
@@ -1397,7 +1464,7 @@ abstract class Statement implements Cloneable
             return ss;    
           } 
           else if ((lhs2 + " + 1").equals("" + rhs2) && 
-              (lhs1 + " * " + lhs2).equals("" + rhs1))
+              Expression.isProductOf(rhs1, lhs1, lhs2))
           { // V := V * I ; I := I + 1
             // reduces to V := V * (I+n-1)!/I!; 
             //            I := I + n
@@ -1504,53 +1571,26 @@ abstract class Statement implements Cloneable
       Expression rhs = asm.getRight();
       rhs.setBrackets(false); 
 
-      if ((lhs + " + " + var).equals("" + rhs))
-      { // lhs := lhs + loopRange->sum()
-        return true; 
-      } 
-      else if ((lhs + " - " + var).equals("" + rhs))
-      { // lhs := lhs - loopRange->sum()
-        return true; 
-      } 
-      else if ((lhs + " * " + var).equals("" + rhs))
-      { // lhs := lhs * loopRange->prd()
-        return true; 
-      }   
-      else if ((lhs + " / " + var).equals("" + rhs))
-      { // lhs := lhs / loopRange->prd()
-        return true; 
-      } 
-      else if ((lhs + " & " + var).equals("" + rhs))
-      { // lhs := lhs & loopRange->forAll(self)
-        return true; 
-      } 
-      else if ((lhs + " or " + var).equals("" + rhs))
-      { // lhs := lhs or loopRange->exists(self)
-        return true; 
-      } 
-      else if ((lhs + "->including(" + var + ")").equals("" + rhs))
-      { // lhs := lhs->union(loopRange)
-        return true; 
-      } 
-      else if ((lhs + "->excluding(" + var + ")").equals("" + rhs))
-      { // lhs := lhs - loopRange
-        return true; 
-      } 
-      else if ((lhs + "->append(" + var + ")").equals("" + rhs))
-      { // lhs := lhs->union(loopRange)
-        return true; 
-      } 
+      if (Expression.isSumOf(rhs, lhs, var) || 
+          Expression.isDifferenceOf(rhs, lhs, var) ||
+          Expression.isProductOf(rhs, lhs, var) || 
+          Expression.isDivisionOf(rhs, lhs, var) || 
+          Expression.isCombinationOf(rhs, "&", lhs, var) || 
+          Expression.isCombinationOf(rhs, "or", lhs, var) ||
+          Expression.isCombinationOf(rhs, "->including", lhs, var) ||
+          Expression.isCombinationOf(rhs, "->append", lhs, var) || 
+          Expression.isCombinationOf(rhs, "->prepend", lhs, var) || 
+          Expression.isCombinationOf(rhs, "->excluding", lhs, var)) 
+      { return true; } 
       else if (rhs instanceof BinaryExpression && 
-        (((BinaryExpression) rhs).getLeft() + "").equals(
-                                                    lhs + ""))
+        ((BinaryExpression) rhs).getLeft().isEqualTo(lhs))
       { BinaryExpression brhs = (BinaryExpression) rhs; 
         Expression expr = brhs.getRight();
         String oper = brhs.getOperator(); 
  
         Vector vars = expr.getVariableUses(); 
 
-        if (// VectorUtil.containsEqualString(var + "", vars) || 
-            VectorUtil.containsEqualString(lhs + "", vars))
+        if (VectorUtil.containsEqualString(lhs + "", vars))
         { return false; } 
 
         if ("+".equals(oper) || "-".equals(oper) || 
@@ -1558,12 +1598,51 @@ abstract class Statement implements Cloneable
             "&".equals(oper) || "or".equals(oper) || 
             "->including".equals(oper) || 
             "->append".equals(oper) || 
+            "->prepend".equals(oper) || 
             "->excluding".equals(oper))
         { return true; }
  
         return false;
       } 
     }
+    else if (st instanceof ImplicitInvocationStatement) 
+    { Expression expr = 
+         ((ImplicitInvocationStatement) st).getCallExpression(); 
+  
+      if (expr instanceof BinaryExpression) 
+      { BinaryExpression be = (BinaryExpression) expr;
+        String beop = be.getOperator();
+        Expression lhs = be.getLeft();  
+        Expression rhs = be.getRight();  
+
+        Vector luses = lhs.getVariableUses();
+        Vector ruses = rhs.getVariableUses();
+
+        if (VectorUtil.containsEqualString(lhs+"", ruses))
+        { return false; } // not valid statement
+ 
+        if (":".equals(beop) || "/:".equals(beop))
+        { if (var.isEqualTo(lhs))
+          { return true; } 
+ 
+          if (VectorUtil.containsEqualString(var+"", luses))
+          { return true; }
+        }
+      } 
+    }         
+    else if (st instanceof ConditionalStatement)
+    { ConditionalStatement cst = (ConditionalStatement) st;
+      Statement ifstat = cst.getIf(); 
+      Statement elseStat = cst.getElse(); 
+
+      if (elseStat == null || elseStat.isSkip())
+      { return Statement.isCumulativeBody(var,ifstat); } 
+
+      if (ifstat == null || ifstat.isSkip())
+      { return Statement.isCumulativeBody(var,elseStat); } 
+
+      return false; 
+    } 
     else if (st instanceof SequenceStatement) 
     { SequenceStatement sq = (SequenceStatement) st; 
 
@@ -7309,7 +7388,7 @@ class WhileStatement extends Statement
   public WhileStatement()
   { loopTest = new BasicExpression(true); 
     body = new InvocationStatement("skip");
-  } 
+  } // while true do skip; 
 
   public WhileStatement(Expression e, Statement b)
   { loopTest = e; 
@@ -7319,7 +7398,7 @@ class WhileStatement extends Statement
     { body = b;
       body.setBrackets(true);
     } 
-  } 
+  } // while e do (b); 
 
   public WhileStatement(Expression e, Vector b)
   { loopTest = e; 
@@ -7683,12 +7762,31 @@ class WhileStatement extends Statement
     Expression bdef = body.definedness(uses, messages); 
 
     if (loopKind == WHILE)
-    { Expression testpre = body.wpc(loopTest); 
+    { Expression testpre = body.wpc(loopTest);
+      Expression imp = 
+          Expression.simplifyImplies(loopTest, testpre);  
       Expression canTerminate = 
-           Expression.simplifyNot(
-              new BinaryExpression("=>", loopTest, testpre));
+          Expression.negate(imp);
+      bdef.setBrackets(true); 
+      canTerminate.setBrackets(true);
+  
+      System.err.println("! (SEM): Condition " + canTerminate + " needed for loop termination"); 
+
+      bdef = Expression.simplifyAnd(canTerminate, bdef); 
+    } 
+
+    if (loopKind == REPEAT)
+    { Expression ntest = Expression.negate(loopTest);  
+      Expression testpre = body.wpc(ntest);
+      Expression imp = 
+          Expression.simplifyImplies(ntest, testpre);  
+      Expression canTerminate = 
+          Expression.negate(imp);
       bdef.setBrackets(true); 
       canTerminate.setBrackets(true);  
+
+      System.err.println("! (SEM): Condition " + canTerminate + " needed for loop termination"); 
+
       bdef = Expression.simplifyAnd(canTerminate, bdef); 
     } 
 
@@ -7768,32 +7866,69 @@ class WhileStatement extends Statement
   
     body.energyUse(uses,rUses,aUses,yUses);
 
-    /* 
-    if (loopKind == FOR) 
-    { if (loopRange != null) 
-      { int rcomp = loopRange.syntacticComplexity();
+    if (loopKind == FOR && 
+        loopRange != null && 
+        loopRange instanceof BasicExpression) 
+    { BasicExpression rng = (BasicExpression) loopRange; 
+      BasicExpression unit = new BasicExpression(1); 
 
-        if (rcomp > TestParameters.syntacticComplexityLimit)
-        { int ycount = (int) uses.get("yellow"); 
-          uses.set("yellow", ycount + 1); 
-          yUses.add("! Code smell (MEL): too high expression complexity (" + rcomp + ") for " + loopRange + "\n" +  
-                    "! Recommend OCL refactoring\n"); 
-          int melcount = (int) uses.get("MEL"); 
-          uses.set("MEL", melcount+1);    
-        } 
+      if ("Integer".equals(rng.getObjectRef() + "") &&
+          unit.isEqualTo(rng.getParameter(1)) && 
+          rng.getParameter(2) instanceof UnaryExpression)
+      { UnaryExpression enrng = 
+               (UnaryExpression) rng.getParameter(2); 
+
+        if ("->size".equals(enrng.getOperator()))
+        { Expression arg = enrng.getArgument();
+          // arg is not in the write frame, and all uses
+          // of arg are of form arg[loopVar]
+          String iter = arg + ""; 
+
+          // Vector newvars = new Vector(); 
+          // newvars.add(arg + "");  
+          Vector wrfr = body.writeFrame(); 
+          // Vector vuses = body.getVariableUses(); 
+          Vector auses = body.getUses(iter); 
+          // Vector vused = body.variablesUsedIn(newvars); 
+          
+          System.err.println(">>> Loop body write frame: " + wrfr); 
+          // System.err.println(">>> Uses: " + vuses); 
+          System.err.println(">>> Iterator uses in loop body: " + auses); 
+          // System.err.println(">>> Used: " + vused); 
+
+          boolean isWritten = false; 
+          for (int i = 0; i < wrfr.size(); i++) 
+          { String wrv = (String) wrfr.get(i); 
+            int k = wrv.indexOf("::"); 
+            if (k >= 0 && iter.equals(wrv.substring(k+2)))
+            { isWritten = true; }   
+            else if (iter.equals(wrv)) 
+            { isWritten = true; } 
+          }
+
+          if (isWritten) 
+          { System.err.println("! (SEM): possible semantic error: writing iterator of for loop within loop body"); }   
+          else 
+          { for (int j = 0; j < auses.size(); j++) 
+            { Expression use = (Expression) auses.get(j); 
+              if ((iter + "[" + loopVar + "]").equals(
+                                            "" + use)) 
+              { } 
+              else
+              { isWritten = true; } 
+            } // naked use of iter
+          } 
+ 
+          if (!isWritten)
+          { int ycount = (int) uses.get("yellow"); 
+            uses.set("yellow", ycount + 1); 
+            yUses.add("! Code smell (OEW): indexed loop\n " + this + "\n! can be replaced by iteration over " + enrng.getArgument() + "\n"); 
+            int melcount = (int) uses.get("OEW"); 
+            uses.set("OEW", melcount+1);  
+          }
+        }  
       } 
     }
-    else if (loopTest != null)
-    { int syncomp = loopTest.syntacticComplexity(); 
-      if (syncomp > TestParameters.syntacticComplexityLimit)
-      { int ycount = (int) uses.get("yellow"); 
-        uses.set("yellow", ycount + 1); 
-        yUses.add("! Code smell (MEL): too high expression complexity (" + syncomp + ") for " + loopTest + "\n" +  
-                  "! Recommend OCL refactoring\n"); 
-        int melcount = (int) uses.get("MEL"); 
-        uses.set("MEL", melcount+1);    
-      }
-    }  */ 
 
     if (loopKind == WHILE || loopKind == REPEAT)
     { if (Statement.ineffectiveFirstStatement(body))
@@ -8213,7 +8348,7 @@ class WhileStatement extends Statement
 
           Vector uses = iftest.variablesUsedIn(newvars); 
           if (uses.size() == 0)
-          { JOptionPane.showInputDialog(">> Conditional can be swapped with loop: if " + iftest + " then (for " + loopTest + " do " + rem + ") else skip"); 
+          { System.err.println("!! (OES): Conditional can be swapped with loop: if " + iftest + " then (for " + loopTest + " do " + rem + ") else skip"); 
             WhileStatement ws = new WhileStatement(loopTest,rem); 
             ws.setLoopKind(Statement.FOR); 
             ws.setLoopVarRange(lv,lr);
@@ -8356,6 +8491,119 @@ class WhileStatement extends Statement
         newbody.setBrackets(brs); 
       } 
     } 
+
+    if (loopKind == FOR && 
+        lr != null && 
+        lr instanceof BasicExpression) 
+    { BasicExpression rng = (BasicExpression) lr; 
+      BasicExpression unit = new BasicExpression(1); 
+
+      if ("Integer".equals(rng.getObjectRef() + "") &&
+          unit.isEqualTo(rng.getParameter(1)) && 
+          rng.getParameter(2) instanceof UnaryExpression)
+      { UnaryExpression enrng = 
+               (UnaryExpression) rng.getParameter(2); 
+
+        if ("->size".equals(enrng.getOperator()))
+        { Expression arg = enrng.getArgument();
+          // arg is not in the write frame, and all uses
+          // of arg are of form arg[loopVar]
+          String iter = arg + ""; 
+
+          // Vector newvars = new Vector(); 
+          // newvars.add(arg + "");  
+          Vector wrfr = newbody.writeFrame(); 
+          // Vector vuses = body.getVariableUses(); 
+          Vector auses = newbody.getUses(iter); 
+          // Vector vused = body.variablesUsedIn(newvars); 
+          
+          System.err.println(">>> Loop body write frame: " + wrfr); 
+          // System.err.println(">>> Uses: " + vuses); 
+          System.err.println(">>> Iterator uses in loop body: " + auses); 
+          // System.err.println(">>> Used: " + vused); 
+
+          boolean isWritten = false; 
+          for (int i = 0; i < wrfr.size(); i++) 
+          { String wrv = (String) wrfr.get(i); 
+            int k = wrv.indexOf("::"); 
+            if (k >= 0 && iter.equals(wrv.substring(k+2)))
+            { isWritten = true; }   
+            else if (iter.equals(wrv)) 
+            { isWritten = true; } 
+          }
+
+          if (isWritten) 
+          { System.err.println("! (SEM): possible semantic error: writing iterator of for loop within loop body"); }   
+          else 
+          { for (int j = 0; j < auses.size(); j++) 
+            { Expression use = (Expression) auses.get(j); 
+              if ((iter + "[" + lv + "]").equals(
+                                            "" + use)) 
+              { } 
+              else
+              { isWritten = true; } 
+            } // naked use of iter
+          } 
+ 
+          if (!isWritten)
+          { System.err.println("! Reducing indexed loop\n " + this + "\n! to iteration over " + enrng.getArgument() + "\n"); 
+
+            Statement first = 
+                      Statement.getFirstStatement(newbody); 
+            if (first != null && 
+                first instanceof CreationStatement) 
+            { CreationStatement cre = (CreationStatement) first; 
+              Statement rem = 
+                        Statement.removeFirstStatement(newbody);
+              Vector newvars = new Vector(); 
+              newvars.add(lv + "");  
+              Vector vused = rem.variablesUsedIn(newvars);
+              String vname = cre.getVariable(); 
+              Expression rhs = cre.getInitialisationExpression(); 
+              if (vused.size() == 0 && 
+                  (iter + "[" + lv + "]").equals(rhs + ""))
+              { Attribute att1 = 
+                   new Attribute(vname, arg.getElementType(), 
+                                 ModelElement.INTERNAL);
+                BasicExpression newvar1 = 
+                  BasicExpression.newVariableBasicExpression(
+                                                       att1);   
+                BinaryExpression test1 = 
+                    new BinaryExpression(":", newvar1, arg);  
+                WhileStatement newloop1 = 
+                   new WhileStatement(test1,rem); 
+                newloop1.setEntity(entity); 
+                newloop1.setLoopKind(loopKind); 
+                newloop1.setLoopRange(newvar1,arg); 
+                newloop1.setBrackets(brackets);
+                return newloop1;
+              }
+            }   
+
+            String _var = Identifier.nextIdentifier("_var"); 
+            Attribute att = 
+               new Attribute(_var, arg.getElementType(), 
+                             ModelElement.INTERNAL);
+            BasicExpression newvar = 
+              BasicExpression.newVariableBasicExpression(att);   
+                                          
+            Statement subbody = 
+               newbody.substituteEq(iter + "[" + lv + "]", 
+                                    newvar);
+            BinaryExpression newtest = 
+                  new BinaryExpression(":", newvar, arg);  
+            WhileStatement newloop = 
+                 new WhileStatement(newtest,subbody); 
+            newloop.setEntity(entity); 
+            newloop.setLoopKind(loopKind); 
+            newloop.setLoopRange(newvar,arg); 
+            newloop.setBrackets(brackets);
+            return newloop;  
+          }
+        }  
+      } 
+    }
+
 
     WhileStatement res = new WhileStatement(lt,newbody); 
     res.setEntity(entity); 
@@ -17700,10 +17948,12 @@ class AssignStatement extends Statement
 
     if (lev > 1 && rhs instanceof BinaryExpression)  
     { BinaryExpression rhsbe = (BinaryExpression) rhs; 
+      String beop = rhsbe.getOperator(); 
 
-      if ("->including".equals(rhsbe.getOperator()) && 
-          (lhs + "").equals(rhsbe.getLeft() + ""))
-      { messages.add("!! (OES): inefficient addition to collection by copying: " + this); 
+      if (("->including".equals(beop) || 
+           "->append".equals(beop)) && 
+          lhs.isEqualTo(rhsbe.getLeft()))
+      { messages.add("!! (OES): inefficient addition to collection by copying within loop: " + this); 
         messages.add("!! Use execute (" + 
                rhsbe.getRight() + " : " + lhs + ") instead"); 
         messages.add(""); 
@@ -17712,11 +17962,35 @@ class AssignStatement extends Statement
         int oescount = (int) flaws.get("OES"); 
         flaws.set("OES", oescount+1);
       } 
-      else if ("->union".equals(rhsbe.getOperator()) && 
-          (lhs + "").equals(rhsbe.getLeft() + ""))
+      else if ("->union".equals(beop) && 
+               lhs.isEqualTo(rhsbe.getLeft()))
       { messages.add("!! (OES): inefficient additions to collection by copying: " + this); 
         messages.add("!! Use execute (" + 
                rhsbe.getRight() + " <: " + lhs + ") instead");
+        messages.add(""); 
+        int aScore = (int) flaws.get("amber"); 
+        flaws.set("amber", aScore+1);
+        int oescount = (int) flaws.get("OES"); 
+        flaws.set("OES", oescount+1); 
+      } 
+      else if (("->excluding".equals(beop) || 
+                "->excludingFirst".equals(beop)) && 
+          lhs.isEqualTo(rhsbe.getLeft()))
+      { messages.add("!! (OES): inefficient removal from collection by copying within loop: " + this); 
+        messages.add("!! Use execute (" + 
+               rhsbe.getRight() + " /: " + lhs + ") instead"); 
+        messages.add(""); 
+        int aScore = (int) flaws.get("amber"); 
+        flaws.set("amber", aScore+1);
+        int oescount = (int) flaws.get("OES"); 
+        flaws.set("OES", oescount+1);
+      } 
+      else if ("-".equals(beop) &&
+               lhs.hasCollectionType() &&  
+               lhs.isEqualTo(rhsbe.getLeft()))
+      { messages.add("!! (OES): inefficient subtractions from collection by copying: " + this); 
+        messages.add("!! Use execute (" + 
+               rhsbe.getRight() + " /<: " + lhs + ") instead");
         messages.add(""); 
         int aScore = (int) flaws.get("amber"); 
         flaws.set("amber", aScore+1);

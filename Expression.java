@@ -7156,6 +7156,78 @@ abstract class Expression
     return "false".equals(ss) || "(false)".equals(ss); 
   }
 
+  public static boolean isSumOf(Expression self, 
+                                Expression a, Expression b)
+  { // this is a + b
+    if (self instanceof BinaryExpression)
+    { BinaryExpression be = (BinaryExpression) self; 
+      if ("+".equals(be.getOperator()))
+      { return a.isEqualTo(be.getLeft()) && 
+               b.isEqualTo(be.getRight()); 
+      } 
+      return false; 
+    } 
+    return false; 
+  } 
+
+  public static boolean isDifferenceOf(Expression self, 
+                                Expression a, Expression b)
+  { // this is a - b
+    if (self instanceof BinaryExpression)
+    { BinaryExpression be = (BinaryExpression) self; 
+      if ("-".equals(be.getOperator()))
+      { return a.isEqualTo(be.getLeft()) && 
+               b.isEqualTo(be.getRight()); 
+      } 
+      return false; 
+    } 
+    return false; 
+  } 
+
+  public static boolean isProductOf(Expression self, 
+                                Expression a, Expression b)
+  { // this is a * b
+    if (self instanceof BinaryExpression)
+    { BinaryExpression be = (BinaryExpression) self; 
+      if ("*".equals(be.getOperator()))
+      { return a.isEqualTo(be.getLeft()) && 
+               b.isEqualTo(be.getRight()); 
+      } 
+      return false; 
+    } 
+    return false; 
+  } 
+
+  public static boolean isCombinationOf(Expression self, 
+                                String op, 
+                                Expression a, Expression b)
+  { // this is a op b
+    if (self instanceof BinaryExpression)
+    { BinaryExpression be = (BinaryExpression) self; 
+      if (op.equals(be.getOperator()))
+      { return a.isEqualTo(be.getLeft()) && 
+               b.isEqualTo(be.getRight()); 
+      } 
+      return false; 
+    } 
+    return false; 
+  } 
+
+  public static boolean isDivisionOf(Expression self, 
+                                Expression a, Expression b)
+  { // this is a / b
+    if (self instanceof BinaryExpression)
+    { BinaryExpression be = (BinaryExpression) self; 
+      if ("/".equals(be.getOperator()))
+      { return a.isEqualTo(be.getLeft()) && 
+               b.isEqualTo(be.getRight()); 
+      } 
+      return false; 
+    } 
+    return false; 
+  } 
+
+
   abstract public Vector splitAnd(final Vector comps); 
 
   abstract public Vector splitOr(final Vector comps); 

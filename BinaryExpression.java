@@ -23547,6 +23547,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         operator.equals("->includesAll") ||
         operator.equals("->excludesAll") ||
         operator.equals("<:") ||
+        operator.equals("/<:") ||
         operator.equals(":") ||
         operator.equals("/:") ||
         operator.equals("->intersection") ||
@@ -23573,6 +23574,19 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
            operator.equals("->intersection") ||
            operator.equals("->union"))
          )    
+      { System.err.println("!! (OES) flaw: O(n)+ operation " + operator + " used in loop: could be O(n*n)+\n");
+        System.err.println();  
+      } 
+      else if (left.isSequence() && level > 1 && 
+          (operator.equals("->including") ||
+           operator.equals("->append") ||
+           operator.equals("->prepend")))
+      { System.err.println("! (OEW) flaw: operation " + operator + " copies its source, when used in loop could be O(n*n)+\n");
+        System.err.println();  
+      } 
+      else if (level > 1 &&         
+               (operator.equals("->restrict") ||
+                operator.equals("->antirestrict")))
       { System.err.println("!! (OES) flaw: O(n)+ operation " + operator + " used in loop: could be O(n*n)+\n");
         System.err.println();  
       } 
@@ -23756,6 +23770,27 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         int oescount = (int) uses.get("OES"); 
         uses.set("OES", oescount+1);   
       }
+      else if (left.isSequence() && level > 1 && 
+          (operator.equals("->including") ||
+           operator.equals("->append") ||
+           operator.equals("->prepend")))
+      { messages.add("! (OEW) flaw: operator " + operator + " copies its source, could be O(n*n) when used in loop"); 
+        messages.add(""); 
+        int yScore = (int) uses.get("yellow"); 
+        uses.set("yellow", yScore+1);
+        int oewcount = (int) uses.get("OEW"); 
+        uses.set("OEW", oewcount+1);   
+      } 
+      else if (level > 1 &&         
+               (operator.equals("->restrict") ||
+                operator.equals("->antirestrict")))
+      { messages.add("!! (OES) flaw: O(n)+ operator " + operator + " used in loop, could be O(n*n)"); 
+        messages.add(""); 
+        int aScore = (int) uses.get("amber"); 
+        uses.set("amber", aScore+1);
+        int oescount = (int) uses.get("OES"); 
+        uses.set("OES", oescount+1);
+      } 
 
       right.collectionOperatorUses(level,res,oldvars,
                                    uses,messages); 
