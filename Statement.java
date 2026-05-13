@@ -3202,6 +3202,7 @@ abstract class Statement implements Cloneable
           res.addAll(Statement.getBreaksContinues(stat));
         }  
       } 
+
       return res;
     } 
     
@@ -3243,6 +3244,15 @@ abstract class Statement implements Cloneable
 
     return res;
   } // Other cases, for all other forms of statement. 
+
+  public static boolean hasBreakStatement(Statement st)
+  { Vector res = Statement.getBreaksContinues(st); 
+    for (int i = 0; i < res.size(); i++) 
+    { if (res.get(i) instanceof BreakStatement) 
+      { return true; } 
+    } 
+    return false; 
+  } 
 
   public static Vector getAssignments(Statement st)
   { Vector res = new Vector(); 
@@ -8130,6 +8140,69 @@ class WhileStatement extends Statement
     return this; 
   }
 
+  public Statement reduceNestedLoopStatements()
+  { if (Statement.hasLoopStatement(body)) { } 
+    else 
+    { return this; } 
+
+    // for x : s do for y : t do if x = y then S1 else skip;
+    // reduces to: 
+    // for x : s->intersection(t) do S1' 
+    // (remove any break from end of S1)
+
+    if (loopKind == Statement.FOR)
+    { // String lv1 = loopVar + ""; 
+
+      if (body instanceof WhileStatement && 
+          ((WhileStatement) body).loopKind == FOR)
+      { WhileStatement ws = (WhileStatement) body;
+        Expression loopVar2 = ws.loopVar; 
+ 
+        if (ws.body instanceof ConditionalStatement)
+        { ConditionalStatement cs = 
+            (ConditionalStatement) ws.body; 
+          Expression cstest = cs.getTest(); 
+
+          if (cstest instanceof BinaryExpression && 
+              cs.getElse() == null || 
+              cs.getElse().isSkip())
+          { BinaryExpression betest = 
+                  (BinaryExpression) cstest; 
+            if ("=".equals(betest.getOperator()) && 
+                (loopVar.isEqualTo(betest.getLeft()) && 
+                 loopVar2.isEqualTo(betest.getRight()) ||
+                 loopVar2.isEqualTo(betest.getLeft()) && 
+                 loopVar.isEqualTo(betest.getRight())))
+            { Statement newbody = cs.getIf();
+              // remove final break if any
+
+              Expression newrange = 
+                     new BinaryExpression("->intersection", 
+                                       loopRange, 
+                                       ws.loopRange); 
+
+              BinaryExpression newTest = 
+                new BinaryExpression(":", loopVar, 
+                                     newrange);  
+              WhileStatement res = 
+                   new WhileStatement(newTest, newbody); 
+              res.setEntity(entity); 
+              res.setLoopKind(loopKind); 
+              res.setLoopRange(loopVar,newrange); 
+              res.setBrackets(brackets); 
+              res.setInvariant(invariant); 
+              res.setVariant(variant);
+              return res; 
+            }
+          }
+        }
+      }
+    } 
+
+
+    return this; 
+  }
+
 
   public java.util.Map collectionOperatorUses(
                              int nestingLevel, 
@@ -8291,8 +8364,6 @@ class WhileStatement extends Statement
   { Expression lv = loopVar; 
     if (loopVar != null) 
     { lv = (Expression) loopVar.clone(); }
-
-    // System.out.println(">>> Loop statement with " + loopVar + " " + loopRange + " " + loopTest); 
   
     Expression lr = loopRange; 
     if (loopRange != null) 
@@ -8363,14 +8434,20 @@ class WhileStatement extends Statement
         }  
       }
     } 
-    else if (loopKind == WHILE && 
+    else if (loopKind == WHILE &&
+             loopTest instanceof BinaryExpression &&  
              lt instanceof BinaryExpression)
     { BinaryExpression ltexpr = 
                              (BinaryExpression) lt; 
         
+      BinaryExpression ltbe = 
+                             (BinaryExpression) loopTest; 
+      
       String bop = ltexpr.getOperator(); 
+      String bop1 = ltbe.getOperator(); 
 
-      if ("<".equals(bop) || "<=".equals(bop))
+      if (bop.equals(bop1) && 
+          ("<".equals(bop) || "<=".equals(bop)))
       { Expression lft = ltexpr.getLeft(); 
         Expression rgt = ltexpr.getRight(); 
         String vname = "" + lft; 
@@ -8378,7 +8455,9 @@ class WhileStatement extends Statement
         vvs.add(vname); 
 
         boolean brs = newbody.hasBrackets();       
-        newbody.setBrackets(false); 
+        newbody.setBrackets(false);
+        boolean hasBreak = 
+           Statement.hasBreakStatement(newbody);  
 
         String bodytext = (newbody + "").trim(); 
 
@@ -8418,20 +8497,46 @@ class WhileStatement extends Statement
           // while vname < rgt do (C; vname := vname + 1) 
           // to 
           // for vname : Integer.subrange(vname, rgt-1)
+          // do C; and
+          // while vname <= rgt do (C; vname := vname + 1) 
+          // to 
+          // for vname : Integer.subrange(vname, rgt)
           // do C; 
 
           String lasttext = (last + "").trim(); 
 
-          if (Statement.isIncrement(last, vname)  
+          /* System.err.println(">>> Reducing while loop " + 
+              this + " to for: " + last + " " + 
+              Type.hasIntegerType(ltbe.getLeft()) + " " + 
+              Type.hasIntegerType(ltbe.getRight())); */ 
+        
+          if (last != null && !hasBreak && 
+              Statement.isIncrement(last, vname)  
               && (lft instanceof BasicExpression) 
+              && lft.isEqualTo(ltbe.getLeft())
               && ((BasicExpression) lft).isSimpleVariable() 
-              && Type.hasIntegerType(lft)  
-              && Type.hasIntegerType(rgt))
+              && Type.hasIntegerType(ltbe.getLeft())  
+              && Type.hasIntegerType(ltbe.getRight()))
           { Statement reducedBody = 
                Statement.removeLastStatement(newbody); 
-            Vector nuses = 
-                reducedBody.variablesUsedIn(vvs); 
-            if (nuses.size() == 0) 
+            Vector wrfr = 
+               reducedBody.writeFrame();
+
+            boolean isWritten = false; 
+            for (int i = 0; i < wrfr.size(); i++) 
+            { String wrv = (String) wrfr.get(i); 
+              int k = wrv.indexOf("::"); 
+              if (k >= 0 && vname.equals(wrv.substring(k+2)))
+              { isWritten = true; }   
+              else if (vname.equals(wrv)) 
+              { isWritten = true; } 
+            }
+ 
+            if (isWritten) 
+            { System.err.println("! Confusing while loop " + 
+                   this + " Multiple writes to " + vname); 
+            } 
+            else  
             { System.err.println(">>> Loop " + this + " reduced to for loop:"); 
 
               reducedBody.setBrackets(true); 
@@ -8441,9 +8546,18 @@ class WhileStatement extends Statement
               if (bop.equals("<="))
               { rhs = rgt; } 
 
-              System.err.println("for " + vname + 
+              String newvar = Identifier.nextIdentifier("_var");
+              Attribute att = 
+                   new Attribute(newvar, lft.getType(), 
+                                 ModelElement.INTERNAL); 
+              Expression var = 
+                BasicExpression.newVariableBasicExpression(att); 
+              Statement subbody = 
+                reducedBody.substituteEq(vname, var); 
+
+              System.err.println(">>> for " + newvar + 
                  " : Integer.subrange(" + vname + "," + rhs + 
-                 ") do " + reducedBody); 
+                 ") do " + subbody); 
 
               Vector pars = new Vector(); 
               pars.add(lft); 
@@ -8452,12 +8566,12 @@ class WhileStatement extends Statement
                 BasicExpression.newFunctionBasicExpression(
                            "subrange", "Integer", pars); 
               BinaryExpression newtest = 
-                 new BinaryExpression(":", lft, newrange); 
+                 new BinaryExpression(":", var, newrange); 
               WhileStatement ws = 
-                new WhileStatement(newtest, reducedBody); 
+                new WhileStatement(newtest, subbody); 
               ws.setEntity(entity); 
               ws.setLoopKind(FOR); 
-              ws.setLoopRange(lft,newrange); 
+              ws.setLoopRange(var, newrange); 
               ws.setBrackets(brackets); 
 
               if (bop.equals("<"))
@@ -8569,7 +8683,8 @@ class WhileStatement extends Statement
                   BasicExpression.newVariableBasicExpression(
                                                        att1);   
                 BinaryExpression test1 = 
-                    new BinaryExpression(":", newvar1, arg);  
+                    new BinaryExpression(":", newvar1, arg);
+                rem.setBrackets(true);   
                 WhileStatement newloop1 = 
                    new WhileStatement(test1,rem); 
                 newloop1.setEntity(entity); 

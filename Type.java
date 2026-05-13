@@ -752,13 +752,16 @@ public class Type extends ModelElement
   } 
 
   public boolean isNumericType()
-  { if ("int".equals(name) || "double".equals(name) || "long".equals(name))
+  { if ("int".equals(name) || 
+        "double".equals(name) || 
+        "long".equals(name))
     { return true; } 
     return false; 
   } 
 
   public static boolean hasIntegerType(Expression expr)
-  { if (expr == null) { return false; } 
+  { if (expr == null) 
+    { return false; } 
     Type t = expr.getType(); 
     return Type.isIntegerType(t);  
   } 

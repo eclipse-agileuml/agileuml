@@ -3827,6 +3827,7 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
        )
     { type = new Type("int",null); 
       elementType = type; 
+      System.out.println(">> Type of " + this + " is " + type); 
       return res; 
     } 
 
