@@ -8141,7 +8141,58 @@ class WhileStatement extends Statement
   }
 
   public Statement reduceNestedLoopStatements()
-  { if (Statement.hasLoopStatement(body)) { } 
+  { // for x : s do return; 
+    // reduces to: 
+    // if s->notEmpty() then return else skip
+
+    if (body instanceof ConditionalStatement) 
+    { ConditionalStatement cs = (ConditionalStatement) body; 
+      Statement ifStat = cs.getIf(); 
+      Statement elseStat = cs.getElse(); 
+      if (ifStat instanceof ReturnStatement && 
+          (elseStat == null || 
+           elseStat.isSkip())
+         ) 
+      { ReturnStatement rs = (ReturnStatement) ifStat; 
+        Expression rexpr = rs.getValue(); 
+
+        Expression notEmpty = 
+            new UnaryExpression("->notEmpty", loopRange); 
+          
+        if (rexpr == null) 
+        { ConditionalStatement result = 
+            new ConditionalStatement(notEmpty, rs, elseStat); 
+          return result; 
+        } 
+
+        Expression anyExpr = 
+               new UnaryExpression("->any", loopRange); 
+          
+        if (rexpr.isEqualTo(loopVar))
+        { ConditionalStatement result = 
+            new ConditionalStatement(notEmpty, 
+              new ReturnStatement(anyExpr), elseStat); 
+          return result; 
+        }
+
+        Expression retValue = 
+          BinaryExpression.newLetBinaryExpression(
+                loopVar, 
+                loopRange.getElementType(), 
+                anyExpr, rexpr); 
+        ConditionalStatement res = 
+            new ConditionalStatement(notEmpty, 
+              new ReturnStatement(retValue), elseStat); 
+        return res;
+      } 
+
+      // for x : s do return expr(x); 
+      // reduces to: 
+      // if s->notEmpty() then 
+      //    return (let x : T = s->any() in expr(x)) else skip
+    } 
+
+    if (Statement.hasLoopStatement(body)) { } 
     else 
     { return this; } 
 

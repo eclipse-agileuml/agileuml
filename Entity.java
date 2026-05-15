@@ -6546,13 +6546,15 @@ public class Entity extends ModelElement implements Comparable
         int rc = (int) opflaws.getOrDefault("RC", 0); 
         int nte = (int) opflaws.getOrDefault("NTE", 0); 
         int oes = (int) opflaws.getOrDefault("OES", 0); 
+        int rl = (int) opflaws.getOrDefault("RL", 0); 
+        int edn = (int) opflaws.getOrDefault("EDN", 0); 
         int lrc = (int) opflaws.getOrDefault("LRC", 0);
         int mel = (int) opflaws.getOrDefault("MEL", 0); 
         int mnc = (int) opflaws.getOrDefault("MNC", 0); 
         int oew = (int) opflaws.getOrDefault("OEW", 0); 
 
         int rr = dev + lce + uor + rc + nte; 
-        int aa = oes; 
+        int aa = rl + edn + oes; 
         int yy = lrc + mel + mnc + oew; 
 
         int optotalflaws = rr + aa + yy; 
@@ -6563,7 +6565,7 @@ public class Entity extends ModelElement implements Comparable
         csvline = csvline + 
                   "," + rr + "," + aa + "," + yy + "," +
                   dev + "," + lce + "," + uor + "," + rc + ","
-                  + nte + "," + 
+                  + nte + "," + rl + "," + edn + "," + 
                   + oes + "," + lrc + "," + mel + "," + 
                   mnc + "," + oew; 
 

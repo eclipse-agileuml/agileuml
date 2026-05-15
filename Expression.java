@@ -6051,6 +6051,9 @@ abstract class Expression
                                        Expression arg)
   { // let x : T = v in expr is just expr if x doesn't 
     // occur in expr
+    // let x : T = v in x is v
+    // let x : T = v in x->op()  is (init)->op()
+    // let x : T = v in f->apply(x) is f->apply(v)
 
     if (x == null) 
     { return arg; } 
@@ -6061,6 +6064,52 @@ abstract class Expression
 
     if (evars.size() == 0) 
     { return arg; } 
+
+    if ((x + "").equals(arg + "") || 
+        ("(" + x + ")").equals(arg + ""))
+    { init.setBrackets(true); 
+      return init; 
+    } 
+
+    if (arg instanceof UnaryExpression) 
+    { UnaryExpression ue = (UnaryExpression) arg; 
+      Expression expr = ue.getArgument(); 
+      if ((x + "").equals(expr + "") || 
+          ("(" + x + ")").equals(expr + ""))
+      { init.setBrackets(true); 
+        return new UnaryExpression(ue.getOperator(), init); 
+      }
+    } 
+
+    if (arg instanceof BinaryExpression) 
+    { BinaryExpression be = (BinaryExpression) arg; 
+      String beop = be.getOperator();
+      Expression beleft = be.getLeft();  
+      Expression beright = be.getRight(); 
+      Vector lvars = beleft.variablesUsedIn(names); 
+     
+      if (lvars.size() == 0 && 
+          ( ("(" + x + ")").equals(beright + "") ||
+            (x + "").equals(beright + "") )
+         )
+      { Expression res = 
+           new BinaryExpression(beop, beleft, init); 
+        res.setBrackets(true); 
+        return res; 
+      }
+
+      Vector rvars = beright.variablesUsedIn(names); 
+     
+      if (rvars.size() == 0 && 
+          ( ("(" + x + ")").equals(beleft + "") ||
+            (x + "").equals(beleft + "") )
+         )
+      { Expression res = 
+           new BinaryExpression(beop, init, beright); 
+        res.setBrackets(true); 
+        return res; 
+      }
+    }
 
     BinaryExpression res = 
       new BinaryExpression("let", init, arg);

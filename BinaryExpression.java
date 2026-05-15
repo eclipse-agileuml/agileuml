@@ -940,6 +940,10 @@ class BinaryExpression extends Expression
       rexpr.setBrackets(true); 
       Expression neqz = new BinaryExpression("/=",rexpr,zero);
 
+      int acount = (int) uses.get("yellow"); 
+      uses.set("yellow", acount+1); 
+      messages.add("! (SEM): Condition " + neqz + " needed for " + this);  
+
       if (left.hasNumericType()) { } 
       else 
       { Expression typeofdouble = 

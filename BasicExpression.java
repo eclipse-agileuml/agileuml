@@ -19372,7 +19372,7 @@ public Statement generateDesignSubtract(Expression rhs)
       if ((arrayIndex + "").equals("0") ||
           (arrayIndex + "").equals(data + "->size() + 1") ||
           (arrayIndex + "").equals("(" + data + ")->size() + 1"))
-      { messages.add("!! Invalid index reference for sequence/string: " + this);
+      { messages.add("!! (SEM/OES): Invalid index reference for sequence/string: " + this);
         int aScore = (int) uses.get("amber"); 
         uses.set("amber", aScore+1); 
         messages.add("");

@@ -4721,6 +4721,7 @@ public class BehaviouralFeature extends ModelElement
     res.set("NTE", 0); 
     res.set("MNC", 0); 
     res.set("CBR", 0); 
+    res.set("EDN", 0); 
 
     java.util.Map clones = new java.util.HashMap(); 
     java.util.Map defs = new java.util.HashMap(); 
