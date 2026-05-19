@@ -782,6 +782,7 @@ Average ( _1 ) |-->->collect( _x | _1->apply(_x) )->average()
 OrderBy ( _1 ) |-->->sortedBy( _1`directLambdaTranslation )<when> _1`isDirectLambda true
 OrderBy ( _1 ) |-->->sortedBy( _x | _1->apply(_x))
 
+OrderByDescending ( _1 ) |-->->sortedBy( _1`directLambdaTranslation )->reverse()<when> _1`isDirectLambda true
 OrderByDescending ( _1 ) |-->->sortedBy( _x | _1->apply(_x))->reverse()
 
 GetAll ( ) |-->.allInstances()
