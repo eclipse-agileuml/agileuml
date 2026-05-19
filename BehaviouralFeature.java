@@ -186,6 +186,12 @@ public class BehaviouralFeature extends ModelElement
            Type.isSequenceType(resultType); 
   } 
 
+  public Expression getDefcond()
+  { if (defcond == null) 
+    { return new BasicExpression(true); } 
+    return defcond; 
+  } 
+
   public void setComments(String comms)
   { comments = comms; } 
 
@@ -449,6 +455,7 @@ public class BehaviouralFeature extends ModelElement
       for (int h = 0; h < calls.size(); h++) 
       { InvocationStatement opcall = 
           (InvocationStatement) calls.get(h);
+
         if (opcall.callExp instanceof BasicExpression)
         { BasicExpression called = 
             (BasicExpression) opcall.callExp;
@@ -3312,7 +3319,7 @@ public class BehaviouralFeature extends ModelElement
   { return post; } 
 
   public Expression definedness(Vector arguments, 
-                                Vector messages) 
+                                PrintWriter mtout) 
   { // pre & (pre => def(post))
     Expression res;
 
@@ -3325,15 +3332,16 @@ public class BehaviouralFeature extends ModelElement
     uses.set("amber", 0); 
     uses.set("red", 0); 
     uses.set("yellow", 0); 
-    // Vector messages = new Vector(); 
+    Vector messages = new Vector(); 
 
     if (post != null)  
     { if (pre != null) 
       { defcond = (Expression) pre.clone();  
         Expression defpost = post.definedness(uses, messages); 
-        Expression imp = Expression.simplifyImplies(defcond, defpost); 
+        Expression imp = 
+               Expression.simplifyImplies(defcond, defpost); 
         imp.setBrackets(true); 
-        res = Expression.simplifyAnd(defcond, imp);
+        res = Expression.simplify("&", defcond, imp, null);
       } 
       else 
       { defcond = new BasicExpression(true); 
@@ -3362,13 +3370,13 @@ public class BehaviouralFeature extends ModelElement
       if (VectorUtil.containsEqualString(selfexpr, calls) ||
           VectorUtil.containsEqualString(selfexpr1, calls))
       { 
-        System.err.println("!! Warning (NTE): possible infinite recursion: " + 
+        mtout.println("!! Warning (NTE): possible infinite recursion: " + 
            selfexpr + " is in calls of activity: " + calls);
 
         int acount = (int) uses.get("amber"); 
         uses.set("amber", acount+1); 
-        messages.add("!! Warning (NTE): possible infinite recursion: " + 
-           selfexpr + " is in calls of activity: " + calls); 
+        // messages.add("!! Warning (NTE): possible infinite recursion: " + 
+        //   selfexpr + " is in calls of activity: " + calls); 
       } 
 
       if (VectorUtil.containsEqualString(selfexpr, returns) ||
@@ -3377,10 +3385,10 @@ public class BehaviouralFeature extends ModelElement
         int acount = (int) uses.get("amber"); 
         uses.set("amber", acount+1); 
 
-        System.err.println("!! Warning (NTE): possible infinite recursion: " + 
+        mtout.println("!! Warning (NTE): possible infinite recursion: " + 
             selfexpr + " is in returned values: " + returns);
-        messages.add("!! Warning (NTE): possible infinite recursion: " + 
-            selfexpr + " is in returned values: " + returns);
+        // messages.add("!! Warning (NTE): possible infinite recursion: " + 
+        //    selfexpr + " is in returned values: " + returns);
       }   
 
       Expression def = activity.definedness(uses,messages); 
@@ -3393,12 +3401,14 @@ public class BehaviouralFeature extends ModelElement
     System.err.println(); 
 
     Expression sres = res.simplifyOCL(); 
-    System.err.println("***> Definedness obligation for operation " + nme + " of class " + entity + " is:\n" + sres); 
-    System.err.println(); 
+    mtout.println("***> Definedness obligation for operation " + nme + " of class " + entity + " is:\n" + sres + "\n");
+    // messages.add("***> Definedness obligation for operation " + nme + " of class " + entity + " is:\n" + sres); 
+    // System.err.println(); 
+    // messages.add(""); 
 
     for (int i = 0; i < messages.size(); i++)
     { String mess = (String) messages.get(i); 
-      System.err.println(mess + "\n"); 
+      mtout.println(mess + "\n"); 
     }  
 
     int ycount = (int) uses.get("yellow"); 
@@ -3406,19 +3416,21 @@ public class BehaviouralFeature extends ModelElement
     int rcount = (int) uses.get("red"); 
 
     if (ycount > 0)
-    { System.err.println("! There are " + ycount + " possible semantic issues in operation " + nme);
-      messages.add("! There are " + ycount + " possible semantic issues in operation " + nme);
+    { mtout.println("! There are " + ycount + " possible semantic issues in operation " + nme);
+      // messages.add("! There are " + ycount + " possible semantic issues in operation " + nme);
     } 
 
     if (ocount > 0)
-    { System.err.println("!! There are " + ocount + " semantic warnings in operation " + nme);
-      messages.add("!! There are " + ocount + " semantic warnings in operation " + nme); 
+    { mtout.println("!! There are " + ocount + " semantic warnings in operation " + nme);
+      // messages.add("!! There are " + ocount + " semantic warnings in operation " + nme); 
     } 
 
     if (rcount > 0)
-    { System.err.println("!!! There are " + rcount + " semantic errors in operation " + nme);
-      messages.add("!!! There are " + rcount + " semantic errors in operation " + nme);
+    { mtout.println("!!! There are " + rcount + " semantic errors in operation " + nme);
+      // messages.add("!!! There are " + rcount + " semantic errors in operation " + nme);
     } 
+
+    mtout.println(); 
 
     return substituteParameters(res, arguments);  
   } 
@@ -3445,11 +3457,11 @@ public class BehaviouralFeature extends ModelElement
  
       // JOptionPane.showMessageDialog(null, "Determinacy obligation for " + getName() + " is:\n" + imp, 
       // "Internal consistency condition", JOptionPane.INFORMATION_MESSAGE); 
-      System.out.println("***> Determinacy obligation for operation " + 
-         getName() + " of class " + entity + " is:\n" + imp); 
-      messages.add("***> Determinacy obligation for operation " + 
+      /* System.err.println("***> Determinacy obligation for operation " + 
+         getName() + " of class " + entity + " is:\n" + imp); */ 
+      /* messages.add("***> Determinacy obligation for operation " + 
                    getName() + " of class " + entity + 
-                   " is:\n" + imp); 
+                   " is:\n" + imp); */  
       detcond = imp; 
       return substituteParameters(imp, arguments);
     }  
@@ -4761,6 +4773,21 @@ public class BehaviouralFeature extends ModelElement
     { res = activity.energyUse(res, redUses, 
                                amberUses, yellowUses);
 
+      Vector calls = Statement.getOperationCalls(activity);
+
+      if (isQuery()) // should be no "newC", "newInstance" calls
+      { for (int t = 0; t < calls.size(); t++) 
+        { String call = "" + calls.get(t); 
+          if (call.endsWith("newInstance()"))
+          { amberUses.add("!! Code smell (OES): object creation " + 
+                          call + " in query operation " + this); 
+            int ascore = (int) res.get("amber");
+            ascore = ascore + 1;
+            res.set("amber", ascore); 
+          } 
+        } 
+      } 
+
       // System.out.println(res); 
       // System.out.println(redUses); 
       // System.out.println(amberUses); 
@@ -5084,6 +5111,19 @@ int ascore = (int) res.get("amber");
       int acomp = activity.syntacticComplexity(); 
       out.println("*** Activity syntactic complexity = " + acomp); 
 
+      Vector calls = 
+          Statement.getOperationCalls(activity);
+
+      if (isQuery()) // should be no "newC", "newInstance" calls
+      { for (int t = 0; t < calls.size(); t++) 
+        { String call = "" + calls.get(t); 
+          if (call.endsWith("newInstance()"))
+          { System.err.println("!! Code smell: object creation " + 
+                          call + " in query operation " + this); 
+          } 
+        } 
+      } 
+   
       if (acomp > TestParameters.operationSizeLimit) 
       { System.err.println("!! Code smell (EOS): too high activity complexity (" + acomp + ") for " + nme); 
         System.err.println("!! Recommend refactoring by splitting operation"); 
@@ -5433,9 +5473,8 @@ int ascore = (int) res.get("amber");
     { res = res + "static "; } 
 
     if (resultType == null || "void".equals(resultType + "")) 
-    { JOptionPane.showMessageDialog(null, 
-        "ERROR: null result type for query operation: " + this,        
-        "Semantic error", JOptionPane.ERROR_MESSAGE);
+    { System.err.println( 
+        "!!! ERROR: null result type for query operation: " + this);
       return ""; 
     } 
 
@@ -5495,8 +5534,7 @@ int ascore = (int) res.get("amber");
     { res = res + "static "; } 
 
     if (resultType == null || "void".equals(resultType + "")) 
-    { JOptionPane.showMessageDialog(null, "ERROR: null result type for: " + this,
-                                    "Type error", JOptionPane.ERROR_MESSAGE);
+    { System.err.println("!!! ERROR: null result type for: " + this);
       return ""; 
     } 
 
@@ -5555,9 +5593,8 @@ int ascore = (int) res.get("amber");
     { res = res + "static "; } 
 
     if (resultType == null || "void".equals(resultType + "")) 
-    { JOptionPane.showMessageDialog(null, 
-        "ERROR: null result type of query operation: " + this,
-        "Type error", JOptionPane.ERROR_MESSAGE);
+    { System.err.println( 
+        "!!! ERROR: null result type of query operation: " + this);
       return ""; 
     } 
 
@@ -5619,8 +5656,7 @@ int ascore = (int) res.get("amber");
     { res = res + "static "; } 
 
     if (resultType == null || "void".equals(resultType + "")) 
-    { JOptionPane.showMessageDialog(null, "ERROR: null result type for: " + this,
-                                    "Type error", JOptionPane.ERROR_MESSAGE);
+    { System.err.println("!!! ERROR: null result type for: " + this);
       return ""; 
     } 
 
@@ -5679,8 +5715,7 @@ int ascore = (int) res.get("amber");
     // { res = res + "static "; } 
 
     if (resultType == null || "void".equals(resultType + "")) 
-    { JOptionPane.showMessageDialog(null, "ERROR: null result type for: " + this,
-                                    "Type error", JOptionPane.ERROR_MESSAGE);
+    { System.err.println("!!! ERROR: null result type for: " + this);
       return ""; 
     } 
 

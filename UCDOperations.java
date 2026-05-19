@@ -16411,17 +16411,6 @@ public void produceCUI(PrintWriter out)
   public void determinacyCheck()
   { Vector messages = new Vector(); 
 
-    for (int i = 0; i < entities.size(); i++) 
-    { Entity ent = (Entity) entities.get(i); 
-
-      if (ent.isDerived() || 
-          ent.isComponent() || 
-          ent.isExternal()) 
-      { continue; } 
-
-      ent.checkDeterminacy(messages); 
-    } 
-
     try
     { PrintWriter mtout = 
           new PrintWriter(
@@ -16431,6 +16420,18 @@ public void produceCUI(PrintWriter out)
       mtout.println(); 
       mtout.println("--- Semantic issues and flaws for system  " + systemName); 
       mtout.println(""); 
+ 
+      for (int i = 0; i < entities.size(); i++) 
+      { Entity ent = (Entity) entities.get(i); 
+
+        if (ent.isDerived() || 
+            ent.isComponent() || 
+            ent.isExternal()) 
+        { continue; } 
+
+        ent.checkDeterminacy(messages, mtout); 
+      } 
+
       for (int k = 0; k < messages.size(); k++) 
       { String mtest = (String) messages.get(k); 
         mtout.println(mtest);
@@ -16443,6 +16444,7 @@ public void produceCUI(PrintWriter out)
    
     System.out.println("*** Semantic issues/flaws written to semanticFlaws.txt"); 
   } 
+
 
   public void loadFromJavaAST(String sourcefile)
   { BufferedReader br = null; 

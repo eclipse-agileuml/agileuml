@@ -2275,11 +2275,12 @@ public class Entity extends ModelElement implements Comparable
                (BehaviouralFeature) allops.get(i); 
       boolean uva = op.checkVariableUse();
       if (uva) 
-      { String yn = 
-          JOptionPane.showInputDialog("Remove unused statements in " + op + "? (y/n):");
+      { // String yn = 
+        //   JOptionPane.showInputDialog("Remove unused statements in " + op + "? (y/n):");
 
-        if (yn != null && "y".equals(yn))         
-        { op.removeUnusedStatements(); } 
+        // if (yn != null && "y".equals(yn))         
+        // { op.removeUnusedStatements(); } 
+        System.err.println("!! (UVA): Unused statements can be removed from " + op); 
       }  
     } 
   } 
@@ -5071,7 +5072,7 @@ public class Entity extends ModelElement implements Comparable
     } 
   } 
 
-  public void checkDeterminacy(Vector messages)
+  public void checkDeterminacy(Vector messages, PrintWriter out)
   { if (isComponent() || isExternal()) 
     { return; } 
 
@@ -5080,11 +5081,11 @@ public class Entity extends ModelElement implements Comparable
            (BehaviouralFeature) operations.get(i);
     
       Vector args = op.getParameterExpressions(); 
-      op.definedness(args, messages);
-      System.err.println(); 
+      op.definedness(args, out);
+      // System.err.println(); 
 
       op.determinate(args, messages); 
-      System.err.println(); 
+      // System.err.println(); 
     }
   }
   

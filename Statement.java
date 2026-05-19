@@ -4886,7 +4886,9 @@ class ReturnStatement extends Statement
 
   public Expression definedness(Map uses, Vector messages)
   { if (value != null) 
-    { return value.definedness(uses, messages); }
+    { Expression res = value.definedness(uses, messages); 
+      return res; 
+    }
  
     return new BasicExpression(true); 
   } 
@@ -5559,14 +5561,28 @@ class BreakStatement extends Statement
                              int nestingLevel, 
                              java.util.Map operatorsAtLevel, 
                              Vector vars)
-  { return operatorsAtLevel; }  
+  { if (nestingLevel <= 1) 
+    { System.err.println("!!! (RC): break statement not within loop"); 
+    }
+  
+    return operatorsAtLevel;
+  }  
 
   public java.util.Map collectionOperatorUses(
                              int nestingLevel, 
                              java.util.Map operatorsAtLevel, 
                              Vector vars, Map uses,
                              Vector messages)
-  { return operatorsAtLevel; }  
+  { if (nestingLevel <= 1) 
+    { messages.add("!!! (RC): break statement not within loop"); 
+      int rcount = (int) uses.get("red"); 
+      uses.set("red", rcount+1); 
+      int rc = (int) uses.get("RC", 0); 
+      uses.set("RC", rc+1); 
+    }
+
+    return operatorsAtLevel; 
+  }  
 }
 
 class ContinueStatement extends Statement
@@ -5779,14 +5795,27 @@ class ContinueStatement extends Statement
                              int nestingLevel, 
                              java.util.Map operatorsAtLevel,
                              Vector vars)
-  { return operatorsAtLevel; }  
+  { if (nestingLevel <= 1) 
+    { System.err.println("!!! (RC): continue statement not within loop"); 
+    } 
+    return operatorsAtLevel; 
+  }  
 
   public java.util.Map collectionOperatorUses(
                              int nestingLevel, 
                              java.util.Map operatorsAtLevel, 
                              Vector vars, Map uses,
                              Vector messages)
-  { return operatorsAtLevel; }  
+  { if (nestingLevel <= 1) 
+    { messages.add("!!! (RC): continue statement not within loop"); 
+      int rcount = (int) uses.get("red"); 
+      uses.set("red", rcount+1); 
+      int rc = (int) uses.get("RC", 0); 
+      uses.set("RC", rc+1); 
+    }
+
+    return operatorsAtLevel; 
+  }  
 }
 
 
@@ -5949,7 +5978,9 @@ class InvocationStatement extends Statement
   } 
 
   public Expression definedness(Map uses, Vector messages) 
-  { return callExp.definedness(uses, messages); } 
+  { Expression res = callExp.definedness(uses, messages); 
+    return res; 
+  } 
 
   public int execute(ModelSpecification sigma, 
                      ModelState beta)
@@ -6970,7 +7001,9 @@ class ImplicitInvocationStatement extends Statement
   } 
 
   public Expression definedness(Map uses, Vector messages)
-  { return callExp.definedness(uses, messages); } 
+  { Expression res = callExp.definedness(uses, messages); 
+    return res; 
+  } 
 
   public Map energyUse(Map uses, 
                        Vector rUses, Vector oUses, Vector yUses)
@@ -7778,10 +7811,15 @@ class WhileStatement extends Statement
       Expression canTerminate = 
           Expression.negate(imp);
       bdef.setBrackets(true); 
+
+      if ("false".equals(canTerminate + "") || 
+          "(false)".equals(canTerminate + ""))
+      { messages.add("!!! (SEM): Non-terminating loop: " + this); } 
+      else 
+      { messages.add("! (SEM): Condition " + canTerminate + " needed for loop termination"); } 
+
       canTerminate.setBrackets(true);
   
-      System.err.println("! (SEM): Condition " + canTerminate + " needed for loop termination"); 
-
       bdef = Expression.simplifyAnd(canTerminate, bdef); 
     } 
 
@@ -7793,9 +7831,14 @@ class WhileStatement extends Statement
       Expression canTerminate = 
           Expression.negate(imp);
       bdef.setBrackets(true); 
-      canTerminate.setBrackets(true);  
 
-      System.err.println("! (SEM): Condition " + canTerminate + " needed for loop termination"); 
+      if ("false".equals(canTerminate + "") || 
+          "(false)".equals(canTerminate + ""))
+      { messages.add("!!! (SEM): Non-terminating loop: " + this); } 
+      else 
+      { messages.add("! (SEM): Condition " + canTerminate + " needed for loop termination"); } 
+
+      canTerminate.setBrackets(true);
 
       bdef = Expression.simplifyAnd(canTerminate, bdef); 
     } 
@@ -8297,6 +8340,9 @@ class WhileStatement extends Statement
     body.collectionOperatorUses(nestingLevel + 1,
                                 operatorsAtLevel, newvars);
 
+    if (nestingLevel > 2)
+    { System.err.println("!! (EDN): Triple-nested loop: " + this); } 
+
     return operatorsAtLevel; 
   }  
 
@@ -8354,6 +8400,14 @@ class WhileStatement extends Statement
     body.collectionOperatorUses(nestingLevel + 1,
                                 operatorsAtLevel, newvars, 
                                 uses, messages);
+
+    if (nestingLevel > 2)
+    { messages.add("!! (EDN): Triple-nested loop: " + this);
+      int aCount = (int) uses.get("amber"); 
+      uses.set("amber", aCount+1); 
+      int edn = (int) uses.get("EDN", 0); 
+      uses.set("EDN", edn+1); 
+    } 
 
     return operatorsAtLevel; 
   }  
@@ -10680,7 +10734,10 @@ class CreationStatement extends Statement
 
   public Expression definedness(Map uses, Vector messages)
   { if (initialExpression != null) 
-    { return initialExpression.definedness(uses, messages); } 
+    { Expression def = 
+            initialExpression.definedness(uses, messages); 
+      return def; 
+    } 
     return new BasicExpression(true); 
   } 
 
@@ -14265,7 +14322,9 @@ class ErrorStatement extends Statement
   } 
 
   public Expression definedness(Map uses, Vector messages)
-  { return thrownObject.definedness(uses, messages); } 
+  { Expression def = thrownObject.definedness(uses, messages); 
+    return def; 
+  } 
 
   public Vector variablesUsedIn(Vector vars) 
   { if (thrownObject != null) 
@@ -17877,7 +17936,7 @@ class AssignStatement extends Statement
     Expression ldef = lhs.definedness(uses, messages); 
     Expression rdef = rhs.definedness(uses, messages); 
 
-    Expression res = Expression.simplifyAnd(ldef, rdef); 
+    Expression res = Expression.simplify("&", ldef, rdef, null); 
     return res; 
   } 
 

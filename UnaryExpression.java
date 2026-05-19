@@ -1367,7 +1367,7 @@ public void findClones(java.util.Map clones,
           "->oclAsSet".equals(eop) || 
           "->asSequence".equals(eop) || 
           "->oclAsSequence".equals(eop)) 
-      { System.out.println("!! OCL efficiency smell (OES): redundant operator: " + eop + " in " + this);
+      { // System.out.println("!! OCL efficiency smell (OES): redundant operator: " + eop + " in " + this);
         return new UnaryExpression("->notEmpty", 
                              expr.getArgument()); 
       } 
@@ -1384,7 +1384,7 @@ public void findClones(java.util.Map clones,
           "->oclAsSet".equals(eop) || 
           "->asSequence".equals(eop) || 
           "->oclAsSequence".equals(eop)) 
-      { System.out.println("!! OCL efficiency smell (OES): redundant operator: " + eop + " in " + this);
+      { // System.out.println("!! OCL efficiency smell (OES): redundant operator: " + eop + " in " + this);
         return new UnaryExpression("->isEmpty", 
                              expr.getArgument()); 
       } 
@@ -1400,7 +1400,7 @@ public void findClones(java.util.Map clones,
         
       if (leftargop.equals("->select"))
       { // s->select(P)->notEmpty()
-        System.out.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
+        // System.out.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
           
         BinaryExpression res = 
             new BinaryExpression("->exists", leftargleft,
@@ -1409,7 +1409,7 @@ public void findClones(java.util.Map clones,
       } 
       else if (leftargop.equals("->reject"))
       { // s->reject(P)->notEmpty()
-        System.out.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
+        // System.out.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
           
         UnaryExpression notpred = 
             new UnaryExpression("not", leftargpred); 
@@ -1420,7 +1420,7 @@ public void findClones(java.util.Map clones,
       } 
       else if (leftargop.equals("|"))
       { // s->select(x | P)->notEmpty()
-        System.out.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
+        // System.out.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
           
         BinaryExpression res = 
             new BinaryExpression("#", leftargleft,
@@ -1429,7 +1429,7 @@ public void findClones(java.util.Map clones,
       } 
       else if (leftargop.equals("|R"))
       { // s->reject(x | P)->notEmpty()
-        System.out.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
+        // System.out.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
           
         UnaryExpression notpred = 
              new UnaryExpression("not", leftargpred); 
@@ -1449,7 +1449,7 @@ public void findClones(java.util.Map clones,
         
       if (leftargop.equals("->select"))
       { // s->select(P)->isEmpty()
-        System.out.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
+        // System.out.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
           
         UnaryExpression notpred = 
             new UnaryExpression("not", leftargpred); 
@@ -1460,7 +1460,7 @@ public void findClones(java.util.Map clones,
       } 
       else if (leftargop.equals("->reject"))
       { // s->reject(P)->isEmpty()
-        System.out.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
+        // System.out.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
           
         BinaryExpression res = 
             new BinaryExpression("->forAll", leftargleft,
@@ -1469,7 +1469,7 @@ public void findClones(java.util.Map clones,
       } 
       else if (leftargop.equals("|"))
       { // s->select(x | P)->isEmpty()
-        System.out.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
+        // System.out.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
 
         UnaryExpression notpred = 
             new UnaryExpression("not", leftargpred); 
@@ -1481,7 +1481,7 @@ public void findClones(java.util.Map clones,
       } 
       else if (leftargop.equals("|R"))
       { // s->reject(x | P)->isEmpty()
-        System.out.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
+        // System.out.println("!! OCL efficiency smell (OES): Inefficient comparison: " + this);
           
         BinaryExpression res = 
             new BinaryExpression("!", leftargleft,
@@ -1505,9 +1505,9 @@ public void findClones(java.util.Map clones,
           BinaryExpression res = 
             new BinaryExpression("|A", lbe.left, lbe.right); 
 
-          System.out.println("!! OCL efficiency smell (OES): Inefficient " + operator + " expression: " + 
+          /* System.out.println("!! OCL efficiency smell (OES): Inefficient " + operator + " expression: " + 
             this + 
-            "\n! Replaced by " + res);
+            "\n! Replaced by " + res); */ 
 
           return res; 
         }
@@ -1518,9 +1518,9 @@ public void findClones(java.util.Map clones,
           BinaryExpression res = 
             new BinaryExpression("->any", lbe.left, lbe.right); 
 
-          System.err.println("!! OCL efficiency smell (OES): Inefficient " + operator + " expression: " + 
+          /* System.err.println("!! OCL efficiency smell (OES): Inefficient " + operator + " expression: " + 
             this + 
-            "\n! Replaced by " + res);
+            "\n! Replaced by " + res); */ 
 
           return res; 
         }
@@ -1530,9 +1530,9 @@ public void findClones(java.util.Map clones,
           BinaryExpression res = 
             new BinaryExpression("|A", lbe.left, notR); 
 
-          System.err.println("!! OCL efficiency smell (OES): Inefficient " + operator + " expression: " + 
+          /* System.err.println("!! OCL efficiency smell (OES): Inefficient " + operator + " expression: " + 
             this + 
-            "\n! Replaced by " + res);
+            "\n! Replaced by " + res); */ 
 
           return res; 
         }
@@ -1542,9 +1542,9 @@ public void findClones(java.util.Map clones,
           BinaryExpression res = 
             new BinaryExpression("->any", lbe.left, notR); 
 
-          System.err.println("!! OCL efficiency smell (OES): Inefficient " + operator + " expression: " + 
+          /* System.err.println("!! OCL efficiency smell (OES): Inefficient " + operator + " expression: " + 
             this + 
-            "\n! Replaced by " + res);
+            "\n! Replaced by " + res); */ 
   
           return res; 
         }
@@ -1552,9 +1552,9 @@ public void findClones(java.util.Map clones,
                  operator.equals("->first"))
         { Expression res = Expression.simplifyFirst(lbe); 
  
-          System.err.println("!! OCL efficiency smell (OES): Inefficient " + operator + " expression: " + 
+          /* System.err.println("!! OCL efficiency smell (OES): Inefficient " + operator + " expression: " + 
             this + 
-            "\n! Replaced by " + res);
+            "\n! Replaced by " + res); */ 
   
           return res; 
         }
@@ -1562,9 +1562,9 @@ public void findClones(java.util.Map clones,
                  operator.equals("->any"))
         { Expression res = Expression.simplifyAny(lbe); 
  
-          System.err.println("!! OCL efficiency smell (OES): Inefficient " + operator + " expression: " + 
+          /* System.err.println("!! OCL efficiency smell (OES): Inefficient " + operator + " expression: " + 
             this + 
-            "\n! Replaced by " + res);
+            "\n! Replaced by " + res); */ 
   
           return res; 
         }
@@ -1575,9 +1575,9 @@ public void findClones(java.util.Map clones,
       { // Redundant ->sort operation:  
         // Argument is already sorted.
 
-        System.err.println("!! OES flaw: Redundant ->sort operation: " + 
+        /* System.err.println("!! OES flaw: Redundant ->sort operation: " + 
             this + 
-            "\n! Argument is already sorted.");
+            "\n! Argument is already sorted."); */ 
 
         if (argument.isSequence() || argument.isMap())
         { return arg; } 
@@ -1657,6 +1657,11 @@ public void findClones(java.util.Map clones,
           (operator.equals("->min") && !argument.isSorted()))
       { if (level > 1)
         { System.err.println("!! (OES): nested execution of O(n)+ operator " + operator + " could be O(n*n)+"); 
+          System.err.println(); 
+        }
+
+        if (level > 2)
+        { System.err.println("!! (EDN): triple-nested iterations in " + this); 
           System.err.println(); 
         } 
       }
@@ -1745,6 +1750,15 @@ public void findClones(java.util.Map clones,
         uses.set("amber", aScore + 1);
         int oescount = (int) uses.get("OES"); 
         uses.set("OES", oescount+1); 
+      }
+
+      if (level > 2)
+      { messages.add("!! (EDN): triple-nested iterations in " + this); 
+        messages.add(""); 
+        int aScore = (int) uses.get("amber"); 
+        uses.set("amber", aScore + 1);
+        int oescount = (int) uses.get("EDN"); 
+        uses.set("EDN", oescount+1); 
       }
     }
 

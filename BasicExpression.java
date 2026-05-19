@@ -3182,7 +3182,10 @@ class BasicExpression extends Expression
       { Expression par1 = (Expression) parameters.get(0); 
         res =  
           Expression.simplifyAnd(res, 
-              new UnaryExpression("->notEmpty", par1)); 
+              new UnaryExpression("->notEmpty", par1));
+ 
+        messages.add("! (SEM): Condition " + res + " needed for " + this); 
+
         return res; 
       } 
   
@@ -3219,7 +3222,7 @@ class BasicExpression extends Expression
 
       if (bf != null) 
       { Vector vv = new Vector(); 
-        Expression spre = bf.definedness(parameters, vv); 
+        Expression spre = bf.getDefcond(); 
         return simplify("&",res,spre,null);
       }  
     } 
@@ -3302,6 +3305,7 @@ class BasicExpression extends Expression
       { BasicExpression iko = new BasicExpression("oclIsKindOf"); 
         iko.setObjectRef(objectRef); 
         iko.setParameters(parameters);
+        messages.add("! (SEM): Condition " + iko + " needed for " + this); 
         return iko; 
       }
       // Operation call defined if precondition[args/params] is true
