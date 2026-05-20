@@ -4037,10 +4037,10 @@ public class UCDArea extends JPanel
       amberFlags = amberFlags + 1; 
     }
 
-    messages.add(">>>>> For system " + systemName + " there are the total energy-use flaws:"); 
-    messages.add(">> Red flag score: " + redFlags); 
-    messages.add(">> Amber flag score: " + amberFlags); 
-    messages.add(">> Yellow flag score: " + yellowFlags); 
+    // messages.add(">>>>> For system " + systemName + " there are the total energy-use flaws:"); 
+    // messages.add(">> Red flag score: " + redFlags); 
+    // messages.add(">> Amber flag score: " + amberFlags); 
+    // messages.add(">> Yellow flag score: " + yellowFlags); 
 
     return res;  
   }

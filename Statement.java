@@ -7919,11 +7919,13 @@ class WhileStatement extends Statement
   
     body.energyUse(uses,rUses,aUses,yUses);
 
+    BasicExpression zero = new BasicExpression(0); 
+    BasicExpression unit = new BasicExpression(1); 
+
     if (loopKind == FOR && 
         loopRange != null && 
         loopRange instanceof BasicExpression) 
     { BasicExpression rng = (BasicExpression) loopRange; 
-      BasicExpression unit = new BasicExpression(1); 
 
       if ("Integer".equals(rng.getObjectRef() + "") &&
           unit.isEqualTo(rng.getParameter(1)) && 
@@ -7964,6 +7966,7 @@ class WhileStatement extends Statement
           else 
           { for (int j = 0; j < auses.size(); j++) 
             { Expression use = (Expression) auses.get(j); 
+              use.setBrackets(false);  
               if ((iter + "[" + loopVar + "]").equals(
                                             "" + use)) 
               { } 
@@ -7976,6 +7979,78 @@ class WhileStatement extends Statement
           { int ycount = (int) uses.get("yellow"); 
             uses.set("yellow", ycount + 1); 
             yUses.add("! Code smell (OEW): indexed loop\n " + this + "\n! can be replaced by iteration over " + enrng.getArgument() + "\n"); 
+            int melcount = (int) uses.get("OEW"); 
+            uses.set("OEW", melcount+1);  
+          }
+        }  
+      } 
+    }
+
+    if (loopKind == FOR && 
+        loopRange != null && 
+        loopRange instanceof BasicExpression) 
+    { BasicExpression rng = (BasicExpression) loopRange; 
+
+      if ("Integer".equals(rng.getObjectRef() + "") &&
+          zero.isEqualTo(rng.getParameter(1)) && 
+          rng.getParameter(2) instanceof BinaryExpression)
+      { BinaryExpression enrng = 
+               (BinaryExpression) rng.getParameter(2); 
+
+        if ("-".equals(enrng.getOperator()) && 
+            enrng.getLeft() instanceof UnaryExpression && 
+            "->size".equals(
+              ((UnaryExpression) 
+                          enrng.getLeft()).getOperator())
+           )
+        { UnaryExpression lbe = 
+                          (UnaryExpression) enrng.getLeft();
+          Expression arg = lbe.getArgument();
+
+          // arg is not in the write frame, and all uses
+          // of arg are of form arg[loopVar]
+          String iter = arg + ""; 
+
+          // Vector newvars = new Vector(); 
+          // newvars.add(arg + "");  
+          Vector wrfr = body.writeFrame(); 
+          // Vector vuses = body.getVariableUses(); 
+          Vector auses = body.getUses(iter); 
+          // Vector vused = body.variablesUsedIn(newvars); 
+          
+          System.err.println(">>> Loop body write frame: " + wrfr); 
+          // System.err.println(">>> Uses: " + vuses); 
+          System.err.println(">>> Iterator uses in loop body: " + auses); 
+          // System.err.println(">>> Used: " + vused); 
+
+          boolean isWritten = false; 
+          for (int i = 0; i < wrfr.size(); i++) 
+          { String wrv = (String) wrfr.get(i); 
+            int k = wrv.indexOf("::"); 
+            if (k >= 0 && iter.equals(wrv.substring(k+2)))
+            { isWritten = true; }   
+            else if (iter.equals(wrv)) 
+            { isWritten = true; } 
+          }
+
+          if (isWritten) 
+          { System.err.println("! (SEM): possible semantic error: writing iterator of for loop within loop body"); }   
+          else 
+          { for (int j = 0; j < auses.size(); j++) 
+            { Expression use = (Expression) auses.get(j);
+              use.setBrackets(false);  
+              if ((iter + "[" + loopVar + " + 1]").equals(
+                                            "" + use)) 
+              { } 
+              else
+              { isWritten = true; } 
+            } // naked use of iter
+          } 
+ 
+          if (!isWritten)
+          { int ycount = (int) uses.get("yellow"); 
+            uses.set("yellow", ycount + 1); 
+            yUses.add("! Code smell (OEW): indexed loop\n " + this + "\n! can be replaced by iteration over " + arg + "\n"); 
             int melcount = (int) uses.get("OEW"); 
             uses.set("OEW", melcount+1);  
           }
@@ -8711,11 +8786,13 @@ class WhileStatement extends Statement
       } 
     } 
 
+    BasicExpression zero = new BasicExpression(0); 
+    BasicExpression unit = new BasicExpression(1); 
+
     if (loopKind == FOR && 
         lr != null && 
         lr instanceof BasicExpression) 
     { BasicExpression rng = (BasicExpression) lr; 
-      BasicExpression unit = new BasicExpression(1); 
 
       if ("Integer".equals(rng.getObjectRef() + "") &&
           unit.isEqualTo(rng.getParameter(1)) && 
@@ -8755,7 +8832,9 @@ class WhileStatement extends Statement
           { System.err.println("! (SEM): possible semantic error: writing iterator of for loop within loop body"); }   
           else 
           { for (int j = 0; j < auses.size(); j++) 
-            { Expression use = (Expression) auses.get(j); 
+            { Expression use = (Expression) auses.get(j);
+              use.setBrackets(false);  
+               
               if ((iter + "[" + lv + "]").equals(
                                             "" + use)) 
               { } 
@@ -8771,14 +8850,16 @@ class WhileStatement extends Statement
                       Statement.getFirstStatement(newbody); 
             if (first != null && 
                 first instanceof CreationStatement) 
-            { CreationStatement cre = (CreationStatement) first; 
+            { CreationStatement cre = 
+                      (CreationStatement) first; 
               Statement rem = 
-                        Statement.removeFirstStatement(newbody);
+                  Statement.removeFirstStatement(newbody);
               Vector newvars = new Vector(); 
               newvars.add(lv + "");  
               Vector vused = rem.variablesUsedIn(newvars);
               String vname = cre.getVariable(); 
-              Expression rhs = cre.getInitialisationExpression(); 
+              Expression rhs = 
+                     cre.getInitialisationExpression(); 
               if (vused.size() == 0 && 
                   (iter + "[" + lv + "]").equals(rhs + ""))
               { Attribute att1 = 
@@ -8809,6 +8890,128 @@ class WhileStatement extends Statement
                                           
             Statement subbody = 
                newbody.substituteEq(iter + "[" + lv + "]", 
+                                    newvar);
+            BinaryExpression newtest = 
+                  new BinaryExpression(":", newvar, arg);  
+            WhileStatement newloop = 
+                 new WhileStatement(newtest,subbody); 
+            newloop.setEntity(entity); 
+            newloop.setLoopKind(loopKind); 
+            newloop.setLoopRange(newvar,arg); 
+            newloop.setBrackets(brackets);
+            return newloop;  
+          }
+        }  
+      } 
+    }
+
+    if (loopKind == FOR && 
+        loopRange != null && 
+        loopRange instanceof BasicExpression) 
+    { BasicExpression rng = (BasicExpression) loopRange; 
+
+      if ("Integer".equals(rng.getObjectRef() + "") &&
+          zero.isEqualTo(rng.getParameter(1)) && 
+          rng.getParameter(2) instanceof BinaryExpression)
+      { BinaryExpression enrng = 
+               (BinaryExpression) rng.getParameter(2); 
+
+        if ("-".equals(enrng.getOperator()) && 
+            enrng.getLeft() instanceof UnaryExpression && 
+            "->size".equals(
+               ((UnaryExpression) enrng.getLeft()).getOperator())
+           )
+        { UnaryExpression lbe = 
+                          (UnaryExpression) enrng.getLeft();
+          Expression arg = lbe.getArgument();
+
+          // arg is not in the write frame, and all uses
+          // of arg are of form arg[loopVar]
+          String iter = arg + ""; 
+
+          // Vector newvars = new Vector(); 
+          // newvars.add(arg + "");  
+          Vector wrfr = body.writeFrame(); 
+          // Vector vuses = body.getVariableUses(); 
+          Vector auses = body.getUses(iter); 
+          // Vector vused = body.variablesUsedIn(newvars); 
+          
+          System.err.println(">>> Loop body write frame: " + wrfr); 
+          // System.err.println(">>> Uses: " + vuses); 
+          System.err.println(">>> Iterator uses in loop body: " + auses); 
+          // System.err.println(">>> Used: " + vused); 
+
+          boolean isWritten = false; 
+          for (int i = 0; i < wrfr.size(); i++) 
+          { String wrv = (String) wrfr.get(i); 
+            int k = wrv.indexOf("::"); 
+            if (k >= 0 && iter.equals(wrv.substring(k+2)))
+            { isWritten = true; }   
+            else if (iter.equals(wrv)) 
+            { isWritten = true; } 
+          }
+
+          if (isWritten) 
+          { System.err.println("! (SEM): possible semantic error: writing iterator of for loop within loop body"); }   
+          else 
+          { for (int j = 0; j < auses.size(); j++) 
+            { Expression use = (Expression) auses.get(j); 
+              use.setBrackets(false);  
+              if ((iter + "[" + lv + " + 1]").equals(
+                                            "" + use)) 
+              { } 
+              else
+              { isWritten = true; } 
+            } // naked use of iter
+          } 
+ 
+          if (!isWritten)
+          { System.err.println("! Reducing indexed loop\n " + this + "\n! to iteration over " + arg + "\n"); 
+
+            Statement first = 
+                      Statement.getFirstStatement(newbody); 
+            if (first != null && 
+                first instanceof CreationStatement) 
+            { CreationStatement cre = 
+                        (CreationStatement) first; 
+              Statement rem = 
+                  Statement.removeFirstStatement(newbody);
+              Vector newvars = new Vector(); 
+              newvars.add(lv + "");  
+              Vector vused = rem.variablesUsedIn(newvars);
+              String vname = cre.getVariable(); 
+              Expression rhs = 
+                   cre.getInitialisationExpression(); 
+              if (vused.size() == 0 && 
+                  (iter + "[" + lv + " + 1]").equals(rhs + ""))
+              { Attribute att1 = 
+                   new Attribute(vname, arg.getElementType(), 
+                                 ModelElement.INTERNAL);
+                BasicExpression newvar1 = 
+                  BasicExpression.newVariableBasicExpression(
+                                                       att1);   
+                BinaryExpression test1 = 
+                    new BinaryExpression(":", newvar1, arg);
+                rem.setBrackets(true);   
+                WhileStatement newloop1 = 
+                   new WhileStatement(test1,rem); 
+                newloop1.setEntity(entity); 
+                newloop1.setLoopKind(loopKind); 
+                newloop1.setLoopRange(newvar1,arg); 
+                newloop1.setBrackets(brackets);
+                return newloop1;
+              }
+            }   
+
+            String _var = Identifier.nextIdentifier("_var"); 
+            Attribute att = 
+               new Attribute(_var, arg.getElementType(), 
+                             ModelElement.INTERNAL);
+            BasicExpression newvar = 
+              BasicExpression.newVariableBasicExpression(att);   
+                                          
+            Statement subbody = 
+               newbody.substituteEq(iter + "[" + lv + " + 1]", 
                                     newvar);
             BinaryExpression newtest = 
                   new BinaryExpression(":", newvar, arg);  

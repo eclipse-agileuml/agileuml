@@ -6129,6 +6129,33 @@ abstract class Expression
     return new UnaryExpression("->tail", src); 
   } 
 
+  public static Expression simplifyUnion(Expression src, 
+                                         Expression col)
+  { // sq->union(Set{})  is  sq
+    // sq->union(Set{x}) is  sq->including(x)
+
+    if (src instanceof SetExpression &&
+        col instanceof SetExpression) 
+    { SetExpression usrc = (SetExpression) src; 
+      return SetExpression.mergeSetExpressions(usrc, 
+                                   (SetExpression) col); 
+    }  
+
+    if (col instanceof SetExpression)
+    { SetExpression scol = (SetExpression) col;
+ 
+      if (scol.size() == 0) 
+      { return src; } 
+
+      if (scol.size() == 1)
+      { Expression elem = scol.getElement(0); 
+        return new BinaryExpression("->including", src, elem); 
+      } 
+    }    
+
+    return new BinaryExpression("->union", src, col); 
+  } 
+
   public static Expression simplifyLet(Attribute x, 
                                        Expression init,
                                        Expression arg)

@@ -22225,14 +22225,9 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       { return lexpr; }
     } 
 
-    if ("->union".equals(operator) && 
-        lexpr instanceof SetExpression && 
-        rexpr instanceof SetExpression)
+    if ("->union".equals(operator))
     { // merge the literal sets/sequences/maps
-      SetExpression res = 
-        SetExpression.mergeSetExpressions((SetExpression) lexpr,
-                                          (SetExpression) rexpr); 
-      return res; 
+      return Expression.simplifyUnion(lexpr,rexpr); 
     } 
 
     int synLeft = lexpr.syntacticComplexity();
