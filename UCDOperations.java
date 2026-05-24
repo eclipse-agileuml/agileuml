@@ -3667,7 +3667,7 @@ public class UCDOperations
 
     energyAnalysis(clnes, messages, csv);
 
-    File file = new File("./energyUseDetails.txt");
+    File file = new File("energyUseDetails.txt");
     try
     { PrintWriter out = new PrintWriter(
                               new BufferedWriter(
@@ -3687,14 +3687,14 @@ public class UCDOperations
     { System.out.println("!! Error generating details file"); }
 
 
-    File sfile = new File("./energyUseSummary.csv");
+    File sfile = new File("energyUseSummary.csv");
     try
     { PrintWriter out = new PrintWriter(
                               new BufferedWriter(
                                 new FileWriter(sfile)));
       out.println("Entity, Operation, Flaws, Red, Amber, Yellow," 
                   + 
-                  "DEV, LCE, UOR, RC, NTE, OES, LRC, MEL, MNC, OEW"); 
+                  "DEV, LCE, UOR, RC, NTE, RL, EDN, OES, LRC, MEL, MNC, OEW"); 
 
       for (int i = 0; i < csv.size(); i++) 
       { String mess = (String) csv.get(i); 
@@ -3716,7 +3716,7 @@ public class UCDOperations
     int amberFlags = 0; 
     int yellowFlags = 0; 
 
-    File file = new File("./energyUseSummary.txt");
+    File file = new File("energyUseSummary.txt");
     try
     { PrintWriter out = new PrintWriter(
                               new BufferedWriter(
@@ -3796,10 +3796,10 @@ public class UCDOperations
       amberFlags = amberFlags + 1; 
     }
 
-    messages.add(">>>>> For system " + systemName + " there are the total energy-use flaws:"); 
-    messages.add(">> Red flag score: " + redFlags); 
-    messages.add(">> Amber flag score: " + amberFlags); 
-    messages.add(">> Yellow flag score: " + yellowFlags); 
+    // messages.add(">>>>> For system " + systemName + " there are the total energy-use flaws:"); 
+    // messages.add(">> Red flag score: " + redFlags); 
+    // messages.add(">> Amber flag score: " + amberFlags); 
+    // messages.add(">> Yellow flag score: " + yellowFlags); 
 
     return res;  
   }
@@ -16406,6 +16406,37 @@ public void produceCUI(PrintWriter out)
     }
     catch (Throwable tt)
     { System.err.println("!! Error generating C++"); } 
+  } 
+
+  public void semanticAnalysis()
+  { Vector messages = new Vector(); 
+
+    try
+    { PrintWriter mtout = 
+          new PrintWriter(
+            new BufferedWriter(
+              new FileWriter("semanticFlaws.txt")));
+
+      mtout.println(); 
+      mtout.println("--- Semantic issues and flaws for system  " + systemName); 
+      mtout.println(""); 
+ 
+      for (int i = 0; i < entities.size(); i++) 
+      { Entity ent = (Entity) entities.get(i); 
+
+        if (ent.isDerived() || 
+            ent.isComponent() || 
+            ent.isExternal()) 
+        { continue; } 
+
+        ent.semanticAnalysis(mtout); 
+      } 
+
+      mtout.close(); 
+    } 
+    catch (Exception _x) { } 
+   
+    System.out.println("*** Semantic issues/flaws written to semanticFlaws.txt"); 
   } 
 
   public void determinacyCheck()
@@ -30533,7 +30564,7 @@ public void produceCUI(PrintWriter out)
       } 
       model.typeCheck(); 
       model.typeCheck(); 
-      model.determinacyCheck(); 
+      model.semanticAnalysis(); 
       try { 
         File fout = new File("qualityDetails.txt");
         PrintWriter qout = new PrintWriter(

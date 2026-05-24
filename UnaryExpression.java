@@ -590,7 +590,7 @@ public class UnaryExpression extends Expression
         "->prd".equals(operator))
     { res = Expression.simplifyAnd(res, argDefined);
 
-      messages.add("! (SEM): Condition " + argDefined + " needed for " + this); 
+      messages.add("! (SEM): Condition " + argDefined + " needed for\n  " + this); 
          
       int yscore = (int) uses.get("yellow");
       uses.set("yellow", yscore+1); 
@@ -620,7 +620,7 @@ public class UnaryExpression extends Expression
     
         int yscore = (int) uses.get("yellow",0); 
         uses.set("yellow", yscore+1); 
-        messages.add("! (SEM): Condition " + nonempty + " needed for " + this);
+        messages.add("! (SEM): Condition " + nonempty + " needed for\n  " + this);
 
         return simplify("&",sne,res,null);
       } 
@@ -641,7 +641,7 @@ public class UnaryExpression extends Expression
 
       int yscore = (int) uses.get("yellow",0); 
       uses.set("yellow", yscore+1); 
-      messages.add("! (SEM): Condition " + nneg + " needed for " + this);
+      messages.add("! (SEM): Condition " + nneg + " needed for\n  " + this);
 
       return simplify("&",sneg,res,null);
     }
@@ -669,7 +669,7 @@ public class UnaryExpression extends Expression
 
       int yscore = (int) uses.get("yellow",0); 
       uses.set("yellow", yscore+1); 
-      messages.add("! (SEM): Condition " + nneg + " needed for " + this);
+      messages.add("! (SEM): Condition " + nneg + " needed for\n  " + this);
 
       return simplify("&",sneg,res,null);
     }
@@ -704,6 +704,197 @@ public class UnaryExpression extends Expression
 
     return res;
   }  
+
+  public void semanticAnalysis(Map uses,
+                               Vector messages)
+  { Expression zero = new BasicExpression(0);
+      
+    argument.semanticAnalysis(uses, messages);
+
+    if ("->oclIsUndefined".equals(operator) || 
+        "->oclIsInvalid".equals(operator))
+    { return; } 
+
+    Expression argDefined = 
+         new BinaryExpression("/=", argument, 
+                 new BasicExpression("null"));
+    argDefined.setBrackets(true);  
+      
+    if ("->ceil".equals(operator) || 
+        "->floor".equals(operator) || 
+        "->abs".equals(operator) || 
+        "->round".equals(operator) ||
+        "->sin".equals(operator) || 
+        "->cos".equals(operator) ||
+        "->tan".equals(operator) ||
+        "->exp".equals(operator) ||
+        "->log".equals(operator) ||
+        "->log10".equals(operator) ||
+        "->asin".equals(operator) || 
+        "->acos".equals(operator) ||
+        "->atan".equals(operator) ||
+        "->sqrt".equals(operator) ||
+        "->cbrt".equals(operator))
+    { if (argument.hasNumericType()) { } 
+      else 
+      { 
+        messages.add("!! (SEM): missing type for " + argument + " in " + this + " Should be numeric"); 
+        int ascore = (int) uses.get("amber");
+        uses.set("amber", ascore+1);    
+      } 
+    }     
+
+    if ("->toLowerCase".equals(operator) ||
+        "->toUpperCase".equals(operator) || 
+        "->trim".equals(operator))
+    { 
+      if (argument.hasStringType()) { } 
+      else 
+      { 
+        messages.add("!! (SEM): missing type for " + argument + " in " + this + " Should be String"); 
+        int ascore = (int) uses.get("amber");
+        uses.set("amber", ascore+1);    
+      } 
+    }     
+
+    if ("->keys".equals(operator) || 
+        "->values".equals(operator))
+    { if (argument.hasMapType()) { } 
+      else 
+      { 
+        messages.add("!! (SEM): missing type for " + argument + " in " + this + " Should be Map"); 
+        int ascore = (int) uses.get("amber");
+        uses.set("amber", ascore+1);    
+      } 
+    }     
+
+    if ("->size".equals(operator) ||
+        "->reverse".equals(operator) || 
+        "->sort".equals(operator) || 
+        "->sum".equals(operator) || 
+        "->average".equals(operator) || 
+        "->prd".equals(operator))
+    { messages.add("! (SEM): Condition " + argDefined + " needed for\n  " + this); 
+         
+      int yscore = (int) uses.get("yellow");
+      uses.set("yellow", yscore+1); 
+
+      return; 
+    }
+    else if ("->last".equals(operator) || 
+        "->first".equals(operator) ||
+        "->front".equals(operator) || 
+        "->tail".equals(operator) ||
+        "->max".equals(operator) || 
+        "->min".equals(operator) ||
+        "->any".equals(operator))
+    { if (argument instanceof SetExpression && 
+          ((SetExpression) argument).size() == 0)
+      { int rscore = (int) uses.get("red",0); 
+        uses.set("red", rscore+1); 
+        messages.add("!!! (SEM): Error: applying " + operator + " to empty collection/map " + argument);
+        return; 
+      } 
+      else 
+      { UnaryExpression nonempty = 
+          new UnaryExpression("->notEmpty", argument);
+        Expression sne = nonempty.simplifyOCL(); 
+    
+        int yscore = (int) uses.get("yellow",0); 
+        uses.set("yellow", yscore+1); 
+        messages.add("! (SEM): Condition " + nonempty + " needed for\n  " + this);
+
+        return;
+      } 
+    }
+    else if ("->sqrt".equals(operator))
+    { Expression nneg = 
+          new BinaryExpression(">=",argument,zero);
+      Expression sneg = nneg.simplifyOCL(); 
+
+      if ("false".equals(sneg+"") || 
+          "(false)".equals(sneg+""))
+      { int rscore = (int) uses.get("red",0); 
+        uses.set("red", rscore+1); 
+        messages.add("!!! (SEM): Applying ->sqrt to negative number " + argument);
+        return; 
+      } 
+
+      int yscore = (int) uses.get("yellow",0); 
+      uses.set("yellow", yscore+1); 
+      messages.add("! (SEM): Condition " + nneg + " needed for\n  " + this);
+
+      return;
+    }
+    else if ("->log".equals(operator) || 
+             "->log10".equals(operator))
+    { if ("0".equals(argument + "") || 
+          "0.0".equals(argument + ""))
+      { messages.add("!!! (SEM): explicit zero argument in " + this + " Must be > 0"); 
+        int rscore = (int) uses.get("red");
+        uses.set("red", rscore+1);    
+        return; 
+      } 
+
+      Expression nneg = 
+          new BinaryExpression(">",argument,zero);
+      Expression sneg = nneg.simplifyOCL(); 
+      if ("false".equals(sneg + "") || 
+          "(false)".equals(sneg + ""))
+      { messages.add("!!! (SEM): argument in " + this + " Must be > 0"); 
+        int rscore = (int) uses.get("red");
+        uses.set("red", rscore+1);    
+        return; 
+      }
+
+      int yscore = (int) uses.get("yellow",0); 
+      uses.set("yellow", yscore+1); 
+      messages.add("! (SEM): Condition " + nneg + " needed for\n  " + this);
+
+      return;
+    }
+    else if ("->acos".equals(operator) || 
+             "->asin".equals(operator))
+    { Expression minus1 = new BasicExpression(-1); 
+      Expression one = new BasicExpression(1); 
+      Expression pos1 = new BinaryExpression(">=",argument,minus1);
+      pos1.setBrackets(true); 
+      Expression pos2 = new BinaryExpression("<=",argument,one);
+      pos2.setBrackets(true); 
+      Expression pos = Expression.simplifyAnd(pos1,pos2); 
+
+      int yscore = (int) uses.get("yellow",0); 
+      uses.set("yellow", yscore+1); 
+      messages.add("! (SEM): Condition " + pos + " needed for\n  " + this);
+
+      return; 
+    }
+    else if ("->toReal".equals(operator))
+    { Expression checkReal = new UnaryExpression("->isReal",argument); 
+
+      int yscore = (int) uses.get("yellow",0); 
+      uses.set("yellow", yscore+1); 
+      messages.add("! (SEM): Condition " + checkReal + " needed for\n  " + this);
+
+      return; 
+    } 
+    else if ("->toInteger".equals(operator))
+    { Expression checkInt = new UnaryExpression("->isInteger",argument); 
+      int yscore = (int) uses.get("yellow",0); 
+      uses.set("yellow", yscore+1); 
+      messages.add("! (SEM): Condition " + checkInt + " needed for\n  " + this);
+      return; 
+    } 
+    else if ("->toLong".equals(operator))
+    { Expression checkInt = new UnaryExpression("->isLong",argument); 
+      int yscore = (int) uses.get("yellow",0); 
+      uses.set("yellow", yscore+1); 
+      messages.add("! (SEM): Condition " + checkInt + " needed for\n  " + this);
+
+      return; 
+    } 
+  }  
+
 
   public void setPre()
   { argument.setPre(); } 

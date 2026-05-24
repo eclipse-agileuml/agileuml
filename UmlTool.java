@@ -838,22 +838,23 @@ public void findPlugins()
     setThresholds.addActionListener(this);
     analyseMenu.add(setThresholds);
 
-    JMenuItem qualCheck = 
+    /* JMenuItem qualCheck = 
       new JMenuItem("Quality check"); 
     qualCheck.setToolTipText(
       "Checks for code smells and other flaws");
     qualCheck.addActionListener(this);
-    analyseMenu.add(qualCheck);
+    analyseMenu.add(qualCheck); */ 
 
-    JMenuItem deterCheck = 
-      new JMenuItem("Definedness/Determinacy"); 
-    deterCheck.setToolTipText(
-      "Checks for determinacy & definedness");
-    deterCheck.addActionListener(this);
-    analyseMenu.add(deterCheck);
+    JMenuItem semanticsItem = new JMenuItem("Semantic analysis"); 
+    semanticsItem.addActionListener(this);
+    semanticsItem.setToolTipText(
+      "Checks for semantic flaws");
+    analyseMenu.add(semanticsItem);
 
     JMenuItem measuresItem = new JMenuItem("Quality measures"); 
     measuresItem.addActionListener(this);
+    measuresItem.setToolTipText(
+      "Checks for code smells and other flaws");
     analyseMenu.add(measuresItem);
 
     JMenuItem energyAnal = new JMenuItem("Energy analysis"); 
@@ -861,6 +862,13 @@ public void findPlugins()
     energyAnal.setToolTipText(
       "Checks for energy use flaws");
     analyseMenu.add(energyAnal);
+
+    JMenuItem deterCheck = 
+      new JMenuItem("Definedness/Determinacy"); 
+    deterCheck.setToolTipText(
+      "Checks for determinacy & definedness");
+    deterCheck.addActionListener(this);
+    analyseMenu.add(deterCheck);
 
     ((JMenu) analyseMenu).addSeparator(); 
 
@@ -2919,10 +2927,12 @@ public void findPlugins()
       }
       else if (label.equals("Set thresholds"))
       { ucdArea.setThresholds("analysisConfig.txt"); }
-      else if (label.equals("Quality check"))
-      { ucdArea.qualityCheck(); }
+      // else if (label.equals("Quality check"))
+      // { ucdArea.qualityCheck(); }
       else if (label.equals("Definedness/Determinacy"))
       { ucdArea.determinacyCheck(); }
+      else if (label.equals("Semantic analysis"))
+      { ucdArea.semanticAnalysis(); }
       else if (label.equals("Extract Interface"))
       { ucdArea.extractInterface(); 
         repaint(); 

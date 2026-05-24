@@ -3068,10 +3068,10 @@ class BasicExpression extends Expression
   { Expression res = new BasicExpression(true);
 
     if ("invalid".equals(data))
-    { messages.add("!! (SEM): invalid should not be used directly in a specification."); 
-      messages.add("!! Use expr->oclIsInvalid() to test for this."); 
-      int ascore = (int) uses.get("amber");
-      uses.set("amber", ascore+1); 
+    { // messages.add("!! (SEM): invalid should not be used directly in a specification."); 
+      // messages.add("!! Use expr->oclIsInvalid() to test for this."); 
+      // int ascore = (int) uses.get("amber");
+      // uses.set("amber", ascore+1); 
       return new BasicExpression(false); 
     } 
 
@@ -3087,11 +3087,6 @@ class BasicExpression extends Expression
         Expression indom = 
             new BinaryExpression(":",arrayIndex,edom);
         
-        messages.add("! (SEM): Condition " + indom + " needed for " + this); 
-         
-        int yscore = (int) uses.get("yellow");
-        uses.set("yellow", yscore+1); 
-
         indom.setBrackets(true); 
         res = simplify("&",res,indom,null); 
       } 
@@ -3145,11 +3140,6 @@ class BasicExpression extends Expression
          Expression.simplifyAnd(lbnd.simplify(),
                                 ubnd.simplify()); 
 
-      messages.add("! (SEM): Condition " + inrange + " needed for " + this); 
-         
-      int yscore = (int) uses.get("yellow");
-      uses.set("yellow", yscore+1); 
-
       inrange.setBrackets(true); 
       return simplify("&",res,inrange,null);
     } 
@@ -3160,11 +3150,6 @@ class BasicExpression extends Expression
       Expression nonnull = new BinaryExpression("/=", 
                      newdata, 
                      new BasicExpression("null"));
-
-      messages.add("! (SEM): Condition " + nonnull + " needed for " + this); 
-         
-      int yscore = (int) uses.get("yellow");
-      uses.set("yellow", yscore+1); 
 
       nonnull.setBrackets(true); 
       res = Expression.simplifyAnd(res, nonnull); 
@@ -3184,9 +3169,167 @@ class BasicExpression extends Expression
           Expression.simplifyAnd(res, 
               new UnaryExpression("->notEmpty", par1));
  
-        messages.add("! (SEM): Condition " + res + " needed for " + this); 
-
         return res; 
+      }  
+    } 
+
+    if ((umlkind == UPDATEOP || umlkind == QUERY) && 
+        entity != null) 
+    { 
+      BehaviouralFeature bf = entity.getDefinedOperation(data);
+
+      if (bf != null) 
+      { Vector vv = new Vector(); 
+        Expression spre = bf.getDefcond(); 
+        return simplify("&",res,spre,null);
+      }  
+    } 
+
+    if (objectRef == null) 
+    { return res; }
+    Expression res2 = objectRef.definedness(uses,messages);
+    res = Expression.simplifyAnd(res, res2); 
+
+    if (umlkind == FUNCTION)
+    { Expression zero = new BasicExpression(0);
+      if ("sqrt".equals(data))
+      { Expression nneg = new BinaryExpression(">=",objectRef,zero);
+
+        Expression sneg = nneg.simplifyOCL(); 
+
+        return simplify("&",sneg,res,null);
+      }
+      else if ("log".equals(data) || "log10".equals(data))
+      { if ("0".equals(objectRef + "") || 
+            "0.0".equals(objectRef + ""))
+        { return new BasicExpression(false); } 
+
+        Expression pos = 
+            new BinaryExpression(">",objectRef,zero);
+        Expression spos = pos.simplifyOCL(); 
+
+        // pos.setBrackets(true); 
+        return simplify("&",spos,res,null);
+      }
+      else if ("acos".equals(data) || "asin".equals(data))
+      { Expression minus1 = new BasicExpression(-1); 
+        Expression one = new BasicExpression(1); 
+        Expression pos1 = new BinaryExpression(">=",objectRef,minus1);
+        Expression pos2 = new BinaryExpression("<=",objectRef,one);
+        Expression res1 = simplify("&",pos2,res,null);
+        return simplify("&",pos1,res1,null); 
+      }
+      else if ("last".equals(data) || "first".equals(data) ||
+          "front".equals(data) || "tail".equals(data) ||
+          "max".equals(data) || "min".equals(data) || 
+          "any".equals(data))
+      { UnaryExpression orsize = new UnaryExpression("->size",objectRef);
+        Expression pos = 
+          new BinaryExpression(">",orsize,zero);
+
+        pos.setBrackets(true); 
+        return simplify("&",pos,res,null);
+      }
+      else if ("toReal".equals(data))
+      { BasicExpression checkReal = new BasicExpression("isReal"); 
+        checkReal.setObjectRef(objectRef); 
+        return simplify("&",checkReal,res,null); 
+      } 
+      else if ("toInteger".equals(data))
+      { BasicExpression checkInt = new BasicExpression("isInteger"); 
+        checkInt.setObjectRef(objectRef); 
+        return simplify("&",checkInt,res,null); 
+      } 
+      else if ("oclAsType".equals(data))
+      { BasicExpression iko = new BasicExpression("oclIsKindOf"); 
+        iko.setObjectRef(objectRef); 
+        iko.setParameters(parameters);
+        return iko; 
+      }
+      // Operation call defined if precondition[args/params] is true
+    }
+
+    return res;
+  }
+
+  public void semanticAnalysis(Map uses, Vector messages)
+  { 
+    if ("invalid".equals(data))
+    { messages.add("!! (SEM): invalid should not be used directly in a specification."); 
+      messages.add("!! Use expr->oclIsInvalid() to test for this."); 
+      int ascore = (int) uses.get("amber");
+      uses.set("amber", ascore+1); 
+    } 
+
+    // for E[ind] for E entity with primary key key, ind : E.key
+    if (umlkind == CLASSID)
+    { if (arrayIndex != null && entity != null)
+      { Attribute pk = entity.getPrincipalKey(); 
+        if (pk == null) { return; } 
+        String pkname = pk.getName();
+        arrayIndex.semanticAnalysis(uses, messages);  
+        BasicExpression edom = new BasicExpression(pkname); 
+        edom.setObjectRef(new BasicExpression(data)); 
+        Expression indom = 
+            new BinaryExpression(":",arrayIndex,edom);
+        
+        messages.add("! (SEM): Condition " + indom + " needed for " + this); 
+         
+        int yscore = (int) uses.get("yellow");
+        uses.set("yellow", yscore+1); 
+      }  
+    }   
+
+    if (objectRef != null) 
+    { objectRef.semanticAnalysis(uses,messages); }
+ 
+    if ((umlkind == ROLE || umlkind == ATTRIBUTE || 
+         umlkind == VARIABLE)
+        && arrayIndex != null)
+    { // if not qualified, but is ordered
+ 
+      BasicExpression newdata = new BasicExpression(data);
+      newdata.setObjectRef(objectRef); 
+      newdata.umlkind = ROLE;  
+      UnaryExpression selfsize = new UnaryExpression("->size", newdata); 
+      Expression lbnd = new BinaryExpression("<=", new BasicExpression(1), arrayIndex); 
+      Expression ubnd = new BinaryExpression("<=", arrayIndex, selfsize); 
+      Expression inrange = 
+         Expression.simplifyAnd(lbnd.simplify(),
+                                ubnd.simplify()); 
+
+      messages.add("! (SEM): Condition " + inrange + " needed for " + this); 
+         
+      int yscore = (int) uses.get("yellow");
+      uses.set("yellow", yscore+1); 
+    } 
+    else if (arrayIndex != null) 
+    { BasicExpression newdata = new BasicExpression(data);
+      newdata.setObjectRef(objectRef); 
+      
+      Expression nonnull = new BinaryExpression("/=", 
+                     newdata, 
+                     new BasicExpression("null"));
+
+      messages.add("! (SEM): Condition " + nonnull + " needed for " + this); 
+         
+      int yscore = (int) uses.get("yellow");
+      uses.set("yellow", yscore+1); 
+    } 
+
+    if (parameters != null) 
+    { for (int i = 0; i < parameters.size(); i++) 
+      { Expression par = (Expression) parameters.get(i); 
+        par.semanticAnalysis(uses,messages); 
+      } 
+
+      if ("OclRandom".equals(objectRef + "") && 
+          "randomElement".equals(data))
+      { Expression par1 = (Expression) parameters.get(0); 
+        Expression res =  
+              new UnaryExpression("->notEmpty", par1);
+ 
+        messages.add("! (SEM): Condition " + res + " needed for " + this); 
       } 
   
       if ("subrange".equals(data) && 
@@ -3215,23 +3358,6 @@ class BasicExpression extends Expression
       }
     } 
 
-    if ((umlkind == UPDATEOP || umlkind == QUERY) && 
-        entity != null) 
-    { 
-      BehaviouralFeature bf = entity.getDefinedOperation(data);
-
-      if (bf != null) 
-      { Vector vv = new Vector(); 
-        Expression spre = bf.getDefcond(); 
-        return simplify("&",res,spre,null);
-      }  
-    } 
-
-    if (objectRef == null) 
-    { return res; }
-    Expression res2 = objectRef.definedness(uses,messages);
-    res = Expression.simplifyAnd(res, res2); 
-
     if (umlkind == FUNCTION)
     { Expression zero = new BasicExpression(0);
       if ("sqrt".equals(data))
@@ -3243,17 +3369,14 @@ class BasicExpression extends Expression
          
         int yscore = (int) uses.get("yellow");
         uses.set("yellow", yscore+1); 
-
-        return simplify("&",sneg,res,null);
       }
       else if ("log".equals(data) || "log10".equals(data))
       { if ("0".equals(objectRef + "") || 
             "0.0".equals(objectRef + ""))
         { messages.add("!!! (SEM): explicit 0 argument of " + this); 
-         int rscore = (int) uses.get("red");
-         uses.set("red", rscore+1);
-         return new BasicExpression(false); 
-       } 
+          int rscore = (int) uses.get("red");
+          uses.set("red", rscore+1);
+        } 
 
         Expression pos = 
             new BinaryExpression(">",objectRef,zero);
@@ -3263,17 +3386,18 @@ class BasicExpression extends Expression
          
         int yscore = (int) uses.get("yellow");
         uses.set("yellow", yscore+1); 
-
-        // pos.setBrackets(true); 
-        return simplify("&",spos,res,null);
       }
       else if ("acos".equals(data) || "asin".equals(data))
       { Expression minus1 = new BasicExpression(-1); 
         Expression one = new BasicExpression(1); 
         Expression pos1 = new BinaryExpression(">=",objectRef,minus1);
         Expression pos2 = new BinaryExpression("<=",objectRef,one);
-        Expression res1 = simplify("&",pos2,res,null);
-        return simplify("&",pos1,res1,null); 
+        Expression res1 = simplify("&",pos1,pos2,null);
+
+        messages.add("! (SEM): Condition " + res1 + " needed for " + this); 
+         
+        int yscore = (int) uses.get("yellow");
+        uses.set("yellow", yscore+1); 
       }
       else if ("last".equals(data) || "first".equals(data) ||
           "front".equals(data) || "tail".equals(data) ||
@@ -3287,31 +3411,34 @@ class BasicExpression extends Expression
          
         int yscore = (int) uses.get("yellow");
         uses.set("yellow", yscore+1); 
-
-        pos.setBrackets(true); 
-        return simplify("&",pos,res,null);
       }
       else if ("toReal".equals(data))
       { BasicExpression checkReal = new BasicExpression("isReal"); 
         checkReal.setObjectRef(objectRef); 
-        return simplify("&",checkReal,res,null); 
+        messages.add("! (SEM): Condition " + checkReal + " needed for " + this); 
+         
+        int yscore = (int) uses.get("yellow");
+        uses.set("yellow", yscore+1); 
       } 
       else if ("toInteger".equals(data))
       { BasicExpression checkInt = new BasicExpression("isInteger"); 
         checkInt.setObjectRef(objectRef); 
-        return simplify("&",checkInt,res,null); 
+        messages.add("! (SEM): Condition " + checkInt + " needed for " + this); 
+         
+        int yscore = (int) uses.get("yellow");
+        uses.set("yellow", yscore+1); 
       } 
       else if ("oclAsType".equals(data))
       { BasicExpression iko = new BasicExpression("oclIsKindOf"); 
         iko.setObjectRef(objectRef); 
         iko.setParameters(parameters);
+
         messages.add("! (SEM): Condition " + iko + " needed for " + this); 
-        return iko; 
+        int yscore = (int) uses.get("yellow");
+        uses.set("yellow", yscore+1); 
       }
       // Operation call defined if precondition[args/params] is true
     }
-
-    return res;
   }
 
   public Expression determinate()

@@ -3352,9 +3352,33 @@ public class BehaviouralFeature extends ModelElement
     { res = new BasicExpression(true); }
     defcond = res; 
  
-    // JOptionPane.showMessageDialog(null, "Definedness obligation for " + getName() + " is:\n" + res,
-    //   "Internal consistency condition", JOptionPane.INFORMATION_MESSAGE); 
+    if (activity != null) 
+    { Expression def = activity.definedness(uses,messages); 
+      def.setBrackets(true); 
+      res = Expression.simplify("&", res, def, null); 
+    }
 
+    Expression sres = res.simplifyOCL(); 
+    mtout.println("***> Definedness obligation for operation " + nme + " of class " + entity + " is:\n" + sres + "\n");
+
+    return substituteParameters(res, arguments);  
+  } 
+
+  public void semanticAnalysis(PrintWriter mtout) 
+  { String nme = getName(); 
+ 
+    Map uses = new Map(); 
+    uses.set("amber", 0); 
+    uses.set("red", 0); 
+    uses.set("yellow", 0); 
+    Vector messages = new Vector(); 
+
+    if (pre != null) 
+    { pre.semanticAnalysis(uses, messages); } 
+
+    if (post != null)  
+    { post.semanticAnalysis(uses, messages); }  
+ 
     if (activity != null) 
     { Vector calls = 
           Statement.getOperationCalls(activity);
@@ -3371,12 +3395,11 @@ public class BehaviouralFeature extends ModelElement
           VectorUtil.containsEqualString(selfexpr1, calls))
       { 
         mtout.println("!! Warning (NTE): possible infinite recursion: " + 
-           selfexpr + " is in calls of activity: " + calls);
+           selfexpr + " is in calls of its activity: " + 
+           calls + "\n");
 
         int acount = (int) uses.get("amber"); 
         uses.set("amber", acount+1); 
-        // messages.add("!! Warning (NTE): possible infinite recursion: " + 
-        //   selfexpr + " is in calls of activity: " + calls); 
       } 
 
       if (VectorUtil.containsEqualString(selfexpr, returns) ||
@@ -3386,25 +3409,12 @@ public class BehaviouralFeature extends ModelElement
         uses.set("amber", acount+1); 
 
         mtout.println("!! Warning (NTE): possible infinite recursion: " + 
-            selfexpr + " is in returned values: " + returns);
-        // messages.add("!! Warning (NTE): possible infinite recursion: " + 
-        //    selfexpr + " is in returned values: " + returns);
+            selfexpr + " is in its returned values: " + 
+            returns + "\n");
       }   
 
-      Expression def = activity.definedness(uses,messages); 
-      // System.err.println(">> Activity definedness: " + def); 
-      // System.err.println(""); 
-      def.setBrackets(true); 
-      res = Expression.simplify("&", res, def, null); 
+      activity.semanticAnalysis(uses,messages); 
     }
-
-    System.err.println(); 
-
-    Expression sres = res.simplifyOCL(); 
-    mtout.println("***> Definedness obligation for operation " + nme + " of class " + entity + " is:\n" + sres + "\n");
-    // messages.add("***> Definedness obligation for operation " + nme + " of class " + entity + " is:\n" + sres); 
-    // System.err.println(); 
-    // messages.add(""); 
 
     for (int i = 0; i < messages.size(); i++)
     { String mess = (String) messages.get(i); 
@@ -3416,23 +3426,21 @@ public class BehaviouralFeature extends ModelElement
     int rcount = (int) uses.get("red"); 
 
     if (ycount > 0)
-    { mtout.println("! There are " + ycount + " possible semantic issues in operation " + nme);
-      // messages.add("! There are " + ycount + " possible semantic issues in operation " + nme);
+    { mtout.println("! There are " + ycount + 
+        " possible semantic issues in operation " + nme + "\n"); 
     } 
 
     if (ocount > 0)
-    { mtout.println("!! There are " + ocount + " semantic warnings in operation " + nme);
-      // messages.add("!! There are " + ocount + " semantic warnings in operation " + nme); 
+    { mtout.println("!! There are " + ocount + 
+        " semantic warnings in operation " + nme + "\n"); 
     } 
 
     if (rcount > 0)
-    { mtout.println("!!! There are " + rcount + " semantic errors in operation " + nme);
-      // messages.add("!!! There are " + rcount + " semantic errors in operation " + nme);
+    { mtout.println("!!! There are " + rcount + 
+        " semantic errors in operation " + nme + "\n"); 
     } 
 
     mtout.println(); 
-
-    return substituteParameters(res, arguments);  
   } 
 
   public Expression determinate(Vector arguments, 

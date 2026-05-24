@@ -2107,6 +2107,8 @@ abstract class Statement implements Cloneable
 
   public abstract Expression definedness(Map uses, Vector messages); 
 
+  public abstract void semanticAnalysis(Map uses, Vector messages); 
+
   public abstract Map energyUse(Map uses, 
                                 Vector rUses, Vector oUses, 
                                 Vector yUses);
@@ -4893,6 +4895,11 @@ class ReturnStatement extends Statement
     return new BasicExpression(true); 
   } 
 
+  public void semanticAnalysis(Map uses, Vector messages)
+  { if (value != null) 
+    { value.semanticAnalysis(uses, messages); }
+  } 
+
   public Object clone()
   { return new ReturnStatement(value); } 
 
@@ -5452,6 +5459,9 @@ class BreakStatement extends Statement
   public Expression definedness(Map uses, Vector messages) 
   { return new BasicExpression(true); } 
 
+  public void semanticAnalysis(Map uses, Vector messages) 
+  { } 
+
   public Vector dataDependents(Vector allvars, Vector vars)
   { return vars; }  
 
@@ -5685,6 +5695,9 @@ class ContinueStatement extends Statement
 
   public Expression definedness(Map uses, Vector messages)
   { return new BasicExpression(true); } 
+
+  public void semanticAnalysis(Map uses, Vector messages)
+  { } 
 
   public Vector dataDependents(Vector allvars, Vector vars)
   { return vars; }  
@@ -5981,6 +5994,9 @@ class InvocationStatement extends Statement
   { Expression res = callExp.definedness(uses, messages); 
     return res; 
   } 
+
+  public void semanticAnalysis(Map uses, Vector messages) 
+  { callExp.semanticAnalysis(uses, messages); } 
 
   public int execute(ModelSpecification sigma, 
                      ModelState beta)
@@ -7005,6 +7021,9 @@ class ImplicitInvocationStatement extends Statement
     return res; 
   } 
 
+  public void semanticAnalysis(Map uses, Vector messages)
+  { callExp.semanticAnalysis(uses, messages); } 
+
   public Map energyUse(Map uses, 
                        Vector rUses, Vector oUses, Vector yUses)
   { callExp.energyUse(uses, rUses, oUses, yUses); 
@@ -7814,10 +7833,8 @@ class WhileStatement extends Statement
 
       if ("false".equals(canTerminate + "") || 
           "(false)".equals(canTerminate + ""))
-      { messages.add("!!! (SEM): Non-terminating loop: " + this); } 
-      else 
-      { messages.add("! (SEM): Condition " + canTerminate + " needed for loop termination"); } 
-
+      { return new BasicExpression(false); } 
+      
       canTerminate.setBrackets(true);
   
       bdef = Expression.simplifyAnd(canTerminate, bdef); 
@@ -7834,9 +7851,7 @@ class WhileStatement extends Statement
 
       if ("false".equals(canTerminate + "") || 
           "(false)".equals(canTerminate + ""))
-      { messages.add("!!! (SEM): Non-terminating loop: " + this); } 
-      else 
-      { messages.add("! (SEM): Condition " + canTerminate + " needed for loop termination"); } 
+      { return new BasicExpression(false); } 
 
       canTerminate.setBrackets(true);
 
@@ -7845,6 +7860,57 @@ class WhileStatement extends Statement
 
     rtest.setBrackets(true); 
     return Expression.simplify("&", rtest, bdef, null); 
+  } 
+
+  public void semanticAnalysis(Map uses, Vector messages)
+  { 
+    if (loopRange != null) 
+    { loopRange.semanticAnalysis(uses, messages); } 
+    else if (loopTest != null) 
+    { loopTest.semanticAnalysis(uses, messages); } 
+     
+    body.semanticAnalysis(uses, messages); 
+
+    if (loopKind == WHILE)
+    { Expression testpre = body.wpc(loopTest);
+      Expression imp = 
+          Expression.simplifyImplies(loopTest, testpre);  
+      Expression canTerminate = 
+          Expression.negate(imp);
+
+      if ("false".equals(canTerminate + "") || 
+          "(false)".equals(canTerminate + ""))
+      { messages.add("!!! (SEM): Non-terminating loop: " + loopSummary());
+        int rc = (int) uses.get("red", 0); 
+        uses.set("red", rc+1); 
+      } 
+      else 
+      { messages.add("! (SEM): Condition " + canTerminate + " needed for loop termination of " + loopSummary());
+        int yc = (int) uses.get("yellow", 0); 
+        uses.set("yellow", yc+1); 
+      } 
+    } 
+
+    if (loopKind == REPEAT)
+    { Expression ntest = Expression.negate(loopTest);  
+      Expression testpre = body.wpc(ntest);
+      Expression imp = 
+          Expression.simplifyImplies(ntest, testpre);  
+      Expression canTerminate = 
+          Expression.negate(imp);
+
+      if ("false".equals(canTerminate + "") || 
+          "(false)".equals(canTerminate + ""))
+      { messages.add("!!! (SEM): Non-terminating loop: " + loopSummary());
+        int rc = (int) uses.get("red", 0); 
+        uses.set("red", rc+1);
+      } 
+      else 
+      { messages.add("! (SEM): Condition " + canTerminate + " needed for loop termination of " + loopSummary());
+        int yc = (int) uses.get("yellow", 0); 
+        uses.set("yellow", yc+1); 
+      } 
+    } 
   } 
 
   public Vector variablesUsedIn(Vector vars) 
@@ -7933,21 +7999,26 @@ class WhileStatement extends Statement
       { UnaryExpression enrng = 
                (UnaryExpression) rng.getParameter(2); 
 
-        if ("->size".equals(enrng.getOperator()))
+        if ("->size".equals(enrng.getOperator()) && 
+            enrng.getArgument() instanceof BasicExpression)
         { Expression arg = enrng.getArgument();
           // arg is not in the write frame, and all uses
           // of arg are of form arg[loopVar]
+          arg.setBrackets(false); 
           String iter = arg + ""; 
 
           // Vector newvars = new Vector(); 
           // newvars.add(arg + "");  
           Vector wrfr = body.writeFrame(); 
           // Vector vuses = body.getVariableUses(); 
+          Vector vuses = body.getUses(loopVar + ""); 
           Vector auses = body.getUses(iter); 
           // Vector vused = body.variablesUsedIn(newvars); 
           
           System.err.println(">>> Loop body write frame: " + wrfr); 
           // System.err.println(">>> Uses: " + vuses); 
+
+          System.err.println(">>> Loop variable uses in loop body: " + vuses); 
           System.err.println(">>> Iterator uses in loop body: " + auses); 
           // System.err.println(">>> Used: " + vused); 
 
@@ -7961,6 +8032,8 @@ class WhileStatement extends Statement
             { isWritten = true; } 
           }
 
+          int vcount = 0; 
+
           if (isWritten) 
           { System.err.println("! (SEM): possible semantic error: writing iterator of for loop within loop body"); }   
           else 
@@ -7969,13 +8042,11 @@ class WhileStatement extends Statement
               use.setBrackets(false);  
               if ((iter + "[" + loopVar + "]").equals(
                                             "" + use)) 
-              { } 
-              else
-              { isWritten = true; } 
-            } // naked use of iter
+              { vcount++; } 
+            } 
           } 
  
-          if (!isWritten)
+          if (!isWritten && vcount == vuses.size())
           { int ycount = (int) uses.get("yellow"); 
             uses.set("yellow", ycount + 1); 
             yUses.add("! Code smell (OEW): indexed loop\n " + this + "\n! can be replaced by iteration over " + enrng.getArgument() + "\n"); 
@@ -8002,10 +8073,14 @@ class WhileStatement extends Statement
             "->size".equals(
               ((UnaryExpression) 
                           enrng.getLeft()).getOperator())
+            && ((UnaryExpression) 
+                   enrng.getLeft()).getArgument() 
+                            instanceof BasicExpression
            )
         { UnaryExpression lbe = 
                           (UnaryExpression) enrng.getLeft();
           Expression arg = lbe.getArgument();
+          arg.setBrackets(false); 
 
           // arg is not in the write frame, and all uses
           // of arg are of form arg[loopVar]
@@ -8015,6 +8090,10 @@ class WhileStatement extends Statement
           // newvars.add(arg + "");  
           Vector wrfr = body.writeFrame(); 
           // Vector vuses = body.getVariableUses(); 
+
+          Vector vuses = body.getUses(loopVar + ""); 
+          System.err.println(">>> Loop variable uses in loop body: " + vuses); 
+
           Vector auses = body.getUses(iter); 
           // Vector vused = body.variablesUsedIn(newvars); 
           
@@ -8033,6 +8112,8 @@ class WhileStatement extends Statement
             { isWritten = true; } 
           }
 
+          int vcount = 0; 
+            
           if (isWritten) 
           { System.err.println("! (SEM): possible semantic error: writing iterator of for loop within loop body"); }   
           else 
@@ -8041,13 +8122,11 @@ class WhileStatement extends Statement
               use.setBrackets(false);  
               if ((iter + "[" + loopVar + " + 1]").equals(
                                             "" + use)) 
-              { } 
-              else
-              { isWritten = true; } 
+              { vcount++; } 
             } // naked use of iter
           } 
  
-          if (!isWritten)
+          if (!isWritten && vcount == vuses.size())
           { int ycount = (int) uses.get("yellow"); 
             uses.set("yellow", ycount + 1); 
             yUses.add("! Code smell (OEW): indexed loop\n " + this + "\n! can be replaced by iteration over " + arg + "\n"); 
@@ -8800,10 +8879,13 @@ class WhileStatement extends Statement
       { UnaryExpression enrng = 
                (UnaryExpression) rng.getParameter(2); 
 
-        if ("->size".equals(enrng.getOperator()))
+        if ("->size".equals(enrng.getOperator()) && 
+            enrng.getArgument() instanceof BasicExpression)
         { Expression arg = enrng.getArgument();
           // arg is not in the write frame, and all uses
           // of arg are of form arg[loopVar]
+          arg.setBrackets(false); 
+
           String iter = arg + ""; 
 
           // Vector newvars = new Vector(); 
@@ -8811,12 +8893,14 @@ class WhileStatement extends Statement
           Vector wrfr = newbody.writeFrame(); 
           // Vector vuses = body.getVariableUses(); 
           Vector auses = newbody.getUses(iter); 
+          Vector vuses = body.getUses(loopVar + ""); 
+          
           // Vector vused = body.variablesUsedIn(newvars); 
           
           System.err.println(">>> Loop body write frame: " + wrfr); 
           // System.err.println(">>> Uses: " + vuses); 
           System.err.println(">>> Iterator uses in loop body: " + auses); 
-          // System.err.println(">>> Used: " + vused); 
+          System.err.println(">>> Loop variable uses: " + vuses); 
 
           boolean isWritten = false; 
           for (int i = 0; i < wrfr.size(); i++) 
@@ -8828,6 +8912,8 @@ class WhileStatement extends Statement
             { isWritten = true; } 
           }
 
+          int vcount = 0; 
+
           if (isWritten) 
           { System.err.println("! (SEM): possible semantic error: writing iterator of for loop within loop body"); }   
           else 
@@ -8837,13 +8923,11 @@ class WhileStatement extends Statement
                
               if ((iter + "[" + lv + "]").equals(
                                             "" + use)) 
-              { } 
-              else
-              { isWritten = true; } 
-            } // naked use of iter
+              { vcount++; } 
+            } 
           } 
  
-          if (!isWritten)
+          if (!isWritten && vcount == vuses.size())
           { System.err.println("! Reducing indexed loop\n " + this + "\n! to iteration over " + enrng.getArgument() + "\n"); 
 
             Statement first = 
@@ -8919,14 +9003,20 @@ class WhileStatement extends Statement
         if ("-".equals(enrng.getOperator()) && 
             enrng.getLeft() instanceof UnaryExpression && 
             "->size".equals(
-               ((UnaryExpression) enrng.getLeft()).getOperator())
+               ((UnaryExpression) 
+                      enrng.getLeft()).getOperator()) 
+            && 
+            ((UnaryExpression) enrng.getLeft()).getArgument()
+                                      instanceof BasicExpression
            )
         { UnaryExpression lbe = 
                           (UnaryExpression) enrng.getLeft();
           Expression arg = lbe.getArgument();
+          arg.setBrackets(false); 
 
           // arg is not in the write frame, and all uses
-          // of arg are of form arg[loopVar]
+          // of loopVar occur in arg[loopVar]
+
           String iter = arg + ""; 
 
           // Vector newvars = new Vector(); 
@@ -8935,11 +9025,12 @@ class WhileStatement extends Statement
           // Vector vuses = body.getVariableUses(); 
           Vector auses = body.getUses(iter); 
           // Vector vused = body.variablesUsedIn(newvars); 
+          Vector vuses = body.getUses(loopVar + ""); 
           
           System.err.println(">>> Loop body write frame: " + wrfr); 
           // System.err.println(">>> Uses: " + vuses); 
           System.err.println(">>> Iterator uses in loop body: " + auses); 
-          // System.err.println(">>> Used: " + vused); 
+          System.err.println(">>> Loop variable uses: " + vuses); 
 
           boolean isWritten = false; 
           for (int i = 0; i < wrfr.size(); i++) 
@@ -8951,6 +9042,8 @@ class WhileStatement extends Statement
             { isWritten = true; } 
           }
 
+          int vcount = 0; 
+
           if (isWritten) 
           { System.err.println("! (SEM): possible semantic error: writing iterator of for loop within loop body"); }   
           else 
@@ -8959,13 +9052,11 @@ class WhileStatement extends Statement
               use.setBrackets(false);  
               if ((iter + "[" + lv + " + 1]").equals(
                                             "" + use)) 
-              { } 
-              else
-              { isWritten = true; } 
-            } // naked use of iter
+              { vcount++; } 
+            } 
           } 
  
-          if (!isWritten)
+          if (!isWritten && vcount == vuses.size())
           { System.err.println("! Reducing indexed loop\n " + this + "\n! to iteration over " + arg + "\n"); 
 
             Statement first = 
@@ -10944,6 +11035,11 @@ class CreationStatement extends Statement
     return new BasicExpression(true); 
   } 
 
+  public void semanticAnalysis(Map uses, Vector messages)
+  { if (initialExpression != null) 
+    { initialExpression.semanticAnalysis(uses, messages); } 
+  } 
+
   public Vector variablesUsedIn(Vector vars)
   { Vector res = new Vector(); 
     if (initialExpression != null) 
@@ -12502,6 +12598,13 @@ class SequenceStatement extends Statement
     return res;  
   } 
 
+  public void semanticAnalysis(Map uses, Vector messages)
+  { for (int i = 0; i < statements.size(); i++) 
+    { Statement stat = (Statement) statements.get(i); 
+      stat.semanticAnalysis(uses, messages);
+    } 
+  } 
+
   public int size()
   { return statements.size(); } 
 
@@ -13992,6 +14095,9 @@ class CaseStatement extends Statement
   public Expression definedness(Map uses, Vector messages)
   { return new BasicExpression(true); } 
 
+  public void semanticAnalysis(Map uses, Vector messages)
+  { } 
+
   public void addCase(Maplet mm)
   { cases.add_element(mm); }
 
@@ -14525,8 +14631,14 @@ class ErrorStatement extends Statement
   } 
 
   public Expression definedness(Map uses, Vector messages)
-  { Expression def = thrownObject.definedness(uses, messages); 
-    return def; 
+  { if (thrownObject != null) 
+    { return thrownObject.definedness(uses, messages); } 
+    return new BasicExpression(true); 
+  } 
+
+  public void semanticAnalysis(Map uses, Vector messages)
+  { if (thrownObject != null) 
+    { thrownObject.semanticAnalysis(uses, messages); } 
   } 
 
   public Vector variablesUsedIn(Vector vars) 
@@ -14956,6 +15068,9 @@ class AssertStatement extends Statement
 
   public Expression definedness(Map uses, Vector messages)
   { return condition.definedness(uses, messages); } 
+
+  public void semanticAnalysis(Map uses, Vector messages)
+  { condition.semanticAnalysis(uses, messages); } 
 
   public java.util.Map collectionOperatorUses(int lev, 
                                     java.util.Map uses, 
@@ -15518,6 +15633,9 @@ class CatchStatement extends Statement
 
   public Expression definedness(Map uses, Vector messages)
   { return action.definedness(uses, messages); } 
+
+  public void semanticAnalysis(Map uses, Vector messages)
+  { action.semanticAnalysis(uses, messages); } 
 
   public Vector variablesUsedIn(Vector vars) 
   { Vector res = new Vector(); 
@@ -16154,6 +16272,18 @@ class TryStatement extends Statement
 
   public Expression definedness(Map uses, Vector messages)
   { return body.definedness(uses, messages); } 
+
+  public void semanticAnalysis(Map uses, Vector messages)
+  { body.semanticAnalysis(uses, messages); 
+
+    for (int i = 0; i < catchClauses.size(); i++) 
+    { Statement stat = (Statement) catchClauses.get(i); 
+      stat.semanticAnalysis(uses, messages); 
+    }
+
+    if (endStatement != null)
+    { endStatement.semanticAnalysis(uses, messages); } 
+  } 
 
   public java.util.Map collectionOperatorUses(int lev, 
                                     java.util.Map uses, 
@@ -17002,6 +17132,9 @@ class IfStatement extends Statement
 
   public Expression definedness(Map uses, Vector messages)
   { return new BasicExpression(true); } 
+
+  public void semanticAnalysis(Map uses, Vector messages)
+  { } 
 
   public Statement generateDesign(java.util.Map env, boolean local)
   { Vector newcases = new Vector(); 
@@ -18130,17 +18263,23 @@ class AssignStatement extends Statement
   } 
 
   public Expression definedness(Map uses, Vector messages)
+  { 
+    Expression ldef = lhs.definedness(uses, messages); 
+    Expression rdef = rhs.definedness(uses, messages); 
+
+    Expression res = Expression.simplify("&", ldef, rdef, null); 
+    return res; 
+  } 
+
+  public void semanticAnalysis(Map uses, Vector messages)
   { if (this.missingDeclaration)
     { int ascore = (int) uses.get("amber"); 
       uses.set("amber", ascore + 1); 
       messages.add("!! (UDEF) Undefined variable: " + lhs); 
     } 
 
-    Expression ldef = lhs.definedness(uses, messages); 
-    Expression rdef = rhs.definedness(uses, messages); 
-
-    Expression res = Expression.simplify("&", ldef, rdef, null); 
-    return res; 
+    lhs.semanticAnalysis(uses, messages); 
+    rhs.semanticAnalysis(uses, messages); 
   } 
 
   public Vector cgparameters()
@@ -19774,6 +19913,14 @@ class ConditionalStatement extends Statement
     }
 
     return res; 
+  } 
+
+  public void semanticAnalysis(Map uses, Vector messages)
+  { test.semanticAnalysis(uses, messages); 
+    ifPart.semanticAnalysis(uses, messages);
+    
+    if (elsePart != null) 
+    { elsePart.semanticAnalysis(uses, messages); }
   } 
 
   public Vector variablesUsedIn(Vector vars)
@@ -21431,6 +21578,9 @@ class FinalStatement extends Statement
 
   public Expression definedness(Map uses, Vector messages)
   { return body.definedness(uses, messages); } 
+
+  public void semanticAnalysis(Map uses, Vector messages)
+  { body.semanticAnalysis(uses, messages); } 
 
 }
 

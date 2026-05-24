@@ -29576,6 +29576,37 @@ public void produceCUI(PrintWriter out)
     } 
   }  
 
+  public void semanticAnalysis()
+  { Vector messages = new Vector(); 
+
+    try
+    { PrintWriter mtout = 
+          new PrintWriter(
+            new BufferedWriter(
+              new FileWriter("semanticFlaws.txt")));
+
+      mtout.println(); 
+      mtout.println("--- Semantic issues and flaws for system  " + systemName); 
+      mtout.println(""); 
+ 
+      for (int i = 0; i < entities.size(); i++) 
+      { Entity ent = (Entity) entities.get(i); 
+
+        if (ent.isDerived() || 
+            ent.isComponent() || 
+            ent.isExternal()) 
+        { continue; } 
+
+        ent.semanticAnalysis(mtout); 
+      } 
+
+      mtout.close(); 
+    } 
+    catch (Exception _x) { } 
+   
+    System.out.println("*** Semantic issues/flaws written to semanticFlaws.txt"); 
+  } 
+
   public void determinacyCheck()
   { Vector messages = new Vector(); 
 

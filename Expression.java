@@ -1023,6 +1023,8 @@ abstract class Expression
 
   public abstract Expression definedness(Map uses, Vector messages); 
 
+  public abstract void semanticAnalysis(Map uses, Vector messages); 
+
   public abstract Expression determinate(); 
 
   public abstract Expression removePrestate(); 
@@ -4199,12 +4201,12 @@ abstract class Expression
   public static Expression simplifyMinus(Expression e1, Expression e2) 
   { if (e1 == null)
     { return simplifyUnaryMinus(e2); } 
+
     if (e2 == null) 
     { return e1; } 
 
-    // System.err.println(">>> Simplify minus: " + e1 + " - " + e2); 
-
-    // also for strings
+    String e1string = "" + e1; 
+    String e2string = "" + e2; 
 
     if (e1.isEqualTo(e2) && e1.hasStringType())
     { return new BasicExpression("\"\""); } 
@@ -4217,8 +4219,19 @@ abstract class Expression
       return res; 
     } 
 
-    if (e1.isEqualTo(e2) || ("" + e1).equals("" + e2))
+    if (e1.isEqualTo(e2) || (e1string).equals(e2string))
     { return new BasicExpression(0); } 
+
+
+    if ("0".equals(e2string) || "0.0".equals(e2string))
+    { return e1; } 
+
+    if ("\"\"".equals(e2string))
+    { return e1; } 
+
+    if (e2 instanceof SetExpression && 
+        ((SetExpression) e2).size() == 0) 
+    { return e1; } 
     
     if (isInteger("" + e1) && isInteger("" + e2))
     { int v1 = convertInteger("" + e1); 
@@ -6141,6 +6154,9 @@ abstract class Expression
                                    (SetExpression) col); 
     }  
 
+    if (src.hasSetType() && src.isEqualTo(col))
+    { return new SetExpression(src.getType()); } 
+
     if (col instanceof SetExpression)
     { SetExpression scol = (SetExpression) col;
  
@@ -6154,6 +6170,32 @@ abstract class Expression
     }    
 
     return new BinaryExpression("->union", src, col); 
+  } 
+
+  public static Expression simplifyIntersection(
+                                         Expression src, 
+                                         Expression col)
+  { // sq->intersection(Set{}) is empty collection of sq type
+    // sq->intersection(sq) is  sq
+
+    if (src instanceof SetExpression &&
+        col instanceof SetExpression) 
+    { SetExpression usrc = (SetExpression) src; 
+      return SetExpression.intersectionSetExpressions(usrc, 
+                                   (SetExpression) col); 
+    }  
+
+    if (src.isEqualTo(col))
+    { return src; } 
+
+    if (col instanceof SetExpression)
+    { SetExpression scol = (SetExpression) col;
+ 
+      if (scol.size() == 0) 
+      { return new SetExpression(src.getType()); } 
+    }    
+
+    return new BinaryExpression("->intersection", src, col); 
   } 
 
   public static Expression simplifyLet(Attribute x, 

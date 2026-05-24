@@ -283,18 +283,27 @@ public class ConditionalExpression extends Expression
     Expression testexpr = test.simplifyOCL(); 
     testexpr.setBrackets(false); 
 
-    if ((testexpr + "").equals("true"))
+    String teststring = "" + testexpr; 
+
+    if (teststring.equals("true"))
     { return ifstat; } 
 
-    if ((testexpr + "").equals("false"))
+    if (teststring.equals("false"))
     { return elsestat; } 
  
     String ifstr = "" + ifstat; 
     String elsestr = "" + elsestat; 
 
     if (ifstr.equals(elsestr) || 
+        ifstat.isEqualTo(elsestat) ||
         ("(" + ifstr + ")").equals(elsestr)) 
     { return ifstat; } 
+
+    if (ifstat.isEqualTo(testexpr)) 
+    { return Expression.simplify("or", ifstat, elsestat, needsBracket); } 
+
+    if (elsestat.isEqualTo(testexpr)) 
+    { return Expression.simplify("and", ifstat, elsestat, needsBracket); } 
 
     if (testexpr instanceof BinaryExpression && 
         elsestat instanceof BinaryExpression)
@@ -1386,12 +1395,13 @@ public Vector singleMutants()
     }  
     
     Expression dand = 
-        new BinaryExpression("=>", test, 
-          ifExp.definedness(uses,messages));
+        Expression.simplify("=>", test, 
+          ifExp.definedness(uses,messages), null);
+    Expression ntest = Expression.negate(test); 
     Expression pand = 
-        new BinaryExpression("=>", 
-          new UnaryExpression("not", test), 
-            elseExp.definedness(uses, messages));
+        Expression.simplify("=>", 
+            ntest, 
+            elseExp.definedness(uses, messages), null);
 
     dand.setBrackets(true); 
     pand.setBrackets(true); 
@@ -1403,6 +1413,19 @@ public Vector singleMutants()
       Expression.simplifyAnd(tdef, and1); 
 
     return and2.simplify();
+  }
+
+  public void semanticAnalysis(Map uses, Vector messages)
+  { test.semanticAnalysis(uses, messages);
+    if (test.hasBooleanType()) { } 
+    else 
+    { messages.add("!! (SEM): conditional test " + test + " should have boolean type"); 
+      int oscore = (int) uses.get("amber"); 
+      uses.set("amber", oscore+1); 
+    }  
+
+    ifExp.definedness(uses, messages); 
+    elseExp.definedness(uses, messages);     
   }
 
   public void setPre()

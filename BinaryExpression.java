@@ -772,10 +772,6 @@ class BinaryExpression extends Expression
       srcDefined = 
         new BinaryExpression("/=", col, 
                 new BasicExpression("null"));
-
-      int acount = (int) uses.get("yellow"); 
-      uses.set("yellow", acount+1); 
-      messages.add("! (SEM): Condition " + srcDefined + " needed for " + this);  
     }
  
     srcDefined.setBrackets(true); 
@@ -785,20 +781,12 @@ class BinaryExpression extends Expression
         "->concatenate".equals(operator))
     { res = Expression.simplifyAnd(res, srcDefined); 
 
-      int acount = (int) uses.get("yellow"); 
-      uses.set("yellow", acount+1); 
-      messages.add("! (SEM): Condition " + srcDefined + " needed for " + this);  
-
       if (left.hasSequenceType()) { } 
       else 
       { Expression typeofseq = 
           new BinaryExpression("->oclIsTypeOf",left,
             BasicExpression.newTypeBasicExpression("Sequence")); 
         res = Expression.simplifyAnd(typeofseq, res);
-
-        int oscore = (int) uses.get("amber"); 
-        uses.set("amber", oscore+1); 
-        messages.add("!! (SEM): Type missing for " + left + " in " + this + " Should be Sequence");  
       } 
 
       return res; 
@@ -809,20 +797,12 @@ class BinaryExpression extends Expression
         "->antirestrict".equals(operator))
     { res = Expression.simplifyAnd(res, srcDefined); 
 
-      int acount = (int) uses.get("yellow"); 
-      uses.set("yellow", acount+1); 
-      messages.add("! (SEM): Condition " + srcDefined + " needed for " + this);  
-
       if (left.hasMapType()) { } 
       else 
       { Expression typeofmap = 
           new BinaryExpression("->oclIsTypeOf",left,
             BasicExpression.newTypeBasicExpression("Map")); 
         res = Expression.simplifyAnd(typeofmap, res); 
-
-        int oscore = (int) uses.get("amber"); 
-        uses.set("amber", oscore+1); 
-        messages.add("!! (SEM): Type missing for " + left + " in " + this + " Should be Map");  
       } 
 
       return res; 
@@ -842,10 +822,6 @@ class BinaryExpression extends Expression
             new BinaryExpression("->oclIsTypeOf",right,
               BasicExpression.newTypeBasicExpression("String")); 
  
-          int oscore = (int) uses.get("amber"); 
-          uses.set("amber", oscore+1); 
-          messages.add("!! (SEM): Type missing for " + right + " in " + this + " Should be numeric or String");  
-
           Expression typedefinedness =
             new BinaryExpression("or", typeofdouble, typeofstring);
           typedefinedness.setBrackets(true); 
@@ -870,14 +846,239 @@ class BinaryExpression extends Expression
           typedefinedness.setBrackets(true); 
 
           res = Expression.simplifyAnd(typedefinedness, res); 
+        } 
+      }  
 
+      return res; 
+    }
+    else if ("-".equals(operator))
+    { 
+      return res; 
+    }
+    else if ("->pow".equals(operator) ||
+             "*".equals(operator))
+    { if (left.hasNumericType()) { } 
+      else 
+      { Expression typeofdouble = 
+          new BinaryExpression("->oclIsKindOf",left,
+            BasicExpression.newTypeBasicExpression("double")); 
+    
+        res = Expression.simplifyAnd(typeofdouble, res); 
+      } 
+
+      if (right.hasNumericType()) { } 
+      else 
+      { Expression typeofdouble = 
+          new BinaryExpression("->oclIsKindOf", right,
+            BasicExpression.newTypeBasicExpression("double")); 
+     
+        res = Expression.simplifyAnd(typeofdouble, res);
+      } 
+
+      return res; 
+    }  
+    else if ("/".equals(operator) || 
+             "mod".equals(operator) || 
+             "div".equals(operator)) 
+    { if ("0".equals(right + "") || 
+          "0.0".equals(right + ""))
+      { 
+        return new BasicExpression(false); 
+      } 
+
+      Expression zero = new BasicExpression(0);
+      Expression rexpr = (Expression) right.clone(); 
+      rexpr.setBrackets(true); 
+      Expression neqz = new BinaryExpression("/=",rexpr,zero);
+
+      if (left.hasNumericType()) { } 
+      else 
+      { Expression typeofdouble = 
+          new BinaryExpression("->oclIsKindOf",left,
+            BasicExpression.newTypeBasicExpression("double")); 
+    
+        res = Expression.simplifyAnd(typeofdouble, res);
+      } 
+
+      if (right.hasNumericType()) { } 
+      else 
+      { Expression typeofdouble = 
+          new BinaryExpression("->oclIsKindOf", right,
+            BasicExpression.newTypeBasicExpression("double")); 
+     
+        res = Expression.simplifyAnd(typeofdouble, res);
+      } 
+
+      return simplify("&",res,neqz,null);
+    }
+    else if ("<".equals(operator) || "<=".equals(operator) || 
+             ">".equals(operator) || ">=".equals(operator) ||
+             "=".equals(operator) || "/=".equals(operator))
+    { // types should be the same
+ 
+      // System.out.println(">> Types of " + this + " are " + 
+      //                 left.getType() + " " + right.getType()); 
+
+      return res; 
+    }
+
+    // and case for ->pow
+    if ("->pow".equals(operator))
+    { Expression zero = new BasicExpression(0);
+      Expression eqz = new BinaryExpression("=",left,zero);
+      Expression geqz = new BinaryExpression(">",right,zero); 
+      Expression pex = new BinaryExpression("=>",eqz,geqz);
+      pex.setBrackets(true);  
+      return simplify("&",res,pex,null);
+    }  // left < 0  =>  right->oclIsTypeOf("int")
+
+    if ("->at".equals(operator))
+    { res = Expression.simplifyAnd(res, srcDefined); 
+
+      if ("String".equals(right.getType() + "") || 
+          left.isMap())
+      { UnaryExpression kexp = new UnaryExpression("->keys", left); 
+        Expression inkeys = new BinaryExpression(":", right, kexp); 
+        return simplify("&",res,inkeys,null); 
+      } 
+      else if (left.isSequence() && 
+               "0".equals(right + ""))
+      { return new BasicExpression(false); }    
+      else if (left.isString() && 
+               "0".equals(right + ""))
+      { return new BasicExpression(false); }    
+
+      UnaryExpression selfsize = new UnaryExpression("->size", left); 
+      Expression lbnd = new BinaryExpression("<=", new BasicExpression(1), right); 
+      Expression ubnd = new BinaryExpression("<=", right, selfsize); 
+      Expression inrange = new BinaryExpression("&",lbnd,ubnd); 
+      inrange.setBrackets(true); 
+      return simplify("&",res,inrange,null);
+    } 
+
+    if ("->exists".equals(operator) || 
+        "->forAll".equals(operator) || 
+        "->select".equals(operator) || 
+        "->reject".equals(operator) || 
+        "->collect".equals(operator) || 
+        "->including".equals(operator) || 
+        "->excluding".equals(operator))
+    { res = Expression.simplifyAnd(res, srcDefined); }
+    
+    if ("->any".equals(operator)) 
+    { Expression nonempty = 
+        new BinaryExpression("->exists", left, right);
+ 
+      res = Expression.simplifyAnd(res, srcDefined);
+      res = Expression.simplifyAnd(res, nonempty);
+    } 
+        
+    if ("|A".equals(operator))
+    { BinaryExpression src = (BinaryExpression) left; 
+      // Expression var = src.getLeft(); 
+      // Expression coll = src.getRight(); 
+      // col1->exists(var | right) needed 
+
+      Expression nonempty = 
+        new BinaryExpression("#", src, right);
+ 
+      res = Expression.simplifyAnd(res, srcDefined);
+      res = Expression.simplifyAnd(res, nonempty);
+    } 
+      
+    return res;
+  }
+
+  public void semanticAnalysis(Map uses, Vector messages)
+  { left.semanticAnalysis(uses, messages);
+    right.semanticAnalysis(uses, messages);
+    
+    Expression srcDefined = 
+      new BinaryExpression("/=", left, 
+                new BasicExpression("null")); 
+
+    if ("#".equals(operator) || "!".equals(operator) || 
+        "#1".equals(operator) || "|".equals(operator) || 
+        "|R".equals(operator) || "|C".equals(operator) ||
+        "|A".equals(operator) || "|sortedBy".equals(operator) ||
+        "|unionAll".equals(operator) || 
+        operator.equals("|concatenateAll") ||
+        "|intersectAll".equals(operator) || 
+        "|selectMaximals".equals(operator) || 
+        "|selectMinimals".equals(operator))
+    { BinaryExpression beleft = (BinaryExpression) left; 
+      Expression col = beleft.getRight(); 
+
+      srcDefined = 
+        new BinaryExpression("/=", col, 
+                new BasicExpression("null"));
+
+      int acount = (int) uses.get("yellow"); 
+      uses.set("yellow", acount+1); 
+      messages.add("! (SEM): Condition " + srcDefined + " needed for\n  " + this);  
+    }
+ 
+    if ("->append".equals(operator) || 
+        "->prepend".equals(operator) || 
+        "->concatenate".equals(operator))
+    { 
+      int acount = (int) uses.get("yellow"); 
+      uses.set("yellow", acount+1); 
+      messages.add("! (SEM): Condition " + srcDefined + " needed for\n  " + this);  
+
+      if (left.hasSequenceType()) { } 
+      else 
+      { 
+        int oscore = (int) uses.get("amber"); 
+        uses.set("amber", oscore+1); 
+        messages.add("!! (SEM): Type missing for " + left + " in " + this + " Should be Sequence");  
+      } 
+
+      return; 
+    }     
+    else if ("->excludingKey".equals(operator) || 
+        "->excludingValue".equals(operator) || 
+        "->restrict".equals(operator) ||
+        "->antirestrict".equals(operator))
+    { 
+      int acount = (int) uses.get("yellow"); 
+      uses.set("yellow", acount+1); 
+      messages.add("! (SEM): Condition " + srcDefined + " needed for\n  " + this);  
+
+      if (left.hasMapType()) { } 
+      else 
+      { 
+        int oscore = (int) uses.get("amber"); 
+        uses.set("amber", oscore+1); 
+        messages.add("!! (SEM): Type missing for " + left + " in " + this + " Should be Map");  
+      } 
+
+      return; 
+    }     
+    else if ("+".equals(operator))
+    { if (left.hasStringType() || right.hasStringType()) 
+      { } // result is a string 
+      else if (left.hasNumericType()) 
+      { if (right.hasNumericType() || 
+            right.hasStringType()) { } 
+        else // right must be string or numeric
+        { 
           int oscore = (int) uses.get("amber"); 
+          uses.set("amber", oscore+1); 
+          messages.add("!! (SEM): Type missing for " + right + " in " + this + " Should be numeric or String");  
+        }
+      } 
+      else if (right.hasNumericType())  
+      { if (left.hasNumericType() || 
+            left.hasStringType()) { } 
+        else // left must be string or numeric
+        { int oscore = (int) uses.get("amber"); 
           uses.set("amber", oscore+1); 
           messages.add("!! (SEM): Type missing for " + left + " in " + this + " Should be numeric or String"); 
         } 
       }  
 
-      return res; 
+      return; 
     }
     else if ("-".equals(operator))
     { if (left.hasStringType() && right.hasStringType()) 
@@ -895,37 +1096,25 @@ class BinaryExpression extends Expression
         messages.add("!! (SEM): Types missing for " + this + " Arguments should be both numeric, both String, both Collections or both Maps");  
       }  
 
-      return res; 
+      return; 
     }
     else if ("->pow".equals(operator) ||
              "*".equals(operator))
     { if (left.hasNumericType()) { } 
       else 
-      { Expression typeofdouble = 
-          new BinaryExpression("->oclIsKindOf",left,
-            BasicExpression.newTypeBasicExpression("double")); 
-    
-        res = Expression.simplifyAnd(typeofdouble, res); 
-
-        int oscore = (int) uses.get("amber"); 
+      { int oscore = (int) uses.get("amber"); 
         uses.set("amber", oscore+1); 
         messages.add("!! (SEM): Type missing for " + left + " in " + this + " Should be numeric");  
       } 
 
       if (right.hasNumericType()) { } 
       else 
-      { Expression typeofdouble = 
-          new BinaryExpression("->oclIsKindOf", right,
-            BasicExpression.newTypeBasicExpression("double")); 
-     
-        res = Expression.simplifyAnd(typeofdouble, res);
-
-        int oscore = (int) uses.get("amber"); 
+      { int oscore = (int) uses.get("amber"); 
         uses.set("amber", oscore+1); 
         messages.add("!! (SEM): Type missing for " + right + " in " + this + " Should be numeric ");  
       } 
 
-      return res; 
+      return; 
     }  
     else if ("/".equals(operator) || 
              "mod".equals(operator) || 
@@ -936,7 +1125,7 @@ class BinaryExpression extends Expression
         int rscore = (int) uses.get("red"); 
         uses.set("red", rscore+1); 
 
-        return new BasicExpression(false); 
+        return; 
       } 
 
       Expression zero = new BasicExpression(0);
@@ -946,16 +1135,11 @@ class BinaryExpression extends Expression
 
       int acount = (int) uses.get("yellow"); 
       uses.set("yellow", acount+1); 
-      messages.add("! (SEM): Condition " + neqz + " needed for " + this);  
+      messages.add("! (SEM): Condition " + neqz + " needed for\n  " + this);  
 
       if (left.hasNumericType()) { } 
       else 
-      { Expression typeofdouble = 
-          new BinaryExpression("->oclIsKindOf",left,
-            BasicExpression.newTypeBasicExpression("double")); 
-    
-        res = Expression.simplifyAnd(typeofdouble, res);
-
+      { 
         int oscore = (int) uses.get("amber"); 
         uses.set("amber", oscore+1); 
         messages.add("!! (SEM): Type missing for " + left + " in " + this + " Should be numeric");   
@@ -963,28 +1147,18 @@ class BinaryExpression extends Expression
 
       if (right.hasNumericType()) { } 
       else 
-      { Expression typeofdouble = 
-          new BinaryExpression("->oclIsKindOf", right,
-            BasicExpression.newTypeBasicExpression("double")); 
-     
-        res = Expression.simplifyAnd(typeofdouble, res);
-
+      { 
         int oscore = (int) uses.get("amber"); 
         uses.set("amber", oscore+1); 
         messages.add("!! (SEM): Type missing for " + right + " in " + this + " Should be numeric");   
       } 
 
-      return simplify("&",res,neqz,null);
+      return;
     }
     else if ("<".equals(operator) || "<=".equals(operator) || 
              ">".equals(operator) || ">=".equals(operator) ||
              "=".equals(operator) || "/=".equals(operator))
-    { // types should be the same
- 
-      // System.out.println(">> Types of " + this + " are " + 
-      //                 left.getType() + " " + right.getType()); 
-
-      if (left.hasNumericType())
+    { if (left.hasNumericType())
       { if (right.hasNumericType()) { } 
         else 
         { int oscore = (int) uses.get("amber"); 
@@ -1017,7 +1191,7 @@ class BinaryExpression extends Expression
         }    
       } 
 
-      return res; 
+      return; 
     }
 
     // and case for ->pow
@@ -1027,42 +1201,56 @@ class BinaryExpression extends Expression
       Expression geqz = new BinaryExpression(">",right,zero); 
       Expression pex = new BinaryExpression("=>",eqz,geqz);
       pex.setBrackets(true);  
-      return simplify("&",res,pex,null);
-    }  // left < 0  =>  right->oclIsTypeOf("int")
-
-    if ("->at".equals(operator))
-    { res = Expression.simplifyAnd(res, srcDefined); 
 
       int acount = (int) uses.get("yellow"); 
       uses.set("yellow", acount+1); 
-      messages.add("! (SEM): Condition " + srcDefined + " needed for " + this);  
+
+      messages.add("! (SEM): Condition " + pex + " needed for\n  " + this);  
+      return;
+    }  // left < 0  =>  right->oclIsTypeOf("int")
+
+    if ("->at".equals(operator))
+    { int acount = (int) uses.get("yellow"); 
+      uses.set("yellow", acount+1); 
+      messages.add("! (SEM): Condition " + srcDefined + " needed for\n  " + this);  
 
       if ("String".equals(right.getType() + "") || 
           left.isMap())
       { UnaryExpression kexp = new UnaryExpression("->keys", left); 
         Expression inkeys = new BinaryExpression(":", right, kexp); 
-        return simplify("&",res,inkeys,null); 
+        int yscore = (int) uses.get("yellow"); 
+        uses.set("yellow", yscore + 1); 
+        messages.add("! (SEM): Condition " + inkeys + " needed for\n  " + this);  
+
+        return; 
       } 
       else if (left.isSequence() && 
                "0".equals(right + ""))
       { int rscore = (int) uses.get("red"); 
         uses.set("red", rscore+1); 
         messages.add("!!! (SEM): Invalid index 0 for sequence " + left);
+        return; 
       }    
       else if (left.isString() && 
                "0".equals(right + ""))
       { int rscore = (int) uses.get("red"); 
         uses.set("red", rscore+1); 
         messages.add("!!! (SEM): Invalid index 0 for string " + left);
+        return; 
       }    
-
 
       UnaryExpression selfsize = new UnaryExpression("->size", left); 
       Expression lbnd = new BinaryExpression("<=", new BasicExpression(1), right); 
       Expression ubnd = new BinaryExpression("<=", right, selfsize); 
       Expression inrange = new BinaryExpression("&",lbnd,ubnd); 
       inrange.setBrackets(true); 
-      return simplify("&",res,inrange,null);
+
+      int yellowcount = (int) uses.get("yellow"); 
+      uses.set("yellow", yellowcount+1); 
+
+      messages.add("! (SEM): Condition " + inrange + " needed for\n  " + this);  
+
+      return;
     } 
 
     if ("->exists".equals(operator) || 
@@ -1072,10 +1260,9 @@ class BinaryExpression extends Expression
         "->collect".equals(operator) || 
         "->including".equals(operator) || 
         "->excluding".equals(operator))
-    { res = Expression.simplifyAnd(res, srcDefined);
-      int acount = (int) uses.get("yellow"); 
-      uses.set("yellow", acount+1); 
-      messages.add("! (SEM): Condition " + srcDefined + " needed for " + this);  
+    { int ycount = (int) uses.get("yellow", 0); 
+      uses.set("yellow", ycount+1); 
+      messages.add("! (SEM): Condition " + srcDefined + " needed for\n  " + this);  
     }
     
     if ("->any".equals(operator)) 
@@ -1085,9 +1272,7 @@ class BinaryExpression extends Expression
       int yscore = (int) uses.get("yellow",0); 
       uses.set("yellow", yscore+1); 
       messages.add("! (SEM): Conditions " + srcDefined + 
-                   " and " + nonempty + " needed for " + this);
-      res = Expression.simplifyAnd(res, srcDefined);
-      res = Expression.simplifyAnd(res, nonempty);
+                   " and " + nonempty + " needed for\n  " + this);
     } 
         
     if ("|A".equals(operator))
@@ -1102,12 +1287,10 @@ class BinaryExpression extends Expression
       int yscore = (int) uses.get("yellow",0); 
       uses.set("yellow", yscore+1); 
       messages.add("! (SEM): Conditions " + srcDefined + 
-          " and " + nonempty + " needed for " + this);
-      res = Expression.simplifyAnd(res, srcDefined);
-      res = Expression.simplifyAnd(res, nonempty);
+          " and " + nonempty + " needed for\n  " + this);
     } 
       
-    return res;
+    return;
   }
 
   public Expression determinate()
@@ -22230,6 +22413,11 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       return Expression.simplifyUnion(lexpr,rexpr); 
     } 
 
+    if ("->intersection".equals(operator))
+    { // merge the literal sets/sequences/maps
+      return Expression.simplifyIntersection(lexpr,rexpr); 
+    } 
+
     int synLeft = lexpr.syntacticComplexity();
     int synRight = rexpr.syntacticComplexity();
 
@@ -23563,6 +23751,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
     if (operator.equals("->including") ||
         operator.equals("->prepend") ||
         operator.equals("->append") ||
+        operator.equals("->count") ||
         operator.equals("->excluding") ||
         operator.equals("->excludingFirst") ||
         operator.equals("->excludingKey") || 
@@ -23571,6 +23760,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         operator.equals("->excludes") ||
         operator.equals("->includesAll") ||
         operator.equals("->excludesAll") ||
+        operator.equals("->indexOf") ||
+        operator.equals("->lastIndexOf") ||
         operator.equals("<:") ||
         operator.equals("/<:") ||
         operator.equals(":") ||
@@ -23593,26 +23784,33 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
            operator.equals("->excludes") ||
            operator.equals("->includesAll") ||
            operator.equals("->excludesAll") ||
+           operator.equals("->count") ||
+           operator.equals("->indexOf") ||
+           operator.equals("->lastIndexOf") ||
            operator.equals("<:") ||
            operator.equals(":") ||
            operator.equals("/:") ||
            operator.equals("->intersection") ||
            operator.equals("->union"))
          )    
-      { System.err.println("!! (OES) flaw: O(n)+ operation " + operator + " used in loop: could be O(n*n)+\n");
+      { System.err.println("!! (OES) flaw: O(n)+ sequence operation " + operator + " used in loop: could be O(n*n)+\n");
         System.err.println();  
       } 
-      else if (left.isSequence() && level > 1 && 
+      else if (level > 1 && 
           (operator.equals("->including") ||
+           operator.equals("->excluding") ||
            operator.equals("->append") ||
-           operator.equals("->prepend")))
+           operator.equals("->prepend") ||
+           operator.equals("->intersection") ||
+           operator.equals("->union")
+          )   )
       { System.err.println("! (OEW) flaw: operation " + operator + " copies its source, when used in loop could be O(n*n)+\n");
         System.err.println();  
       } 
       else if (level > 1 &&         
                (operator.equals("->restrict") ||
                 operator.equals("->antirestrict")))
-      { System.err.println("!! (OES) flaw: O(n)+ operation " + operator + " used in loop: could be O(n*n)+\n");
+      { System.err.println("!! (OES) flaw: O(n)+ map operation " + operator + " used in loop: could be O(n*n)+\n");
         System.err.println();  
       } 
          
@@ -23620,8 +23818,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       return res; 
     } 
 
-    if (operator.equals("->count") ||
-        operator.equals("->at"))
+    if (operator.equals("->at"))
     { left.collectionOperatorUses(level,res,vars); 
       Vector opers = (Vector) res.get(level); 
       if (opers == null) 
@@ -23767,6 +23964,9 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         operator.equals("->excludes") ||
         operator.equals("->includesAll") ||
         operator.equals("->excludesAll") ||
+        operator.equals("->count") ||
+        operator.equals("->indexOf") ||
+        operator.equals("->lastIndexOf") ||
         operator.equals("<:") ||
         operator.equals(":") ||
         operator.equals("/:") ||
@@ -23785,13 +23985,23 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       opers.add(this); 
       res.put(level, opers); 
 
-      if (left.isSequence() && level > 1 && 
+      if (level > 1 && left.isSet() && 
+          (operator.equals("->includes") ||
+           operator.equals("->excludes") ||
+           operator.equals("->count") ||
+           operator.equals(":") ||
+           operator.equals("/:"))) 
+      { /* O(1) operator */ } 
+      else if (level > 1 && 
           (operator.equals("->excluding") ||
            operator.equals("->excludingFirst") ||
            operator.equals("->includes") ||
            operator.equals("->excludes") ||
            operator.equals("->includesAll") ||
            operator.equals("->excludesAll") ||
+           operator.equals("->count") ||
+           operator.equals("->indexOf") ||
+           operator.equals("->lastIndexOf") ||
            operator.equals("<:") ||
            operator.equals(":") ||
            operator.equals("/:") ||
@@ -23805,10 +24015,17 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         int oescount = (int) uses.get("OES"); 
         uses.set("OES", oescount+1);   
       }
-      else if (left.isSequence() && level > 1 && 
+      else if (level > 1 && 
           (operator.equals("->including") ||
+           operator.equals("->excluding") ||
+           operator.equals("->excludingKey") || 
+           operator.equals("->excludingValue") ||
+           operator.equals("->restrict") ||
+           operator.equals("->antirestrict") ||
            operator.equals("->append") ||
-           operator.equals("->prepend")))
+           operator.equals("->prepend") ||
+           operator.equals("->union") ||
+           operator.equals("->intersection")))
       { messages.add("! (OEW) flaw: operator " + operator + " copies its source, could be O(n*n) when used in loop"); 
         messages.add(""); 
         int yScore = (int) uses.get("yellow"); 
@@ -23819,7 +24036,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       else if (level > 1 &&         
                (operator.equals("->restrict") ||
                 operator.equals("->antirestrict")))
-      { messages.add("!! (OES) flaw: O(n)+ operator " + operator + " used in loop, could be O(n*n)"); 
+      { messages.add("!! (OES) flaw: O(n)+ map operator " + operator + " used in loop, could be O(n*n)"); 
         messages.add(""); 
         int aScore = (int) uses.get("amber"); 
         uses.set("amber", aScore+1);
@@ -23832,8 +24049,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       return res; 
     } 
 
-    if (operator.equals("->count") ||
-        operator.equals("->at"))
+    if (operator.equals("->at"))
     { Vector oldvars = new Vector();
       oldvars.addAll(vars); 
       left.collectionOperatorUses(level,res,vars,uses,

@@ -5088,6 +5088,18 @@ public class Entity extends ModelElement implements Comparable
       // System.err.println(); 
     }
   }
+
+  public void semanticAnalysis(PrintWriter out)
+  { if (isComponent() || isExternal()) 
+    { return; } 
+
+    for (int i = 0; i < operations.size(); i++)
+    { BehaviouralFeature op = 
+           (BehaviouralFeature) operations.get(i);
+    
+      op.semanticAnalysis(out);
+    }
+  }
   
   public void checkInvariants() 
   { for (int i = 0; i < operations.size(); i++)

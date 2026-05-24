@@ -86,6 +86,20 @@ public class SetExpression extends Expression
     type.setElementType(elementType);
   } 
 
+  public SetExpression(Type typ)
+  { elements = new Vector(); 
+
+    if (typ == null) 
+    { typ = new Type("Sequence", null); } 
+
+    type = (Type) typ.clone(); 
+    if (Type.isSequenceType(type))
+    { ordered = true; } 
+
+    elementType = typ.getElementType(); 
+    type.setElementType(elementType);
+  } 
+
   public Expression get(int i)
   { return (Expression) elements.get(i); } 
 
@@ -974,6 +988,15 @@ public class SetExpression extends Expression
 
     return res; 
   } 
+
+  public void semanticAnalysis(Map uses, Vector messages)
+  { 
+    for (int i = 0; i < elements.size(); i++) 
+    { Expression elem = (Expression) elements.get(i); 
+      elem.semanticAnalysis(uses, messages);
+    } 
+  } 
+
 
   public Expression determinate()
   { Expression res = new BasicExpression(true);  // conjunction of definedness of elements
