@@ -3193,7 +3193,8 @@ class BasicExpression extends Expression
     if (umlkind == FUNCTION)
     { Expression zero = new BasicExpression(0);
       if ("sqrt".equals(data))
-      { Expression nneg = new BinaryExpression(">=",objectRef,zero);
+      { Expression nneg = 
+                   new BinaryExpression(">=",objectRef,zero);
 
         Expression sneg = nneg.simplifyOCL(); 
 
@@ -3361,7 +3362,8 @@ class BasicExpression extends Expression
     if (umlkind == FUNCTION)
     { Expression zero = new BasicExpression(0);
       if ("sqrt".equals(data))
-      { Expression nneg = new BinaryExpression(">=",objectRef,zero);
+      { Expression nneg = 
+                   new BinaryExpression(">=",objectRef,zero);
 
         Expression sneg = nneg.simplifyOCL(); 
 
@@ -17911,27 +17913,32 @@ public Statement generateDesignSubtract(Expression rhs)
   { if (umlkind == FUNCTION)
     { if (objectRef == null)
       { return this; }
+
       Expression ors = objectRef.simplify(); 
 
       // many cases, eg, 2.sqr as 4, etc
 
       if (data.equals("last") && 
+          arrayIndex == null &&
           (ors instanceof SetExpression))
       { SetExpression se = (SetExpression) ors; 
         return se.getLastElement(); 
       } 
 
       if (data.equals("last") && 
+          arrayIndex == null &&
           Expression.isStringValue("" + ors))
       { return Expression.simplifyLast(ors); } 
 
       if (data.equals("first") && 
+          arrayIndex == null &&
           (ors instanceof SetExpression))
       { SetExpression se = (SetExpression) ors; 
         return se.getFirstElement(); 
       }
 
       if (data.equals("first") && 
+          arrayIndex == null &&
           Expression.isStringValue("" + ors))
       { return Expression.simplifyFirst(ors); } 
 
@@ -17946,6 +17953,7 @@ public Statement generateDesignSubtract(Expression rhs)
       { return Expression.simplifySize(ors); }
 
       if (data.equals("subrange") && 
+         arrayIndex == null &&
          ors instanceof BasicExpression && 
          parameters != null && 
          ((BasicExpression) ors).objectRef != null &&
@@ -17983,6 +17991,7 @@ public Statement generateDesignSubtract(Expression rhs)
     }       
 
     if (data.equals("subrange") && 
+        arrayIndex == null &&
         parameters != null && 
         parameters.size() > 1 && 
         objectRef != null) 
@@ -17991,7 +18000,38 @@ public Statement generateDesignSubtract(Expression rhs)
       return Expression.simplifySubrange(objectRef, p1, p2); 
     } 
 
-    if (arrayIndex == null) { return this; } 
+    if (data.equals("setAt") && 
+        arrayIndex == null &&
+        parameters != null && 
+        parameters.size() > 1 && 
+        objectRef != null) 
+    { Expression p1 = (Expression) parameters.get(0); 
+      Expression p2 = (Expression) parameters.get(1);
+      return Expression.simplifySetAt(objectRef, p1, p2); 
+    } 
+
+    if (data.equals("insertAt") && 
+        arrayIndex == null &&
+        parameters != null && 
+        parameters.size() > 1 && 
+        objectRef != null) 
+    { Expression p1 = (Expression) parameters.get(0); 
+      Expression p2 = (Expression) parameters.get(1);
+      return Expression.simplifyInsertAt(objectRef, p1, p2); 
+    } 
+
+    if (data.equals("insertInto") && 
+        arrayIndex == null &&
+        parameters != null && 
+        parameters.size() > 1 && 
+        objectRef != null) 
+    { Expression p1 = (Expression) parameters.get(0); 
+      Expression p2 = (Expression) parameters.get(1);
+      return Expression.simplifyInsertInto(objectRef, p1, p2); 
+    } 
+
+    if (arrayIndex == null) 
+    { return this; } 
 
     Expression ai = arrayIndex.simplify(); 
     if (Expression.isIntegerValue("" + ai) && 
@@ -19210,6 +19250,44 @@ public Statement generateDesignSubtract(Expression rhs)
       }  
     } 
 
+    if ("setAt".equals(data) &&
+        arrayIndex == null && 
+        pars != null)
+    { if (pars.size() == 2)
+      { Expression res = 
+          Expression.simplifySetAt(objR, 
+                             (Expression) pars.get(0), 
+                             (Expression) pars.get(1)); 
+        return res;
+      } 
+    } 
+
+    if ("insertAt".equals(data) &&
+        arrayIndex == null && 
+        pars != null)
+    { if (pars.size() == 2)
+      { Expression res = 
+          Expression.simplifyInsertAt(objR, 
+                             (Expression) pars.get(0), 
+                             (Expression) pars.get(1)); 
+        return res;
+      } 
+    } 
+
+    if ("insertInto".equals(data) &&
+        arrayIndex == null && 
+        pars != null)
+    { if (pars.size() == 2)
+      { Expression res = 
+          Expression.simplifyInsertInto(objR, 
+                             (Expression) pars.get(0), 
+                             (Expression) pars.get(1)); 
+        return res;
+      } 
+    } 
+
+    // excludingSubrange, setSubrange, + regex ops
+
     BasicExpression res = (BasicExpression) clone(); 
     res.objectRef = objR; 
     res.arrayIndex = arrInd; 
@@ -19442,7 +19520,15 @@ public Statement generateDesignSubtract(Expression rhs)
       opers.add(this); 
       res.put(level, opers);
 
-      if (level > 1 && !(data.equals("setAt")))
+      if (level > 1 && data.equals("setAt"))
+      { messages.add("! (OEW) flaw: setAt copies the source collection\n");
+
+        int yScore = (int) uses.get("yellow"); 
+        uses.set("yellow", yScore+1); 
+        int oewcount = (int) uses.get("OEW", 0); 
+        uses.set("OEW", oewcount+1);
+      }
+      else if (level > 1)
       { messages.add("!! (OES) flaw: O(n) operation " + this + " within loop may be O(n*n)");
 
         int amberScore = (int) uses.get("amber"); 

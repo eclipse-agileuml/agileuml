@@ -7231,7 +7231,7 @@ class ImplicitInvocationStatement extends Statement
   }  
 
   public Expression wpc(Expression post)
-  { return post; }
+  { return callExp.wpc(post); }
 
   public Expression wpc(Expression inv, Expression post)
   { return inv; }  
@@ -8030,7 +8030,7 @@ class WhileStatement extends Statement
             { isWritten = true; }   
             else if (iter.equals(wrv)) 
             { isWritten = true; } 
-          }
+          } // also check loopVar is not written
 
           int vcount = 0; 
 

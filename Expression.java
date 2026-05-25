@@ -1364,6 +1364,9 @@ abstract class Expression
     return simplifyAnd(head,conjoin(tail)); 
   } 
         
+  public Expression wpc(Expression post) 
+  { return post; } 
+
   public String updateForm(String language, java.util.Map env, boolean local)
   { if ("Java4".equals(language))
     { return updateForm(env,local); } 
@@ -6352,6 +6355,201 @@ abstract class Expression
 
     return new UnaryExpression("->size", arg); 
   } 
+
+  public static Expression simplifySetAt(Expression src, 
+                                         Expression arg1, 
+                                         Expression arg2)
+  { // sq.setAt(i,x) for i < 0  is  
+    //    sq.setAt(sq->size() + i, x)
+    // sq.setAt(i,x).setAt(i,y) is sq.setAt(i,y)
+  
+    arg1.setBrackets(false); 
+    arg2.setBrackets(false); 
+
+    Expression par1 = arg1; 
+    Expression par2 = arg2; 
+
+    if (src instanceof BasicExpression)
+    { BasicExpression besrc = (BasicExpression) src; 
+      if ("setAt".equals(besrc.getData()) && 
+          par1.isEqualTo(besrc.getParameter(1)))
+      { Vector vect = new Vector(); 
+        vect.add(par1); 
+        vect.add(par2); 
+        return 
+          BasicExpression.newFunctionBasicExpression(
+                      "setAt", besrc.getObjectRef(), vect);
+      } 
+    } 
+
+    if ((src.isSequence() || src.isString()) && 
+        Expression.isDecimalInteger(arg1 + ""))
+    { int val1 = Expression.convertInteger(arg1 + ""); 
+
+      if (val1 < 0) 
+      { Expression sze = 
+          Expression.simplifySize(src);
+        par1 = 
+          new BinaryExpression("-", sze, 
+                             new BasicExpression(-val1));
+      } 
+    }
+
+    if ((src.isSequence() || src.isString()) && 
+        arg1 instanceof UnaryExpression && 
+        "-".equals(((UnaryExpression) arg1).getOperator()) )
+    { UnaryExpression marg = (UnaryExpression) arg1; 
+      Expression narg = marg.getArgument(); 
+      narg.setBrackets(false); 
+
+      if (Expression.isDecimalInteger(narg + ""))
+      { int val1 = Expression.convertInteger(narg + "");
+        if (val1 > 0)
+        { Expression sze = 
+            Expression.simplifySize(src);
+          par1 = 
+                new BinaryExpression("-", sze, 
+                         new BasicExpression(val1)); 
+        }
+      } 
+    } 
+        
+    if (Expression.isIntegerValue("" + par1) && 
+        src instanceof SetExpression) 
+    { int ind1 = Expression.convertInteger(par1 + "");
+      return SetExpression.setAt((SetExpression) src, 
+                                 ind1, par2); 
+    } 
+
+    Vector pars = new Vector(); 
+    pars.add(par1); 
+    pars.add(par2);  
+    return BasicExpression.newFunctionBasicExpression(
+                                      "setAt", src, pars);   
+  }
+
+  public static Expression simplifyInsertAt(Expression src, 
+                                         Expression arg1, 
+                                         Expression arg2)
+  { // sq.insertAt(i,x) for i < 0  is  
+    //    sq.insertAt(sq->size() + i, x)
+    
+    arg1.setBrackets(false); 
+    arg2.setBrackets(false); 
+
+    Expression par1 = arg1; 
+    Expression par2 = arg2; 
+
+    if ((src.isSequence() || src.isString()) && 
+        Expression.isDecimalInteger(arg1 + ""))
+    { int val1 = Expression.convertInteger(arg1 + ""); 
+
+      if (val1 < 0) 
+      { Expression sze = 
+          Expression.simplifySize(src);
+        par1 = 
+          new BinaryExpression("-", sze, 
+                             new BasicExpression(-val1));
+      } 
+    }
+
+    if ((src.isSequence() || src.isString()) && 
+        arg1 instanceof UnaryExpression && 
+        "-".equals(((UnaryExpression) arg1).getOperator()) )
+    { UnaryExpression marg = (UnaryExpression) arg1; 
+      Expression narg = marg.getArgument(); 
+      narg.setBrackets(false); 
+
+      if (Expression.isDecimalInteger(narg + ""))
+      { int val1 = Expression.convertInteger(narg + "");
+        if (val1 > 0)
+        { Expression sze = 
+            Expression.simplifySize(src);
+          par1 = 
+                new BinaryExpression("-", sze, 
+                         new BasicExpression(val1)); 
+        }
+      } 
+    } 
+        
+    if (Expression.isIntegerValue("" + par1) && 
+        src instanceof SetExpression) 
+    { int ind1 = Expression.convertInteger(par1 + "");
+      return SetExpression.insertAt((SetExpression) src, 
+                                 ind1, par2); 
+    } 
+
+    Vector pars = new Vector(); 
+    pars.add(par1); 
+    pars.add(par2);  
+    return BasicExpression.newFunctionBasicExpression(
+                                      "insertAt", src, pars);   
+  }
+
+  public static Expression simplifyInsertInto(Expression src, 
+                                         Expression arg1, 
+                                         Expression arg2)
+  { // sq.insertInto(i,x) for i < 0  is  
+    //    sq.insertInto(sq->size() + i, x)
+    // sq.insertInto(i, Sequence{})  is  sq
+    
+    arg1.setBrackets(false); 
+    arg2.setBrackets(false); 
+
+    Expression par1 = arg1; 
+    Expression par2 = arg2; 
+
+    if ((src.isSequence() || src.isString()) && 
+        Expression.isDecimalInteger(arg1 + ""))
+    { int val1 = Expression.convertInteger(arg1 + ""); 
+
+      if (val1 < 0) 
+      { Expression sze = 
+          Expression.simplifySize(src);
+        par1 = 
+          new BinaryExpression("-", sze, 
+                             new BasicExpression(-val1));
+      } 
+    }
+
+    if ((src.isSequence() || src.isString()) && 
+        arg1 instanceof UnaryExpression && 
+        "-".equals(((UnaryExpression) arg1).getOperator()) )
+    { UnaryExpression marg = (UnaryExpression) arg1; 
+      Expression narg = marg.getArgument(); 
+      narg.setBrackets(false); 
+
+      if (Expression.isDecimalInteger(narg + ""))
+      { int val1 = Expression.convertInteger(narg + "");
+        if (val1 > 0)
+        { Expression sze = 
+            Expression.simplifySize(src);
+          par1 = 
+                new BinaryExpression("-", sze, 
+                         new BasicExpression(val1)); 
+        }
+      } 
+    } 
+        
+    if (Expression.isIntegerValue("" + par1) && 
+        src instanceof SetExpression && 
+        par2 instanceof SetExpression) 
+    { int ind1 = Expression.convertInteger(par1 + "");
+      return SetExpression.insertInto((SetExpression) src, 
+                                 ind1, 
+                                 (SetExpression) par2); 
+    } 
+
+    if (par2 instanceof SetExpression && 
+        ((SetExpression) par2).size() == 0) 
+    { return src; } 
+
+    Vector pars = new Vector(); 
+    pars.add(par1); 
+    pars.add(par2);  
+    return BasicExpression.newFunctionBasicExpression(
+                                  "insertInto", src, pars);   
+  }
 
   public static Expression simplifySubrange(Expression src, 
                                             Expression arg1, 

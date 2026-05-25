@@ -121,6 +121,29 @@ public class ConditionalExpression extends Expression
     return elseExp.execute(sigma, beta); 
   } 
 
+  public Expression wpc(Expression post)
+  { 
+    Expression scond = test.simplify();
+    scond.setBrackets(false); 
+ 
+    if ("true".equals(scond+""))
+    { return ifExp.wpc(post); }
+
+    if ("false".equals(scond + "")) 
+    { return elseExp.wpc(post); } 
+
+    Expression tpost = ifExp.wpc(post); 
+    Expression fpost = elseExp.wpc(post); 
+    Expression ncond = Expression.negate(scond); 
+
+    Expression conj1 = 
+           Expression.simplify("=>", scond, tpost, true);
+    Expression conj2 = 
+           Expression.simplify("=>", ncond, fpost, true);  
+
+    return Expression.simplify("&", conj1, conj2, true); 
+  } 
+
   public Expression transformPythonSelectExpressions()
   { Expression tqf = test.transformPythonSelectExpressions();
     Expression lqf = ifExp.transformPythonSelectExpressions();

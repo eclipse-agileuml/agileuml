@@ -15289,7 +15289,7 @@ public boolean conflictsWithIn(String op, Expression el,
   } // what about comparitors? 
     
   public int execute(ModelSpecification sigma, 
-                      ModelState beta)
+                     ModelState beta)
   { if ("->includes".equals(operator))
     { Expression eval = left.evaluate(sigma, beta); 
       Expression elem = right.evaluate(sigma, beta); 
@@ -15414,6 +15414,103 @@ public boolean conflictsWithIn(String op, Expression el,
     // ->excludesAll for maps
 
     return Statement.NORMAL; 
+  } 
+
+  public Expression wpc(Expression post)
+  { if ("->includes".equals(operator))
+    { // same as left := left->including(right)
+
+      AssignStatement asm = 
+          new AssignStatement(left, 
+            new BinaryExpression("->including", left, right)); 
+      return asm.wpc(post); 
+    }
+    else if (":".equals(operator))
+    { // same as right := right->including(left)
+
+      AssignStatement asm = 
+          new AssignStatement(right, 
+            new BinaryExpression("->including", right, left)); 
+      return asm.wpc(post); 
+    }
+    else if ("->includesAll".equals(operator))
+    { // left := left->union(right)
+
+      AssignStatement asm = 
+          new AssignStatement(left, 
+            new BinaryExpression("->union", left, right)); 
+      return asm.wpc(post); 
+    }
+    else if ("<:".equals(operator))
+    { // same as right := right->union(left)
+
+      AssignStatement asm = 
+          new AssignStatement(right, 
+            new BinaryExpression("->union", right, left)); 
+      return asm.wpc(post); 
+    }
+    else if ("->excludes".equals(operator))
+    { // same as left := left->excluding(right)
+
+      AssignStatement asm = 
+          new AssignStatement(left, 
+            new BinaryExpression("->excluding", left, right)); 
+      return asm.wpc(post); 
+    }
+    else if ("/:".equals(operator))
+    { // same as right := right->excluding(left)
+
+      AssignStatement asm = 
+          new AssignStatement(right, 
+            new BinaryExpression("->excluding", right, left)); 
+      return asm.wpc(post); 
+    }
+    else if ("->excludesAll".equals(operator))
+    { // same as left := left - right
+
+      AssignStatement asm = 
+          new AssignStatement(left, 
+            new BinaryExpression("-", left, right)); 
+      return asm.wpc(post); 
+    }
+    else if ("/<:".equals(operator))
+    { // same as right := right - left
+
+      AssignStatement asm = 
+          new AssignStatement(right, 
+            new BinaryExpression("-", right, left)); 
+      return asm.wpc(post); 
+    }
+    else if ("&".equals(operator))
+    { // sequencing 
+      Expression pre1 = right.wpc(post); 
+      return left.wpc(pre1);  
+    }
+    /* else if ("!".equals(operator))
+    { // for loop
+      BinaryExpression expr = (BinaryExpression) left; 
+      Expression col = expr.getRight(); 
+      Expression var = expr.getLeft(); // identifier
+      Expression range = col.evaluate(sigma, beta);
+
+      if (range == null) 
+      { return Statement.EXCEPTION; } 
+
+      if (Expression.isInvalid(range)) 
+      { return Statement.EXCEPTION; } 
+
+      if (range instanceof SetExpression)
+      { SetExpression srange = (SetExpression) range; 
+        return 
+          srange.executeForAll(sigma, beta, 
+                                      "" + var, right); 
+      } 
+    } */ 
+
+    // also ->excludesKey, ->excludesValue, ->includesAll,
+    // ->excludesAll for maps
+
+    return post; 
   } 
   
   public String updateForm(java.util.Map env, boolean local)
@@ -23754,6 +23851,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         operator.equals("->count") ||
         operator.equals("->excluding") ||
         operator.equals("->excludingFirst") ||
+        operator.equals("->excludingAt") ||
         operator.equals("->excludingKey") || 
         operator.equals("->excludingValue") ||
         operator.equals("->includes") ||
@@ -23780,6 +23878,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       if (left.isSequence() && level > 1 && 
           (operator.equals("->excluding") ||
            operator.equals("->excludingFirst") ||
+           operator.equals("->excludingAt") ||
            operator.equals("->includes") ||
            operator.equals("->excludes") ||
            operator.equals("->includesAll") ||
@@ -23799,6 +23898,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       else if (level > 1 && 
           (operator.equals("->including") ||
            operator.equals("->excluding") ||
+           operator.equals("->excludingFirst") ||
+           operator.equals("->excludingAt") ||
            operator.equals("->append") ||
            operator.equals("->prepend") ||
            operator.equals("->intersection") ||
@@ -23958,6 +24059,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         operator.equals("->append") ||
         operator.equals("->excluding") ||
         operator.equals("->excludingFirst") ||
+        operator.equals("->excludingAt") ||
         operator.equals("->excludingKey") || 
         operator.equals("->excludingValue") ||
         operator.equals("->includes") ||
@@ -23995,6 +24097,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       else if (level > 1 && 
           (operator.equals("->excluding") ||
            operator.equals("->excludingFirst") ||
+           operator.equals("->excludingAt") ||
            operator.equals("->includes") ||
            operator.equals("->excludes") ||
            operator.equals("->includesAll") ||
@@ -24017,15 +24120,14 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       }
       else if (level > 1 && 
           (operator.equals("->including") ||
-           operator.equals("->excluding") ||
+           // operator.equals("->excluding") ||
            operator.equals("->excludingKey") || 
+           // operator.equals("->excludingAt") ||
            operator.equals("->excludingValue") ||
-           operator.equals("->restrict") ||
-           operator.equals("->antirestrict") ||
+           // operator.equals("->restrict") ||
+           // operator.equals("->antirestrict") ||
            operator.equals("->append") ||
-           operator.equals("->prepend") ||
-           operator.equals("->union") ||
-           operator.equals("->intersection")))
+           operator.equals("->prepend")))
       { messages.add("! (OEW) flaw: operator " + operator + " copies its source, could be O(n*n) when used in loop"); 
         messages.add(""); 
         int yScore = (int) uses.get("yellow"); 
