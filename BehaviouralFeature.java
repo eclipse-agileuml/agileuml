@@ -5043,8 +5043,64 @@ int ascore = (int) res.get("amber");
     } 
 
     if (activity != null) 
-    { activity.collectionOperatorUses(level, res, vars, 
-                                      flaws, messages); 
+    { java.util.Map localres = new java.util.HashMap(); 
+
+      activity.collectionOperatorUses(level, localres, vars, 
+                                      flaws, messages);
+      
+      java.util.Set keys = localres.keySet(); 
+      for (Object k : keys)
+      { java.util.Set linearOpCollections = 
+                            new java.util.HashSet(); 
+
+        Vector opers = (Vector) localres.get(k); 
+        for (int i = 0; i < opers.size(); i++) 
+        { Expression oper = (Expression) opers.get(i);
+ 
+          if (oper instanceof UnaryExpression) 
+          { UnaryExpression ue = (UnaryExpression) oper; 
+            Expression arg = ue.getArgument(); 
+            if (arg instanceof BasicExpression && 
+                Expression.linearOperators.contains(
+                                   ue.getOperator()))
+            { arg.setBrackets(false); 
+              if (linearOpCollections.contains("" + arg))
+              { messages.add("! (OEW): multiple linear iterations over collection " + 
+                  arg + " in " + this + 
+                  ": Can be optimised using a single iteration.\n");
+                int rScore = (int) flaws.get("yellow"); 
+                flaws.set("yellow", rScore+1);  
+                int lcecount = (int) flaws.get("OEW"); 
+                flaws.set("OEW", lcecount+1); 
+              }
+
+              linearOpCollections.add("" + arg);  
+            }
+          } 
+
+          if (oper instanceof BinaryExpression) 
+          { BinaryExpression be = (BinaryExpression) oper; 
+            Expression arg = be.getLeft(); 
+            if (arg instanceof BasicExpression && 
+                Expression.linearOperators.contains(
+                                   be.getOperator())) 
+            { arg.setBrackets(false); 
+              if (linearOpCollections.contains("" + arg))
+              { messages.add("! (OEW): multiple linear iterations over collection " + arg + " in " + this + 
+                   ": Can be optimised using a single iteration.\n"); 
+                int rScore = (int) flaws.get("yellow"); 
+                flaws.set("yellow", rScore+1);  
+                int lcecount = (int) flaws.get("OEW"); 
+                flaws.set("OEW", lcecount+1);
+              } 
+           
+              linearOpCollections.add("" + arg);
+            } 
+          } 
+        } 
+      } 
+
+      res.putAll(localres);  
     } 
 
   } // and activity

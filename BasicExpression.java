@@ -19262,6 +19262,17 @@ public Statement generateDesignSubtract(Expression rhs)
       } 
     } 
 
+    if ("excludingAt".equals(data) &&
+        arrayIndex == null && 
+        pars != null)
+    { if (pars.size() == 1)
+      { Expression res = 
+          Expression.simplifyExcludingAt(objR, 
+                             (Expression) pars.get(0)); 
+        return res;
+      } 
+    } 
+
     if ("insertAt".equals(data) &&
         arrayIndex == null && 
         pars != null)
@@ -19286,7 +19297,30 @@ public Statement generateDesignSubtract(Expression rhs)
       } 
     } 
 
-    // excludingSubrange, setSubrange, + regex ops
+    if ("excludingSubrange".equals(data) &&
+        arrayIndex == null && 
+        pars != null)
+    { if (pars.size() == 2)
+      { Expression res = 
+          Expression.simplifyExcludingSubrange(objR, 
+                             (Expression) pars.get(0), 
+                             (Expression) pars.get(1)); 
+        return res;
+      } 
+    } 
+
+    if ("setSubrange".equals(data) &&
+        arrayIndex == null && 
+        pars != null)
+    { if (pars.size() == 3)
+      { Expression res = 
+          Expression.simplifySetSubrange(objR, 
+                             (Expression) pars.get(0), 
+                             (Expression) pars.get(1), 
+                             (Expression) pars.get(2)); 
+        return res;
+      } 
+    } 
 
     BasicExpression res = (BasicExpression) clone(); 
     res.objectRef = objR; 
@@ -19417,6 +19451,7 @@ public Statement generateDesignSubtract(Expression rhs)
         data.equals("insertInto") ||
         data.equals("subrange") ||
         data.equals("setAt") ||
+        data.equals("excludingAt") ||
         data.equals("excludingSubrange") ||
         data.equals("setSubrange"))
     { Vector opers = (Vector) res.get(level); 
@@ -19483,6 +19518,14 @@ public Statement generateDesignSubtract(Expression rhs)
                             Map uses, Vector messages)
   { //  level |-> [x.setAt(i,y), etc]
 
+    if (parameters != null) 
+    { for (int i = 0; i < parameters.size(); i++) 
+      { Expression par = (Expression) parameters.get(i); 
+        par.collectionOperatorUses(level, res, vars, 
+                                   uses, messages); 
+      } 
+    } 
+
     /* JOptionPane.showInputDialog("Collection uses of " + this + " " + level + " " + objectRef + " " + parameters);  */ 
 
     if (objectRef != null || parameters != null ||
@@ -19491,11 +19534,7 @@ public Statement generateDesignSubtract(Expression rhs)
       Vector vuses = variablesUsedIn(vars);
       int syncom = syntacticComplexity(); 
  
-      /* JOptionPane.showInputDialog("Complexity of " + this + 
-          " = " + syncom + " uses = " + vuses + 
-          " level: " + level + " sideeffect: " + sideeffect); */ 
-
-      if (syncom >= TestParameters.energyCloneSizeLimit &&
+      if (syncom > TestParameters.energyCloneSizeLimit &&
           level > 1 && vuses.size() == 0 && !sideeffect)
       { messages.add("!!! Warning (LCE): The expression " + this + " may be independent of the iterator variables " + vars + "\n" + 
           "!!!  Use Extract local variable to optimise.");
@@ -19506,12 +19545,24 @@ public Statement generateDesignSubtract(Expression rhs)
         int oescount = (int) uses.get("LCE"); 
         uses.set("LCE", oescount+1);
       }
+      else if (syncom > 1 && 
+          level > 1 && vuses.size() == 0 && !sideeffect)
+      { messages.add("! Warning (OEW): The expression " + this + " may be independent of the iterator variables " + vars + "\n" + 
+          "!  Use Extract local variable to optimise.");
+        refactorELV = true;  
+        int yScore = (int) uses.get("yellow"); 
+        uses.set("yellow", yScore+1); 
+        messages.add(""); 
+        int oewcount = (int) uses.get("OEW"); 
+        uses.set("OEW", oewcount+1);
+      }
     } // Any non-trivial basic expression
 
     if (data.equals("insertAt") || 
         data.equals("insertInto") ||
         data.equals("subrange") ||
         data.equals("setAt") ||
+        data.equals("excludingAt") ||
         data.equals("excludingSubrange") ||
         data.equals("setSubrange"))
     { Vector opers = (Vector) res.get(level); 

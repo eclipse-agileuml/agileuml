@@ -8457,7 +8457,7 @@ class WhileStatement extends Statement
                              java.util.Map operatorsAtLevel, 
                              Vector vars)
   { if (loopRange != null) 
-    { loopRange.collectionOperatorUses(nestingLevel, 
+    { loopRange.collectionOperatorUses(nestingLevel+1, 
                                        operatorsAtLevel, 
                                        vars); 
     }
@@ -8465,7 +8465,7 @@ class WhileStatement extends Statement
     { loopTest.collectionOperatorUses(nestingLevel+1, 
                                       operatorsAtLevel, 
                                       vars); 
-    }
+    } // loop range or test may be evaluated in each iteration
 
     Vector newvars = new Vector(); 
     newvars.addAll(vars); 
@@ -8539,7 +8539,7 @@ class WhileStatement extends Statement
     }  
  
     if (loopRange != null) 
-    { loopRange.collectionOperatorUses(nestingLevel, 
+    { loopRange.collectionOperatorUses(nestingLevel + 1, 
                                        operatorsAtLevel, 
                                        newvars, 
                                        uses, messages); 

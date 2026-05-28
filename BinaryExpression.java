@@ -22515,6 +22515,11 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       return Expression.simplifyIntersection(lexpr,rexpr); 
     } 
 
+    if ("->excludingAt".equals(operator))
+    { // merge the literal sets/sequences/maps
+      return Expression.simplifyExcludingAt(lexpr,rexpr); 
+    } 
+
     int synLeft = lexpr.syntacticComplexity();
     int synRight = rexpr.syntacticComplexity();
 
@@ -24038,20 +24043,36 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
                                       Vector messages)
   { //  level |-> [x.setAt(i,y), etc]
 
+    int syncomp = syntacticComplexity(); 
     boolean sideeffect = isSideEffecting(); 
     Vector vuses = variablesUsedIn(vars);
  
-    if (level > 1 && vuses.size() == 0 && !sideeffect)
+    if (level > 1 && 
+        syncomp > TestParameters.energyCloneSizeLimit && 
+        vuses.size() == 0 && !sideeffect)
     { messages.add("!!! (LCE) flaw: The expression " + this + " may be independent of the iterator variables " + vars + "\n" + 
         "!!! Use Extract local variable to optimise."); 
       messages.add(""); 
-      System.err.println(); 
+      // System.err.println(); 
       refactorELV = true;
       int rScore = (int) uses.get("red"); 
       uses.set("red", rScore+1);  
       int lcecount = (int) uses.get("LCE"); 
       uses.set("LCE", lcecount+1); 
       return res; 
+    }
+    else if (level > 1 && 
+        syncomp > 1 && 
+        vuses.size() == 0 && !sideeffect)
+    { messages.add("! (OEW) warning: The expression " + this + " may be independent of the iterator variables " + vars + "\n" + 
+        "! Use Extract local variable to optimise."); 
+      messages.add(""); 
+      // System.err.println(); 
+      refactorELV = true;
+      int rScore = (int) uses.get("yellow"); 
+      uses.set("yellow", rScore+1);  
+      int lcecount = (int) uses.get("OEW"); 
+      uses.set("OEW", lcecount+1); 
     }
 
     if (operator.equals("->including") ||

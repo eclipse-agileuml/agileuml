@@ -1873,13 +1873,17 @@ public void findClones(java.util.Map clones,
                                       Vector messages)
   { //  level |-> [x.setAt(i,y), etc]
 
+    int syncom = syntacticComplexity(); 
+
     argument.collectionOperatorUses(level, res, vars, uses,
                                     messages); 
 
     Vector vuses = variablesUsedIn(vars);
-    boolean sideeffects = isSideEffecting(); 
+    boolean sideeffect = isSideEffecting(); 
  
-    if (level > 1 && vuses.size() == 0 && !sideeffects)
+    if (level > 1 && 
+        syncom > TestParameters.energyCloneSizeLimit && 
+        vuses.size() == 0 && !sideeffect)
     { messages.add("!!! (LCE) flaw: The expression " + this + " may be independent of the iterator variables " + vars + "\n" + 
           "!!! Use Extract local variable to optimise.");
       messages.add(""); 
@@ -1889,6 +1893,20 @@ public void findClones(java.util.Map clones,
       int oescount = (int) uses.get("LCE"); 
       uses.set("LCE", oescount+1); 
     }
+    else if (syncom > 1 && 
+          level > 1 && vuses.size() == 0 && !sideeffect)
+    { messages.add("! Warning (OEW): The expression " + this + 
+                   " may be independent of the iterator variables " + 
+                   vars + "\n" + 
+                   "!  Use Extract local variable to optimise.");
+      refactorELV = true;  
+      int yScore = (int) uses.get("yellow"); 
+      uses.set("yellow", yScore+1); 
+      messages.add(""); 
+      int oewcount = (int) uses.get("OEW"); 
+      uses.set("OEW", oewcount+1);
+    }
+
 
     if (operator.equals("->sort") || 
         operator.equals("->unionAll") || 
