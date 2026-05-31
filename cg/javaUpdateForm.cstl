@@ -36,10 +36,22 @@ _1 or _2 |-->if (!(_1`cgJava8)) { _2 }
 _1 xor _2 |-->if (!(_1`cgJava8) && !(_2`cgJava8)) { _1 } 
 
 _1 = _2 |-->_1 = _2`cgJava8
+
+_1->includes(_2) |-->_1.add(_2`cgJava8)
 _1 : _2 |-->_2.add(_1`cgJava8)
+
+_1->excludes(_2) |-->_1.remove(_2`cgJava8)
 _1 /: _2 |-->_2.remove(_1`cgJava8)
+
+_1->includesAll(_2) |-->_1.putAll(_2`cgJava8)<when> _1 Map
+_1->includesAll(_2) |-->_1.addAll(_2`cgJava8)
+
+_1 <: _2 |-->_2.putAll(_1`cgJava8)<when> _2 Map
 _1 <: _2 |-->_2.addAll(_1`cgJava8)
+
 _1 /<: _2 |-->_2.removeAll(_1`cgJava8)
+
+_1->excludesKey(_2) |-->_1.remove(_2`cgJava8)
 
 _1->forAll(_2 | _3) |-->for (_1 _2 : _1._1_allInstances) { _3; }<when>_1 classId
 _1->forAll(_2 | _3) |-->for (_2`type _2 : _1`cgJava8) { _3; }

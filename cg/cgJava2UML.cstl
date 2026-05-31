@@ -37,7 +37,12 @@ Pair |-->Map
 Triple |-->Map
 LinkedHashMap |-->Map
 NavigableMap |-->Map
+ConcurrentMap |-->Map
 ConcurrentNavigableMap |-->Map
+ConcurrentHashMap |->Map
+ConcurrentSkipListMap |->Map
+Provider |->Map
+SimpleBindings |->Map
 
 Vector |-->Sequence
 ArrayList |-->Sequence
@@ -322,6 +327,13 @@ Triple _1 |-->Map(String,OclAny)
 LinkedHashMap _1 |-->Map_1`collectionParameters
 NavigableMap _1 |-->Map_1`collectionParameters
 ConcurrentNavigableMap _1 |-->Map_1`collectionParameters
+NavigableMap _1 |-->Map_1`collectionParameters
+ConcurrentMap _1 |-->Map_1`collectionParameters
+ConcurrentNavigableMap _1 |-->Map_1`collectionParameters
+ConcurrentHashMap _1 |->Map_1`collectionParameters
+ConcurrentSkipListMap _1 |->Map_1`collectionParameters
+Provider |->Map
+SimpleBindings |->Map(String,OclAny)
 
 ArrayList _1 |-->Sequence_1`collectionParameters
 List _1 |-->Sequence_1`collectionParameters
@@ -3817,6 +3829,12 @@ SequencedMap _1 |-->Map{}_1`collectionCreationRest
 LinkedHashMap _1 |-->Map{}_1`collectionCreationRest
 NavigableMap _1 |-->Map{}_1`collectionCreationRest
 ConcurrentNavigableMap _1 |-->Map{}_1`collectionCreationRest
+ConcurrentMap _1 |-->Map{}_1`collectionCreationRest
+ConcurrentHashMap _1 |->Map{}_1`collectionCreationRest
+ConcurrentSkipListMap _1 |->Map{}_1`collectionCreationRest
+Provider |->Map{}
+SimpleBindings |->Map{}
+
 
 PrintStream _1 |-->_1`newTextWriter
 FileInputStream _1 |-->_1`newTextReader
@@ -3915,6 +3933,11 @@ SequencedMap _1 |-->true
 LinkedHashMap _1 |-->true
 NavigableMap _1 |-->true
 ConcurrentNavigableMap _1 |-->true
+ConcurrentMap _1 |-->true
+ConcurrentHashMap _1 |->true
+ConcurrentSkipListMap _1 |->true
+Provider |->true
+SimpleBindings |->true
 
 _1 _2 |-->false
 _1 |-->false
@@ -4017,6 +4040,11 @@ Triple |-->Map
 LinkedHashMap |-->Map
 NavigableMap |-->Map
 ConcurrentNavigableMap |-->Map
+ConcurrentMap |-->Map
+ConcurrentHashMap |->Map
+ConcurrentSkipListMap |->Map
+Provider |->Map
+SimpleBindings |->Map
 
 Vector |-->Sequence
 ArrayList |-->Sequence
@@ -4236,6 +4264,11 @@ EnumMap _1 |-->Map{}
 LinkedHashMap _1 |-->Map{}
 NavigableMap _1 |-->Map{}
 ConcurrentNavigableMap _1 |-->Map{}
+ConcurrentMap _1 |-->Map{}
+ConcurrentHashMap _1 |->Map{}
+ConcurrentSkipListMap _1 |->Map{}
+Provider |->Map{}
+SimpleBindings |->Map{}
 
 ArrayList _1 |-->Sequence{}
 List _1 |-->Sequence{}
