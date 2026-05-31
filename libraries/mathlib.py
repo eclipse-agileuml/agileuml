@@ -956,3 +956,4 @@ class FinanceLib :
 # t2 = time.time()
 # print(1000*(t2 - t1))
 
+print(MathLib.standardDeviation([85.4, 94.2, 92.9, 85.8, 94.9]))

@@ -10,6 +10,7 @@ from ocldate import *
 from oclprocess import *
 from ocliterator import *
 from ocldatasource import *
+from oclrandom import *
 from enum import Enum
 
 def free(x):
@@ -538,33 +539,36 @@ class Excel :
 
   def Correl(xs,ys) :
     result = 0.0
-    xmean = 0.0
     xmean = MathLib.mean(xs)
-    ymean = 0.0
     ymean = MathLib.mean(ys)
-    sumdiffs = 0.0
     sumdiffs = ocl.sum([(xs[i -1] - xmean) * (ys[i -1] - ymean) for i in range(1, len(xs) +1)])
-    sumx = 0.0
     sumx = ocl.sum([(xs[i -1] - xmean) * (xs[i -1] - xmean) for i in range(1, len(xs) +1)])
-    sumy = 0.0
     sumy = ocl.sum([(ys[i -1] - ymean) * (ys[i -1] - ymean) for i in range(1, len(ys) +1)])
     result = sumdiffs/math.sqrt((sumx * sumy))
     return result
 
+  def CorrelP(sq1, sq2) : 
+    corr = Excel.Correl(sq1,sq2)
+
+    pValue = 0
+
+    for i in range(1,1000) : 
+      sq = OclRandom.randomiseSequence(sq1)
+      rcorr = Excel.Correl(sq,sq2)
+      if rcorr >= corr : 
+        pValue = pValue + 1
+
+    return pValue/1000.0
+
+
   def Cosh(x) :
-    result = 0.0
-    result = math.cosh(x)
-    return result
+    return math.cosh(x)
 
   def Cot(x) :
-    result = 0.0
-    result = 1.0/math.tan(x)
-    return result
+    return 1.0/math.tan(x)
 
   def Coth(x) :
-    result = 0.0
-    result = 1.0/math.tanh(x)
-    return result
+    return 1.0/math.tanh(x)
 
   def Count(sq) :
     result = 0.0
@@ -582,7 +586,6 @@ class Excel :
     return result
 
   def Covar(sq1,sq2) :
-    result = 0.0
     m1 = MathLib.mean(sq1)
     m2 = MathLib.mean(sq2)
     sumprod = 0
@@ -593,33 +596,24 @@ class Excel :
     return result
 
   def Covariance_P(sq1,sq2) :
-    result = 0.0
     result = Excel.Covar(sq1, sq2)
     return result
 
   def Covariance_S(sq1,sq2) :
-    result = 0.0
-    numbs1 = []
     numbs1 = [x for x in sq1 if (type(x) == float)]
-    numbs2 = []
     numbs2 = [y for y in sq2 if (type(y) == float)]
     result = Excel.Covar(numbs1, numbs2)
     return result
 
   def CritBinom(x,y,z) :
     result = 0.0
-    pass
     return result
 
   def Csc(x) :
-    result = 0.0
-    result = 1.0/math.sin(x)
-    return result
+    return 1.0/math.sin(x)
 
   def Csch(x) :
-    result = 0.0
-    result = 1.0/math.sinh(x)
-    return result
+    return 1.0/math.sinh(x)
 
   def CumlPmt(rate,periods,presentValue,firstPeriod,lastPeriod,timing) :
     result = 0.0

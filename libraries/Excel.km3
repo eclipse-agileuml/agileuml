@@ -365,6 +365,22 @@ class Excel {
   pre: xs->size() >= 1 & ys->size() = xs->size()
   post: xmean = MathLib.mean(xs) & ymean = MathLib.mean(ys) & sumdiffs = Integer.subrange(1,xs->size())->collect( i | (xs[i] - xmean)*(ys[i] - ymean) )->sum() & sumx = Integer.subrange(1,xs->size())->collect( i | (xs[i] - xmean)*(xs[i] - xmean) )->sum() & sumy = Integer.subrange(1,ys->size())->collect( i | (ys[i] - ymean)*(ys[i] - ymean) )->sum() & result = sumdiffs/((sumx*sumy)->sqrt()); 
 
+  static operation CorrelP(sq1 : Sequence(double), sq2 : Sequence(double)) : double
+  pre: true post: true
+  activity: 
+    var corr : double := Excel.Correl(sq1,sq2); 
+    var pValue : double := 0.0; 
+
+    for i : Integer.subrange(1,1000)  
+    do 
+      (var sq : Sequence(double) := OclRandom.randomiseSequence(sq1); 
+       var rcorr : double := Excel.Correl(sq,sq2); 
+       if rcorr >= corr 
+       then  
+         pValue := pValue + 1
+       else skip); 
+
+    return pValue/1000.0; 
 
   static operation Cosh(x : double) : double
   pre: true 
