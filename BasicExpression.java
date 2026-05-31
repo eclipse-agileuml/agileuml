@@ -10998,8 +10998,8 @@ public Statement generateDesignSubtract(Expression rhs)
     if (isEvent) // an operation of entity
     { 
       if (entity == null) 
-      { System.err.println("WARNING: No defined entity for operation: " + this); 
-        System.err.println("Assuming it is a global operation (use case, library op, etc)");
+      { System.err.println("!! WARNING: No defined entity for operation: " + this); 
+        System.err.println("!! Assuming it is a global operation (use case, library op, etc)");
  
         if (objectRef == null) 
         { return cont + "." + data + pars + ";"; } 
@@ -14954,6 +14954,9 @@ public Statement generateDesignSubtract(Expression rhs)
         umlkind == QUERY || umlkind == UPDATEOP || prestate)
     { return "{} /* can't add to: " + data + " */"; }
 
+    if (umlkind == VARIABLE && Type.isMapType(type))
+    { return data + ".putAll(" + val2 + ");"; }   
+
     if (umlkind == VARIABLE && Type.isCollectionType(type))
     { if (arrayIndex != null) 
       { String indopt = arrayIndex.queryForm(env,local); 
@@ -15018,9 +15021,13 @@ public Statement generateDesignSubtract(Expression rhs)
                               String val2, boolean local)
   { String cont = "Controller.inst()"; 
 
-    if (umlkind == VALUE || umlkind == CONSTANT || umlkind == FUNCTION ||
+    if (umlkind == VALUE || umlkind == CONSTANT || 
+        umlkind == FUNCTION ||
         umlkind == QUERY || umlkind == UPDATEOP || prestate)
     { return "{} /* can't add to: " + data + " */"; }
+
+    if (umlkind == VARIABLE && Type.isMapType(type))
+    { return data + ".putAll(" + val2 + ");"; }   
 
     if (umlkind == VARIABLE && Type.isCollectionType(type))
     { if (arrayIndex != null) 
@@ -15087,9 +15094,14 @@ public Statement generateDesignSubtract(Expression rhs)
                               String val2, boolean local)
   { String cont = "Controller.inst()"; 
 
-    if (umlkind == VALUE || umlkind == CONSTANT || umlkind == FUNCTION ||
+    if (umlkind == VALUE || umlkind == CONSTANT || 
+        umlkind == FUNCTION ||
         umlkind == QUERY || umlkind == UPDATEOP || prestate)
     { return "{} /* can't add to: " + data + " */"; }
+
+    if (umlkind == VARIABLE && Type.isMapType(type))
+    { return data + ".putAll(" + val2 + ");"; } 
+    // and for C# and C++  
 
     if (umlkind == VARIABLE && Type.isCollectionType(type))
     { if (arrayIndex != null) 

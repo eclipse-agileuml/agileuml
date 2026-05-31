@@ -2618,7 +2618,6 @@ abstract class Statement implements Cloneable
 
     if (st instanceof WhileStatement) 
     { return false; } 
-    // Nested loops cannot be handled within a recursion. 
 
     if (st instanceof TryStatement) 
     { TryStatement ts = (TryStatement) st; 
@@ -7885,7 +7884,7 @@ class WhileStatement extends Statement
         uses.set("red", rc+1); 
       } 
       else 
-      { messages.add("! (SEM): Condition " + canTerminate + " needed for loop termination of " + loopSummary());
+      { messages.add("! (SEM): Condition " + canTerminate + "\n! needed for loop termination of " + loopSummary());
         int yc = (int) uses.get("yellow", 0); 
         uses.set("yellow", yc+1); 
       } 
@@ -7906,7 +7905,7 @@ class WhileStatement extends Statement
         uses.set("red", rc+1);
       } 
       else 
-      { messages.add("! (SEM): Condition " + canTerminate + " needed for loop termination of " + loopSummary());
+      { messages.add("! (SEM): Condition " + canTerminate + "\n! needed for loop termination of " + loopSummary());
         int yc = (int) uses.get("yellow", 0); 
         uses.set("yellow", yc+1); 
       } 

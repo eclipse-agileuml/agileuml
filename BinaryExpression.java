@@ -15666,11 +15666,17 @@ public boolean conflictsWithIn(String op, Expression el,
     if (operator.equals("=>"))
     { String ufl = left.queryForm(env,local); 
       String ufr = right.updateForm(env,local); 
-      if ("true".equals(ufl))
+      if ("true".equals(ufl) || "(true)".equals(ufl))
       { return ufr; }
       return "  if (" + ufl + ") \n" + 
              "  { " + ufr + "}";
     } // accumulate the cases
+
+    if ("->excludesKey".equals(operator))
+    { String lqf = left.queryForm(env,local); 
+      String rqf = right.queryForm(env,local); 
+      return lqf + ".remove(" + rqf + ")"; 
+    } 
 
     if (extensionoperators.containsKey(operator))
     { String op = operator;
@@ -15685,45 +15691,58 @@ public boolean conflictsWithIn(String op, Expression el,
       return lqf + "." + op + "(" + rqf + ")";
     } 
 
-    if (operator.equals("=") && left instanceof BasicExpression)
+    if (operator.equals("=") && 
+        left instanceof BasicExpression)
     { val2 = right.queryForm(env,local);
       return ((BasicExpression) left).updateFormEq(env,val2,right,local);
     }
-    else if (operator.equals("=") && left instanceof UnaryExpression)
+    else if (operator.equals("=") && 
+             left instanceof UnaryExpression)
     { val2 = right.queryForm(env,local);
       return ((UnaryExpression) left).updateFormEq("Java4",env,((UnaryExpression) left).operator,val2,right,local);
     }
-    else if (operator.equals("=") && left instanceof BinaryExpression)
+    else if (operator.equals("=") && 
+             left instanceof BinaryExpression)
     { val2 = right.queryForm(env,local);
       return ((BinaryExpression) left).updateFormEq("Java4",env,((BinaryExpression) left).operator,val2,right,local);
     }
-    else if (operator.equals("=") && left instanceof SetExpression)
+    else if (operator.equals("=") && 
+             left instanceof SetExpression)
     { val2 = right.queryForm(env,local);
       return ((SetExpression) left).updateForm("Java4",env,operator,val2,right,local);
     }
-    else if (operator.equals("->includesAll") && left instanceof BasicExpression)
+    else if (operator.equals("->includesAll") && 
+             left instanceof BasicExpression)
     { val2 = right.queryForm(env,local);
       return ((BasicExpression) left).updateForm(env,"<:",val2,right,local);
     }
-    else if (operator.equals("->includesAll") && left instanceof BinaryExpression)
+    else if (operator.equals("->includesAll") && 
+             left instanceof BinaryExpression)
     { return ((BinaryExpression) left).updateFormSubset("Java4", env, right, local); }
-    else if (operator.equals("->includesAll") && left instanceof UnaryExpression)
+    else if (operator.equals("->includesAll") && 
+             left instanceof UnaryExpression)
     { return ((UnaryExpression) left).updateFormSubset("Java4", env, right, local); }
-    else if (operator.equals("->includes") && left instanceof BinaryExpression)
+    else if (operator.equals("->includes") && 
+             left instanceof BinaryExpression)
     { return ((BinaryExpression) left).updateFormIn("Java4", env, right, local); }
-    else if (operator.equals("->includes") && left instanceof UnaryExpression)
+    else if (operator.equals("->includes") && 
+             left instanceof UnaryExpression)
     { return ((UnaryExpression) left).updateFormIn("Java4", env, right, local); }
-    else if (operator.equals("->excludesAll") && left instanceof BasicExpression)
+    else if (operator.equals("->excludesAll") && 
+             left instanceof BasicExpression)
     { val2 = right.queryForm(env,local);
       return ((BasicExpression) left).updateForm(env,"-",val2,right,local);
     }
     else if (operator.equals("->excludesAll") && left instanceof UnaryExpression)
     { return ((UnaryExpression) left).updateFormSubtract("Java4", env,right,local); }
-    else if (operator.equals("->excludesAll") && left instanceof BinaryExpression)
+    else if (operator.equals("->excludesAll") && 
+             left instanceof BinaryExpression)
     { return ((BinaryExpression) left).updateFormSubtract("Java4", env,right,local); }
-    else if (operator.equals("->excludes") && left instanceof UnaryExpression)
+    else if (operator.equals("->excludes") && 
+             left instanceof UnaryExpression)
     { return ((UnaryExpression) left).updateFormNotIn("Java4", env,right,local); }
-    else if (operator.equals("->excludes") && left instanceof BinaryExpression)
+    else if (operator.equals("->excludes") && 
+             left instanceof BinaryExpression)
     { return ((BinaryExpression) left).updateFormNotIn("Java4", env,right,local); }
     else if ((operator.equals(":") || 
               operator.equals("<:") || 
@@ -15744,7 +15763,8 @@ public boolean conflictsWithIn(String op, Expression el,
       return ber.updateForm(env,operator,val1,left,local);
     }
     else if ((operator.equals("->includes") || 
-              operator.equals("->excludes")) && (left instanceof BasicExpression))
+              operator.equals("->excludes")) && 
+             (left instanceof BasicExpression))
     { String val3 = right.queryForm(env,local);
       BasicExpression bel = (BasicExpression) left;
       /* boolean rmult = right.isMultiple();
@@ -15764,8 +15784,10 @@ public boolean conflictsWithIn(String op, Expression el,
     }
     else
     { String qf = queryForm(env,local); 
-      return "if (" + qf + ") { } else { System.err.println(\"Assertion " + qf + " fails:\"); System.err.println(this); }\n";  
-	}
+      return "if (" + qf + 
+             ") { } else { System.err.println(\"! Assertion " + 
+             qf + " fails:\"); System.err.println(this); }\n";  
+    }
   }
 
 public String updateFormIn(String language, java.util.Map env, Expression var, boolean local)
@@ -17066,6 +17088,12 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       return "\n    { final " + lett + " " + acc + " = " + val + ";\n" + stats + "\n    }"; 
     } 
 
+    if ("->excludesKey".equals(operator))
+    { String lqf = left.queryForm(env,local); 
+      String rqf = right.queryForm(env,local); 
+      return lqf + ".remove(" + rqf + ")"; 
+    } 
+
     if (extensionoperators.containsKey(operator))
     { String op = operator;
       String opjava = Expression.getOperatorJava(op); 
@@ -17261,6 +17289,12 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       return "\n    { final " + lett + " " + acc + " = " + val + ";\n" + stats + "\n    }"; 
     } 
 
+    if ("->excludesKey".equals(operator))
+    { String lqf = left.queryForm(env,local); 
+      String rqf = right.queryForm(env,local); 
+      return lqf + ".remove(" + rqf + ")"; 
+    } // and for C# and C++
+
     if (extensionoperators.containsKey(operator))
     { String op = operator;
       String opjava = Expression.getOperatorJava(op); 
@@ -17280,29 +17314,36 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       // System.out.println("QUERY FORM JAVA7: " + val2); 
       return ((BasicExpression) left).updateFormEqJava7(env,val2,right,local);
     }
-    else if (operator.equals("=") && left instanceof UnaryExpression)
+    else if (operator.equals("=") && 
+             left instanceof UnaryExpression)
     { val2 = right.queryFormJava7(env,local);
       return ((UnaryExpression) left).updateFormEq("Java7", env, ((UnaryExpression) left).operator,val2,right,local);
     }
-    else if (operator.equals("=") && left instanceof BinaryExpression)
+    else if (operator.equals("=") && 
+             left instanceof BinaryExpression)
     { val2 = right.queryFormJava7(env,local);
       return ((BinaryExpression) left).updateFormEq("Java7", env, ((BinaryExpression) left).operator,val2,right,local);
     }
-    else if (operator.equals("=") && left instanceof SetExpression)
+    else if (operator.equals("=") && 
+             left instanceof SetExpression)
     { val2 = right.queryFormJava7(env,local);
       return ((SetExpression) left).updateForm("Java7",env,operator,val2,right,local);
     }
-    else if (operator.equals("->includesAll") && left instanceof BasicExpression)
+    else if (operator.equals("->includesAll") && 
+             left instanceof BasicExpression)
     { val2 = right.queryFormJava7(env,local);
       return ((BasicExpression) left).updateFormJava7(env,"<:",val2,right,local);
     }
-    else if (operator.equals("->excludesAll") && left instanceof BasicExpression)
+    else if (operator.equals("->excludesAll") && 
+             left instanceof BasicExpression)
     { val2 = right.queryFormJava7(env,local);
       return ((BasicExpression) left).updateFormJava7(env,"-",val2,right,local);
     }
     else if ((operator.equals(":") || 
-              operator.equals("<:") || operator.equals("/<:") ||
-              operator.equals("/:")) && (right instanceof BasicExpression))
+              operator.equals("<:") || 
+              operator.equals("/<:") ||
+              operator.equals("/:")) && 
+             (right instanceof BasicExpression))
     { String val1 = left.queryFormJava7(env,local);
       BasicExpression ber = (BasicExpression) right;
       if (left.isPrimitive())
@@ -17310,7 +17351,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       return ber.updateFormJava7(env,operator,val1,left,local);
     }
     else if ((operator.equals("->includes") || 
-              operator.equals("->excludes")) && (left instanceof BasicExpression))
+              operator.equals("->excludes")) && 
+             (left instanceof BasicExpression))
     { String val3 = right.queryFormJava7(env,local);
       BasicExpression bel = (BasicExpression) left;
 
@@ -17323,7 +17365,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
     }
     else
     { String qf = queryFormJava7(env,local); 
-      return "if (" + qf + ") { } else { System.err.println(\"Assertion " + qf + " fails: \"); System.err.println(this); }\n";  
+      return "if (" + qf + ") { } else { System.err.println(\"! Assertion " + qf + " fails: \"); System.err.println(this); }\n";  
     }
 
     // else

@@ -3385,6 +3385,15 @@ public class BehaviouralFeature extends ModelElement
       Vector returns = 
           Statement.getReturnValues(activity); 
 
+      boolean alwaysReturns = this.checkHasReturn();
+      if (alwaysReturns) { } 
+      else 
+      { mtout.println("!! Warning (SEM): query operation may fail to return value: " + this + "\n");
+
+        int acount = (int) uses.get("amber"); 
+        uses.set("amber", acount+1); 
+      } 
+
       String selfexpr = toString(); 
       String selfexpr1 = selfexpr; 
 
@@ -3724,8 +3733,10 @@ public class BehaviouralFeature extends ModelElement
   }
 
   public boolean checkHasReturn()
-  { if (this.returnsValue() && activity != null) 
-    { if (Statement.endsWithReturn(activity)) { } 
+  { if (this.returnsValue()) 
+    { if (activity != null && 
+          Statement.endsWithReturn(activity)) 
+      { return true; } 
       else 
       { System.err.println("!! Warning: operation " + name + " activity has control flow paths not ending in return: " + activity); 
         return false; 

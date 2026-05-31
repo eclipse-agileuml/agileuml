@@ -6214,7 +6214,7 @@ public class Entity extends ModelElement implements Comparable
            actualClones.size() + 
            " Cloned expressions/statements: ");
         for (Object aclne : actualClones)
-        { amberDetails.add("  " + aclne); } 
+        { amberDetails.add("  " + aclne + "\n"); } 
         amberDetails.add("!! from " + op); 
         amberDetails.add(""); 
         
@@ -6223,7 +6223,7 @@ public class Entity extends ModelElement implements Comparable
 
         int opclesze = actualClones.size();
         res1.set("amber", amberop + opclesze); 
-        amberDetails.add("!! Expression/statement clones of " + op + "!: " + actualClones);
+        amberDetails.add("!! " + opclesze + " Expression/statement clones in " + op);
         int devcount = (int) res1.get("DEV"); 
         res1.set("DEV", devcount + opclesze); 
       }  
@@ -6525,7 +6525,7 @@ public class Entity extends ModelElement implements Comparable
           entityClones.size() + 
           " Cloned expressions/statements from " + name);
       for (Object aclne : entityClones)
-      { messages.add("  " + aclne); } 
+      { messages.add("  " + aclne + "\n"); } 
       messages.add("!! cloned in " + name); 
       messages.add(""); 
  

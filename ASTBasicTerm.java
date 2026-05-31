@@ -1448,7 +1448,9 @@ public class ASTBasicTerm extends ASTTerm
       return "Set";
     } 
 
-    if ("Map".equals(value))
+    if ("Map".equals(value) || 
+        "NavigableMap".equals(value) || 
+        "ConcurrentNavigableMap".equals(value))
     { modelElement = new Type("Map", null); 
       expression = new BasicExpression((Type) modelElement); 
       return "Map"; 
@@ -1470,13 +1472,18 @@ public class ASTBasicTerm extends ASTTerm
       return "Map"; 
     }
  
-    if ("Hashtable".equals(value))
+    if ("Hashtable".equals(value) || 
+        "ConcurrentMap".equals(value) || 
+        "ConcurrentHashMap".equals(value) ||
+        "ConcurrentSkipListMap".equals(value))
     { modelElement = new Type("Map", null); 
       expression = new BasicExpression((Type) modelElement); 
       return "Map"; 
     }
  
-    if ("Properties".equals(value))
+    if ("Properties".equals(value) || 
+        "Provider".equals(value) ||
+        "SimpleBindings".equals(value))
     { modelElement = new Type("Map", null); 
       expression = new BasicExpression((Type) modelElement); 
       return "Map"; 
@@ -2594,7 +2601,10 @@ public class ASTBasicTerm extends ASTTerm
       return "Map"; 
     }
  
-    if ("Hashtable".equals(value))
+    if ("Hashtable".equals(value) ||
+        "ConcurrentMap".equals(value) || 
+        "ConcurrentHashMap".equals(value) ||
+        "ConcurrentSkipListMap".equals(value))
     { modelElement = new Type("Map", null); 
       expression = new BasicExpression((Type) modelElement); 
       return "Map"; 
@@ -2608,7 +2618,9 @@ public class ASTBasicTerm extends ASTTerm
       return "Map"; 
     } 
 
-    if ("Properties".equals(value))
+    if ("Properties".equals(value) || 
+        "Provider".equals(value) || 
+        "SimpleBindings".equals(value))
     { modelElement = new Type("Map", null); 
       expression = new BasicExpression((Type) modelElement); 
       return "Map"; 
