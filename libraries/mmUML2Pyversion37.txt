@@ -1090,7 +1090,7 @@ String
 ls String rs String
 query
 true
-( operator = ":" & right.isSet() => result = rs + ".add(" + ls + ")" ) & ( operator = ":" & right.isCollection() => result = rs + ".append(" + ls + ")" ) & ( operator = "/:" & right.isSet() => result = rs + ".discard(" + ls + ")" ) & ( operator = "/:" & right.isCollection() => result = rs + ".remove(" + ls + ")" ) & ( operator = "<:" & right.isSet() => result = rs + ".update(" + ls + ")" ) & ( operator = ":" & right.isCollection() => result = rs + ".extend(" + ls + ")" ) & ( operator = "/<:" & right.isSet() => result = rs + ".difference_update(" + ls + ")" ) & (true => result = "pass") 
+( operator = ":" & right.isSet() => result = rs + ".add(" + ls + ")" ) & ( operator = ":" & right.isCollection() => result = rs + ".append(" + ls + ")" ) & ( operator = "/:" & right.isSet() => result = rs + ".discard(" + ls + ")" ) & ( operator = "/:" & right.isCollection() => result = rs + ".remove(" + ls + ")" ) & ( operator = "<:" & right.isSet() => result = rs + ".update(" + ls + ")" ) & ( operator = "<:" & right.isMap() => result = rs + " |= " + ls ) & ( operator = "<:" & right.isCollection() => result = rs + ".extend(" + ls + ")" ) & ( operator = "/<:" & right.isSet() => result = rs + ".difference_update(" + ls + ")" ) & ( operator = "->excludingKey" => result = "del " + ls + "[" + rs + "]") & (true => result = "pass") 
 
 
 
