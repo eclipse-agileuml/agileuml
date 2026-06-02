@@ -2895,6 +2895,7 @@ assign_part::
 //= _1 |--> div _1 ; _1`updateForm<when> _1`hasSideEffect true
 //= _1 |--> div _1
 
+|= _1 |-->->union(_1)<when> _1 Map
 |= _1 |--> or _1 ; _1`updateForm<when> _1`hasSideEffect true
 |= _1 |--> or _1
 
