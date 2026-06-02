@@ -17497,40 +17497,53 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       return "\n    { const " + lett + " " + acc + " = " + val + ";\n" + stats + "\n    }"; 
     } 
 
+    if ("->excludesKey".equals(operator))
+    { String lqf = left.queryForm(env,local); 
+      String rqf = right.queryForm(env,local); 
+      return lqf + ".Remove(" + rqf + ")"; 
+    } 
+
     if (operator.equals("=") && left instanceof BasicExpression)
     { val2 = right.queryFormCSharp(env,local);
       return ((BasicExpression) left).updateFormEqCSharp(env,val2,right,local);
     }
-    else if (operator.equals("=") && left instanceof UnaryExpression)
+    else if (operator.equals("=") && 
+             left instanceof UnaryExpression)
     { val2 = right.queryFormCSharp(env,local);
       return ((UnaryExpression) left).updateFormEq("CSharp", env, ((UnaryExpression) left).operator,val2,right,local);
     }
-    else if (operator.equals("=") && left instanceof BinaryExpression)
+    else if (operator.equals("=") && 
+             left instanceof BinaryExpression)
     { val2 = right.queryFormCSharp(env,local);
       return ((BinaryExpression) left).updateFormEq("CSharp", env, ((BinaryExpression) left).operator,val2,right,local);
     }
-    else if (operator.equals("=") && left instanceof SetExpression)
+    else if (operator.equals("=") && 
+             left instanceof SetExpression)
     { val2 = right.queryFormCSharp(env,local);
       return ((SetExpression) left).updateForm("CSharp",env,operator,val2,right,local);
     } // must be a sequence
-    else if (operator.equals("->includesAll") && left instanceof BasicExpression)
+    else if (operator.equals("->includesAll") && 
+             left instanceof BasicExpression)
     { val2 = right.queryFormCSharp(env,local);
       return ((BasicExpression) left).updateFormCSharp(env,"<:",val2,right,local);
     }
-    else if (operator.equals("->excludesAll") && left instanceof BasicExpression)
+    else if (operator.equals("->excludesAll") && 
+             left instanceof BasicExpression)
     { val2 = right.queryFormCSharp(env,local);
       return ((BasicExpression) left).updateFormCSharp(env,"-",val2,right,local);
     }
     else if ((operator.equals(":") || 
               operator.equals("<:") || operator.equals("/<:") ||
-              operator.equals("/:")) && (right instanceof BasicExpression))
+              operator.equals("/:")) && 
+             (right instanceof BasicExpression))
     { String val1 = left.queryFormCSharp(env,local);
       BasicExpression ber = (BasicExpression) right;
       // if (left.isPrimitive())
       // { val1 = ((BasicExpression) left).wrap(val1); }
       return ber.updateFormCSharp(env,operator,val1,left,local);
     }
-    else if ((operator.equals("->includes") || operator.equals("->excludes")) && 
+    else if ((operator.equals("->includes") || 
+              operator.equals("->excludes")) && 
              (left instanceof BasicExpression))
     { String val3 = right.queryFormCSharp(env,local);
       BasicExpression bel = (BasicExpression) left;
@@ -17662,34 +17675,47 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       return "\n    { const " + lett + " " + acc + " = " + val + ";\n" + stats + "\n    }"; 
     } 
 
+    if ("->excludesKey".equals(operator))
+    { String lqf = left.queryForm(env,local); 
+      String rqf = right.queryForm(env,local); 
+      return lqf + "->erase(" + rqf + ")"; 
+    } 
+
+
     if (operator.equals("=") && left instanceof BasicExpression)
     { val2 = right.queryFormCPP(env,local);
       return ((BasicExpression) left).updateFormEqCPP(env,val2,local);
     }
-    else if (operator.equals("=") && left instanceof UnaryExpression)
+    else if (operator.equals("=") && 
+             left instanceof UnaryExpression)
     { val2 = right.queryFormCPP(env,local);
       return ((UnaryExpression) left).updateFormEq("CPP",env,((UnaryExpression) left).operator,val2,right,local);
     }
-    else if (operator.equals("=") && left instanceof BinaryExpression)
+    else if (operator.equals("=") && 
+             left instanceof BinaryExpression)
     { val2 = right.queryFormCPP(env,local);
       return ((BinaryExpression) left).updateFormEq("CPP", env, ((BinaryExpression) left).operator,val2,right,local);
       // return left.updateForm("CPP",env,((BinaryExpression) left).operator,val2,right,local);
     }
-    else if (operator.equals("=") && left instanceof SetExpression)
+    else if (operator.equals("=") && 
+             left instanceof SetExpression)
     { val2 = right.queryFormCPP(env,local);
       return ((SetExpression) left).updateForm("CPP",env,operator,val2,right,local);
     }
-    else if (operator.equals("->includesAll") && left instanceof BasicExpression)
+    else if (operator.equals("->includesAll") && 
+             left instanceof BasicExpression)
     { val2 = right.queryFormCPP(env,local);
       return ((BasicExpression) left).updateFormCPP(env,"<:",val2,right,local);
     }
-    else if (operator.equals("->excludesAll") && left instanceof BasicExpression)
+    else if (operator.equals("->excludesAll") && 
+             left instanceof BasicExpression)
     { val2 = right.queryFormCPP(env,local);
       return ((BasicExpression) left).updateFormCPP(env,"-",val2,right,local);
     }
     else if ((operator.equals(":") || 
               operator.equals("<:") || operator.equals("/<:") ||
-              operator.equals("/:")) && (right instanceof BasicExpression))
+              operator.equals("/:")) && 
+             (right instanceof BasicExpression))
     { String val1 = left.queryFormCPP(env,local);
       BasicExpression ber = (BasicExpression) right;
       /* boolean lmult = left.isMultiple();
@@ -17703,7 +17729,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       // { val1 = ((BasicExpression) left).wrap(val1); }
       return ber.updateFormCPP(env,operator,val1,left,local);
     }
-    else if ((operator.equals("->includes") || operator.equals("->excludes")) && 
+    else if ((operator.equals("->includes") || 
+              operator.equals("->excludes")) && 
              (left instanceof BasicExpression))
     { String val3 = right.queryFormCPP(env,local);
       BasicExpression bel = (BasicExpression) left;
