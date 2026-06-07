@@ -7051,7 +7051,7 @@ public void findClones(java.util.Map clones,
              operator.equals("/<:") || 
              operator.equals("->excludesAll") ||
              operator.equals("/:"))
-    { boolean rmult = right.isMultiple();
+    { boolean rmult = right.isCollection();
       type = new Type("boolean",null);
       // System.out.println(left + " type= " + tleft); 
       // System.out.println(right + " type= " + tright); 
@@ -7085,7 +7085,8 @@ public void findClones(java.util.Map clones,
     }
     else if (operator.equals("->includes") || 
              operator.equals("->excludes"))
-    { boolean lmult = left.isMultiple();
+    { boolean lmult = left.isCollection();
+
       type = new Type("boolean",null); 
       if (lmult) 
       { }
@@ -19093,12 +19094,16 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
     if (operator.equals("->select") || 
         operator.equals("->reject") ||
         operator.equals("->closure") || 
-        operator.equals("->sortedBy") || 
-        operator.equals("|") || operator.equals("|R") || 
+        operator.equals("->sortedBy") ||
+        operator.equals("|sortedBy") || 
+        operator.equals("|") || 
+        operator.equals("|R") || 
         operator.equals("|C") || 
         operator.equals("->collect") || 
         operator.equals("->selectMinimals") ||
         operator.equals("->selectMaximals") || 
+        operator.equals("|selectMinimals") ||
+        operator.equals("|selectMaximals") || 
         operator.equals("->unionAll") || 
         operator.equals("->concatenateAll") || 
         operator.equals("->intersectAll") || 
@@ -19112,7 +19117,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         operator.equals("->antirestrict")) 
     { return true; } 
 
-    if (operator.equals("->at") || operator.equals("->any") || operator.equals("|A"))
+    if (operator.equals("->at") || 
+        operator.equals("->any") || operator.equals("|A"))
     { return Type.isCollectionType(left.elementType); } 
 
     if (operator.equals("let"))
@@ -19153,7 +19159,6 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
 	
     if (operator.equals("let"))
     { return right.isSorted(); }
-
 
     // if (operator.equals("->at"))
     // { return Type.isSequenceType(left.elementType); } 
@@ -20010,9 +20015,25 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
   // be[result]
 
   public Expression simplify(final Vector vars) 
-  { Expression lsimp = left.simplify(vars);
-    Expression rsimp = right.simplify(vars);
-    return simplify(operator,lsimp,rsimp,vars); 
+  { Expression lexpr;
+    Expression rexpr = right.simplify(vars); 
+
+    if ("#".equals(operator) || "!".equals(operator) || 
+        "#1".equals(operator) || "|".equals(operator) || 
+        "|R".equals(operator) || "|C".equals(operator) ||
+        "|sortedBy".equals(operator) || 
+        "|isUnique".equals(operator) || 
+        "|selectMaximals".equals(operator) || 
+        "|selectMinimals".equals(operator))
+    { BinaryExpression beleft = (BinaryExpression) left; 
+      Expression col = beleft.getRight(); 
+      lexpr = new BinaryExpression(":", beleft.getLeft(), 
+                                   col.simplify(vars));  
+    } 
+    else 
+    { lexpr = left.simplify(vars); } 
+
+    return simplify(operator,lexpr,rexpr,vars); 
   }
 
   public Expression evaluate(ModelSpecification sigma, 
@@ -20077,10 +20098,26 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
   } 
 
   public Expression simplify() 
-  { Expression lsimp = left.simplify();
-    Expression rsimp = right.simplify();
+  { Expression lexpr;
+    Expression rexpr = right.simplifyOCL(); 
+
+    if ("#".equals(operator) || "!".equals(operator) || 
+        "#1".equals(operator) || "|".equals(operator) || 
+        "|R".equals(operator) || "|C".equals(operator) ||
+        "|sortedBy".equals(operator) ||
+        "|isUnique".equals(operator) ||  
+        "|selectMaximals".equals(operator) || 
+        "|selectMinimals".equals(operator))
+    { BinaryExpression beleft = (BinaryExpression) left; 
+      Expression col = beleft.getRight(); 
+      lexpr = new BinaryExpression(":", beleft.getLeft(), 
+                                   col.simplify());  
+    } 
+    else 
+    { lexpr = left.simplify(); } 
+
     return Expression.simplify(
-                  operator,lsimp,rsimp,needsBracket); 
+                  operator,lexpr,rexpr,needsBracket); 
   }
 
   public Expression substitute(final Expression oldE,
@@ -20088,7 +20125,10 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
   { if (operator.equals("#") || operator.equals("#1") || 
         operator.equals("!") || operator.equals("|A") ||
         operator.equals("#LC") || operator.equals("|") || 
-        operator.equals("|C") || operator.equals("|R"))
+        operator.equals("|C") || operator.equals("|R") ||
+        "|sortedBy".equals(operator) || 
+        "|selectMaximals".equals(operator) || 
+        "|selectMinimals".equals(operator))
     { Expression var = ((BinaryExpression) left).left; 
       Vector vars = oldE.getVariableUses();
       Vector vars1 = newE.getVariableUses(); 
@@ -22481,7 +22521,7 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       remainder2.add(right);
       Vector rem = (Vector) simplifyAnd(remainder1,remainder2);   
       if (rem != null && rem.size() > 0)
-      { remainder.add(rem.get(0)); }    // remainder.size() == 0 
+      { remainder.add(rem.get(0)); } // remainder.size() == 0 
       return lfs; 
     } 
 
@@ -22527,8 +22567,23 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
 
     // System.out.println(">> Simplifying " + this); 
 
-    Expression lexpr = left.simplifyOCL(); 
+    Expression lexpr;
     Expression rexpr = right.simplifyOCL(); 
+
+    if ("#".equals(operator) || "!".equals(operator) || 
+        "#1".equals(operator) || "|".equals(operator) || 
+        "|R".equals(operator) || "|C".equals(operator) ||
+        "|sortedBy".equals(operator) || 
+        "|isUnique".equals(operator) ||  
+        "|selectMaximals".equals(operator) || 
+        "|selectMinimals".equals(operator))
+    { BinaryExpression beleft = (BinaryExpression) left; 
+      Expression col = beleft.getRight(); 
+      lexpr = new BinaryExpression(":", beleft.getLeft(), 
+                                   col.simplifyOCL());  
+    } 
+    else 
+    { lexpr = left.simplifyOCL(); } 
 
     if ("->at".equals(operator)) 
     { return Expression.simplifyAt(lexpr, rexpr); } 
@@ -22553,6 +22608,54 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       Expression lvar = beleft.getLeft(); 
       Expression lcoll = beleft.getRight(); 
       return Expression.simplifyCollect(lvar, lcoll, rexpr); 
+    } 
+
+    if ("!".equals(operator))
+    { BinaryExpression beleft = (BinaryExpression) lexpr;
+      // System.err.println(">>> Simplifying " + lexpr + 
+      //                    " ! " + rexpr);  
+      Expression lvar = beleft.getLeft(); 
+      Expression lcoll = beleft.getRight(); 
+      return Expression.simplifyForAll(lvar, lcoll, rexpr); 
+    } 
+
+    if ("#1".equals(operator))
+    { BinaryExpression beleft = (BinaryExpression) lexpr;
+      // System.err.println(">>> Simplifying " + lexpr + 
+      //                    " ! " + rexpr);  
+      Expression lvar = beleft.getLeft(); 
+      Expression lcoll = beleft.getRight(); 
+      return Expression.simplifyExists1(lvar, lcoll, rexpr); 
+    } 
+
+    if ("|selectMinimals".equals(operator))
+    { BinaryExpression beleft = (BinaryExpression) lexpr;
+      // System.err.println(">>> Simplifying " + lexpr + 
+      //                    " ! " + rexpr);  
+      Expression lvar = beleft.getLeft(); 
+      Expression lcoll = beleft.getRight(); 
+      return Expression.simplifySelectMinimals(lvar, 
+                                               lcoll, rexpr); 
+    } 
+
+    if ("|selectMaximals".equals(operator))
+    { BinaryExpression beleft = (BinaryExpression) lexpr;
+      // System.err.println(">>> Simplifying " + lexpr + 
+      //                    " ! " + rexpr);  
+      Expression lvar = beleft.getLeft(); 
+      Expression lcoll = beleft.getRight(); 
+      return Expression.simplifySelectMaximals(lvar, 
+                                               lcoll, rexpr); 
+    } 
+
+    if ("|isUnique".equals(operator))
+    { BinaryExpression beleft = (BinaryExpression) lexpr;
+      // System.err.println(">>> Simplifying " + lexpr + 
+      //                    " ! " + rexpr);  
+      Expression lvar = beleft.getLeft(); 
+      Expression lcoll = beleft.getRight(); 
+      return Expression.simplifyIsUnique(lvar, 
+                                         lcoll, rexpr); 
     } 
 
     if ("|sortedBy".equals(operator))
@@ -22909,8 +23012,11 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
           }
         }  
       }
+
+      return Expression.simplifySelect(svar, domain, right); 
     }
-    else if (operator.equals("|R"))
+    
+    if (operator.equals("|R"))
     { BinaryExpression arg = (BinaryExpression) left; 
       Expression domain = arg.getRight(); 
       Expression svar = arg.getLeft(); 
@@ -22997,8 +23103,10 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
           }
         }  
       }
+      return Expression.simplifyReject(svar, domain, right); 
     }
-    else if (operator.equals("|A"))
+    
+    if (operator.equals("|A"))
     { BinaryExpression arg = (BinaryExpression) left; 
       Expression domain = arg.getRight();
       Expression svar = arg.getLeft(); 
@@ -23094,8 +23202,11 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
           }             
         }  
       }
+
+      return Expression.simplifyAny(svar, domain, right);
     }
-    else if (operator.equals("#"))
+    
+    if (operator.equals("#"))
     { BinaryExpression arg = (BinaryExpression) left; 
       Expression domain = arg.getRight();
       Expression svar = arg.getLeft(); 
@@ -23164,29 +23275,32 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
                 (BinaryExpression) lbe.getLeft();
           Expression newright = lbe.getRight();
           Expression newvar = newleft.getLeft();
- 
-          // System.err.println("!! OCL efficiency smell (OES): Inefficient nested reject/exists: " + this);
+          Expression newcol = newleft.getRight(); 
+
+          // newcol->reject(newvar | newright)->
+          //              ->exists(svar | right)
           
           if (("" + svar).equals("" + newvar))
           { Expression newpred = 
               Expression.simplifyAnd(
                   Expression.negate(newright), right); 
-            Expression newdomain = 
-              new BinaryExpression(":",svar, newleft.getRight()); 
-            return new BinaryExpression("#", newdomain, newpred);
-          } 
+            return Expression.simplifyExists(svar, newcol, newpred);
+          } // newcol->exists(svar | not(newright) & right)
           else 
           { Expression subright = 
                   right.substituteEq("" + svar, newvar);
             Expression newpred = 
               Expression.simplifyAnd(
                   Expression.negate(newright), subright); 
-            return new BinaryExpression("#", newleft, newpred);
-          }
+            return Expression.simplifyExists(newvar, newcol, newpred);
+          } // newcol->exists(newvar | not(newright) & right[newvar/svar])
         }  
       }
+
+      return Expression.simplifyExists(svar,domain,right);  
     }
-    else if (operator.equals("->select"))
+    
+    if (operator.equals("->select"))
     {  
       if (left instanceof BinaryExpression) 
       { BinaryExpression lbe = (BinaryExpression) left;
@@ -23526,11 +23640,13 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
     // ->reject(...)->at(1) is a red flag, likewise 
     // ->sort()->at(1) is a red flag, likewise 
     // ->sortedBy(...)->at(1) is a red flag, likewise 
+    // ->sortedBy(...)->forAll(...), ->exists(...)
     // ->collect(...)->at(1) is a red flag, likewise 
     // s->select(...)->size() = 0
     // s->count(x)->size() = 0
     // mp->keys()->includes(x)
     // sq->collect(x|e)->at(i) or ->first() or ->last()  
+    
 
     Expression ZERO_EXPRESSION = new BasicExpression(0); 
     Expression UNIT_EXPRESSION = new BasicExpression(1); 
@@ -23721,7 +23837,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
     else if (operator.equals("|") ||
              operator.equals("|R"))
     { BinaryExpression arg = (BinaryExpression) left; 
-      Expression domain = arg.getRight(); 
+      Expression domain = arg.getRight();
+ 
       if (domain instanceof BinaryExpression) 
       { BinaryExpression lbe = (BinaryExpression) domain; 
 
@@ -23734,6 +23851,14 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
           res.set("amber", ascore+1);
           int oescount = (int) res.get("OES"); 
           res.set("OES", oescount+1);  
+        }
+        else if (lbe.operator.equals("|sortedBy") ||
+                 lbe.operator.equals("->sortedBy"))
+        { yUses.add("! OCL efficiency warning (OEW): " + this + " : more efficient to sort after selection");
+          int yscore = (int) res.get("yellow"); 
+          res.set("yellow", yscore+1);
+          int oescount = (int) res.get("OEW"); 
+          res.set("OEW", oescount+1);  
         }
       }
     }
@@ -23777,6 +23902,38 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
         }
       } 
     }
+    else if (operator.equals("->forAll") || 
+             operator.equals("!"))
+    { // col->select(P)->forAll(Q) is 
+      // col->forAll(P => Q), etc
+
+      BinaryExpression arg = (BinaryExpression) left; 
+      Expression domain = arg.getRight(); 
+      if (domain instanceof BinaryExpression) 
+      { BinaryExpression lbe = (BinaryExpression) domain; 
+
+        if (lbe.operator.equals("|") ||
+            lbe.operator.equals("|R") ||
+            lbe.operator.equals("->select") ||
+            lbe.operator.equals("->reject"))
+        { aUses.add("!! OCL efficiency smell (OES): Inefficient  select/reject iterators (loops) in " + this + " : more efficient to combine conditions in one ->forAll");
+
+          int ascore = (int) res.get("amber"); 
+          res.set("amber", ascore+1); 
+          int oescount = (int) res.get("OES"); 
+          res.set("OES", oescount+1); 
+        }
+        else if (lbe.operator.equals("|sortedBy") ||
+            lbe.operator.equals("->sortedBy"))
+        { aUses.add("!! OCL efficiency smell (OES): redundant sorting in " + this + " : remove ->sortedBy");
+
+          int ascore = (int) res.get("amber"); 
+          res.set("amber", ascore+1); 
+          int oescount = (int) res.get("OES"); 
+          res.set("OES", oescount+1); 
+        }
+      }
+    }
     else if (operator.equals("->exists") || 
              operator.equals("#"))
     { // col->select(P)->exists(Q) is 
@@ -23792,6 +23949,15 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
             lbe.operator.equals("->select") ||
             lbe.operator.equals("->reject"))
         { aUses.add("!! OCL efficiency smell (OES): Inefficient  select/reject iterators (loops) in " + this + " : more efficient to combine conditions in one ->exists");
+
+          int ascore = (int) res.get("amber"); 
+          res.set("amber", ascore+1); 
+          int oescount = (int) res.get("OES"); 
+          res.set("OES", oescount+1); 
+        }
+        else if (lbe.operator.equals("|sortedBy") ||
+            lbe.operator.equals("->sortedBy"))
+        { aUses.add("!! OCL efficiency smell (OES): redundant sorting in " + this + " : remove ->sortedBy");
 
           int ascore = (int) res.get("amber"); 
           res.set("amber", ascore+1); 

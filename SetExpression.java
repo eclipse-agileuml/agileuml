@@ -885,6 +885,12 @@ public class SetExpression extends Expression
     return null; 
   } 
 
+  public Expression getOCLElement(int i) 
+  { if (i <= elements.size())
+    { return (Expression) elements.get(i-1); } 
+    return null; 
+  } 
+
   public Expression at(Expression index)
   { // if this is a map, get mapped value
     // else if index is integer, return index-1 element

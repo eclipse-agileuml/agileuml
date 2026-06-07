@@ -2690,11 +2690,12 @@ abstract class Expression
 
   public static boolean isOclIteratorOperator(String op)
   { if (op.startsWith("|") || op.startsWith("#") || 
-          op.equals("!") )
+        op.equals("!") )
     { return true; }
     
     if ("->collect".equals(op) || 
         "->isUnique".equals(op) || 
+        "->sortedBy".equals(op) || 
         "->reject".equals(op) || 
         "->select".equals(op) || 
         "->selectMaximals".equals(op) || 
@@ -3765,7 +3766,28 @@ abstract class Expression
     if (op.equals("->roundTo")) 
     { return simplifyRoundTo(e1,e2); } 
 
-    if (op.equals("#&")) { return simplifyExistsAnd(e1,e2); } 
+    if (op.equals("#&")) 
+    { return simplifyExistsAnd(e1,e2); } 
+
+    if (op.equals("->forAll"))
+    { return simplifyForAll(e1, e2); } 
+
+    if ("!".equals(op))
+    { BinaryExpression beleft = (BinaryExpression) e1; 
+      Expression lvar = beleft.getLeft(); 
+      Expression lcoll = beleft.getRight(); 
+      return Expression.simplifyForAll(lvar, lcoll, e2); 
+    } 
+
+    if (op.equals("->exists1"))
+    { return simplifyExists1(e1, e2); } 
+
+    if ("#1".equals(op))
+    { BinaryExpression beleft = (BinaryExpression) e1; 
+      Expression lvar = beleft.getLeft(); 
+      Expression lcoll = beleft.getRight(); 
+      return Expression.simplifyExists1(lvar, lcoll, e2); 
+    }
 
     if (op.equals("&")) { return simplifyAnd(e1,e2); } 
 
@@ -3930,6 +3952,89 @@ abstract class Expression
       return SetExpression.antirestrict(s1, s2); 
     }  
 
+    if (op.equals("->sortedBy"))
+    { return simplifySortedBy(e1, e2); } 
+
+    if ("|sortedBy".equals(op) && 
+        e1 instanceof BinaryExpression)
+    { BinaryExpression be1 = (BinaryExpression) e1; 
+      return simplifySortedBy(be1.getLeft(), be1.getRight(), 
+                            e2); 
+    } 
+
+    if (op.equals("->isUnique"))
+    { return simplifyIsUnique(e1, e2); } 
+
+    if ("|isUnique".equals(op) && 
+        e1 instanceof BinaryExpression)
+    { BinaryExpression be1 = (BinaryExpression) e1; 
+      return simplifyIsUnique(be1.getLeft(), be1.getRight(), 
+                            e2); 
+    } 
+
+    if (op.equals("->exists"))
+    { return simplifyExists(e1, e2); } 
+
+    if ("#".equals(op) && 
+        e1 instanceof BinaryExpression)
+    { BinaryExpression be1 = (BinaryExpression) e1; 
+      return simplifyExists(be1.getLeft(), be1.getRight(), 
+                            e2); 
+    } 
+
+    if ("->select".equals(op))
+    { return simplifySelect(e1, e2); } 
+
+    if ("|".equals(op) && 
+        e1 instanceof BinaryExpression)
+    { BinaryExpression be1 = (BinaryExpression) e1; 
+      return simplifySelect(be1.getLeft(), be1.getRight(), 
+                            e2); 
+    } 
+
+    if ("->reject".equals(op))
+    { return simplifyReject(e1, e2); } 
+
+    if ("|R".equals(op) && 
+        e1 instanceof BinaryExpression)
+    { BinaryExpression be1 = (BinaryExpression) e1; 
+      return simplifyReject(be1.getLeft(), be1.getRight(), 
+                            e2); 
+    } 
+
+    if ("->collect".equals(op))
+    { return simplifyCollect(e1, e2); } 
+
+    if ("|C".equals(op) && 
+        e1 instanceof BinaryExpression)
+    { BinaryExpression be1 = (BinaryExpression) e1; 
+      return simplifyCollect(be1.getLeft(), be1.getRight(), 
+                            e2); 
+    } 
+
+    if ("|A".equals(op) && 
+        e1 instanceof BinaryExpression)
+    { BinaryExpression be1 = (BinaryExpression) e1; 
+      return simplifyAny(be1.getLeft(), be1.getRight(), 
+                         e2); 
+    } 
+
+    if ("|selectMaximals".equals(op) && 
+        e1 instanceof BinaryExpression)
+    { BinaryExpression be1 = (BinaryExpression) e1; 
+      return simplifySelectMaximals(be1.getLeft(), 
+                            be1.getRight(), 
+                            e2); 
+    } 
+
+    if ("|selectMinimals".equals(op) && 
+        e1 instanceof BinaryExpression)
+    { BinaryExpression be1 = (BinaryExpression) e1; 
+      return simplifySelectMinimals(be1.getLeft(), 
+                            be1.getRight(), 
+                            e2); 
+    } 
+
     if (Expression.isMath2Operator(op))
     { 
       if (Expression.isNumber(e1 + "") && 
@@ -3956,11 +4061,16 @@ abstract class Expression
   { if (e1 == null)  { return e2; }
     if (e2 == null)  { return e1; }
 
-    Expression res; 
-    if (op.equals("&")) { res = simplifyAnd(e1,e2); } 
-    else if (op.equals("or")) { res = simplifyOr(e1,e2); }
-    else if (op.equals("=>")) { res = simplifyImp(e1,e2); } 
-    else if (op.equals("=")) { res = simplifyEq(e1,e2); }
+    Expression res;
+ 
+    if (op.equals("&")) 
+    { res = simplifyAnd(e1,e2); } 
+    else if (op.equals("or")) 
+    { res = simplifyOr(e1,e2); }
+    else if (op.equals("=>")) 
+    { res = simplifyImp(e1,e2); } 
+    else if (op.equals("=")) 
+    { res = simplifyEq(e1,e2); }
     else if (op.equals("!=") || op.equals("/=")) 
     { res = simplifyNeq(e1,e2); } 
     else if (op.equals(":")) 
@@ -3971,6 +4081,10 @@ abstract class Expression
     { res = simplifyExists(e1,e2); } 
     else if (op.equals("->forAll")) 
     { res = simplifyForAll(e1,e2); } 
+    else if (op.equals("->exists1")) 
+    { res = simplifyExists1(e1,e2); } 
+    else if (op.equals("->isUnique")) 
+    { res = simplifyIsUnique(e1,e2); } 
     else if (comparitors.contains(op)) 
     { res = simplifyIneq(op,e1,e2); } 
     else if (op.equals("+")) 
@@ -4114,6 +4228,74 @@ abstract class Expression
     { SetExpression s1 = (SetExpression) e1;
       res = s1.at(e2); 
     }  
+    else if ("!".equals(op) && 
+             e1 instanceof BinaryExpression)
+    { BinaryExpression be1 = (BinaryExpression) e1; 
+      res = simplifyForAll(be1.getLeft(), be1.getRight(), 
+                           e2); 
+    } 
+    else if ("#".equals(op) && 
+             e1 instanceof BinaryExpression)
+    { BinaryExpression be1 = (BinaryExpression) e1; 
+      res = simplifyExists(be1.getLeft(), be1.getRight(), 
+                           e2); 
+    } 
+    else if ("#1".equals(op) && 
+             e1 instanceof BinaryExpression)
+    { BinaryExpression be1 = (BinaryExpression) e1; 
+      res = simplifyExists1(be1.getLeft(), be1.getRight(), 
+                           e2); 
+    } 
+    else if ("|isUnique".equals(op) && 
+             e1 instanceof BinaryExpression)
+    { BinaryExpression be1 = (BinaryExpression) e1; 
+      res = simplifyIsUnique(be1.getLeft(), be1.getRight(), 
+                           e2); 
+    } 
+    else if ("|".equals(op) && 
+             e1 instanceof BinaryExpression)
+    { BinaryExpression be1 = (BinaryExpression) e1; 
+      res = simplifySelect(be1.getLeft(), be1.getRight(), 
+                           e2); 
+    } 
+    else if ("|R".equals(op) && 
+             e1 instanceof BinaryExpression)
+    { BinaryExpression be1 = (BinaryExpression) e1; 
+      res = simplifyReject(be1.getLeft(), be1.getRight(), 
+                           e2); 
+    } 
+    else if ("|C".equals(op) && 
+             e1 instanceof BinaryExpression)
+    { BinaryExpression be1 = (BinaryExpression) e1; 
+      res = simplifyCollect(be1.getLeft(), be1.getRight(), 
+                           e2); 
+    } 
+    else if ("|A".equals(op) && 
+             e1 instanceof BinaryExpression)
+    { BinaryExpression be1 = (BinaryExpression) e1; 
+      res = simplifyAny(be1.getLeft(), be1.getRight(), 
+                           e2); 
+    } 
+    else if ("|selectMaximals".equals(op) && 
+             e1 instanceof BinaryExpression)
+    { BinaryExpression be1 = (BinaryExpression) e1; 
+      res = simplifySelectMaximals(be1.getLeft(), 
+                           be1.getRight(), 
+                           e2); 
+    } 
+    else if ("|selectMinimals".equals(op) && 
+             e1 instanceof BinaryExpression)
+    { BinaryExpression be1 = (BinaryExpression) e1; 
+      res = simplifySelectMinimals(be1.getLeft(), 
+                           be1.getRight(), 
+                           e2); 
+    } 
+    else if ("|sortedBy".equals(op) && 
+             e1 instanceof BinaryExpression)
+    { BinaryExpression be1 = (BinaryExpression) e1; 
+      res = simplifySortedBy(be1.getLeft(), be1.getRight(), 
+                           e2); 
+    } 
     else if (Expression.isMath2Operator(op) &&
              Expression.isNumberValue(e1 + "") && 
              Expression.isNumberValue(e2 + ""))
@@ -4714,7 +4896,151 @@ abstract class Expression
       { return new BasicExpression(false); } 
     } 
 
+    if (col instanceof UnaryExpression)
+    { UnaryExpression re = (UnaryExpression) col; 
+      String reop = re.getOperator(); 
+      if ("->sort".equals(reop) || 
+          "->asSet".equals(reop) || 
+          "->oclAsSet".equals(reop) || 
+          "->asSequence".equals(reop) || 
+          "->oclAsSequence".equals(reop) || 
+          "->reverse".equals(reop))
+      { // redundant operator  
+        Expression arg = re.getArgument(); 
+        return Expression.simplifyExists(arg, pred); 
+      } 
+    } 
+
+    if (col instanceof BinaryExpression)
+    { BinaryExpression re = (BinaryExpression) col; 
+      String reop = re.getOperator();
+ 
+      if ("->sortedBy".equals(reop))  
+      { // redundant 
+        Expression arg = re.getLeft(); 
+        return Expression.simplifyExists(arg, pred); 
+      } 
+
+      if ("|sortedBy".equals(reop))
+      { BinaryExpression domain = 
+              (BinaryExpression) re.getLeft(); 
+        Expression arg = domain.getRight(); 
+        return Expression.simplifyExists(arg, pred); 
+      } 
+
+      if ("->select".equals(reop))
+      { // conjoin the predicates 
+        Expression arg = re.getLeft(); 
+        Expression pred1 = re.getRight();
+        Expression newpred = 
+               Expression.simplifyAnd(pred1, pred);  
+        return Expression.simplifyExists(arg, newpred); 
+      } 
+
+      if ("->reject".equals(reop))
+      { // conjoin the predicates 
+        Expression arg = re.getLeft(); 
+        Expression pred1 = re.getRight();
+        Expression npred1 = Expression.negate(pred1); 
+        Expression newpred = 
+               Expression.simplifyAnd(npred1, pred);  
+        return Expression.simplifyExists(arg, newpred); 
+      } 
+    } 
+
     return new BinaryExpression("->exists", col, pred); 
+  } 
+
+  public static Expression simplifyExists1(Expression col, 
+                                          Expression pred)
+  { // col->exists1(false) is false 
+    // false for empty col
+
+    if (pred.isFalseString())
+    { return new BasicExpression(false); } 
+
+    if (col instanceof SetExpression)
+    { SetExpression se = (SetExpression) col;
+      if (se.size() == 0)
+      { return new BasicExpression(false); } 
+    } 
+
+    if (col instanceof UnaryExpression)
+    { UnaryExpression re = (UnaryExpression) col; 
+      String reop = re.getOperator(); 
+      if ("->sort".equals(reop) || 
+          "->asSequence".equals(reop) || 
+          "->oclAsSequence".equals(reop) || 
+          "->reverse".equals(reop))
+      { // redundant operator  
+        Expression arg = re.getArgument(); 
+        return Expression.simplifyExists1(arg, pred); 
+      } 
+    } 
+
+    if (col instanceof BinaryExpression)
+    { BinaryExpression re = (BinaryExpression) col; 
+      String reop = re.getOperator();
+ 
+      if ("->sortedBy".equals(reop))  
+      { // redundant 
+        Expression arg = re.getLeft(); 
+        return Expression.simplifyExists1(arg, pred); 
+      } 
+
+      if ("|sortedBy".equals(reop))
+      { BinaryExpression domain = 
+              (BinaryExpression) re.getLeft(); 
+        Expression arg = domain.getRight(); 
+        return Expression.simplifyExists1(arg, pred); 
+      } 
+    } 
+
+    return new BinaryExpression("->exists1", col, pred); 
+  } 
+
+  public static Expression simplifyIsUnique(Expression col, 
+                                            Expression expr)
+  { // true for empty or singleton col
+
+    if (col instanceof SetExpression)
+    { SetExpression se = (SetExpression) col;
+      if (se.size() <= 1)
+      { return new BasicExpression(true); } 
+    } 
+
+    if (col instanceof UnaryExpression)
+    { UnaryExpression re = (UnaryExpression) col; 
+      String reop = re.getOperator(); 
+      if ("->sort".equals(reop) || 
+          "->asSequence".equals(reop) || 
+          "->oclAsSequence".equals(reop) || 
+          "->reverse".equals(reop))
+      { // redundant operator  
+        Expression arg = re.getArgument(); 
+        return Expression.simplifyIsUnique(arg, expr); 
+      } 
+    } 
+
+    if (col instanceof BinaryExpression)
+    { BinaryExpression re = (BinaryExpression) col; 
+      String reop = re.getOperator();
+ 
+      if ("->sortedBy".equals(reop))  
+      { // redundant 
+        Expression arg = re.getLeft(); 
+        return Expression.simplifyIsUnique(arg, expr); 
+      } 
+
+      if ("|sortedBy".equals(reop))
+      { BinaryExpression domain = 
+              (BinaryExpression) re.getLeft(); 
+        Expression arg = domain.getRight(); 
+        return Expression.simplifyIsUnique(arg, expr); 
+      } 
+    } 
+
+    return new BinaryExpression("->isUnique", col, expr); 
   } 
 
   public static Expression simplifyExists(Expression var, 
@@ -4734,12 +5060,195 @@ abstract class Expression
     
     if (col instanceof SetExpression)
     { SetExpression se = (SetExpression) col;
+
       if (se.size() == 0)
       { return new BasicExpression(false); } 
+
+      if (se.size() == 1)
+      { Expression val = se.getOCLElement(1); 
+        Type typ = val.getType(); 
+        Expression res = 
+          BinaryExpression.newLetBinaryExpression(var, 
+                                       typ, val, pred); 
+        return res; 
+      } 
+    } 
+
+    if (col instanceof UnaryExpression)
+    { UnaryExpression re = (UnaryExpression) col; 
+      String reop = re.getOperator(); 
+      if ("->sort".equals(reop) || 
+          "->asSet".equals(reop) || 
+          "->oclAsSet".equals(reop) || 
+          "->asSequence".equals(reop) || 
+          "->oclAsSequence".equals(reop) || 
+          "->reverse".equals(reop))
+      { // redundant operator  
+        Expression arg = re.getArgument(); 
+        return Expression.simplifyExists(var, arg, pred); 
+      } 
+    } 
+
+    if (col instanceof BinaryExpression)
+    { BinaryExpression re = (BinaryExpression) col; 
+      String reop = re.getOperator();
+ 
+      if ("->sortedBy".equals(reop))  
+      { // redundant 
+        Expression arg = re.getLeft(); 
+        return Expression.simplifyExists(var, arg, pred); 
+      } 
+
+      if ("|sortedBy".equals(reop))
+      { BinaryExpression domain = 
+              (BinaryExpression) re.getLeft(); 
+        Expression arg = domain.getRight(); 
+        return Expression.simplifyExists(var, arg, pred); 
+      } 
+
+      if ("|".equals(reop))
+      { BinaryExpression domain = 
+               (BinaryExpression) re.getLeft(); 
+        Expression var1 = domain.getLeft();
+
+        if (var1.isEqualTo(var))
+        { // arg->exists(var | pred1 & pred) 
+
+          Expression arg = domain.getRight(); 
+          Expression pred1 = re.getRight(); 
+          Expression newpred = 
+                 Expression.simplifyAnd(pred1, pred);
+          return Expression.simplifyExists(var, arg, newpred); 
+        } 
+      }  
+
+      if ("|R".equals(reop))
+      { BinaryExpression domain = 
+               (BinaryExpression) re.getLeft(); 
+        Expression var1 = domain.getLeft();
+
+        if (var1.isEqualTo(var))
+        { // arg->exists(var | not(pred1) & pred) 
+
+          Expression arg = domain.getRight(); 
+          Expression pred1 = re.getRight();
+          Expression npred1 = Expression.negate(pred1);  
+          Expression newpred = 
+                 Expression.simplifyAnd(npred1,pred);
+          return Expression.simplifyExists(var, arg, newpred); 
+        } 
+      }  
     } 
 
     return new BinaryExpression("#", 
         new BinaryExpression(":", var, col), pred); 
+  } 
+
+  public static Expression simplifyExists1(Expression var, 
+                                          Expression col, 
+                                          Expression pred)
+  { // col->exists1(false) is false 
+    // false for empty col
+    
+    if (pred.isFalseString())
+    { return new BasicExpression(false); } 
+
+    if (col instanceof SetExpression)
+    { SetExpression se = (SetExpression) col;
+
+      if (se.size() == 0)
+      { return new BasicExpression(false); } 
+
+      if (se.size() == 1)
+      { Expression val = se.getOCLElement(1); 
+        Type typ = val.getType(); 
+        Expression res = 
+          BinaryExpression.newLetBinaryExpression(var, 
+                                       typ, val, pred); 
+        return res; 
+      } 
+    } 
+
+    if (col instanceof UnaryExpression)
+    { UnaryExpression re = (UnaryExpression) col; 
+      String reop = re.getOperator(); 
+      if ("->sort".equals(reop) || 
+          "->asSequence".equals(reop) || 
+          "->oclAsSequence".equals(reop) || 
+          "->reverse".equals(reop))
+      { // redundant operator  
+        Expression arg = re.getArgument(); 
+        return Expression.simplifyExists1(var, arg, pred); 
+      } 
+    } 
+
+    if (col instanceof BinaryExpression)
+    { BinaryExpression re = (BinaryExpression) col; 
+      String reop = re.getOperator();
+ 
+      if ("->sortedBy".equals(reop))  
+      { // redundant 
+        Expression arg = re.getLeft(); 
+        return Expression.simplifyExists1(var, arg, pred); 
+      } 
+
+      if ("|sortedBy".equals(reop))
+      { BinaryExpression domain = 
+              (BinaryExpression) re.getLeft(); 
+        Expression arg = domain.getRight(); 
+        return Expression.simplifyExists1(var, arg, pred); 
+      } 
+    } 
+
+    return new BinaryExpression("#1", 
+        new BinaryExpression(":", var, col), pred); 
+  } 
+
+  public static Expression simplifyIsUnique(Expression var, 
+                                          Expression col, 
+                                          Expression expr)
+  { // true for empty/singleton col
+    
+    if (col instanceof SetExpression)
+    { SetExpression se = (SetExpression) col;
+
+      if (se.size() <= 1)
+      { return new BasicExpression(true); } 
+    } 
+
+    if (col instanceof UnaryExpression)
+    { UnaryExpression re = (UnaryExpression) col; 
+      String reop = re.getOperator(); 
+      if ("->sort".equals(reop) || 
+          "->asSequence".equals(reop) || 
+          "->oclAsSequence".equals(reop) || 
+          "->reverse".equals(reop))
+      { // redundant operator  
+        Expression arg = re.getArgument(); 
+        return Expression.simplifyIsUnique(var, arg, expr); 
+      } 
+    } 
+
+    if (col instanceof BinaryExpression)
+    { BinaryExpression re = (BinaryExpression) col; 
+      String reop = re.getOperator();
+ 
+      if ("->sortedBy".equals(reop))  
+      { // redundant 
+        Expression arg = re.getLeft(); 
+        return Expression.simplifyIsUnique(var, arg, expr); 
+      } 
+
+      if ("|sortedBy".equals(reop))
+      { BinaryExpression domain = 
+              (BinaryExpression) re.getLeft(); 
+        Expression arg = domain.getRight(); 
+        return Expression.simplifyIsUnique(var, arg, expr); 
+      } 
+    } 
+
+    return new BinaryExpression("|isUnique", 
+        new BinaryExpression(":", var, col), expr); 
   } 
 
   public static Expression simplifyForAll(Expression col, 
@@ -4747,6 +5256,11 @@ abstract class Expression
   { // col->forAll(false) is col->isEmpty() 
     // col->forAll(true) is true
     // true for empty col
+
+    // col->sort()->forAll(x | P) is col->forAll(x | P)
+    // col->sortedBy(e)->forAll(x | P) is col->forAll(x | P)
+    // col->sortedBy(y|e)->forAll(x | P) is col->forAll(x | P)
+
 
     if (pred.isFalseString())
     { return Expression.simplifyIsEmpty(col,null); } 
@@ -4760,6 +5274,58 @@ abstract class Expression
       { return new BasicExpression(true); } 
     } 
 
+    if (col instanceof UnaryExpression)
+    { UnaryExpression re = (UnaryExpression) col; 
+      String reop = re.getOperator(); 
+      if ("->sort".equals(reop) || 
+          "->asSet".equals(reop) || 
+          "->oclAsSet".equals(reop) || 
+          "->asSequence".equals(reop) || 
+          "->oclAsSequence".equals(reop) || 
+          "->reverse".equals(reop))
+      { // redundant operator  
+        Expression arg = re.getArgument(); 
+        return Expression.simplifyForAll(arg, pred); 
+      } 
+    } 
+
+    if (col instanceof BinaryExpression)
+    { BinaryExpression re = (BinaryExpression) col; 
+      String reop = re.getOperator();
+ 
+      if ("->sortedBy".equals(reop))  
+      { // redundant 
+        Expression arg = re.getLeft(); 
+        return Expression.simplifyForAll(arg, pred); 
+      } 
+
+      if ("|sortedBy".equals(reop))
+      { BinaryExpression domain = 
+              (BinaryExpression) re.getLeft(); 
+        Expression arg = domain.getRight(); 
+        return Expression.simplifyForAll(arg, pred); 
+      } 
+
+      if ("->select".equals(reop))
+      { // combine the predicates 
+        Expression arg = re.getLeft(); 
+        Expression pred1 = re.getRight();
+        Expression newpred = 
+               Expression.simplifyImplies(pred1, pred);  
+        return Expression.simplifyForAll(arg, newpred); 
+      } 
+
+      if ("->reject".equals(reop))
+      { // combine the predicates 
+        Expression arg = re.getLeft(); 
+        Expression pred1 = re.getRight();
+        Expression npred1 = Expression.negate(pred1); 
+        Expression newpred = 
+               Expression.simplifyImplies(npred1, pred);  
+        return Expression.simplifyForAll(arg, newpred); 
+      } 
+    } 
+    
     return new BinaryExpression("->forAll", col, pred); 
   } 
 
@@ -4769,6 +5335,8 @@ abstract class Expression
   { // col->forAll(x | false) is col->isEmpty() 
     // col->forAll(x | true) is true
     // true for empty col
+    // Set{y}->forAll(var | pred) is 
+    //         let var : t = y in pred
 
     // if var /: vars(pred) then 
     //   col->isEmpty() or pred
@@ -4781,11 +5349,280 @@ abstract class Expression
     
     if (col instanceof SetExpression)
     { SetExpression se = (SetExpression) col;
+
       if (se.size() == 0)
       { return new BasicExpression(true); } 
+
+      if (se.size() == 1)
+      { Expression val = se.getOCLElement(1); 
+        Type typ = val.getType(); 
+        Expression res = 
+          BinaryExpression.newLetBinaryExpression(var, 
+                                       typ, val, pred); 
+        return res; 
+      } 
+    } 
+
+    if (col instanceof UnaryExpression)
+    { UnaryExpression re = (UnaryExpression) col; 
+      String reop = re.getOperator(); 
+      if ("->sort".equals(reop) || 
+          "->asSet".equals(reop) || 
+          "->oclAsSet".equals(reop) || 
+          "->asSequence".equals(reop) || 
+          "->oclAsSequence".equals(reop) || 
+          "->reverse".equals(reop))
+      { // redundant operator  
+        Expression arg = re.getArgument(); 
+        return Expression.simplifyForAll(var, arg, pred); 
+      } 
+    } 
+
+    if (col instanceof BinaryExpression)
+    { BinaryExpression re = (BinaryExpression) col; 
+      String reop = re.getOperator();
+ 
+      if ("->sortedBy".equals(reop))  
+      { // redundant 
+        Expression arg = re.getLeft(); 
+        return Expression.simplifyForAll(var, arg, pred); 
+      } 
+
+      if ("|sortedBy".equals(reop))
+      { BinaryExpression domain = 
+              (BinaryExpression) re.getLeft(); 
+        Expression arg = domain.getRight(); 
+        return Expression.simplifyForAll(var, arg, pred); 
+      } 
+
+      if ("|".equals(reop))
+      { BinaryExpression domain = 
+               (BinaryExpression) re.getLeft(); 
+        Expression var1 = domain.getLeft();
+
+        if (var1.isEqualTo(var))
+        { // arg->forAll(var | pred1 => pred) 
+
+          Expression arg = domain.getRight(); 
+          Expression pred1 = re.getRight(); 
+          Expression newpred = 
+                 Expression.simplifyImplies(pred1,pred);
+          return Expression.simplifyForAll(var, arg, newpred); 
+        } 
+      }  
+
+      if ("|R".equals(reop))
+      { BinaryExpression domain = 
+               (BinaryExpression) re.getLeft(); 
+        Expression var1 = domain.getLeft();
+
+        if (var1.isEqualTo(var))
+        { // arg->forAll(var | not(pred1) => pred) 
+
+          Expression arg = domain.getRight(); 
+          Expression pred1 = re.getRight();
+          Expression npred1 = Expression.negate(pred1);  
+          Expression newpred = 
+                 Expression.simplifyImplies(npred1,pred);
+          return Expression.simplifyForAll(var, arg, newpred); 
+        } 
+      }  
     } 
 
     return new BinaryExpression("!", 
+             new BinaryExpression(":", var, col), pred); 
+  } 
+
+  public static Expression simplifySortedBy(Expression var, 
+                                          Expression col, 
+                                          Expression pred)
+  { // col->sortedBy(x | pred) is col for empty or 1-card col 
+
+    // if var /: vars(pred) then 
+    //   col
+    
+    if (col instanceof SetExpression)
+    { SetExpression se = (SetExpression) col;
+
+      if (se.size() <= 1)
+      { Type etyp = se.getElementType(); 
+        SetExpression res = 
+          new SetExpression(true);
+        if (se.size() == 1)
+        { Expression val = se.getOCLElement(1); 
+          res.addElement(val); 
+        } 
+        res.setElementType(etyp);  
+        return res; 
+      } 
+    } 
+
+    return new BinaryExpression("|sortedBy", 
+             new BinaryExpression(":", var, col), pred); 
+  } 
+
+  public static Expression simplifySortedBy(Expression col, 
+                                          Expression expr)
+  { // col->sortedBy(expr) is col for empty or 1-card col 
+    
+    if (col instanceof SetExpression)
+    { SetExpression se = (SetExpression) col;
+
+      if (se.size() <= 1)
+      { Type etyp = se.getElementType(); 
+        SetExpression res = 
+          new SetExpression(true);
+        if (se.size() == 1)
+        { Expression val = se.getOCLElement(1); 
+          res.addElement(val); 
+        } 
+        res.setElementType(etyp);  
+        return res; 
+      } 
+    } 
+
+    return new BinaryExpression("->sortedBy", col, expr); 
+  } // if expr is constant, then also col. 
+
+  public static Expression simplifySelect(Expression var, 
+                                          Expression col, 
+                                          Expression pred)
+  { // col->select(x | false) is empty collection of col type 
+    // col->select(x | true) is col
+    // col for empty col
+
+    if (pred.isFalseString())
+    { SetExpression emptycol = new SetExpression(); 
+      emptycol.setType(col.getType()); 
+      emptycol.setElementType(col.getElementType()); 
+      return emptycol; 
+    } 
+
+    if (pred.isTrueString())
+    { return col; } 
+    
+    if (col instanceof SetExpression)
+    { SetExpression se = (SetExpression) col;
+
+      if (se.size() == 0)
+      { return se; } 
+    } 
+
+    return new BinaryExpression("|", 
+             new BinaryExpression(":", var, col), pred); 
+  } 
+
+  public static Expression simplifySelect(Expression col, 
+                                          Expression pred)
+  { // col->select(false) is empty collection of col type 
+    // col->select(true) is col
+    // col for empty col
+
+    if (pred.isFalseString())
+    { SetExpression emptycol = new SetExpression(); 
+      emptycol.setType(col.getType()); 
+      emptycol.setElementType(col.getElementType()); 
+      return emptycol; 
+    } 
+
+    if (pred.isTrueString())
+    { return col; } 
+    
+    if (col instanceof SetExpression)
+    { SetExpression se = (SetExpression) col;
+
+      if (se.size() == 0)
+      { return se; } 
+    } 
+
+    return new BinaryExpression("->select", col, pred); 
+  } 
+
+  public static Expression simplifyReject(Expression var, 
+                                          Expression col, 
+                                          Expression pred)
+  { // col->reject(x | false) is col  
+    // col->reject(x | true) is empty collection of col type
+    // col for empty col
+
+    if (pred.isTrueString())
+    { SetExpression emptycol = new SetExpression(); 
+      emptycol.setType(col.getType()); 
+      emptycol.setElementType(col.getElementType()); 
+      return emptycol; 
+    } 
+
+    if (pred.isFalseString())
+    { return col; } 
+    
+    if (col instanceof SetExpression)
+    { SetExpression se = (SetExpression) col;
+
+      if (se.size() == 0)
+      { return se; } 
+    } 
+
+    return new BinaryExpression("|R", 
+             new BinaryExpression(":", var, col), pred); 
+  } 
+
+  public static Expression simplifyReject(Expression col, 
+                                          Expression pred)
+  { // col->reject(false) is col  
+    // col->reject(true) is empty collection of col type
+    // col for empty col
+
+    if (pred.isTrueString())
+    { SetExpression emptycol = new SetExpression(); 
+      emptycol.setType(col.getType()); 
+      emptycol.setElementType(col.getElementType()); 
+      return emptycol; 
+    } 
+
+    if (pred.isFalseString())
+    { return col; } 
+    
+    if (col instanceof SetExpression)
+    { SetExpression se = (SetExpression) col;
+
+      if (se.size() == 0)
+      { return se; } 
+    } 
+
+    return new BinaryExpression("->reject", col, pred); 
+  } 
+
+  public static Expression simplifySelectMaximals(Expression var, 
+                                          Expression col, 
+                                          Expression pred)
+  { // col->selectMaximals(x | e) is col  
+    // for empty or singleton col
+    
+    if (col instanceof SetExpression)
+    { SetExpression se = (SetExpression) col;
+
+      if (se.size() <= 1)
+      { return se; } 
+    } 
+
+    return new BinaryExpression("|selectMaximals", 
+             new BinaryExpression(":", var, col), pred); 
+  } 
+
+  public static Expression simplifySelectMinimals(Expression var, 
+                                          Expression col, 
+                                          Expression pred)
+  { // col->selectMinimals(x | e) is col  
+    // for empty or singleton col
+    
+    if (col instanceof SetExpression)
+    { SetExpression se = (SetExpression) col;
+
+      if (se.size() <= 1)
+      { return se; } 
+    } 
+
+    return new BinaryExpression("|selectMinimals", 
              new BinaryExpression(":", var, col), pred); 
   } 
 
@@ -5432,6 +6269,21 @@ abstract class Expression
               new BinaryExpression(":", var, src), expr); 
   } 
 
+  public static Expression simplifyCollect( 
+                              Expression src, Expression expr)
+  { 
+    if (src instanceof SetExpression) 
+    { SetExpression se = (SetExpression) src; 
+      if (se.size() == 0) 
+      { SetExpression res = new SetExpression(true); 
+        res.setElementType(se.getElementType()); 
+        return res; 
+      } 
+    }
+
+    return new BinaryExpression("->collect", src, expr); 
+  } 
+
   public static Expression simplifySum(Expression src)
   { // Integer.subrange(1,n)->sum() is (n*(n+1))/2
     // Integer.subrange(a,b)->sum() is ((b-a+1)*(a+b))/2
@@ -6014,6 +6866,45 @@ abstract class Expression
     } 
 
     return new UnaryExpression("->any", src); 
+  } 
+
+  public static Expression simplifyAny(Expression var, 
+                             Expression src, Expression pred)
+  { // sq->asSet()->any(x | pred)  is sq->any(x | pred)
+    // sq->asSequence()->any(x|pred)  is sq->any(x|pred)
+    // col->any(x | true) is col->first()
+    // col->any(x | false) is invalid
+    // empty collection ->any(x | pred) is invalid. 
+
+    if (pred.isTrueString())
+    { return Expression.simplifyFirst(src); } 
+
+    if (pred.isFalseString())
+    { return new BasicExpression("invalid"); } 
+
+    if (src instanceof SetExpression)
+    { SetExpression usrc = (SetExpression) src;
+ 
+      if (usrc.size() == 0) 
+      { return new BasicExpression("invalid"); } 
+    } 
+
+    if (src instanceof UnaryExpression)
+    { UnaryExpression uexpr = (UnaryExpression) src;
+      String uop = uexpr.getOperator();  
+      if ("->asSet".equals(uop) || 
+          "->asSequence".equals(uop) ||
+          "->oclAsSet".equals(uop) || 
+          "->oclAsSequence".equals(uop)) 
+      { return Expression.simplifyAny(var,
+                              uexpr.getArgument(), pred); 
+      } 
+    }
+
+
+    return new BinaryExpression("|A", 
+                 new BinaryExpression(":", var, src), 
+                 pred); 
   } 
 
   public static Expression simplifyReverse(Expression src)
