@@ -140,6 +140,10 @@ _1 < _2 |-->_1 & (_1`last < _2)<when> _1 comparison, _1 multiple
 _1 < _2 |-->MatrixLib.matrixLess(_1,_2)<when> _1`ocltype Sequence, _2`ocltype Sequence
 _1 < _2 |-->MatrixLib.elementwiseLess(_1,_2)<when> _1`ocltype Sequence
 
+_1 < _2 |-->(_2->includesAll(_1) & _1 /= _2)<when> _1 Set
+_1 < _2 |-->(_2->includesAll(_1) & _1 /= _2)<when> _1`ocltype Set
+
+_1 < _2 |-->_1->forAll(_x | _1->count(_x) < _2->count(_x))<when> _1 Bag
 _1 < _2 |-->_1->forAll(_x | _1->count(_x) < _2->count(_x))<when> _1`ocltype Bag
 
 _1 < _2 |-->_1 < _2<when> _1`ocltype String
@@ -160,6 +164,7 @@ _1 > _2 |-->_1 & (_1`last > _2)<when> _1 comparison, _1 multiple
 _1 > _2 |-->MatrixLib.matrixGreater(_1,_2)<when> _1`ocltype Sequence, _2`ocltype Sequence
 _1 > _2 |-->MatrixLib.elementwiseGreater(_1,_2)<when> _1`ocltype Sequence
 
+_1 > _2 |-->_1->forAll(_x | _1->count(_x) > _2->count(_x))<when> _1 Bag
 _1 > _2 |-->_1->forAll(_x | _1->count(_x) > _2->count(_x))<when> _1`ocltype Bag
 
 _1 > _2 |-->_1 > _2<when> _1`ocltype String
@@ -177,6 +182,7 @@ _1 > _2 |-->(_1->compareTo(_2)) > 0
 
 _1 >= _2 |-->_1 & (_1`last >= _2)<when> _1 comparison, _1 multiple
 
+_1 >= _2 |-->_1->forAll(_x | _1->count(_x) >= _2->count(_x))<when> _1 Bag
 _1 >= _2 |-->_1->forAll(_x | _1->count(_x) >= _2->count(_x))<when> _1`ocltype Bag
 
 _1 >= _2 |-->_1 >= _2<when> _1`ocltype String
@@ -194,7 +200,11 @@ _1 >= _2 |-->(_1->compareTo(_2)) >= 0
 
 _1 <= _2 |-->_1 & (_1`last <= _2)<when> _1 comparison, _1 multiple
 
+_1 <= _2 |-->_2->includesAll(_1)<when> _1 Set
+_1 <= _2 |-->_2->includesAll(_1)<when> _1`ocltype Set
+
 _1 <= _2 |-->_1->forAll(_x | _1->count(_x) <= _2->count(_x))<when> _1 Bag
+_1 <= _2 |-->_1->forAll(_x | _1->count(_x) <= _2->count(_x))<when> _1`ocltype Bag
 
 _1 <= _2 |-->_1 <= _2<when> _1`ocltype String
 _1 <= _2 |-->_1 <= _2<when> _1`ocltype double
@@ -424,10 +434,21 @@ _1 >> _2 |-->_1 /(2->pow(_2))
 _1 & _2 |-->_1->intersection(_2)<when> _1 Bag
 _1 & _2 |-->_1->intersection(_2)<when> _1`ocltype Bag
 
+_1 & _2 |-->_1->intersection(_2)<when> _1 Set
+_1 & _2 |-->_1->intersection(_2)<when> _1`ocltype Set
+
 _1 & _2 |-->MathLib.bitwiseAnd(_1, _2)
+
+_1 ^ _2 |-->_1->symmetricDifference(_2)<when> _1 Set
+_1 ^ _2 |-->_1->symmetricDifference(_2)<when> _1`ocltype Set
+
 _1 ^ _2 |-->MathLib.bitwiseXor(_1, _2)
+
 _1 | _2 |-->_1->union(_2)<when> _1 Map
 _1 | _2 |-->_1->union(_2)<when> _1`ocltype Map
+_1 | _2 |-->_1->union(_2)<when> _1 Set
+_1 | _2 |-->_1->union(_2)<when> _1`ocltype Set
+
 _1 | _2 |-->MathLib.bitwiseOr(_1, _2)
 
 _1 _2 _3 |-->_1_2<when> _2`isBasicTypeTrailer true, _3 matches .value
@@ -3065,12 +3086,21 @@ _1 - _2 |-->double
 _1 << _2 |-->int
 _1 >> _2 |-->int
 
+_1 & _2 |-->Bag<when> _1 Bag
 _1 & _2 |-->Bag<when> _1`ocltype Bag
+_1 & _2 |-->Set<when> _1 Set
+_1 & _2 |-->Set<when> _1`ocltype Set
 _1 & _2 |-->int
 
+_1 ^ _2 |-->Set<when> _1 Set
+_1 ^ _2 |-->Set<when> _1`ocltype Set
 _1 ^ _2 |-->int
 
+_1 | _2 |-->Set<when> _1 Set
+_1 | _2 |-->Set<when> _1`ocltype Set
+_1 | _2 |-->Bag<when> _1 Bag
 _1 | _2 |-->Bag<when> _1`ocltype Bag
+_1 | _2 |-->Map<when> _1 Map
 _1 | _2 |-->Map<when> _1`ocltype Map
 _1 | _2 |-->int
 
