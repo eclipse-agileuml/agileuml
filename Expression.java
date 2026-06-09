@@ -4012,12 +4012,18 @@ abstract class Expression
                             e2); 
     } 
 
+    if ("->any".equals(op))
+    { return simplifyAny(e1, e2); } 
+
     if ("|A".equals(op) && 
         e1 instanceof BinaryExpression)
     { BinaryExpression be1 = (BinaryExpression) e1; 
       return simplifyAny(be1.getLeft(), be1.getRight(), 
                          e2); 
     } 
+
+    if ("->selectMaximals".equals(op))
+    { return simplifySelectMaximals(e1, e2); } 
 
     if ("|selectMaximals".equals(op) && 
         e1 instanceof BinaryExpression)
@@ -4026,6 +4032,9 @@ abstract class Expression
                             be1.getRight(), 
                             e2); 
     } 
+
+    if ("->selectMinimals".equals(op))
+    { return simplifySelectMinimals(e1, e2); } 
 
     if ("|selectMinimals".equals(op) && 
         e1 instanceof BinaryExpression)
@@ -4085,6 +4094,14 @@ abstract class Expression
     { res = simplifyExists1(e1,e2); } 
     else if (op.equals("->isUnique")) 
     { res = simplifyIsUnique(e1,e2); } 
+    else if (op.equals("->any")) 
+    { res = simplifyAny(e1,e2); }
+    else if (op.equals("->selectMinimals")) 
+    { res = simplifySelectMinimals(e1,e2); } 
+    else if (op.equals("->selectMaximals")) 
+    { res = simplifySelectMaximals(e1,e2); }
+    else if (op.equals("->sortedBy")) 
+    { res = simplifySortedBy(e1,e2); }       
     else if (comparitors.contains(op)) 
     { res = simplifyIneq(op,e1,e2); } 
     else if (op.equals("+")) 
@@ -5592,6 +5609,22 @@ abstract class Expression
     return new BinaryExpression("->reject", col, pred); 
   } 
 
+  public static Expression simplifySelectMaximals(
+                                          Expression col, 
+                                          Expression pred)
+  { // col->selectMaximals(e) is col  
+    // for empty or singleton col
+    
+    if (col instanceof SetExpression)
+    { SetExpression se = (SetExpression) col;
+
+      if (se.size() <= 1)
+      { return se; } 
+    } 
+
+    return new BinaryExpression("->selectMaximals", col, pred); 
+  } 
+
   public static Expression simplifySelectMaximals(Expression var, 
                                           Expression col, 
                                           Expression pred)
@@ -5607,6 +5640,22 @@ abstract class Expression
 
     return new BinaryExpression("|selectMaximals", 
              new BinaryExpression(":", var, col), pred); 
+  } 
+
+  public static Expression simplifySelectMinimals(
+                                          Expression col, 
+                                          Expression pred)
+  { // col->selectMinimals(e) is col  
+    // for empty or singleton col
+    
+    if (col instanceof SetExpression)
+    { SetExpression se = (SetExpression) col;
+
+      if (se.size() <= 1)
+      { return se; } 
+    } 
+
+    return new BinaryExpression("->selectMinimals", col, pred); 
   } 
 
   public static Expression simplifySelectMinimals(Expression var, 
@@ -6868,6 +6917,42 @@ abstract class Expression
     return new UnaryExpression("->any", src); 
   } 
 
+  public static Expression simplifyAny(Expression src, 
+                                       Expression pred)
+  { // sq->asSet()->any(pred)  is sq->any(pred)
+    // sq->asSequence()->any(pred)  is sq->any(pred)
+    // col->any(true) is col->first()
+    // col->any(false) is invalid
+    // empty collection ->any(pred) is invalid. 
+
+    if (pred.isTrueString())
+    { return Expression.simplifyFirst(src); } 
+
+    if (pred.isFalseString())
+    { return new BasicExpression("invalid"); } 
+
+    if (src instanceof SetExpression)
+    { SetExpression usrc = (SetExpression) src;
+ 
+      if (usrc.size() == 0) 
+      { return new BasicExpression("invalid"); } 
+    } 
+
+    if (src instanceof UnaryExpression)
+    { UnaryExpression uexpr = (UnaryExpression) src;
+      String uop = uexpr.getOperator();  
+      if ("->asSet".equals(uop) || 
+          "->asSequence".equals(uop) ||
+          "->oclAsSet".equals(uop) || 
+          "->oclAsSequence".equals(uop)) 
+      { return Expression.simplifyAny(
+                              uexpr.getArgument(), pred); 
+      } 
+    }
+
+    return new BinaryExpression("->any", src, pred); 
+  } 
+
   public static Expression simplifyAny(Expression var, 
                              Expression src, Expression pred)
   { // sq->asSet()->any(x | pred)  is sq->any(x | pred)
@@ -6911,16 +6996,28 @@ abstract class Expression
   { // sq->reverse()->reverse()  is  sq
     // sq->sortedBy(x | e)->reverse() is sq->sortedBy(x | -e)
     //   when e is numeric
+
+    if (src instanceof SetExpression) 
+    { SetExpression usrc = (SetExpression) src; 
+      if (usrc.size() <= 1) 
+      { return usrc; }  
+    }  
     
-    if (src instanceof UnaryExpression && 
-        "->reverse".equals(
-           ((UnaryExpression) src).getOperator()))
-    { UnaryExpression usrc = (UnaryExpression) src; 
-      Expression uarg = usrc.getArgument(); 
-      // System.err.println("!! OES: Inefficient ->reverse operation: " + src + "->reverse()"); 
- 
-      return uarg; 
-    } 
+    if (src instanceof UnaryExpression)
+    { UnaryExpression uexpr = (UnaryExpression) src;
+      String uop = uexpr.getOperator();
+      Expression uarg = uexpr.getArgument(); 
+
+      if ("->reverse".equals(uop))
+      { // System.err.println("!! OES: Inefficient ->reverse operation: " + src + "->reverse()");
+        return uarg; 
+      }    
+      else if ("->asSet".equals(uop) || 
+               "->oclAsSet".equals(uop)) 
+      { // System.err.println("!! OES: Invalid operator " + uop + " in: " + src + "->reverse()");
+        return Expression.simplifyReverse(uarg); 
+      }
+    }  
 
     return new UnaryExpression("->reverse", src); 
   }
