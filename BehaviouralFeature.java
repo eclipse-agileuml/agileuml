@@ -4725,6 +4725,10 @@ public class BehaviouralFeature extends ModelElement
     { activity = activity.forwardPropagateAssignments(); }  
   } 
 
+  // if all operations of a class ignore the initial value of 
+  // a used attribute attr, then replace attr by a local variable
+  // in these operations. 
+
   public Map energyAnalysis(Vector redUses, Vector amberUses, 
                             Vector yellowUses)
   { // Scan the postcondition/activity for energy expensive

@@ -457,6 +457,29 @@ abstract class Statement implements Cloneable
     return false;  
   } // can also consider ->including, ->append
 
+  public static boolean readBeforeWrite(String v, 
+                                        Statement st)
+  { // on some control flow path, v is read before being written
+    Vector vvs = new Vector(); 
+    vvs.add(v); 
+      
+    if (st instanceof AssignStatement) 
+    { AssignStatement asgn = (AssignStatement) st; 
+      Expression expr = asgn.getRhs();
+
+      Vector vuses = expr.variablesUsedIn(vvs);
+      if (vuses.size() > 0) 
+      { return true; } 
+
+      // if v is updated feature in Lhs, return false 
+      Vector upds = asgn.updatedData(); 
+      if (upds.contains(v))
+      { return false; } 
+    } 
+
+    return false; // may not be read at all
+  } 
+
   public static Expression conditionalBranches2Expressions(
       Statement st, BehaviouralFeature bf, String op, String par,
       Vector nonrecs, Vector tailrecs, Vector semirecs) 
@@ -19224,6 +19247,34 @@ class AssignStatement extends Statement
         String frame = lexpr + ""; 
         if (e != null) 
         { frame = e.getName() + "::" + frame; } 
+        res.add(frame);
+      }
+    }
+
+    // res.add(lhs + "");  // lhs.data if a BasicExpression
+    return res;  
+  }  
+
+  public Vector updatedData()
+  { Vector res = new Vector();
+
+    if (lhs instanceof BasicExpression) 
+    { String frame = ((BasicExpression) lhs).data; 
+      res.add(frame); 
+    } // also case of v->at(i) := expr, etc
+    else if (lhs instanceof BinaryExpression)
+    { BinaryExpression expr = (BinaryExpression) lhs; 
+      if (expr.getOperator().equals("->at"))
+      { Expression arg = expr.getLeft();
+        String frame = arg + "";  
+        res.add(frame); 
+      } 
+    }
+    else if (lhs instanceof SetExpression)
+    { SetExpression sexpr = (SetExpression) lhs; 
+      for (int i = 0; i < sexpr.size(); i++) 
+      { Expression lexpr = (Expression) sexpr.get(i); 
+        String frame = lexpr + ""; 
         res.add(frame);
       }
     }

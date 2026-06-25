@@ -19429,6 +19429,22 @@ public Statement generateDesignSubtract(Expression rhs)
         int oescount = (int) res.get("OES"); 
         res.set("OES", oescount+1); 
       } 
+      else if ("OclDatasource".equals(objectRef + "") && 
+               "newSocket".equals(data))
+      { oUses.add("!! Expensive operation (OES): socket creation: " + this);
+        int ascore = (int) res.get("amber"); 
+        res.set("amber", ascore+1);
+        int oescount = (int) res.get("OES"); 
+        res.set("OES", oescount+1); 
+      } 
+      else if ("OclDatasource".equals(objectRef + "") && 
+               "newServerSocket".equals(data))
+      { oUses.add("!! Expensive operation (OES): socket creation: " + this);
+        int ascore = (int) res.get("amber"); 
+        res.set("amber", ascore+1);
+        int oescount = (int) res.get("OES"); 
+        res.set("OES", oescount+1); 
+      } 
       else if ("OclType".equals(objectRef + "") && 
                ("getAttributeValue".equals(data) || 
                 "setAttributeValue".equals(data) || 
@@ -19452,9 +19468,28 @@ public Statement generateDesignSubtract(Expression rhs)
     boolean sideeffect = isSideEffecting(); 
     Vector vuses = variablesUsedIn(vars); 
 
-    if (level > 1 && vuses.size() == 0 && !sideeffect)
-    { System.err.println("!!! Warning (LCE): The expression " + this + " may be independent of the iterator variables " + vars + "\n" + 
-       "!!!  Use Extract local variable to optimise.");
+    if (Expression.isOclDatasource(objectRef) && 
+        data.equals("rawQuery") && 
+        parameters != null && 
+        parameters.size() > 0) 
+    { Expression par1 = (Expression) parameters.get(0); 
+      String pstring = "" + par1; 
+      if (pstring.startsWith("\"SELECT * FROM"))
+      { String rem = pstring.substring(14); 
+        if (rem.indexOf("WHERE") < 0)
+        { System.err.println("! (OEW) flaw: retrieving all instances of a table: " + this + " may be inefficient.\n! Use SELECT ... WHERE ... instead");
+
+          System.err.println();
+        }
+      }
+    }
+
+    if (level > 1 && 
+        (objectRef != null || arrayIndex != null || 
+         parameters != null) && 
+        vuses.size() == 0 && !sideeffect)
+    { System.err.println("! Warning (LCE): The expression " + this + " may be independent of the iterator variables " + vars + "\n" + 
+       "!  Use Extract local variable to optimise.");
        refactorELV = true; 
        System.err.println();  
     }
@@ -19496,7 +19531,11 @@ public Statement generateDesignSubtract(Expression rhs)
          data.equals("Copy") || // language.equals("Mamba")  
          
          data.equals("executeQuery") ||
-         data.equals("executeMany") || 
+         data.equals("executeMany") ||
+         Expression.isOclDatasource(objectRef) && data.equals("execSQL") || 
+         Expression.isOclDatasource(objectRef) && data.equals("rawQuery") || 
+         Expression.isOclDatasource(objectRef) && data.equals("connect") ||  
+         Expression.isOclDatasource(objectRef) && data.equals("openConnection") ||  
          data.equals("createStatement")))
     { System.err.println("!! (OES) flaw: expensive operation " + this + " within loop");
       System.err.println(); 
@@ -19537,6 +19576,26 @@ public Statement generateDesignSubtract(Expression rhs)
                                    uses, messages); 
       } 
     } 
+
+    if (Expression.isOclDatasource(objectRef) && 
+        data.equals("rawQuery") && 
+        parameters != null && 
+        parameters.size() > 0) 
+    { Expression par1 = (Expression) parameters.get(0); 
+      String pstring = "" + par1; 
+      if (pstring.startsWith("\"SELECT * FROM"))
+      { String rem = pstring.substring(14); 
+        if (rem.indexOf("WHERE") < 0)
+        { messages.add("! (OEW) flaw: retrieving all instances of a table: " + this + " may be inefficient.\n! Use SELECT ... WHERE ... instead");
+
+          int yScore = (int) uses.get("yellow"); 
+          uses.set("yellow", yScore+1); 
+          messages.add(""); 
+          int oewcount = (int) uses.get("OEW"); 
+          uses.set("OEW", oewcount+1);
+        }
+      }
+    }
 
     /* JOptionPane.showInputDialog("Collection uses of " + this + " " + level + " " + objectRef + " " + parameters);  */ 
 
@@ -19627,6 +19686,10 @@ public Statement generateDesignSubtract(Expression rhs)
          
           data.equals("executeQuery") ||
           data.equals("executeMany") || 
+          Expression.isOclDatasource(objectRef) && data.equals("execSQL") || 
+          Expression.isOclDatasource(objectRef) && data.equals("rawQuery") || 
+          Expression.isOclDatasource(objectRef) && data.equals("connect") ||  
+          Expression.isOclDatasource(objectRef) && data.equals("openConnection") ||  
           data.equals("createStatement")))
     { messages.add("!! (OES) flaw: expensive operation " + this + " within loop");
 
@@ -19647,7 +19710,6 @@ public Statement generateDesignSubtract(Expression rhs)
       { opers = new Vector(); } 
       opers.add(newbe); 
       res.put(level, opers); 
-
 
       if ((arrayIndex + "").equals("0") ||
           (arrayIndex + "").equals(data + "->size() + 1") ||

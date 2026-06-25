@@ -2370,6 +2370,16 @@ abstract class Expression
     return false; 
   }
 
+  public static boolean isOclDatasource(Expression oref)
+  { if (oref == null) 
+    { return false; } 
+    Type typ = oref.getType(); 
+    if (typ != null && 
+        "OclDatasource".equals(typ.getName()))
+    { return true; } 
+    return false; 
+  } 
+
   public boolean isSetValued()
   { return type != null && type.isSet(); }
 
@@ -5451,12 +5461,49 @@ abstract class Expression
   } 
 
   public static Expression simplifySortedBy(Expression var, 
-                                          Expression col, 
-                                          Expression pred)
+                                            Expression col, 
+                                            Expression pred)
   { // col->sortedBy(x | pred) is col for empty or 1-card col 
 
     // if var /: vars(pred) then 
     //   col
+    
+    if (col instanceof SetExpression)
+    { SetExpression se = (SetExpression) col;
+
+      if (se.size() <= 1)
+      { Type etyp = se.getElementType(); 
+        SetExpression res = 
+          new SetExpression(true);
+
+        if (se.size() == 1)
+        { Expression val = se.getOCLElement(1); 
+          res.addElement(val); 
+        } 
+
+        res.setElementType(etyp);  
+        return res; 
+      } 
+    } 
+
+    if (col instanceof UnaryExpression)
+    { UnaryExpression ue = (UnaryExpression) col; 
+      String ueop = ue.getOperator(); 
+      if (ueop.equals("->asSequence") || 
+          ueop.equals("->oclAsSequence"))
+      { return Expression.simplifySortedBy(var, 
+                             ue.getArgument(), 
+                             pred); 
+      } 
+    } 
+
+    return new BinaryExpression("|sortedBy", 
+             new BinaryExpression(":", var, col), pred); 
+  } 
+
+  public static Expression simplifySortedBy(Expression col, 
+                                            Expression expr)
+  { // col->sortedBy(expr) is col for empty or 1-card col 
     
     if (col instanceof SetExpression)
     { SetExpression se = (SetExpression) col;
@@ -5474,27 +5521,14 @@ abstract class Expression
       } 
     } 
 
-    return new BinaryExpression("|sortedBy", 
-             new BinaryExpression(":", var, col), pred); 
-  } 
-
-  public static Expression simplifySortedBy(Expression col, 
-                                          Expression expr)
-  { // col->sortedBy(expr) is col for empty or 1-card col 
-    
-    if (col instanceof SetExpression)
-    { SetExpression se = (SetExpression) col;
-
-      if (se.size() <= 1)
-      { Type etyp = se.getElementType(); 
-        SetExpression res = 
-          new SetExpression(true);
-        if (se.size() == 1)
-        { Expression val = se.getOCLElement(1); 
-          res.addElement(val); 
-        } 
-        res.setElementType(etyp);  
-        return res; 
+    if (col instanceof UnaryExpression)
+    { UnaryExpression ue = (UnaryExpression) col; 
+      String ueop = ue.getOperator(); 
+      if (ueop.equals("->asSequence") || 
+          ueop.equals("->oclAsSequence"))
+      { return Expression.simplifySortedBy( 
+                             ue.getArgument(), 
+                             expr); 
       } 
     } 
 
@@ -5622,6 +5656,18 @@ abstract class Expression
       { return se; } 
     } 
 
+    if (col instanceof UnaryExpression)
+    { UnaryExpression ue = (UnaryExpression) col; 
+      String ueop = ue.getOperator(); 
+      if (ueop.equals("->asSequence") || 
+          ueop.equals("->oclAsSequence"))
+      { return Expression.simplifySelectMaximals( 
+                             ue.getArgument(), 
+                             pred); 
+      } 
+    } 
+
+
     return new BinaryExpression("->selectMaximals", col, pred); 
   } 
 
@@ -5636,6 +5682,17 @@ abstract class Expression
 
       if (se.size() <= 1)
       { return se; } 
+    } 
+
+    if (col instanceof UnaryExpression)
+    { UnaryExpression ue = (UnaryExpression) col; 
+      String ueop = ue.getOperator(); 
+      if (ueop.equals("->asSequence") || 
+          ueop.equals("->oclAsSequence"))
+      { return Expression.simplifySelectMaximals(var, 
+                             ue.getArgument(), 
+                             pred); 
+      } 
     } 
 
     return new BinaryExpression("|selectMaximals", 
@@ -5655,6 +5712,17 @@ abstract class Expression
       { return se; } 
     } 
 
+    if (col instanceof UnaryExpression)
+    { UnaryExpression ue = (UnaryExpression) col; 
+      String ueop = ue.getOperator(); 
+      if (ueop.equals("->asSequence") || 
+          ueop.equals("->oclAsSequence"))
+      { return Expression.simplifySelectMinimals( 
+                             ue.getArgument(), 
+                             pred); 
+      } 
+    } 
+
     return new BinaryExpression("->selectMinimals", col, pred); 
   } 
 
@@ -5669,6 +5737,17 @@ abstract class Expression
 
       if (se.size() <= 1)
       { return se; } 
+    } 
+
+    if (col instanceof UnaryExpression)
+    { UnaryExpression ue = (UnaryExpression) col; 
+      String ueop = ue.getOperator(); 
+      if (ueop.equals("->asSequence") || 
+          ueop.equals("->oclAsSequence"))
+      { return Expression.simplifySelectMinimals(var, 
+                             ue.getArgument(), 
+                             pred); 
+      } 
     } 
 
     return new BinaryExpression("|selectMinimals", 
@@ -7023,7 +7102,7 @@ abstract class Expression
   }
 
   public static Expression simplifySort(Expression src)
-  { // sq->reverse()->sort()  is  sq->sort()
+  { // sq->asSequence()->sort()  is  sq->sort()
     // Integer.subrange(a,b)->sort() is Integer.subrange(a,b)
     // sq->sort()->sort() is sq->sort()
 
@@ -7032,21 +7111,37 @@ abstract class Expression
         "Integer".equals(
            ((BasicExpression) src).getObjectRef() + ""))
     { BasicExpression lcol = (BasicExpression) src; 
-      System.err.println("!! OES: Redundant operator ->sort() in: " + src + "->sort()"); 
+      // System.err.println("!! OES: Redundant operator ->sort() in: " + src + "->sort()"); 
       return lcol; 
     }  
 
-    
+    if (src instanceof SetExpression)
+    { SetExpression se = (SetExpression) src;
+
+      if (se.size() <= 1)
+      { Type etyp = se.getElementType(); 
+        SetExpression res = 
+          new SetExpression(true);
+
+        if (se.size() == 1)
+        { Expression val = se.getOCLElement(1); 
+          res.addElement(val); 
+        } 
+
+        res.setElementType(etyp);  
+        return res; 
+      } 
+    } 
+
     if (src instanceof UnaryExpression)
     { UnaryExpression usrc = (UnaryExpression) src; 
       String uop = usrc.getOperator(); 
  
-      if ("->reverse".equals(uop) || 
-          "->sort".equals(uop) || 
+      if ("->sort".equals(uop) || 
           "->asSequence".equals(uop) || 
           "->oclAsSequence".equals(uop))
       { Expression uarg = usrc.getArgument(); 
-        System.err.println("!! OES: Redundant operator " + uop + " in: " + src + "->sort()"); 
+        // System.err.println("!! OES: Redundant operator " + uop + " in: " + src + "->sort()"); 
  
         return uarg; 
       } 
