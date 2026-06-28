@@ -5312,6 +5312,7 @@ public class Entity extends ModelElement implements Comparable
       int eos = (int) opflaws.getOrDefault("EOS", 0); 
       int uva = (int) opflaws.getOrDefault("UVA", 0); 
 
+
       opred = cbr; 
       opamber = dc + mgn + efo + cc; 
       opyellow = eos + uva; 
@@ -5390,6 +5391,36 @@ public class Entity extends ModelElement implements Comparable
       } 
     }   
 
+    java.util.HashMap attUseFlaws = new java.util.HashMap(); 
+    
+    for (int i = 0; i < attributes.size(); i++) 
+    { Attribute attr = (Attribute) attributes.get(i); 
+      String v = attr.getName(); 
+
+      boolean unused = true; 
+      boolean alwaysOverwritten = true; 
+
+      for (int j = 0; j < operations.size(); j++) 
+      { BehaviouralFeature bf = 
+                     (BehaviouralFeature) operations.get(j); 
+        int bfuse = bf.ignoredAttribute(v, attUseFlaws); 
+          
+        if (bfuse == Statement.RDWR) 
+        { unused = false; 
+          alwaysOverwritten = false; 
+          break; 
+        } // normal usage
+
+        if (bfuse == Statement.WR)
+        { unused = false; } 
+      } 
+
+      if (unused) 
+      { out.println("!! Attribute " + v + " unused in operations of " + ename); } 
+      else if (alwaysOverwritten) 
+      { out.println("!! Attribute " + v + " always overwritten in operations of " + ename); } 
+    } 
+         
     return totalComplexity; 
   } 
 
@@ -6644,6 +6675,7 @@ public class Entity extends ModelElement implements Comparable
       String entop = ename + "::" + opname; 
       for (int j = 0; j < newopuses.size(); j++) 
       { res.add_pair(entop, newopuses.get(j)); } 
+      // no duplicates are added 
 
       if (superclass != null) 
       { Entity sup = superclass; 
@@ -6659,9 +6691,10 @@ public class Entity extends ModelElement implements Comparable
     } 
 
     if (n > 0)
-    { System.out.println(">>> Cohesion of class " + ename + " = " + res.size()/(1.0*n*(n-1))); 
+    { System.out.println(">>> Operations cohesion of class " + ename + " = " + res.size()/(1.0*n*n)); 
       System.out.println(); 
-    }
+    } // number of possible 
+      // dependencies that are actually used
 
     return res; 
   } 
@@ -6892,7 +6925,7 @@ public class Entity extends ModelElement implements Comparable
       int sz = selfCalls.size(); 
       if (cz > 1) 
       { double cra = sz/(1.0*cz*(cz-1)); 
-        System.out.println(">>> Cohesion of component " + comp + " = " + cra); 
+        System.out.println(">>> Operation cohesion of component " + comp + " = " + cra); 
         newCRA = newCRA + cra;
       }  
     }
@@ -6920,7 +6953,7 @@ public class Entity extends ModelElement implements Comparable
     int ccount = finalComponents.size(); 
     double cCoupling = cdepcount/(1.0*ccount*(ccount-1)); 
 
-    System.out.println(">> Component coupling: " + cCoupling);
+    System.out.println(">> Component operation coupling: " + cCoupling);
     System.out.println(">> New CRA-index: " + (newCRA - cCoupling)); 
     System.out.println(); 
 

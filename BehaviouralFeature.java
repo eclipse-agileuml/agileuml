@@ -5120,6 +5120,26 @@ int ascore = (int) res.get("amber");
 
   } // and activity
 
+  public int ignoredAttribute(String v, java.util.Map qflaws)
+  { // if an attribute is written before being read, could 
+    // be a flaw: OWA - overwritten attribute
+    int wrstat = Statement.NOUSE; 
+
+    if (activity != null) 
+    { wrstat = Statement.readBeforeWrite(v, activity); 
+      if (wrstat == Statement.WR) 
+      { System.err.println("! Possible code smell (OWA): attribute " + v + " value ignored & overwritten by " + this); 
+        int owa = (int) qflaws.getOrDefault("OWA", 0); 
+        qflaws.put("OWA", owa + 1); 
+        System.err.println();
+      } 
+    } 
+
+    return wrstat; 
+  } // NOUSE for all operations - unused attribute
+    // WR/NOUSE for all operations - replace by local variables
+
+  // Quality analysis: 
   public int displayMeasures(PrintWriter out, java.util.Map qflaws)   
   { String res = ""; 
     String nme = getName(); 

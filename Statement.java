@@ -34,7 +34,9 @@ abstract class Statement implements Cloneable
   public static final int EXIT = 5;
   public static final int OTHER = 6; 
    
-  
+  public static final int NOUSE = 0; 
+  public static final int RDWR = 1; 
+  public static final int WR = 2; 
 
   public static final String[] spaces = { "", "  ", "    ", "      ", "        ", "          ", "            ", "              ", "                ", "                  ", "                    " }; 
   // spaces[i] is i*2 spaces
@@ -457,8 +459,8 @@ abstract class Statement implements Cloneable
     return false;  
   } // can also consider ->including, ->append
 
-  public static boolean readBeforeWrite(String v, 
-                                        Statement st)
+  public static int readBeforeWrite(String v, 
+                                    Statement st)
   { // on some control flow path, v is read before being written
     Vector vvs = new Vector(); 
     vvs.add(v); 
@@ -469,15 +471,131 @@ abstract class Statement implements Cloneable
 
       Vector vuses = expr.variablesUsedIn(vvs);
       if (vuses.size() > 0) 
-      { return true; } 
+      { return Statement.RDWR; } 
 
       // if v is updated feature in Lhs, return false 
       Vector upds = asgn.updatedData(); 
       if (upds.contains(v))
-      { return false; } 
+      { return Statement.WR; } 
     } 
 
-    return false; // may not be read at all
+    if (st instanceof CreationStatement)
+    { CreationStatement cs = (CreationStatement) st; 
+      String var = cs.getVariable(); 
+      Expression expr = cs.getInitialisationExpression(); 
+
+      if (var.equals(v))
+      { return NOUSE; } // redefined 
+
+      Vector vuses = expr.variablesUsedIn(vvs);
+      if (vuses.size() > 0) 
+      { return Statement.RDWR; } 
+      
+      return Statement.NOUSE; 
+    } 
+
+    if (st instanceof ConditionalStatement)
+    { ConditionalStatement cs = (ConditionalStatement) st; 
+      Expression tst = cs.getTest(); 
+
+      Vector vuses = tst.variablesUsedIn(vvs);
+      if (vuses.size() > 0) 
+      { return Statement.RDWR; } 
+
+      Statement ifstat = cs.getIfPart(); 
+      Statement elsestat = cs.getElsePart(); 
+
+      int w1 = Statement.readBeforeWrite(v, ifstat); 
+      int w2 = Statement.readBeforeWrite(v, elsestat); 
+
+      if (w1 == Statement.RDWR || 
+          w2 == Statement.RDWR)
+      { return Statement.RDWR; } 
+
+      if (w1 == Statement.WR || 
+          w2 == Statement.WR)
+      { return Statement.WR; } 
+  
+      return Statement.NOUSE; 
+    } 
+
+    if (st instanceof SequenceStatement) 
+    { SequenceStatement ss = (SequenceStatement) st; 
+      for (int i = 0; i < ss.size(); i++) 
+      { Statement s1 = ss.getStatement(i); 
+        int w1 = Statement.readBeforeWrite(v, s1); 
+        if (w1 == Statement.RDWR) 
+        { return Statement.RDWR; } 
+        if (w1 == Statement.WR)
+        { return Statement.WR; } 
+      }
+      return Statement.NOUSE; 
+    }  
+
+    if (st instanceof ReturnStatement) 
+    { ReturnStatement rs = (ReturnStatement) st; 
+      Expression rvalue = rs.getValue(); 
+      if (rvalue == null) 
+      { return Statement.NOUSE; } 
+
+      Vector vuses = rvalue.variablesUsedIn(vvs);
+      if (vuses.size() > 0) 
+      { return Statement.RDWR; } 
+      
+      return Statement.NOUSE; 
+    } 
+
+    if (st instanceof WhileStatement) 
+    { WhileStatement ws = (WhileStatement) st; 
+      int lkind = ws.getLoopKind();
+      
+      if (lkind == Statement.WHILE) 
+      { Expression tst = ws.getLoopTest(); 
+  
+        Vector vuses = tst.variablesUsedIn(vvs);
+        if (vuses.size() > 0) 
+        { return Statement.RDWR; }
+
+        Statement body = ws.getLoopBody(); 
+        int use = Statement.readBeforeWrite(v, body); 
+        return use; 
+      }  
+      
+      if (lkind == Statement.REPEAT) 
+      { Expression tst = ws.getLoopTest(); 
+
+        Statement body = ws.getLoopBody(); 
+        int use = Statement.readBeforeWrite(v, body); 
+        if (use != Statement.NOUSE) 
+        { return use; }  
+        
+        Vector vuses = tst.variablesUsedIn(vvs);
+        if (vuses.size() > 0) 
+        { return Statement.RDWR; }
+
+        return Statement.NOUSE; 
+      }  
+
+      if (lkind == Statement.FOR) 
+      { Expression tst = ws.getLoopRange(); 
+        Expression var = ws.getLoopVar(); 
+
+        Vector vuses = tst.variablesUsedIn(vvs);
+        if (vuses.size() > 0) 
+        { return Statement.RDWR; }
+
+        if (v.equals(var + ""))
+        { return Statement.NOUSE; } 
+
+        Statement body = ws.getLoopBody(); 
+        int use = Statement.readBeforeWrite(v, body); 
+        return use; 
+      }  
+      
+      return Statement.NOUSE; 
+    } 
+
+    return Statement.NOUSE; // may not be read at all
   } 
 
   public static Expression conditionalBranches2Expressions(
@@ -7570,6 +7688,12 @@ class WhileStatement extends Statement
 
   public Expression getLoopTest()
   { return loopTest; } 
+
+  public Expression getLoopRange()
+  { return loopRange; } 
+
+  public int getLoopKind()
+  { return loopKind; } 
 
   public void setTest(Expression tst)
   { loopTest = tst;
