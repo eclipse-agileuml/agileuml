@@ -3,7 +3,7 @@ import java.io.*;
 import javax.swing.*;
 
 /******************************
-* Copyright (c) 2003--2024 Kevin Lano
+* Copyright (c) 2003--2026 Kevin Lano
 * This program and the accompanying materials are made available under the
 * terms of the Eclipse Public License 2.0 which is available at
 * http://www.eclipse.org/legal/epl-2.0
@@ -1938,8 +1938,8 @@ System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
     int epl = parameters.size(); 
     out.println("*** Number of parameters: " + epl + "\n");
     if (epl > 5) 
-    { System.err.println("*** Bad smell (EPL): too many parameters (" + epl + ") in " + getName()); 
-      System.err.println(">>> Suggest refactoring by sequential decomposition of transformation"); 
+    { System.err.println("!! Bad smell (EPL): too many parameters (" + epl + ") in " + getName()); 
+      System.err.println("!! Suggest refactoring by sequential decomposition of transformation"); 
     }  
 
     int attsSize = ownedAttribute.size(); 

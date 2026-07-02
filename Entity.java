@@ -5046,8 +5046,8 @@ public class Entity extends ModelElement implements Comparable
 
       if (pars != null && 
           pars.size() > TestParameters.numberOfParametersLimit) 
-      { System.err.println("! Code smell (EPL): too many parameters (" + pars + ") for " + nme); 
-        System.err.println("! Recommend refactoring by introducing value object for parameters or splitting operation into parts"); 
+      { System.err.println("!! Code smell (EPL): too many parameters (" + pars + ") for " + nme); 
+        System.err.println("!! Recommend refactoring by introducing value object for parameters or splitting operation into parts"); 
         System.err.println(); 
       }  
 
