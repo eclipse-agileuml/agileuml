@@ -1983,6 +1983,53 @@ public void findClones(java.util.Map clones,
     return res; 
   } // also any in the argument. 
 
+  public Expression computationalCost()
+  { Expression argcost = argument.computationalCost(); 
+
+    Expression argsize = Expression.simplifySize(argument); 
+
+    if (operator.equals("->sort") && !argument.isSorted())
+    { Expression ccost = 
+        new BinaryExpression("*", argsize, 
+          new UnaryExpression("->log", argsize)); 
+      return ccost; 
+    } 
+
+    if (operator.equals("->copy") ||
+        operator.equals("->isDeleted") ||
+        operator.equals("->reverse") ||
+        operator.equals("->front") ||
+        operator.equals("->tail") ||
+        operator.equals("->sum") ||
+        operator.equals("->average") ||
+        operator.equals("->prd") ||
+        operator.equals("->oclAsSet") && !argument.isSet() ||
+        operator.equals("->oclAsSequence") ||
+        operator.equals("->asSet") && !argument.isSet() ||
+        operator.equals("->asSequence") ||
+        (operator.equals("->max") && !argument.isSorted()) ||
+        (operator.equals("->min") && !argument.isSorted()))
+    { // O(n) operator
+      if (argcost == null)
+      { return argsize; } 
+
+      SetExpression res = new SetExpression(); 
+      res.addElement(argcost); 
+      res.addElement(argsize); 
+      return Expression.simplifyMax(res); 
+    } 
+
+    if (operator.equals("->unionAll") || 
+        operator.equals("->intersectAll") || 
+        operator.equals("->concatenateAll"))
+    { // generally O(n*n)
+      return new BinaryExpression("*", 
+                       argsize, argsize); 
+    } 
+        
+    return argcost;
+  } 
+
 
   public int syntacticComplexity() 
   { int res = argument.syntacticComplexity() + 1; 

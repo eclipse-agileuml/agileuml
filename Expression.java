@@ -260,6 +260,9 @@ abstract class Expression
   public boolean isAttribute()
   { return umlkind == ATTRIBUTE; } 
 
+  public boolean isRole()
+  { return umlkind == ROLE; } 
+
   public static String ofKind(int umlkind)
   { if (umlkind == UNKNOWN) { return "UNKNOWN"; } 
  
@@ -2396,6 +2399,9 @@ abstract class Expression
 
   public boolean isSequence()
   { return type != null && type.isSequence(); }
+
+  public boolean isSortedSequence()
+  { return type != null && type.isSortedSequence(); }
 
   public boolean isStringSequence()
   { return type != null && type.isStringSequence(); } 
@@ -6170,7 +6176,9 @@ abstract class Expression
 
     if (src instanceof SetExpression)
     { SetExpression usrc = (SetExpression) src; 
-      Expression uarg = usrc.min(); 
+      SetExpression fset = 
+               SetExpression.flattenOperator("->min", usrc);  
+      Expression uarg = fset.min(); 
  
       return uarg; 
     }
@@ -6237,8 +6245,10 @@ abstract class Expression
     // Integer.subrange(a,b)->max() is b
 
     if (src instanceof SetExpression)
-    { SetExpression usrc = (SetExpression) src; 
-      Expression uarg = usrc.max(); 
+    { SetExpression usrc = (SetExpression) src;
+      SetExpression fset = 
+               SetExpression.flattenOperator("->max", usrc);  
+      Expression uarg = fset.max(); 
  
       return uarg; 
     }
@@ -9795,6 +9805,8 @@ public static boolean conflictsReverseOp(String op1, String op2)
   public abstract java.util.Map collectionOperatorUses(int level, 
                              java.util.Map res, Vector vars, 
                              Map uses, Vector messages); 
+
+  public abstract Expression computationalCost(); 
 
   public Expression isExistsForall(Vector foralls, Expression tracest)
   { return null; }

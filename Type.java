@@ -345,6 +345,11 @@ public class Type extends ModelElement
            "SortedSequence".equals(name);
   } 
 
+  public boolean isSortedSequence() 
+  { return "Sequence".equals(name) && sorted || 
+           "SortedSequence".equals(name);
+  } 
+
   public boolean isMap() 
   { return "Map".equals(name); } 
 

@@ -268,6 +268,7 @@ public class UseCase extends ModelElement
   { Map res = new Map(); 
     res.set("red", 0); 
     res.set("amber", 0); 
+    res.set("yellow", 0); 
 
     String ename = getName(); 
 
@@ -283,15 +284,20 @@ public class UseCase extends ModelElement
 
       Vector redDetails = new Vector(); 
       Vector amberDetails = new Vector(); 
+      Vector yellowDetails = new Vector(); 
       
       Map conres = new Map(); 
       conres.set("red", 0); 
       conres.set("amber", 0); 
+      conres.set("yellow", 0); 
 
-      Map res1 = con.energyUse(conres,redDetails, amberDetails);
+      Map res1 = con.energyUse(conres, 
+                       redDetails, amberDetails); 
+                       // , yellowDetails);
 
       int redop = (int) res1.get("red"); 
       int amberop = (int) res1.get("amber"); 
+      int yellowop = (int) res1.get("yellow"); 
 
       con.collectionOperatorUses(1, collOps, collVars); 
 
@@ -334,8 +340,11 @@ public class UseCase extends ModelElement
 
       Vector redDetails = new Vector(); 
       Vector amberDetails = new Vector(); 
+      Vector yellowDetails = new Vector(); 
 
-      Map res1 = op.energyAnalysis(redDetails, amberDetails);
+      Map res1 = 
+          op.energyAnalysis(redDetails, 
+                            amberDetails, yellowDetails);
 
       op.collectionOperatorUses(1, collOps, collVars); 
  
@@ -1954,7 +1963,9 @@ System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
     for (int i = 0; i < opsSize; i++) 
     { BehaviouralFeature bf = (BehaviouralFeature) ownedOperations.get(i); 
       bf.findClones(clones); 
-      int opsize = bf.displayMeasures(out); 
+      java.util.Map qflaws = 
+                       new java.util.HashMap(); 
+      int opsize = bf.displayMeasures(out, qflaws); 
       totalSize = totalSize + opsize; 
 
       if (opsize > 100) 

@@ -5120,6 +5120,18 @@ int ascore = (int) res.get("amber");
 
   } // and activity
 
+  public Expression computationalCost()
+  { // Estimate of computational cost 
+
+    if (activity != null) 
+    { return activity.computationalCost(); } 
+
+    if (post != null) 
+    { return post.computationalCost(); } 
+
+    return null; 
+  } 
+
   public int ignoredAttribute(String v, java.util.Map qflaws)
   { // if an attribute is written before being read, could 
     // be a flaw: OWA - overwritten attribute

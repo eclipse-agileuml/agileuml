@@ -863,6 +863,12 @@ public void findPlugins()
       "Checks for energy use flaws");
     analyseMenu.add(energyAnal);
 
+    JMenuItem compCost = new JMenuItem("Computational cost"); 
+    compCost.addActionListener(this);
+    compCost.setToolTipText(
+      "Estimates computational cost");
+    analyseMenu.add(compCost);
+
     JMenuItem deterCheck = 
       new JMenuItem("Definedness/Determinacy"); 
     deterCheck.setToolTipText(
@@ -2649,6 +2655,8 @@ public void findPlugins()
       }  
       else if (label.equals("Energy analysis"))
       { ucdArea.energyAnalysis(); }  
+      else if (label.equals("Computational cost"))
+      { ucdArea.computationalCost(); }  
       else if (label.equals("Simulate"))
       { simulatedExecution(); } 
       else if (label.equals("Clean architecture properties"))

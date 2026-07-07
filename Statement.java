@@ -595,6 +595,61 @@ abstract class Statement implements Cloneable
       return Statement.NOUSE; 
     } 
 
+    if (st instanceof ImplicitInvocationStatement) 
+    { Vector rds = st.readFrame();
+      Vector wrs = st.writeFrame(); 
+
+      // if v : rds then RDWR, else if v : wrs then WR
+      // else NOUSE 
+
+      for (int i = 0; i < rds.size(); i++) 
+      { String rv = (String) rds.get(i); 
+        int k = rv.indexOf("::"); 
+        if (k >= 0) 
+        { String vname = rv.substring(k+2); 
+          if (v.equals(vname))
+          { return Statement.RDWR; }
+        }  
+        else if (v.equals(rv))
+        { return Statement.RDWR; } 
+      }
+
+      for (int i = 0; i < wrs.size(); i++) 
+      { String wv = (String) wrs.get(i); 
+        int k = wv.indexOf("::"); 
+        if (k >= 0) 
+        { String vname = wv.substring(k+2); 
+          if (v.equals(vname))
+          { return Statement.WR; }
+        }  
+        else if (v.equals(wv))
+        { return Statement.WR; } 
+      }
+
+      return Statement.NOUSE;
+    } 
+
+    if (st instanceof InvocationStatement) 
+    { Vector rds = st.readFrame();
+
+      // if v : rds then RDWR, 
+      // else NOUSE 
+
+      for (int i = 0; i < rds.size(); i++) 
+      { String rv = (String) rds.get(i); 
+        int k = rv.indexOf("::"); 
+        if (k >= 0) 
+        { String vname = rv.substring(k+2); 
+          if (v.equals(vname))
+          { return Statement.RDWR; }
+        }  
+        else if (v.equals(rv))
+        { return Statement.RDWR; } 
+      }
+
+      return Statement.NOUSE;
+    } 
+
     return Statement.NOUSE; // may not be read at all
   } 
 
@@ -2266,6 +2321,8 @@ abstract class Statement implements Cloneable
                              java.util.Map operatorsAtLevel, 
                              Vector vars, Map uses,
                              Vector messages);
+
+  public abstract Expression computationalCost(); 
 
   public static boolean isSemiTailRecursive(
             BehaviouralFeature bf, String nme, Statement st)
@@ -5035,6 +5092,13 @@ class ReturnStatement extends Statement
     return new BasicExpression(true); 
   } 
 
+  public Expression computationalCost()
+  { if (value == null) 
+    { return null; } 
+
+    return value.computationalCost(); 
+  } 
+
   public void semanticAnalysis(Map uses, Vector messages)
   { if (value != null) 
     { value.semanticAnalysis(uses, messages); }
@@ -5703,6 +5767,9 @@ class BreakStatement extends Statement
   public Statement optimiseOCL()
   { return this; }  
 
+  public Expression computationalCost()
+  { return null; } 
+
   public Map energyUse(Map uses, 
                        Vector rUses, Vector oUses, Vector yUses)
   { return uses; }  
@@ -5940,6 +6007,9 @@ class ContinueStatement extends Statement
   public Map energyUse(Map uses, 
                        Vector rUses, Vector oUses, Vector yUses)
   { return uses; }  
+
+  public Expression computationalCost()
+  { return null; } 
 
   public Statement optimiseOCL()
   { return this; }  
@@ -6349,6 +6419,9 @@ class InvocationStatement extends Statement
     { return callExp.variablesUsedIn(vars); } 
     return res; 
   } 
+
+  public Expression computationalCost()
+  { return callExp.computationalCost(); } 
 
   public Statement optimiseOCL()
   { Expression cexp = callExp.simplifyOCL(); 
@@ -6891,7 +6964,8 @@ class InvocationStatement extends Statement
       } 
  
       if (entity != null) 
-      { BehaviouralFeature op = entity.getDefinedOperation(callString); 
+      { BehaviouralFeature op = 
+            entity.getDefinedOperation(callString); 
         if (op != null) 
         { Expression post = op.getPost(); 
           Vector params = op.getParameters(); 
@@ -6907,12 +6981,14 @@ class InvocationStatement extends Statement
           { String par = "" + params.get(p); 
             parstrings.add(par); 
           } 
+
           res.removeAll(parstrings); 
         }
         // System.out.println("Invocation " + callString + " READ FRAME= " + res); 
         return res; 
       } 
     }   
+
     return callExp.allReadFrame(); 
   } 
 
@@ -7188,6 +7264,9 @@ class ImplicitInvocationStatement extends Statement
 
     return uses; 
   }  
+
+  public Expression computationalCost()
+  { return callExp.computationalCost(); } 
 
   public java.util.Map collectionOperatorUses(
                              int nestingLevel, 
@@ -7784,6 +7863,31 @@ class WhileStatement extends Statement
 
     return res; 
   } 
+
+  public Expression computationalCost()
+  { Expression bcost = body.computationalCost();
+
+    if (loopKind == Statement.FOR)
+    { Expression rcost = loopRange.computationalCost(); 
+      Expression rsize = 
+             new UnaryExpression("->size", loopRange); 
+      if (bcost == null) 
+      { return rcost; } 
+      return 
+        new BinaryExpression("*", rsize, bcost);       
+    } 
+    else 
+    { Expression tcost = loopTest.computationalCost(); 
+      if (bcost == null) 
+      { return tcost; } // error
+
+      String ni = Identifier.nextIdentifier("N"); 
+
+      return new BinaryExpression("*", 
+               new BasicExpression(ni), bcost); 
+    } 
+  } 
+ 
 
   public int execute(ModelSpecification sigma, 
                      ModelState beta)
@@ -11137,6 +11241,23 @@ class CreationStatement extends Statement
     return res; 
   } 
 
+  public Expression computationalCost()
+  { Expression rcost = null; 
+    if (initialExpression != null) 
+    { rcost = initialExpression.computationalCost(); }
+    
+    Expression lcost = new BasicExpression("cost_decL"); 
+
+    if (rcost == null) 
+    { return lcost; } 
+
+    SetExpression costs = new SetExpression(); 
+    costs.addElement(lcost); 
+    costs.addElement(rcost); 
+    return Expression.simplifyMax(costs); 
+  } 
+
+
   public int execute(ModelSpecification sigma, 
                      ModelState beta)
   { // add assignsTo as new variable, set to initialExpression
@@ -13089,6 +13210,19 @@ class SequenceStatement extends Statement
     return uses; 
   } 
 
+  public Expression computationalCost()
+  { Vector costs = new Vector(); 
+    for (int i = 0; i < statements.size(); i++) 
+    { Statement st = (Statement) statements.get(i); 
+      Expression cost = st.computationalCost(); 
+      if (cost != null) 
+      { costs.add(cost); } 
+    }
+
+    SetExpression se = new SetExpression(costs);  
+    return Expression.simplifyMax(se); 
+  } 
+
   public java.util.Map collectionOperatorUses(int lev, 
                               java.util.Map uses, 
                               Vector vars)
@@ -14238,6 +14372,22 @@ class CaseStatement extends Statement
     return cs; 
   } 
 
+  public Expression computationalCost()
+  { Vector costs = new Vector();
+ 
+    Vector ss = cases.elements; 
+    for (int i = 0; i < ss.size(); i++) 
+    { Maplet mm = (Maplet) ss.get(i); 
+      Statement cse = (Statement) mm.dest; 
+      Expression ccost = cse.computationalCost(); 
+      if (ccost != null) 
+      { costs.add(ccost); } 
+    } 
+
+    SetExpression se = new SetExpression(costs); 
+    return Expression.simplifyMax(se); 
+  } 
+
   public Expression definedness(Map uses, Vector messages)
   { return new BasicExpression(true); } 
 
@@ -14768,6 +14918,12 @@ class ErrorStatement extends Statement
     return EXCEPTION; 
   } 
 
+  public Expression computationalCost()
+  { if (thrownObject != null) 
+    { return thrownObject.computationalCost(); } 
+    return null; 
+  } 
+
   public Statement optimiseOCL()
   { if (thrownObject != null) 
     { Expression tobj = thrownObject.simplifyOCL(); 
@@ -15180,6 +15336,12 @@ class AssertStatement extends Statement
     if (message != null)
     { message.energyUse(uses, rUses, aUses, yUses); } 
     return uses; 
+  } 
+
+  public Expression computationalCost()
+  { if (condition != null) 
+    { return condition.computationalCost(); } 
+    return null; 
   } 
 
   public int execute(ModelSpecification sigma, ModelState beta)
@@ -15703,6 +15865,25 @@ class CatchStatement extends Statement
       new CatchStatement(caughtObject.dereference(var), 
                          action.dereference(var)); 
   }
+
+  public Expression computationalCost()
+  { Vector costs = new Vector(); 
+
+    if (caughtObject != null) 
+    { Expression ccost = caughtObject.computationalCost(); 
+      if (ccost != null) 
+      { costs.add(ccost); } 
+    } 
+
+    if (action != null) 
+    { Expression acost = action.computationalCost(); 
+      if (acost != null) 
+      { costs.add(acost); } 
+    } 
+
+    SetExpression se = new SetExpression(costs); 
+    return Expression.simplifyMax(se); 
+  } 
 
   public Statement optimiseOCL() 
   { Expression cobj = null; 
@@ -16267,6 +16448,32 @@ class TryStatement extends Statement
   
     return res; 
   }
+
+  public Expression computationalCost()
+  { Vector costs = new Vector(); 
+
+    if (body != null) 
+    { Expression bcost = body.computationalCost(); 
+      if (bcost != null) 
+      { costs.add(bcost); } 
+    } 
+
+    for (int i = 0; i < catchClauses.size(); i++) 
+    { Statement cse = (Statement) catchClauses.get(i); 
+      Expression ccost = cse.computationalCost(); 
+      if (ccost != null) 
+      { costs.add(ccost); } 
+    } 
+
+    if (endStatement != null) 
+    { Expression bcost = endStatement.computationalCost(); 
+      if (bcost != null) 
+      { costs.add(bcost); } 
+    } 
+
+    SetExpression res = new SetExpression(costs); 
+    return Expression.simplifyMax(res); 
+  } 
 
   public int execute(ModelSpecification sigma, 
                      ModelState beta)
@@ -17232,7 +17439,8 @@ class IfStatement extends Statement
     cases.add(ic1); 
     if ("skip".equals(elsepart + "")) { } 
     else 
-    { IfCase ic2 = new IfCase(new BasicExpression(true),elsepart); 
+    { IfCase ic2 = 
+        new IfCase(new BasicExpression(true),elsepart); 
       cases.add(ic2);
     }  
   } 
@@ -17262,6 +17470,19 @@ class IfStatement extends Statement
     res.setEntity(entity); 
     return res; 
   }  // clone the conditions
+
+  public Expression computationalCost()
+  { Vector costs = new Vector(); 
+    for (int i = 0; i < cases.size(); i++) 
+    { IfCase cse = (IfCase) cases.get(i); 
+      Expression ccost = cse.computationalCost(); 
+      if (ccost != null) 
+      { costs.add(ccost); } 
+    } 
+
+    SetExpression res = new SetExpression(costs); 
+    return Expression.simplifyMax(res); 
+  } 
 
   public Statement optimiseOCL() 
   { Vector newcases = new Vector(); 
@@ -18624,6 +18845,23 @@ class AssignStatement extends Statement
     return res; 
   } 
 
+  public Expression computationalCost()
+  { Expression rcost = rhs.computationalCost(); 
+    
+    Expression lcost = new BasicExpression("cost_wrL"); 
+    if (lhs.isAttribute() || lhs.isRole())
+    { lcost = new BasicExpression("cost_wrA"); } 
+    // also indexation costs
+
+    if (rcost == null) 
+    { return lcost; } 
+
+    SetExpression costs = new SetExpression(); 
+    costs.addElement(lcost); 
+    costs.addElement(rcost); 
+    return Expression.simplifyMax(costs); 
+  } 
+
   public Map energyUse(Map uses, 
                        Vector rUses, Vector oUses, Vector yUses)
   { lhs.energyUse(uses, rUses, oUses, yUses); 
@@ -19558,6 +19796,21 @@ class IfCase
     return uses; 
   }
 
+  public Expression computationalCost()
+  { Vector costs = new Vector(); 
+    
+    Expression tcost = test.computationalCost(); 
+    if (tcost != null) 
+    { costs.add(tcost); } 
+
+    Expression ifcost = ifPart.computationalCost(); 
+    if (ifcost != null) 
+    { costs.add(ifcost); } 
+
+    SetExpression res = new SetExpression(costs); 
+    return Expression.simplifyMax(res); 
+  } 
+
   public java.util.Map collectionOperatorUses(int lev, 
                           java.util.Map uses, 
                           Vector vars, Map flaws, 
@@ -20088,6 +20341,27 @@ class ConditionalStatement extends Statement
 
     return res; 
   } 
+
+  public Expression computationalCost()
+  { Vector costs = new Vector(); 
+
+    Expression tcost = test.computationalCost();
+    if (tcost != null) 
+    { costs.add(tcost); }  
+
+    Expression ifcost = ifPart.computationalCost();
+    if (ifcost != null) 
+    { costs.add(ifcost); }  
+
+    if (elsePart != null) 
+    { Expression elsecost = elsePart.computationalCost();
+      if (elsecost != null) 
+      { costs.add(elsecost); }  
+    }
+
+    SetExpression res = new SetExpression(costs); 
+    return Expression.simplifyMax(res); 
+  }  
 
   public void semanticAnalysis(Map uses, Vector messages)
   { test.semanticAnalysis(uses, messages); 
@@ -21471,6 +21745,9 @@ class FinalStatement extends Statement
   { Statement ifc = body.optimiseOCL(); 
     return new FinalStatement(ifc); 
   }  
+
+  public Expression computationalCost()
+  { return body.computationalCost(); } 
 
   public void findClones(java.util.Map clones, String rule, String op)
   { body.findClones(clones,rule,op); } 

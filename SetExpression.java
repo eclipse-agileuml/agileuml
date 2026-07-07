@@ -1133,6 +1133,35 @@ public class SetExpression extends Expression
     return res;  
   } 
 
+  public static SetExpression flattenOperator(String op, 
+                                     SetExpression se)
+  { // groups col->op() into the overall list
+
+    Vector elems = new Vector(); 
+    Vector elements = se.getElements(); 
+
+    for (int i = 0; i < elements.size(); i++) 
+    { Expression expr = (Expression) elements.get(i);
+ 
+      if (expr instanceof UnaryExpression && 
+          op.equals(((UnaryExpression) expr).getOperator()))
+      { UnaryExpression ue = (UnaryExpression) expr; 
+        if (ue.getArgument() instanceof SetExpression)
+        { SetExpression argse = (SetExpression) ue.getArgument(); 
+          SetExpression subse = 
+             SetExpression.flattenOperator(op, argse); 
+          elems.addAll(subse.getElements()); 
+        } 
+        else 
+        { elems.add(expr); } 
+      } 
+      else 
+      { elems.add(expr); } 
+    } 
+
+    return new SetExpression(elems); 
+  } // applies to ->max, ->min, ->sum and ->prd
+
   public Expression max()
   { Expression res = null;
 
@@ -1142,12 +1171,20 @@ public class SetExpression extends Expression
     res = (Expression) elements.get(0);  
     String resv = "" + res; 
 
+    boolean homogenous = true; 
+
     if (Expression.isStringValue(resv))
     { 
       for (int i = 1; i < elements.size(); i++) 
-      { Expression elem = (Expression) elements.get(i); 
+      { Expression elem = (Expression) elements.get(i);
         String es = "" + elem; 
 
+        if (Expression.isStringValue(es)) { } 
+        else 
+        { homogenous = false; 
+          break; 
+        } 
+ 
         String s1 = resv.substring(0, resv.length()-1); 
         String s2 = es.substring(0, es.length()-1); 
 
@@ -1156,11 +1193,21 @@ public class SetExpression extends Expression
           resv = es; 
         } 
       } 
+
+      if (homogenous) 
+      { return res; } 
     }
     else if (Expression.isNumber(resv)) 
     { for (int i = 1; i < elements.size(); i++) 
       { Expression elem = (Expression) elements.get(i); 
         String es = "" + elem; 
+
+        if (Expression.isNumber(es)) { } 
+        else 
+        { homogenous = false; 
+          break; 
+        } 
+
         double dr = Expression.convertNumber(resv); 
         double de = Expression.convertNumber(es);
  
@@ -1169,11 +1216,30 @@ public class SetExpression extends Expression
           resv = es; 
         }
       }
+
+      if (homogenous) 
+      { return res; } 
     }
-    else 
-    { return new UnaryExpression("->max", this); }  
- 
-    return res;  
+
+    Vector elems = new Vector(); 
+    elems.add(res); 
+
+    Vector selems = new Vector(); 
+    selems.add(resv); 
+
+    for (int i = 1; i < elements.size(); i++) 
+    { Expression elem = (Expression) elements.get(i); 
+      String selem = elem + ""; 
+
+      if (selems.contains(selem)) { } 
+      else 
+      { elems.add(elem); 
+        selems.add(selem); 
+      } 
+    } 
+
+    SetExpression nse = new SetExpression(elems); 
+    return new UnaryExpression("->max", nse); 
   } 
 
   public Expression min()
@@ -1185,35 +1251,75 @@ public class SetExpression extends Expression
     res = (Expression) elements.get(0);  
     String resv = "" + res; 
 
-    for (int i = 1; i < elements.size(); i++) 
-    { Expression elem = (Expression) elements.get(i); 
-      String es = "" + elem; 
+    boolean homogenous = true; 
 
-      if (Expression.isStringValue(resv) && 
-          Expression.isStringValue(es))
-      { String s1 = resv.substring(0, resv.length()-1); 
+    if (Expression.isStringValue(resv))
+    { 
+      for (int i = 1; i < elements.size(); i++) 
+      { Expression elem = (Expression) elements.get(i);
+        String es = "" + elem; 
+
+        if (Expression.isStringValue(es)) { } 
+        else 
+        { homogenous = false; 
+          break; 
+        } 
+ 
+        String s1 = resv.substring(0, resv.length()-1); 
         String s2 = es.substring(0, es.length()-1); 
 
-        if (s2.compareTo(s1) < 0)
+        if (s1.compareTo(s2) > 0)
         { res = elem; 
           resv = es; 
         } 
       } 
-      else if (Expression.isNumber(resv) && 
-               Expression.isNumber(es))
-      { double dr = Expression.convertNumber(resv); 
-        double de = Expression.convertNumber(es); 
 
-        if (de < dr)
+      if (homogenous) 
+      { return res; } 
+    }
+    else if (Expression.isNumber(resv)) 
+    { for (int i = 1; i < elements.size(); i++) 
+      { Expression elem = (Expression) elements.get(i); 
+        String es = "" + elem; 
+
+        if (Expression.isNumber(es)) { } 
+        else 
+        { homogenous = false; 
+          break; 
+        } 
+
+        double dr = Expression.convertNumber(resv); 
+        double de = Expression.convertNumber(es);
+ 
+        if (dr > de)
         { res = elem; 
           resv = es; 
         }
       }
-      else 
-      { return new UnaryExpression("->min", this); }  
+
+      if (homogenous) 
+      { return res; } 
     }
 
-    return res;  
+    Vector elems = new Vector(); 
+    elems.add(res); 
+
+    Vector selems = new Vector(); 
+    selems.add(resv); 
+
+    for (int i = 1; i < elements.size(); i++) 
+    { Expression elem = (Expression) elements.get(i); 
+      String selem = elem + ""; 
+
+      if (selems.contains(selem)) { } 
+      else 
+      { elems.add(elem); 
+        selems.add(selem); 
+      } 
+    } 
+
+    SetExpression nse = new SetExpression(elems); 
+    return new UnaryExpression("->min", nse); 
   } 
 
   public Expression selectMinimals(Vector elems)
@@ -3193,6 +3299,21 @@ public class SetExpression extends Expression
     return res; 
   }  
 
+  public Expression computationalCost() 
+  { if (elements.size() == 0) 
+    { return null; } // no cost
+
+    Vector elems = new Vector(); 
+    for (int i = 0; i < elements.size(); i++) 
+    { Expression elem = (Expression) elements.get(i);  
+      Expression ecost = elem.computationalCost();
+      if (ecost != null) 
+      { elems.add(ecost); } 
+    } 
+
+    SetExpression res = new SetExpression(elems); 
+    return Expression.simplifyMax(res); 
+  }  
 
   public int syntacticComplexity() 
   { int res = 0;

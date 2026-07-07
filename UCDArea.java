@@ -3930,6 +3930,22 @@ public class UCDArea extends JPanel
     { System.out.println("!! Error generating summary file"); }
   } 
 
+  public void computationalCost()
+  { for (int j = 0; j < entities.size(); j++) 
+    { Entity ent = (Entity) entities.get(j);
+ 
+      if (ent.isDerived()) { continue; } 
+
+      if (ent.isComponent() || ent.isExternal())
+      { continue; } 
+
+      Expression cost = ent.computationalCost(); 
+
+      System.out.println(">> Cost for " + ent.getName() + ":"); 
+      System.out.println(cost); 
+    } 
+  } 
+
   public void energyAnalysisHTML()
   { java.util.Map clnes = new java.util.HashMap(); 
     Vector messages = new Vector(); 

@@ -5673,6 +5673,22 @@ public class Entity extends ModelElement implements Comparable
     } 
   } 
 
+  public Expression computationalCost()
+  { Vector costs = new Vector(); 
+    for (int i = 0; i < operations.size(); i++) 
+    { BehaviouralFeature bf = 
+                 (BehaviouralFeature) operations.get(i); 
+      Expression opcost = bf.computationalCost(); 
+      if (opcost != null) 
+      { costs.add(opcost); } 
+
+      System.out.println(">>> Cost of " + bf + " = " + opcost); 
+    } 
+
+    SetExpression res = new SetExpression(costs); 
+    return new UnaryExpression("->max", res); 
+  } 
+
   public void extractLocalVariables()
   { // Looks for clones within operations, replaces these 
     // by new local declarations. Also, constant expressions

@@ -19726,6 +19726,89 @@ public Statement generateDesignSubtract(Expression rhs)
     return res; 
   } // and in the parameters and object ref
 
+  public Expression computationalCost()
+  { Expression cost = null; 
+
+    if (parameters != null) 
+    { SetExpression costs = new SetExpression(); 
+      for (int i = 0; i < parameters.size(); i++) 
+      { Expression par = (Expression) parameters.get(i);
+        Expression pcost = par.computationalCost();  
+        if (pcost != null) 
+        { costs.addElement(pcost); }  
+      } 
+
+      cost = new UnaryExpression("->max", costs);   
+    } 
+
+    if (arrayIndex != null) 
+    { Expression icost = arrayIndex.computationalCost(); 
+      if (cost == null) 
+      { cost = icost; }
+      else if (icost == null) { }  
+      else 
+      { SetExpression oldcosts = new SetExpression(); 
+        oldcosts.addElement(icost); 
+        oldcosts.addElement(cost); 
+        cost = new UnaryExpression("->max", oldcosts);  
+      } 
+    } 
+
+    if (data.equals("insertAt") || 
+        data.equals("insertInto") ||
+        data.equals("subrange") ||
+        data.equals("reverse") ||
+        data.equals("excludingAt") ||
+        data.equals("excludingSubrange") ||
+        data.equals("setSubrange"))
+    { Expression nop = new UnaryExpression("->size", objectRef); 
+      if (cost == null) 
+      { cost = nop; } 
+      else 
+      { SetExpression oldcosts = new SetExpression(); 
+        oldcosts.addElement(nop); 
+        oldcosts.addElement(cost); 
+        cost = new UnaryExpression("->max", oldcosts);  
+      } 
+    } 
+    else if (objectRef != null) 
+    { Expression objCost = objectRef.computationalCost(); 
+      if (cost == null) 
+      { cost = objCost; } 
+      else if (objCost == null) { } 
+      else  
+      { SetExpression oldcosts = new SetExpression(); 
+        oldcosts.addElement(objCost); 
+        oldcosts.addElement(cost); 
+        cost = new UnaryExpression("->max", oldcosts);  
+      }
+    } 
+
+    // if operation call then cost_op
+    // if attribute cost_rdA
+    // if variable  cost_rdL
+
+    Expression acost = null; 
+    if (umlkind == ATTRIBUTE || umlkind == ROLE)
+    { acost = new BasicExpression("cost_rdA"); } 
+    else if (umlkind == VARIABLE)
+    { acost = new BasicExpression("cost_rdL"); } 
+    else if (umlkind == QUERY) 
+    { acost = new BasicExpression("cost_" + data); } 
+   
+    if (cost == null) 
+    { cost = acost; } 
+    else if (acost == null) 
+    { } 
+    else  
+    { SetExpression oldcosts = new SetExpression(); 
+      oldcosts.addElement(acost); 
+      oldcosts.addElement(cost); 
+      cost = new UnaryExpression("->max", oldcosts);  
+    }
+
+    return cost; 
+  } 
   
   public int maximumReferenceChain() 
   { int res = 1; 

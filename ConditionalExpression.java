@@ -569,6 +569,25 @@ public class ConditionalExpression extends Expression
     return result; 
   } 
 
+  public Expression computationalCost()
+  { Expression testcost = 
+                   test.computationalCost(); 
+    Expression ifcost = 
+                   ifExp.computationalCost(); 
+    Expression elsecost =
+                   elseExp.computationalCost();
+    
+    SetExpression res = new SetExpression(); 
+    if (testcost != null) 
+    { res.addElement(testcost); } 
+    if (ifcost != null) 
+    { res.addElement(ifcost); } 
+    if (elsecost != null) 
+    { res.addElement(elsecost); } 
+
+    return new UnaryExpression("->max", res); 
+  } 
+
   public int syntacticComplexity()
   { int res = test.syntacticComplexity(); 
     res = res + ifExp.syntacticComplexity(); 

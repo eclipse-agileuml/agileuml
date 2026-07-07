@@ -24563,6 +24563,333 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
     return res; 
   } // and the left and right. 
 
+  public Expression computationalCost()
+  { Expression cost = left.computationalCost(); 
+    Expression leftsize = Expression.simplifySize(left);
+    Expression rightsize = Expression.simplifySize(right);
+ 
+    if (left.isSet() && 
+        (operator.equals("->includes") ||
+         operator.equals("->excludes") ||
+         operator.equals("->including") ||
+         operator.equals("->excluding") ||
+         operator.equals("->count") ||
+         operator.equals(":") ||
+         operator.equals("/:"))) 
+    {  } // O(1)
+    else if (left.isSet() && 
+      (operator.equals("->includesAll") ||
+       operator.equals("->excludesAll") ||
+       operator.equals("<:") ||
+       operator.equals("/<:") ||
+       operator.equals("-") ||
+       operator.equals("->intersection") ||
+       operator.equals("->union")))   
+    { if (cost == null) 
+      { cost = leftsize; }
+      else 
+      { SetExpression cset = new SetExpression(); 
+        cset.addElement(leftsize); 
+        cset.addElement(cost); 
+        cost = Expression.simplifyMax(cset); 
+      } 
+    } 
+    else if (left.isSortedSequence() &&  
+      (operator.equals("->includes") ||
+       operator.equals("->excludes") ||
+       operator.equals(":") ||
+       operator.equals("/:")))
+    { Expression opcost = 
+             new UnaryExpression("->log", leftsize); 
+      if (cost == null) 
+      { cost = opcost; } 
+      else 
+      { SetExpression costs = new SetExpression(); 
+        costs.addElement(opcost); 
+        costs.addElement(cost); 
+        cost = Expression.simplifyMax(costs); 
+      } 
+    } 
+    else if (left.isSortedSequence() &&  
+             operator.equals("->including"))
+    { Expression opcost = 
+             new UnaryExpression("->log", leftsize); 
+      if (cost == null) 
+      { cost = opcost; } 
+      else 
+      { SetExpression costs = new SetExpression(); 
+        costs.addElement(opcost); 
+        costs.addElement(cost); 
+        cost = Expression.simplifyMax(costs); 
+      } 
+    } 
+    else if (left.isSequence() && 
+             (operator.equals("->including") ||
+              operator.equals("->append") ||
+              operator.equals("->prepend"))) { } 
+    else if (left.isSequence() && 
+      (operator.equals("->excluding") ||
+       operator.equals("->includes") ||
+       operator.equals("->excludes") ||
+       operator.equals(":") ||
+       operator.equals("/:") ||
+       operator.equals("->excludingFirst") ||
+       operator.equals("->excludingAt") ||
+       operator.equals("->count") ||
+       operator.equals("->indexOf") ||
+       operator.equals("->lastIndexOf"))) 
+    { if (cost == null) 
+      { cost = leftsize; } 
+      else 
+      { SetExpression costs = new SetExpression(); 
+        costs.addElement(leftsize); 
+        costs.addElement(cost); 
+        cost = Expression.simplifyMax(costs); 
+      } 
+    } 
+    else if (left.isSequence() && 
+      (operator.equals("->includesAll") ||
+       operator.equals("->excludesAll") ||
+       operator.equals("-") ||
+       operator.equals("<:") ||
+       operator.equals("/<:") ||
+       operator.equals("->intersection") ||
+       operator.equals("->union")))   
+    { Expression ccost = 
+         new BinaryExpression("*", leftsize, rightsize);
+ 
+      if (cost == null) 
+      { cost = ccost; }
+      else 
+      { SetExpression cset = new SetExpression(); 
+        cset.addElement(ccost); 
+        cset.addElement(cost); 
+        cost = Expression.simplifyMax(cset); 
+      } 
+    } 
+    else if (operator.equals("->excludingKey") || 
+             operator.equals("->excludingValue") ||
+             operator.equals("->excludesKey") || 
+             operator.equals("->excludesValue") ||
+             operator.equals("->includesKey") || 
+             operator.equals("->includesValue"))
+      { Expression opcost = 
+             new UnaryExpression("->log", leftsize); 
+      if (cost == null) 
+      { cost = opcost; } 
+      else 
+      { SetExpression costs = new SetExpression(); 
+        costs.addElement(opcost); 
+        costs.addElement(cost); 
+        cost = Expression.simplifyMax(costs); 
+      } 
+    } 
+    else if (left.isMap() && 
+      (operator.equals("->restrict") ||
+       operator.equals("->antirestrict") || 
+       operator.equals("-") || 
+       operator.equals("->intersection") ||
+       operator.equals("->union") || 
+       operator.equals("->includesAll") ||
+       operator.equals("->excludesAll") ||
+       operator.equals("<:") || 
+       operator.equals("/<:")))
+    { SetExpression sexpr = new SetExpression(); 
+      sexpr.addElement(leftsize); 
+      sexpr.addElement(rightsize);
+ 
+      Expression opcost = 
+             new UnaryExpression("->max",sexpr);
+  
+      if (cost == null) 
+      { cost = opcost; } 
+      else 
+      { SetExpression costs = new SetExpression(); 
+        costs.addElement(opcost); 
+        costs.addElement(cost); 
+        cost = Expression.simplifyMax(costs); 
+      } 
+    } 
+
+    if (operator.equals("->select") ||
+        operator.equals("->reject") ||
+        operator.equals("->collect") ||
+        operator.equals("->forall") ||
+        operator.equals("->exists") ||
+        operator.equals("->exists1") ||
+        operator.equals("->isUnique") ||
+        operator.equals("->any") ||
+        operator.equals("->selectMinimals") ||
+        operator.equals("->selectMaximals"))  
+    { Expression rcost = 
+          right.computationalCost(); 
+      Expression ccost = null; 
+ 
+      if (rcost == null) 
+      { ccost = leftsize; } 
+      else 
+      { ccost = new BinaryExpression("*", 
+           leftsize, rcost);
+      } 
+
+      if (cost == null) 
+      { cost = ccost; }
+      else 
+      { SetExpression cset = new SetExpression(); 
+        cset.addElement(ccost); 
+        cset.addElement(cost); 
+        cost = Expression.simplifyMax(cset); 
+      } 
+    }  
+
+    if (operator.equals("->sortedBy"))  
+    { Expression rcost = 
+          right.computationalCost(); 
+      Expression ccost = new BinaryExpression("*", 
+            new UnaryExpression("->log", leftsize), 
+            leftsize);
+ 
+      if (rcost != null) 
+      { ccost = new BinaryExpression("*", 
+           ccost, rcost);
+      } 
+
+      if (cost == null) 
+      { cost = ccost; }
+      else 
+      { SetExpression cset = new SetExpression(); 
+        cset.addElement(ccost); 
+        cset.addElement(cost); 
+        cost = Expression.simplifyMax(cset); 
+      } 
+    }  
+
+    if (operator.equals("|") ||
+        operator.equals("|R") ||
+        operator.equals("|C") ||
+        operator.equals("!") ||
+        operator.equals("#") ||
+        operator.equals("#1") || 
+        operator.equals("|A") || 
+        operator.equals("|unionAll") || 
+        operator.equals("|intersectAll") || 
+        operator.equals("|concatenateAll") || 
+        operator.equals("|selectMinimals") || 
+        operator.equals("|selectMaximals") || 
+        operator.equals("|sortedBy"))
+    { BinaryExpression iter = (BinaryExpression) left; 
+      Expression col = iter.getRight(); 
+      Expression rcost = 
+          right.computationalCost(); 
+      Expression ccost = null; 
+ 
+      if (rcost == null) 
+      { ccost = Expression.simplifySize(col); } 
+      else 
+      { ccost = new BinaryExpression("*", 
+           Expression.simplifySize(col), 
+           rcost);
+      } 
+
+      if (cost == null) 
+      { cost = ccost; }
+      else 
+      { SetExpression cset = new SetExpression(); 
+        cset.addElement(ccost); 
+        cset.addElement(cost); 
+        cost = Expression.simplifyMax(cset); 
+      }       
+    } 
+
+    if (operator.equals("|sortedBy"))
+    { BinaryExpression iter = (BinaryExpression) left; 
+      Expression col = iter.getRight();
+      Expression colsize = Expression.simplifySize(col); 
+ 
+      Expression rcost = 
+          right.computationalCost(); 
+
+      Expression ccost = new BinaryExpression("*", 
+            new UnaryExpression("->log", colsize), 
+            colsize);
+ 
+      if (rcost != null) 
+      { ccost = new BinaryExpression("*", 
+           ccost, rcost);
+      } 
+
+      if (cost == null) 
+      { cost = ccost; }
+      else 
+      { SetExpression cset = new SetExpression(); 
+        cset.addElement(ccost); 
+        cset.addElement(cost); 
+        cost = Expression.simplifyMax(cset); 
+      } 
+    }  
+      
+    if ("+".equals(operator) && left.isString() || 
+        "->firstMatch".equals(operator) ||
+        "->isMatch".equals(operator) ||
+        "->hasMatch".equals(operator) || 
+        operator.equals("->allMatches"))
+    { Expression ccost = leftsize; 
+
+      if (cost == null) 
+      { cost = ccost; }
+      else 
+      { SetExpression cset = new SetExpression(); 
+        cset.addElement(ccost); 
+        cset.addElement(cost); 
+        cost = Expression.simplifyMax(cset); 
+      }       
+    }
+
+    if ("+".equals(operator) || "-".equals(operator))
+    { if (type != null) 
+      { String tname = type.getName();
+        if ("double".equals(tname))
+        { cost = new BasicExpression("cost_doubleAdd"); } 
+        else if ("int".equals(tname))
+        { cost = new BasicExpression("cost_intAdd"); } 
+        else if ("long".equals(tname))
+        { cost = new BasicExpression("cost_longAdd"); }
+      } 
+
+      return cost; 
+    } 
+
+    if ("*".equals(operator) || "/".equals(operator) ||
+        "mod".equals(operator) || "div".equals(operator))
+    { if (type != null) 
+      { String tname = type.getName();
+        if ("double".equals(tname))
+        { cost = new BasicExpression("cost_doubleMult"); } 
+        else if ("int".equals(tname))
+        { cost = new BasicExpression("cost_intMult"); } 
+        else if ("long".equals(tname))
+        { cost = new BasicExpression("cost_longMult"); }
+      } 
+  
+      return cost; 
+    } 
+
+    Expression rcost = right.computationalCost(); 
+ 
+    if (cost != null) 
+    { if (rcost != null)
+      { SetExpression sexpr = new SetExpression(); 
+        sexpr.addElement(cost); 
+        sexpr.addElement(rcost); 
+        return Expression.simplifyMax(sexpr); 
+      } 
+      else 
+      { return cost; } 
+    } 
+    else 
+    { return rcost; } 
+
+  } 
 
   public int maximumReferenceChain() 
   { int maxleft = left.maximumReferenceChain();
