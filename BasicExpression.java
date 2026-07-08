@@ -19738,7 +19738,7 @@ public Statement generateDesignSubtract(Expression rhs)
         { costs.addElement(pcost); }  
       } 
 
-      cost = new UnaryExpression("->max", costs);   
+      cost = Expression.simplifyMax(costs);   
     } 
 
     if (arrayIndex != null) 
@@ -19750,10 +19750,19 @@ public Statement generateDesignSubtract(Expression rhs)
       { SetExpression oldcosts = new SetExpression(); 
         oldcosts.addElement(icost); 
         oldcosts.addElement(cost); 
-        cost = new UnaryExpression("->max", oldcosts);  
+        cost = Expression.simplifyMax(oldcosts);  
       } 
     } 
 
+    if (data.equals("subrange") && 
+        "Integer".equals(objectRef + "") && 
+        parameters.size() > 1)
+    { Expression par1 = (Expression) parameters.get(0); 
+      Expression par2 = (Expression) parameters.get(1);
+      cost = Expression.simplifyMinus(par2, par1); 
+      return cost; 
+    }  
+      
     if (data.equals("insertAt") || 
         data.equals("insertInto") ||
         data.equals("subrange") ||
@@ -19761,14 +19770,14 @@ public Statement generateDesignSubtract(Expression rhs)
         data.equals("excludingAt") ||
         data.equals("excludingSubrange") ||
         data.equals("setSubrange"))
-    { Expression nop = new UnaryExpression("->size", objectRef); 
+    { Expression nop = Expression.simplifySize(objectRef); 
       if (cost == null) 
       { cost = nop; } 
       else 
       { SetExpression oldcosts = new SetExpression(); 
         oldcosts.addElement(nop); 
         oldcosts.addElement(cost); 
-        cost = new UnaryExpression("->max", oldcosts);  
+        cost = Expression.simplifyMax(oldcosts);  
       } 
     } 
     else if (objectRef != null) 
@@ -19780,7 +19789,7 @@ public Statement generateDesignSubtract(Expression rhs)
       { SetExpression oldcosts = new SetExpression(); 
         oldcosts.addElement(objCost); 
         oldcosts.addElement(cost); 
-        cost = new UnaryExpression("->max", oldcosts);  
+        cost = Expression.simplifyMax(oldcosts);  
       }
     } 
 
@@ -19804,7 +19813,7 @@ public Statement generateDesignSubtract(Expression rhs)
     { SetExpression oldcosts = new SetExpression(); 
       oldcosts.addElement(acost); 
       oldcosts.addElement(cost); 
-      cost = new UnaryExpression("->max", oldcosts);  
+      cost = Expression.simplifyMax(oldcosts);  
     }
 
     return cost; 
