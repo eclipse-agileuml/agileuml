@@ -4521,8 +4521,14 @@ abstract class Expression
     { return new BasicExpression(0); } 
 
     if (isInteger("" + e1) && isInteger("" + e2))
-    { int v1 = convertInteger("" + e1); 
-      int v2 = convertInteger("" + e2); 
+    { long v1 = convertInteger("" + e1); 
+      long v2 = convertInteger("" + e2); 
+      return new BasicExpression(v1 * v2); 
+    }
+
+    if (isLong("" + e1) && isLong("" + e2))
+    { long v1 = convertLong("" + e1); 
+      long v2 = convertLong("" + e2); 
       return new BasicExpression(v1 * v2); 
     }
     
@@ -4547,7 +4553,13 @@ abstract class Expression
     if (isInteger("" + e1) && isInteger("" + e2))
     { int v1 = convertInteger("" + e1); 
       int v2 = convertInteger("" + e2); 
-      return new BasicExpression((int) Math.pow(v1,v2)); 
+      return new BasicExpression((long) Math.pow(v1,v2)); 
+    }
+
+    if (isLong("" + e1) && isLong("" + e2))
+    { long v1 = convertLong("" + e1); 
+      long v2 = convertLong("" + e2); 
+      return new BasicExpression((long) Math.pow(v1,v2)); 
     }
 
     if (isNumber("" + e1) && isNumber("" + e2))
@@ -4630,6 +4642,24 @@ abstract class Expression
       // case of v2 = 0 
       return new BasicExpression(v1 / v2); 
     }
+
+    if (isLong("" + e1) && isLong("" + e2))
+    { long v1 = convertLong("" + e1); 
+      long v2 = convertLong("" + e2);
+
+      e1.setBrackets(br1); 
+      e2.setBrackets(br2); 
+
+      if (v2 == 0 && v1 > 0)
+      { return new BasicExpression("Math_PINFINITY"); } 
+      if (v2 == 0 && v1 < 0)
+      { return new BasicExpression("Math_NINFINITY"); }
+      if (v2 == 0 && v1 == 0)
+      { return new BasicExpression("Math_NaN"); } 
+       
+      // case of v2 = 0 
+      return new BasicExpression(v1 / v2); 
+    }
     
     if (isNumber("" + e1) && isNumber("" + e2))
     { double v1 = convertNumber("" + e1); 
@@ -4661,6 +4691,21 @@ abstract class Expression
     if (isInteger("" + e1) && isInteger("" + e2))
     { int v1 = convertInteger("" + e1); 
       int v2 = convertInteger("" + e2);
+
+      if (v2 == 0 && v1 > 0)
+      { return new BasicExpression("Math_PINFINITY"); } 
+      if (v2 == 0 && v1 < 0)
+      { return new BasicExpression("Math_NINFINITY"); }
+      if (v2 == 0 && v1 == 0)
+      { return new BasicExpression("Math_NaN"); } 
+       
+      // case of v2 = 0 
+      return new BasicExpression(v1 / v2); 
+    }
+
+    if (isLong("" + e1) && isLong("" + e2))
+    { long v1 = convertLong("" + e1); 
+      long v2 = convertLong("" + e2);
 
       if (v2 == 0 && v1 > 0)
       { return new BasicExpression("Math_PINFINITY"); } 
@@ -4709,6 +4754,20 @@ abstract class Expression
        
       return new BasicExpression(v1 % v2); 
     }
+
+    if (isLong("" + e1) && isLong("" + e2))
+    { long v1 = convertLong("" + e1); 
+      long v2 = convertLong("" + e2);
+
+      if (v2 == 0 && v1 > 0)
+      { return new BasicExpression("Math_PINFINITY"); } 
+      if (v2 == 0 && v1 < 0)
+      { return new BasicExpression("Math_NINFINITY"); }
+      if (v2 == 0 && v1 == 0)
+      { return new BasicExpression("Math_NaN"); } 
+       
+      return new BasicExpression(v1 % v2); 
+    }
     
     if (isNumber("" + e1) && isNumber("" + e2))
     { double v1 = convertNumber("" + e1); 
@@ -4722,7 +4781,7 @@ abstract class Expression
       { return new BasicExpression("Math_NaN"); } 
       // case of v2 = 0 
 
-      return new BasicExpression(((int) v1) % ((int) v2)); 
+      return new BasicExpression(((long) v1) % ((long) v2)); 
     } // v1 - ((int) (v1/v2))
 
     return new BinaryExpression("mod", e1, e2); 
