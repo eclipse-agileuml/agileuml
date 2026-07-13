@@ -502,6 +502,9 @@ abstract class Expression
     // return multiplicity != ModelElement.ONE;
   } 
 
+  public boolean isConstructorCall()
+  { return false; } // default
+
   public int upperBound()
   { if (isMultipleValued())
     { return 1000000000; } 

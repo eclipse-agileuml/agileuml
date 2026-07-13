@@ -304,6 +304,92 @@ public class BehaviouralFeature extends ModelElement
                        new BasicExpression(status)); 
   } // But also need to return status. 
 
+  public void checkObjectResourceLeaks(Map res, Vector amberUses)
+  { // objects created and assigned to a local variable
+
+    if (activity != null) 
+    { Vector asgns = 
+        Statement.getAssignments(activity);
+      Vector decs = 
+        Statement.getDeclarations(activity); 
+      Vector invocs = 
+        Statement.getImplicitOperationCalls(activity); 
+
+      Vector assignsNewObjectToLocalVariable1 = 
+        Statement.newObjectToLocalVariable(asgns); 
+      Vector assignsNewObjectToLocalVariable2 = 
+        Statement.newObjectInitialisations(decs);
+      Vector newObjects = 
+        Statement.getImplicitCreations(invocs);
+      Vector deletedObjects = 
+        Statement.getImplicitDeletions(invocs);
+
+      for (int i = 0; 
+           i < assignsNewObjectToLocalVariable1.size(); 
+           i++)
+      { AssignStatement ast = 
+          (AssignStatement) 
+                 assignsNewObjectToLocalVariable1.get(i);
+        Expression var = ast.getLhs();
+        if (VectorUtil.containsEqualString(var+"", 
+                                    deletedObjects)) { } 
+        else   
+        { amberUses.add("!! (RL): New instance " + 
+                           ast.getRhs() + 
+                           " assigned to local variable " + 
+                           var + " and not deleted");
+          int ascore = (int) res.get("amber");
+          ascore = ascore + 1;
+          res.set("amber", ascore); 
+          int rl = (int) res.get("RL"); 
+          res.set("RL", rl+1); 
+        } 
+      }   
+
+      for (int i = 0; 
+           i < assignsNewObjectToLocalVariable2.size(); 
+           i++)
+      { CreationStatement ast = 
+          (CreationStatement) 
+                 assignsNewObjectToLocalVariable2.get(i);
+        String var = ast.getVariable(); 
+ 
+        if (VectorUtil.containsEqualString(var, 
+                                    deletedObjects)) { } 
+        else   
+        { amberUses.add("!! (RL): New instance " + 
+                           ast.getInitialisationExpression() + 
+                           " assigned to local variable " + 
+                           var + " and not deleted");
+          int ascore = (int) res.get("amber");
+          ascore = ascore + 1;
+          res.set("amber", ascore); 
+          int rl = (int) res.get("RL"); 
+          res.set("RL", rl+1); 
+        }  
+      }   
+
+      for (int i = 0; i < newObjects.size(); i++)
+      { Expression created = 
+          (Expression) newObjects.get(i);
+
+        if (created.isVariable()) 
+        { if (VectorUtil.containsEqualString(created+"", 
+                                      deletedObjects)) { } 
+          else   
+          { amberUses.add("!! (RL): New instance assigned to local variable " + 
+                          created + " and not deleted");
+            int ascore = (int) res.get("amber");
+            ascore = ascore + 1;
+            res.set("amber", ascore); 
+            int rl = (int) res.get("RL"); 
+            res.set("RL", rl+1); 
+          }  
+        } 
+      }   
+    } 
+  } 
+
   public void jsClassFromConstructor(Entity ent, Entity cclass, Vector inits, Vector entities) 
   { // For each statement  self.att := expr  in activity
     // make att an attribute of ent, with initialisation expr
@@ -4800,8 +4886,13 @@ public class BehaviouralFeature extends ModelElement
 
       if (isQuery()) // should be no "newC", "newInstance" calls
       { for (int t = 0; t < calls.size(); t++) 
-        { String call = "" + calls.get(t); 
-          if (call.endsWith("newInstance()"))
+        { InvocationStatement call = 
+                    (InvocationStatement) calls.get(t); 
+          Expression expr = call.getCallExpression(); 
+
+          if (expr != null && 
+              expr instanceof BasicExpression && 
+              ((BasicExpression) expr).isConstructorCall())
           { amberUses.add("!! Code smell (OES): object creation " + 
                           call + " in query operation " + this); 
             int ascore = (int) res.get("amber");
@@ -4810,6 +4901,8 @@ public class BehaviouralFeature extends ModelElement
           } 
         } 
       } 
+
+      checkObjectResourceLeaks(res, amberUses); 
 
       // System.out.println(res); 
       // System.out.println(redUses); 

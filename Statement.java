@@ -3457,6 +3457,11 @@ abstract class Statement implements Cloneable
   { Vector res = new Vector(); 
     if (st == null) 
     { return res; }
+
+    if (st instanceof AssignStatement)
+    { res.add(st); 
+      return res; 
+    } 
  
     if (st instanceof SequenceStatement) 
     { SequenceStatement sq = (SequenceStatement) st; 
@@ -3496,6 +3501,89 @@ abstract class Statement implements Cloneable
         }  
       } 
       res.addAll(getAssignments(ts.getEndStatement())); 
+    } 
+
+    return res;
+  } // Other cases, for all other forms of statement. 
+
+  public static Vector newObjectToLocalVariable(Vector asgns)
+  { Vector res = new Vector(); 
+
+    for (int i = 0; i < asgns.size(); i++) 
+    { AssignStatement asgn = (AssignStatement) asgns.get(i); 
+      Expression var = asgn.getLhs(); 
+      Expression val = asgn.getRhs(); 
+      if (var.isVariable() &&
+          val != null &&  
+          val.isConstructorCall())
+      { res.add(asgn); } 
+    } 
+
+    return res; 
+  } 
+
+  public static Vector newObjectInitialisations(Vector decs) 
+  { Vector res = new Vector(); 
+
+    for (int i = 0; i < decs.size(); i++) 
+    { CreationStatement asgn = 
+              (CreationStatement) decs.get(i); 
+      Expression val = asgn.getInitialisationExpression(); 
+      if (val != null && val.isConstructorCall())
+      { res.add(asgn); } 
+    } 
+
+    return res; 
+  } 
+
+  public static Vector getDeclarations(Statement st)
+  { Vector res = new Vector(); 
+    if (st == null) 
+    { return res; }
+ 
+    if (st instanceof CreationStatement)
+    { res.add(st); 
+      return res; 
+    } 
+        
+    if (st instanceof SequenceStatement) 
+    { SequenceStatement sq = (SequenceStatement) st; 
+      Vector stats = sq.getStatements(); 
+      for (int i = 0; i < stats.size(); i++) 
+      { if (stats.get(i) instanceof CreationStatement)
+        { res.add(stats.get(i)); } 
+        else if (stats.get(i) instanceof SequenceStatement)
+        { Statement stat = (Statement) stats.get(i); 
+          res.addAll(Statement.getDeclarations(stat));
+        }  
+      } 
+      return res;
+    } 
+    
+    if (st instanceof ConditionalStatement) 
+    { ConditionalStatement cs = (ConditionalStatement) st; 
+      res.addAll(getDeclarations(cs.ifPart())); 
+      res.addAll(getDeclarations(cs.elsePart())); 
+      return res; 
+    } 
+
+    if (st instanceof WhileStatement) 
+    { WhileStatement ws = (WhileStatement) st; 
+      res.addAll(getDeclarations(ws.getLoopBody())); 
+      return res; 
+    } // implicit declaration in case of FOR
+
+    if (st instanceof TryStatement) 
+    { TryStatement ts = (TryStatement) st; 
+      res.addAll(getDeclarations(ts.getBody())); 
+      Vector stats = ts.getClauses(); 
+      for (int i = 0; i < stats.size(); i++) 
+      { if (stats.get(i) instanceof Statement)
+        { Statement stat = (Statement) stats.get(i); 
+          res.addAll(getDeclarations(stat));
+        }  
+      } 
+      res.addAll(getDeclarations(ts.getEndStatement())); 
     } 
 
     return res;
@@ -3765,6 +3853,122 @@ abstract class Statement implements Cloneable
 
     return res;
   } // Other cases, for all other forms of statement. 
+
+  public static Vector getImplicitOperationCalls(Statement st)
+  { Vector res = new Vector(); 
+    if (st == null) 
+    { return res; }
+
+    // System.out.println(">> Operation calls in " + st); 
+
+    if (st instanceof ImplicitInvocationStatement)
+    { res.add(st);   
+      return res; 
+    } 
+
+    // if (st instanceof ReturnStatement) 
+    // { 
+ 
+    if (st instanceof SequenceStatement) 
+    { SequenceStatement sq = (SequenceStatement) st; 
+      Vector stats = sq.getStatements(); 
+      for (int i = 0; i < stats.size(); i++) 
+      { Statement ss = (Statement) stats.get(i); 
+        res.addAll(Statement.getImplicitOperationCalls(ss)); 
+
+        /* if (stats.get(i) instanceof InvocationStatement)
+        { res.add(stats.get(i)); } 
+        else if (stats.get(i) instanceof SequenceStatement)
+        { Statement stat = (Statement) stats.get(i); 
+          res.addAll(Statement.getOperationCalls(stat));
+        }  */ 
+      } 
+
+      return res;
+    } 
+    
+    if (st instanceof ConditionalStatement) 
+    { ConditionalStatement cs = (ConditionalStatement) st; 
+      res.addAll(getImplicitOperationCalls(cs.ifPart())); 
+      res.addAll(getImplicitOperationCalls(cs.elsePart())); 
+      return res; 
+    } 
+
+    if (st instanceof IfStatement) 
+    { IfStatement cs = (IfStatement) st; 
+      System.err.println("! Warning: do not use IfStatement"); 
+      Statement ifpart = cs.getIfPart(); 
+      if (ifpart != null) 
+      { res.addAll(getImplicitOperationCalls(ifpart)); } 
+      Statement elsepart = cs.getElsePart(); 
+      if (elsepart != null) 
+      { res.addAll(getImplicitOperationCalls(elsepart)); }  
+      return res; 
+    } 
+
+    if (st instanceof WhileStatement) 
+    { WhileStatement ws = (WhileStatement) st; 
+      res.addAll(getImplicitOperationCalls(ws.getLoopBody())); 
+      return res; 
+    } 
+
+    if (st instanceof TryStatement) 
+    { TryStatement ts = (TryStatement) st; 
+      res.addAll(getImplicitOperationCalls(ts.getBody())); 
+      Vector stats = ts.getClauses(); 
+      for (int i = 0; i < stats.size(); i++) 
+      { if (stats.get(i) instanceof Statement)
+        { Statement stat = (Statement) stats.get(i); 
+          res.addAll(getImplicitOperationCalls(stat));
+        }  
+      } 
+
+      res.addAll(
+             getImplicitOperationCalls(ts.getEndStatement())); 
+    } 
+
+    return res;
+  } // Other cases, for all other forms of statement. 
+
+  public static Vector getImplicitCreations(Vector stats)
+  { // the x of impstat : stats which execute x->oclIsNew()
+
+    Vector res = new Vector(); 
+    for (int i = 0; i < stats.size(); i++) 
+    { ImplicitInvocationStatement st = 
+              (ImplicitInvocationStatement) stats.get(i); 
+      Expression call = st.getCallExp(); 
+      if (call instanceof UnaryExpression) 
+      { UnaryExpression bexpr = (UnaryExpression) call;
+        String op = bexpr.getOperator(); 
+ 
+        if ("->oclIsNew".equals(op))
+        { res.add(bexpr.getArgument()); }  
+      } 
+    } 
+
+    return res; 
+  } 
+
+  public static Vector getImplicitDeletions(Vector stats)
+  { // the x of impstat : stats which execute x->isDeleted()
+
+    Vector res = new Vector(); 
+    for (int i = 0; i < stats.size(); i++) 
+    { ImplicitInvocationStatement st = 
+              (ImplicitInvocationStatement) stats.get(i); 
+      Expression call = st.getCallExp(); 
+      if (call instanceof UnaryExpression) 
+      { UnaryExpression bexpr = (UnaryExpression) call;
+        String op = bexpr.getOperator(); 
+ 
+        if ("->isDeleted".equals(op))
+        { res.add(bexpr.getArgument()); }  
+      } 
+    } 
+
+    return res; 
+  } 
 
   public static Statement replaceSelfCallByContinue(String nme, Vector branch, Statement asgns)
   { // sequence statement of branch elements except 

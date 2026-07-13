@@ -512,7 +512,7 @@ class BasicExpression extends Expression
   } 
 
   public boolean isConstructorCall()
-  { if (data.equals("newInstance"))
+  { if (data.equals("newInstance") && objectRef != null)
     { return true; } 
 
     if (type != null && type.isEntity())
@@ -522,6 +522,14 @@ class BasicExpression extends Expression
       if (data.equals("create" + tname))
       { return true; } 
       if (data.equals("new" + tname))
+      { return true; } 
+    } 
+
+    String str = this + ""; 
+    int dotInd = str.indexOf("."); 
+    if (dotInd > 0) 
+    { String obj = str.substring(0,dotInd); 
+      if (str.equals(obj + ".new" + obj + "()"))
       { return true; } 
     } 
 
@@ -19760,8 +19768,24 @@ public Statement generateDesignSubtract(Expression rhs)
     { Expression par1 = (Expression) parameters.get(0); 
       Expression par2 = (Expression) parameters.get(1);
       cost = Expression.simplifyMinus(par2, par1); 
+      cost.setBrackets(true); 
       return cost; 
     }  
+
+    if ("Integer".equals(objectRef + "") && 
+        ("Sum".equals(data) || "Prd".equals(data)) &&
+        parameters.size() > 2)
+    { // also add costs of +, *
+      Expression par1 = (Expression) parameters.get(1); 
+      Expression par2 = (Expression) parameters.get(2);
+      Expression rng = Expression.simplifyMinus(par2, par1); 
+      rng.setBrackets(true); 
+      Expression expr = (Expression) parameters.get(3);
+      cost = expr.computationalCost(); 
+      if (cost == null) { return cost; } 
+      return Expression.simplifyMult(rng, cost);   
+    } 
+
       
     if (data.equals("insertAt") || 
         data.equals("insertInto") ||
