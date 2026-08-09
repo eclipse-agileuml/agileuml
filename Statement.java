@@ -484,7 +484,7 @@ abstract class Statement implements Cloneable
       String var = cs.getVariable(); 
       Expression expr = cs.getInitialisationExpression(); 
 
-      if (var.equals(v))
+      if (expr == null || var.equals(v))
       { return NOUSE; } // redefined 
 
       Vector vuses = expr.variablesUsedIn(vvs);

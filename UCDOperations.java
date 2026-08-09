@@ -30555,6 +30555,10 @@ public void produceCUI(PrintWriter out)
 
     if (args.length >= 2 && "-mambaAnalysis".equals(args[0]))
     { String fname = args[1]; 
+
+      java.util.Date d1 = new java.util.Date(); 
+      long t1 = d1.getTime(); 
+
       try { 
         model.loadZAppDevFromFile(fname); 
       } 
@@ -30577,6 +30581,46 @@ public void produceCUI(PrintWriter out)
       { System.out.println("!! Error generating measures"); }
    
       model.energyAnalysis();   
+
+      java.util.Date d2 = new java.util.Date(); 
+      long t2 = d2.getTime();
+      System.out.println(">>> Execution time = " + (t2 - t1)); 
+
+      return; 
+    } 
+
+    if (args.length >= 2 && "-pythonAnalysis".equals(args[0]))
+    { java.util.Date d1 = new java.util.Date(); 
+      long t1 = d1.getTime(); 
+
+      String fname = args[1]; 
+      try { 
+        model.loadFromPython(fname);
+      } 
+      catch (Exception _e)
+      { System.out.println("!! Error loading file " + fname); 
+        return; 
+      } 
+      model.typeCheck(); 
+      model.typeCheck(); 
+      model.semanticAnalysis(); 
+      try { 
+        File fout = new File("qualityDetails.txt");
+        PrintWriter qout = new PrintWriter(
+                              new BufferedWriter(
+                                new FileWriter(fout)));
+        model.displayMeasures(qout);
+        qout.close();
+      }
+      catch (IOException ex)
+      { System.out.println("!! Error generating measures"); }
+   
+      model.energyAnalysis();   
+
+      java.util.Date d2 = new java.util.Date(); 
+      long t2 = d2.getTime();
+      System.out.println(">>> Execution time = " + (t2 - t1)); 
+ 
       return; 
     } 
   
