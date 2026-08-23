@@ -14043,6 +14043,19 @@ public void produceCUI(PrintWriter out)
     }
   } */ 
 
+  public void saveKM3ToFile(String fle)
+  { File target = new File(fle);
+    try
+    { PrintWriter out =
+          new PrintWriter(
+            new BufferedWriter(new FileWriter(target)));
+       saveKM3(out); 
+       out.close(); 
+    }
+    catch (IOException e) 
+    { System.err.println("!! Error saving KM3"); } 
+  }
+
  /* 
 
   public void saveKM3ToFile()
@@ -30553,6 +30566,15 @@ public void produceCUI(PrintWriter out)
   { String cmd = ""; 
     UCDOperations model = new UCDOperations(); 
 
+    if (args.length >= 2 && "-loadJava".equals(args[0]))
+    { String fname = args[1]; 
+      model.loadFromJavaAST(fname); 
+      model.typeCheck(); 
+      model.typeCheck(); 
+      model.saveKM3ToFile("output/mm.km3"); 
+      return; 
+    } 
+
     if (args.length >= 2 && "-mambaAnalysis".equals(args[0]))
     { String fname = args[1]; 
 
@@ -30651,6 +30673,23 @@ public void produceCUI(PrintWriter out)
         else 
         { System.err.println("! Warning: no file output/mm.km3"); }
       }  
+      else if ("saveKM3".equals(cmd))
+      { try
+        { File km3file = 
+             new File("output/mm.km3"); 
+
+          PrintWriter out =
+             new PrintWriter(
+               new BufferedWriter(new FileWriter(km3file)));
+
+          model.saveKM3(out);
+          out.flush();  
+          out.close();
+    
+          System.out.println(">>> Saved UML to file " + km3file); 
+        } catch (Exception _ex) 
+          { System.err.println("! Warning: no file  output/mm.km3"); }
+      } 
       else if ("loadJava".equals(cmd))
       { model.loadFromJavaAST("code.java"); } 
       else if ("loadPython".equals(cmd))
