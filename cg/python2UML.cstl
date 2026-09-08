@@ -1719,6 +1719,8 @@ numpyTrailer::
 
 . maximum _1 |-->MatrixLib.matrixMaximum(_1`firstArg, _1`secondArg)<action> _1`firstArg Sequence
 
+. mean _1 |-->_1->average()
+
 . prod _1 |-->MatrixLib.prdMatrix(_1`firstArg)<action> _1`firstArg Sequence
 . sum _1 |-->MatrixLib.sumMatrix(_1`firstArg)<action> _1`firstArg Sequence
 
