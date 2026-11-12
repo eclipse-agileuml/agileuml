@@ -1209,7 +1209,8 @@ class BinaryExpression extends Expression
       return;
     }  // left < 0  =>  right->oclIsTypeOf("int")
 
-    if ("->at".equals(operator))
+    if ("->at".equals(operator) || 
+        "->excludingAt".equals(operator))
     { int acount = (int) uses.get("yellow"); 
       uses.set("yellow", acount+1); 
       messages.add("! (SEM): Condition " + srcDefined + " needed for\n  " + this);  

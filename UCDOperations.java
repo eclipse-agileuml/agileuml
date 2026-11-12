@@ -3658,10 +3658,12 @@ public class UCDOperations
     } 
   } 
 
-  public void energyAnalysis()
+  public String energyAnalysis()
   { java.util.Map clnes = new java.util.HashMap(); 
     Vector messages = new Vector();
     Vector csv = new Vector();
+
+    String result = ""; 
 
     // TestParameters.cloneSizeLimit = 4; 
 
@@ -3675,7 +3677,10 @@ public class UCDOperations
 
       for (int i = 0; i < messages.size(); i++) 
       { String mess = (String) messages.get(i); 
-        out.println(mess); 
+        out.println(mess);
+        if (mess.startsWith(">")) { } 
+        else 
+        { result = result + mess + "\n"; }  
       }  
 
       out.println(); 
@@ -3706,6 +3711,8 @@ public class UCDOperations
     }
     catch (IOException ex)
     { System.out.println("!! Error generating summary file"); }
+  
+    return result; 
   } 
 
   public Map energyAnalysis(java.util.Map clones, 
@@ -16421,8 +16428,9 @@ public void produceCUI(PrintWriter out)
     { System.err.println("!! Error generating C++"); } 
   } 
 
-  public void semanticAnalysis()
+  public String semanticAnalysis()
   { Vector messages = new Vector(); 
+    String sem = ""; 
 
     try
     { PrintWriter mtout = 
@@ -16433,6 +16441,8 @@ public void produceCUI(PrintWriter out)
       mtout.println(); 
       mtout.println("--- Semantic issues and flaws for system  " + systemName); 
       mtout.println(""); 
+
+      sem = sem + "--- Semantic issues and flaws for system  " + systemName + "\n";       
  
       for (int i = 0; i < entities.size(); i++) 
       { Entity ent = (Entity) entities.get(i); 
@@ -16442,7 +16452,8 @@ public void produceCUI(PrintWriter out)
             ent.isExternal()) 
         { continue; } 
 
-        ent.semanticAnalysis(mtout); 
+        String sement = ent.semanticAnalysis(mtout);
+        sem = sem + sement + "\n";  
       } 
 
       mtout.close(); 
@@ -16450,6 +16461,7 @@ public void produceCUI(PrintWriter out)
     catch (Exception _x) { } 
    
     System.out.println("*** Semantic issues/flaws written to semanticFlaws.txt"); 
+    return sem; 
   } 
 
   public void determinacyCheck()
@@ -30602,11 +30614,13 @@ public void produceCUI(PrintWriter out)
       catch (IOException ex)
       { System.out.println("!! Error generating measures"); }
    
-      model.energyAnalysis();   
+      String eanal = model.energyAnalysis();   
 
       java.util.Date d2 = new java.util.Date(); 
       long t2 = d2.getTime();
       System.out.println(">>> Execution time = " + (t2 - t1)); 
+
+      System.out.println(eanal); 
 
       return; 
     } 
@@ -30664,7 +30678,9 @@ public void produceCUI(PrintWriter out)
       } 
       model.typeCheck(); 
       model.typeCheck(); 
-      model.semanticAnalysis(); 
+
+      String sem = model.semanticAnalysis();
+ 
       try { 
         File fout = new File("qualityDetails.txt");
         PrintWriter qout = new PrintWriter(
@@ -30676,11 +30692,15 @@ public void produceCUI(PrintWriter out)
       catch (IOException ex)
       { System.out.println("!! Error generating measures"); }
    
-      model.energyAnalysis();   
+      String res = model.energyAnalysis();   
 
       java.util.Date d2 = new java.util.Date(); 
       long t2 = d2.getTime();
       System.out.println(">>> Execution time = " + (t2 - t1)); 
+
+      System.out.println(); 
+      System.out.println(sem); 
+      System.out.println(res); 
  
       return; 
     } 

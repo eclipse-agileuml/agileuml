@@ -3450,8 +3450,9 @@ public class BehaviouralFeature extends ModelElement
     return substituteParameters(res, arguments);  
   } 
 
-  public void semanticAnalysis(PrintWriter mtout) 
+  public String semanticAnalysis(PrintWriter mtout) 
   { String nme = getName(); 
+    String sem = ""; 
  
     Map uses = new Map(); 
     uses.set("amber", 0); 
@@ -3474,7 +3475,11 @@ public class BehaviouralFeature extends ModelElement
       boolean alwaysReturns = this.checkHasReturn();
       if (alwaysReturns) { } 
       else 
-      { mtout.println("!! Warning (SEM): query operation may fail to return value: " + this + "\n");
+      { String mess = 
+          "!! Warning (SEM): query operation may fail to return value: " + this + "\n"; 
+
+        mtout.println(mess);
+        sem = sem + mess; 
 
         int acount = (int) uses.get("amber"); 
         uses.set("amber", acount+1); 
@@ -3488,10 +3493,13 @@ public class BehaviouralFeature extends ModelElement
 
       if (VectorUtil.containsEqualString(selfexpr, calls) ||
           VectorUtil.containsEqualString(selfexpr1, calls))
-      { 
-        mtout.println("!! Warning (NTE): possible infinite recursion: " + 
+      { String mess = 
+           "!! Warning (NTE): possible infinite recursion: " + 
            selfexpr + " is in calls of its activity: " + 
-           calls + "\n");
+           calls + "\n"; 
+
+        mtout.println(mess);
+        sem = sem + mess; 
 
         int acount = (int) uses.get("amber"); 
         uses.set("amber", acount+1); 
@@ -3503,9 +3511,13 @@ public class BehaviouralFeature extends ModelElement
         int acount = (int) uses.get("amber"); 
         uses.set("amber", acount+1); 
 
-        mtout.println("!! Warning (NTE): possible infinite recursion: " + 
-            selfexpr + " is in its returned values: " + 
-            returns + "\n");
+        String mess = 
+          "!! Warning (NTE): possible infinite recursion: " + 
+          selfexpr + " is in its returned values: " + 
+          returns + "\n"; 
+
+        mtout.println(mess);
+        sem = sem + mess; 
       }   
 
       activity.semanticAnalysis(uses,messages); 
@@ -3514,6 +3526,7 @@ public class BehaviouralFeature extends ModelElement
     for (int i = 0; i < messages.size(); i++)
     { String mess = (String) messages.get(i); 
       mtout.println(mess + "\n"); 
+      sem = sem + mess + "\n"; 
     }  
 
     int ycount = (int) uses.get("yellow"); 
@@ -3535,7 +3548,8 @@ public class BehaviouralFeature extends ModelElement
         " semantic errors in operation " + nme + "\n"); 
     } 
 
-    mtout.println(); 
+    mtout.println();
+    return sem + "\n";  
   } 
 
   public Expression determinate(Vector arguments, 

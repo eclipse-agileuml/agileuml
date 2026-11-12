@@ -8430,9 +8430,10 @@ class WhileStatement extends Statement
 
   public Map energyUse(Map uses, Vector rUses, Vector aUses, 
                        Vector yUses)
-  { if (loopRange != null) 
-    { loopRange.energyUse(uses,rUses,aUses,yUses); }
-    else if (loopTest != null)
+  { // if (loopRange != null) 
+    // { loopRange.energyUse(uses,rUses,aUses,yUses); }
+    // else 
+    if (loopKind != FOR && loopTest != null)
     { loopTest.energyUse(uses,rUses,aUses,yUses); 
       loopTest.setBrackets(false); 
     }
@@ -8469,11 +8470,11 @@ class WhileStatement extends Statement
           Vector auses = body.getUses(iter); 
           // Vector vused = body.variablesUsedIn(newvars); 
           
-          System.err.println(">>> Loop body write frame: " + wrfr); 
+          // System.err.println(">>> Loop body write frame: " + wrfr); 
           // System.err.println(">>> Uses: " + vuses); 
 
-          System.err.println(">>> Loop variable uses in loop body: " + vuses); 
-          System.err.println(">>> Iterator uses in loop body: " + auses); 
+          // System.err.println(">>> Loop variable uses in loop body: " + vuses); 
+          // System.err.println(">>> Iterator uses in loop body: " + auses); 
           // System.err.println(">>> Used: " + vused); 
 
           boolean isWritten = false; 
@@ -8546,14 +8547,14 @@ class WhileStatement extends Statement
           // Vector vuses = body.getVariableUses(); 
 
           Vector vuses = body.getUses(loopVar + ""); 
-          System.err.println(">>> Loop variable uses in loop body: " + vuses); 
+          // System.err.println(">>> Loop variable uses in loop body: " + vuses); 
 
           Vector auses = body.getUses(iter); 
           // Vector vused = body.variablesUsedIn(newvars); 
           
-          System.err.println(">>> Loop body write frame: " + wrfr); 
+          // System.err.println(">>> Loop body write frame: " + wrfr); 
           // System.err.println(">>> Uses: " + vuses); 
-          System.err.println(">>> Iterator uses in loop body: " + auses); 
+          // System.err.println(">>> Iterator uses in loop body: " + auses); 
           // System.err.println(">>> Used: " + vused); 
 
           boolean isWritten = false; 
@@ -8910,12 +8911,13 @@ class WhileStatement extends Statement
                              int nestingLevel, 
                              java.util.Map operatorsAtLevel, 
                              Vector vars)
-  { if (loopRange != null) 
-    { loopRange.collectionOperatorUses(nestingLevel+1, 
-                                       operatorsAtLevel, 
-                                       vars); 
-    }
-    else if (loopTest != null)
+  { // if (loopRange != null) 
+    // { loopRange.collectionOperatorUses(nestingLevel+1, 
+    //                                    operatorsAtLevel, 
+    //                                    vars); 
+    // }
+    // else 
+    if (loopKind != FOR && loopTest != null)
     { loopTest.collectionOperatorUses(nestingLevel+1, 
                                       operatorsAtLevel, 
                                       vars); 
@@ -8992,13 +8994,14 @@ class WhileStatement extends Statement
       } 
     }  
  
-    if (loopRange != null) 
-    { loopRange.collectionOperatorUses(nestingLevel + 1, 
-                                       operatorsAtLevel, 
-                                       newvars, 
-                                       uses, messages); 
-    }
-    else if (loopTest != null)
+    // if (loopRange != null) 
+    // { loopRange.collectionOperatorUses(nestingLevel + 1, 
+    //                                    operatorsAtLevel, 
+    //                                    newvars, 
+    //                                    uses, messages); 
+    // }
+    // else 
+    if (loopKind != FOR && loopTest != null)
     { loopTest.collectionOperatorUses(nestingLevel + 1, 
                                       operatorsAtLevel, 
                                       oldvars, 

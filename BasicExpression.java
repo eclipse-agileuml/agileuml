@@ -3345,7 +3345,25 @@ class BasicExpression extends Expression
           parameters.size() > 0)
       { Expression par1 = (Expression) parameters.get(0);
  
-        if (par1.hasIntegerType()) { } 
+        if (par1.hasIntegerType()) 
+        { if ("Integer".equals(objectRef + "")) { } 
+          else // par1 must be in range
+          { UnaryExpression selfsize = 
+               new UnaryExpression("->size", objectRef); 
+            Expression lbnd = 
+              new BinaryExpression("<=", new BasicExpression(1), par1); 
+            Expression ubnd = 
+              new BinaryExpression("<=", par1, selfsize); 
+            Expression inrange = 
+              Expression.simplifyAnd(lbnd.simplify(),
+                                    ubnd.simplify()); 
+
+            messages.add("! (SEM): Condition " + inrange + " needed for " + this); 
+         
+            int yscore = (int) uses.get("yellow");
+            uses.set("yellow", yscore+1); 
+          } 
+        } 
         else 
         { messages.add("!! (SEM): parameter " + par1 + 
              " of " + this + " must have integer type"); 
@@ -3356,7 +3374,25 @@ class BasicExpression extends Expression
         if (parameters.size() > 1) 
         { Expression par2 = (Expression) parameters.get(1);
  
-          if (par2.hasIntegerType()) { } 
+          if (par2.hasIntegerType()) 
+          { if ("Integer".equals(objectRef + "")) { } 
+            else // par2 must be in range
+            { UnaryExpression selfsize = 
+                new UnaryExpression("->size", objectRef); 
+              Expression lbnd = 
+                new BinaryExpression("<=", new BasicExpression(1), par2); 
+              Expression ubnd = 
+                new BinaryExpression("<=", par2, selfsize); 
+              Expression inrange = 
+                Expression.simplifyAnd(lbnd.simplify(),
+                                    ubnd.simplify()); 
+
+              messages.add("! (SEM): Condition " + inrange + " needed for " + this); 
+         
+              int yscore = (int) uses.get("yellow");
+              uses.set("yellow", yscore+1); 
+            } 
+          } 
           else 
           { messages.add("!! (SEM): parameter " + par2 + 
                " of " + this + " must have integer type"); 
@@ -3364,6 +3400,35 @@ class BasicExpression extends Expression
             uses.set("amber", ascore+1); 
           }
         } 
+      }
+
+      if ("insertAt".equals(data) && 
+          parameters.size() > 0)
+      { Expression par1 = (Expression) parameters.get(0);
+ 
+        if (par1.hasIntegerType()) 
+        { UnaryExpression selfsize = 
+               new UnaryExpression("->size", objectRef); 
+          Expression lbnd = 
+            new BinaryExpression("<=", new BasicExpression(1), par1); 
+          Expression ubnd = 
+            new BinaryExpression("<=", par1, selfsize); 
+          Expression inrange = 
+             Expression.simplifyAnd(lbnd.simplify(),
+                                    ubnd.simplify()); 
+
+          messages.add("! (SEM): Condition " + inrange + " needed for " + this); 
+         
+          int yscore = (int) uses.get("yellow");
+          uses.set("yellow", yscore+1); 
+        } 
+        else 
+        { messages.add("!! (SEM): parameter " + par1 + 
+             " of " + this + " must have integer type"); 
+          int ascore = (int) uses.get("amber");
+          uses.set("amber", ascore+1); 
+        } 
+
       }
     } 
 
