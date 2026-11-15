@@ -1338,6 +1338,7 @@ public class ASTBasicTerm extends ASTTerm
         "BlockingDeque".equals(value) ||
         "LinkedBlockingDeque".equals(value) ||
         "ArrayBlockingQueue".equals(value) ||
+        "ConcurrentLinkedQueue".equals(value) ||
         "BlockingQueue".equals(value) || 
         "LinkedHashSet".equals(value) || 
         "ListOrderedSet".equals(value) ||
@@ -2484,6 +2485,7 @@ public class ASTBasicTerm extends ASTTerm
     if ("LinkedList".equals(value) || "List".equals(value) ||
         "Stack".equals(value) ||
         "LinkedHashSet".equals(value) ||  
+        "ConcurrentLinkedQueue".equals(value) ||
         "Queue".equals(value) || "Deque".equals(value))
     { modelElement = new Type("Sequence", null); 
       expression = new BasicExpression((Type) modelElement); 

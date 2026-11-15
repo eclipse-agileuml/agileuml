@@ -15617,7 +15617,8 @@ public class ASTCompositeTerm extends ASTTerm
       return expr; 
     }   
      
-    if ("Array".equals(obj + "") && 
+    if (("Array".equals(obj + "") ||
+         "List".equals(obj + "")) && 
         "of".equals(feature)) 
     { SetExpression sq = new SetExpression(pars, true);
       Type seqtype = new Type("Sequence", null); 
@@ -24958,6 +24959,19 @@ public class ASTCompositeTerm extends ASTTerm
       return "OclFile.newOclFile(" + callp1 + ")"; 
     } 
 
+    if ("of".equals(called) && 
+        cargs.size() == 1)
+    { // OclFile.newOclFile(cargs1)
+      ASTTerm.setType(this, "String"); 
+    
+      ASTTerm callarg1 = (ASTTerm) cargs.get(0);
+      String callp1 = callarg1.toKM3(); 
+          
+      expression = 
+         callarg1.expression;
+      return callp1; 
+    } 
+
     System.out.println(">>> internal method call: " + called + cargs); 
 
     return ""; 
@@ -27226,7 +27240,7 @@ public class ASTCompositeTerm extends ASTTerm
 
           return "(" + callp1 + ").subrange(1," + callp2 + ")"; 
         }
-        else if ("Paths".equals(args))
+        else if ("Paths".equals(args) || "Path".equals(args))
         { return pathsMethodCallFormKM3(called,cargs); } 
         else if ("Files".equals(args))
         { return filesMethodCallFormKM3(called,cargs); } 
@@ -28163,7 +28177,8 @@ public class ASTCompositeTerm extends ASTTerm
 
           return "(" + callp1 + " + \"\")->isMatch(\"[a-zA-Z_$]\")"; 
         }    
-        else if ("isSpaceChar".equals(called) && "Character".equals(argliteral))
+        else if ("isSpaceChar".equals(called) && 
+                 "Character".equals(argliteral))
         { ASTTerm callarg1 = (ASTTerm) cargs.get(0); 
           String callp1 = callarg1.toKM3(); 
 
@@ -28197,7 +28212,8 @@ public class ASTCompositeTerm extends ASTTerm
 
           return "(" + callp1 + " + \"\")->isMatch(\"[ \\t\\n\\r]\")"; 
         }    
-        else if ("toString".equals(called) && "Character".equals(argliteral))
+        else if ("toString".equals(called) && 
+                 "Character".equals(argliteral))
         { ASTTerm callarg1 = (ASTTerm) cargs.get(0); 
           String callp1 = callarg1.toKM3(); 
 
@@ -28457,6 +28473,19 @@ public class ASTCompositeTerm extends ASTTerm
                                  called, 
                                  cargs, 
                                  argliteral); 
+        } 
+        else if ("List".equals(argliteral) && 
+                 "of".equals(called)) 
+        { String res = toKM3arraylist(cargs);
+          return res; 
+        } 
+        else if ("Path".equals(argliteral) && 
+                 "of".equals(called) && 
+                 cargs.size() > 0) 
+        { ASTTerm callarg = (ASTTerm) cargs.get(0); 
+          expression = callarg.expression; 
+          ASTTerm.setType(thisliteral,"String"); 
+          return expression + ""; 
         } 
         else if ("clone".equals(called))
         { if (arg.expression != null) 
@@ -32294,14 +32323,17 @@ public class ASTCompositeTerm extends ASTTerm
           //      arg.expression, 
           //      " ", JOptionPane.ERROR_MESSAGE);
 
-          if ("Arrays".equals(argliteral) && cargs.size() > 0)
+          if (("Arrays".equals(argliteral) || 
+               argliteral.endsWith(".Arrays")) && 
+              cargs.size() > 0)
           { // Arrays.stream(arr)
             ASTTerm carg1 = (ASTTerm) cargs.get(0); 
             String callp1 = carg1.toKM3(); 
             expression = carg1.expression;
             return callp1; 
           } 
-          else if ("StreamSupport".equals(argliteral) && cargs.size() > 0)
+          else if ("StreamSupport".equals(argliteral) && 
+                   cargs.size() > 0)
           { // StreamSupport.stream(arr)
             ASTTerm carg1 = (ASTTerm) cargs.get(0); 
             String callp1 = carg1.toKM3();
