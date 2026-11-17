@@ -34308,7 +34308,7 @@ public class ASTCompositeTerm extends ASTTerm
           if (args instanceof ASTCompositeTerm)
           { creatorArguments = 
               ((ASTCompositeTerm) args).getCreatorArgumentExpressions(); 
-            System.out.println("::>> Creator arguments of " + args + " :: " + creatorArguments); 
+            // System.out.println("::>> Creator arguments of " + args + " :: " + creatorArguments); 
           } 
 
           if (args.expressions != null) 
@@ -35504,7 +35504,7 @@ public class ASTCompositeTerm extends ASTTerm
       if (args instanceof ASTCompositeTerm)
       { creatorArguments = 
          ((ASTCompositeTerm) args).getCreatorArgumentExpressions(); 
-        System.out.println("::>> Creator arguments of " + args + ": " + creatorArguments); 
+        // System.out.println("::>> Creator arguments of " + args + ": " + creatorArguments); 
       } 
 
       if (args.expressions != null) 
@@ -37811,7 +37811,8 @@ public class ASTCompositeTerm extends ASTTerm
             // ASTTerm.entities.add(cent); 
             // It is a static operation of a standard object
 
-            if ("parseLong".equals(mname))
+            if ("parseLong".equals(mname) || 
+                "longValue".equals(mname))
             { Attribute lampar = 
                 new Attribute("_par", 
                   new Type("String", null), 
@@ -37826,7 +37827,8 @@ public class ASTCompositeTerm extends ASTTerm
               ((UnaryExpression) expression).setAccumulator(lampar);  
               return expression + ""; 
             } 
-            else if ("parseInt".equals(mname))
+            else if ("parseInt".equals(mname) ||
+                     "intValue".equals(mname))
             { Attribute lampar = 
                 new Attribute("_par", 
                   new Type("String", null), 
@@ -37841,7 +37843,8 @@ public class ASTCompositeTerm extends ASTTerm
               ((UnaryExpression) expression).setAccumulator(lampar);  
               return expression + ""; 
             } 
-            else if ("parseDouble".equals(mname))
+            else if ("parseDouble".equals(mname) ||
+                     "doubleValue".equals(mname))
             { Attribute lampar = 
                 new Attribute("_par", 
                   new Type("String", null), 
@@ -44851,7 +44854,7 @@ public class ASTCompositeTerm extends ASTTerm
 
   public boolean hasJavaLabelFunctions(
                                    BehaviouralFeature mbf)
-  { System.out.println(">>> hasJavaLabelFunctions " + this); 
+  { // System.out.println(">>> hasJavaLabelFunctions " + this); 
 
     if (terms.size() == 0)
     { return false; } 
@@ -44970,7 +44973,7 @@ public class ASTCompositeTerm extends ASTTerm
           { String stat0 = labstat.toKM3(); } 
           String stats = act.toKM3();
 
-          System.out.println(">>> Labelled statement: " + labstat + " " + labstat.statement + " " + (labstat.statement instanceof SequenceStatement)); 
+          // System.out.println(">>> Labelled statement: " + labstat + " " + labstat.statement + " " + (labstat.statement instanceof SequenceStatement)); 
 
           SequenceStatement breakaction = 
                                  new SequenceStatement(); 
@@ -44985,7 +44988,7 @@ public class ASTCompositeTerm extends ASTTerm
           Vector retvals = 
                  Statement.getReturnValues(breakaction); 
 
-          System.out.println(">> Return values: " + retvals); 
+          // System.out.println(">> Return values: " + retvals); 
 
           if (retvals != null && retvals.size() > 0)
           { Type retType = Type.determineType(retvals); 
@@ -45049,9 +45052,9 @@ public class ASTCompositeTerm extends ASTTerm
  
           bfcontinue.setActivity(continueaction); 
           
-          System.out.println(">>> Break label function: " + bfbreak.display()); 
+          // System.out.println(">>> Break label function: " + bfbreak.display()); 
 
-          System.out.println(">>> Continue label function: " + bfcontinue.display()); 
+          // System.out.println(">>> Continue label function: " + bfcontinue.display()); 
 
           res.add(bfbreak);
           res.add(bfcontinue);
