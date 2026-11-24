@@ -59,6 +59,17 @@ public class SetExpression extends Expression
     return res; 
   } 
 
+  public static SetExpression newMapSetExpression(Vector pars)
+  { SetExpression res = new SetExpression(); 
+    res.setType(new Type("Map", null)); 
+    for (int i = 0; i + 1 < pars.size(); i = i+2)
+    { Expression key = (Expression) pars.get(i); 
+      Expression value = (Expression) pars.get(i+1); 
+      res.addElement(new BinaryExpression("|->", key, value)); 
+    } 
+    return res; 
+  } 
+
   public static SetExpression newRefSetExpression()
   { SetExpression res = new SetExpression(); 
     res.setType(new Type("Ref", null)); 
