@@ -4898,6 +4898,25 @@ public class BehaviouralFeature extends ModelElement
 
       Vector calls = Statement.getOperationCalls(activity);
 
+      // Duplicate calls are suspicious.
+      java.util.HashSet seencalls = new java.util.HashSet(); 
+
+      // System.out.println(">> Seen calls are: " + calls); 
+ 
+      for (int p = 0; p < calls.size(); p++) 
+      { Statement cc = (Statement) calls.get(p); 
+        if (seencalls.contains(cc + ""))
+        { amberUses.add("!! Code smell (DC): duplicate calls of " + 
+                          cc + " in " + this); 
+          int ascore = (int) res.get("amber");
+          ascore = ascore + 1;
+          res.set("amber", ascore); 
+          int dcscore = (int) res.get("DC"); 
+          res.set("DC", dcscore+1); 
+        } 
+        seencalls.add(cc + ""); 
+      } 
+
       if (isQuery()) // should be no "newC", "newInstance" calls
       { for (int t = 0; t < calls.size(); t++) 
         { InvocationStatement call = 
@@ -4912,6 +4931,8 @@ public class BehaviouralFeature extends ModelElement
             int ascore = (int) res.get("amber");
             ascore = ascore + 1;
             res.set("amber", ascore); 
+            int oesscore = (int) res.get("OES"); 
+            res.set("OES", oesscore+1); 
           } 
         } 
       } 

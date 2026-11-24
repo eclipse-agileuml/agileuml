@@ -30641,7 +30641,9 @@ public void produceCUI(PrintWriter out)
       } 
       model.typeCheck(); 
       model.typeCheck(); 
-      model.semanticAnalysis(); 
+
+      String sem = model.semanticAnalysis();
+ 
       try { 
         File fout = new File("qualityDetails.txt");
         PrintWriter qout = new PrintWriter(
@@ -30653,8 +30655,12 @@ public void produceCUI(PrintWriter out)
       catch (IOException ex)
       { System.out.println("!! Error generating measures"); }
    
-      model.energyAnalysis();   
+      String res = model.energyAnalysis();   
 
+      System.out.println(); 
+      System.out.println(sem); 
+      System.out.println(res); 
+   
       java.util.Date d2 = new java.util.Date(); 
       long t2 = d2.getTime();
       System.out.println(">>> Execution time = " + (t2 - t1)); 
@@ -30760,7 +30766,24 @@ public void produceCUI(PrintWriter out)
       else if ("analyse".equals(cmd))
       { model.typeCheck(); 
         model.typeInference(); 
-        model.energyAnalysis(); 
+        String sem = model.semanticAnalysis();
+ 
+        try { 
+          File fout = new File("qualityDetails.txt");
+          PrintWriter qout = new PrintWriter(
+                              new BufferedWriter(
+                                new FileWriter(fout)));
+          model.displayMeasures(qout);
+          qout.close();
+        }
+        catch (IOException ex)
+        { System.out.println("!! Error generating measures"); }
+   
+        String res = model.energyAnalysis();   
+
+        System.out.println(); 
+        System.out.println(sem); 
+        System.out.println(res); 
       }
       else if ("simplify".equals(cmd))
       { model.simplifyOCL(); } 
