@@ -15630,6 +15630,23 @@ public class ASTCompositeTerm extends ASTTerm
       return sq; 
     } 
 
+    if ("Map".equals(obj + "") && 
+        "of".equals(feature)) 
+    { SetExpression sq = 
+         SetExpression.newMapSetExpression(pars);
+      Type seqtype = new Type("Map", null); 
+      if (pars.size() > 0)
+      { seqtype.setKeyType(
+          ((Expression) pars.get(0)).getType());
+      }
+      if (pars.size() > 1)
+      { seqtype.setElementType(
+          ((Expression) pars.get(1)).getType());
+      }  
+      sq.setType(seqtype); 
+      return sq; 
+    } 
+
     if ("Number".equals(obj + "") && 
         "isFinite".equals(feature) && 
         pars.size() == 1)
@@ -28478,6 +28495,28 @@ public class ASTCompositeTerm extends ASTTerm
                  "of".equals(called)) 
         { String res = toKM3arraylist(cargs);
           return res; 
+        } 
+        else if ("Map".equals(argliteral) && 
+                 "of".equals(called)) 
+        { Vector pars = new Vector(); 
+          for (Object obj : cargs)
+          { ASTTerm trm = (ASTTerm) obj;
+            pars.add(trm.expression); 
+          } 
+          SetExpression sq = 
+            SetExpression.newMapSetExpression(pars);
+          Type seqtype = new Type("Map", null); 
+          if (pars.size() > 0)
+          { seqtype.setKeyType(
+             ((Expression) pars.get(0)).getType());
+          }
+          if (pars.size() > 1)
+          { seqtype.setElementType(
+            ((Expression) pars.get(1)).getType());
+          }  
+          sq.setType(seqtype); 
+          expression = sq;
+          return sq + "";  
         } 
         else if ("Path".equals(argliteral) && 
                  "of".equals(called) && 
