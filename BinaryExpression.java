@@ -1175,7 +1175,8 @@ class BinaryExpression extends Expression
         }    
       } 
       else if (left.hasStringType())
-      { if (right.hasStringType()) { } 
+      { if (right.hasStringType() ||
+            "null".equals(right + "")) { } 
         else 
         { int oscore = (int) uses.get("amber"); 
           uses.set("amber", oscore+1); 
@@ -1183,7 +1184,8 @@ class BinaryExpression extends Expression
         }    
       } 
       else if (right.hasStringType())
-      { if (left.hasStringType()) { } 
+      { if (left.hasStringType() ||
+            "null".equals(left + "")) { } 
         else 
         { int oscore = (int) uses.get("amber"); 
           uses.set("amber", oscore+1); 
@@ -23649,8 +23651,8 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
     // sq->collect(x|e)->at(i) or ->first() or ->last()  
     
 
-    Expression ZERO_EXPRESSION = new BasicExpression(0); 
-    Expression UNIT_EXPRESSION = new BasicExpression(1); 
+    final Expression ZERO_EXPRESSION = new BasicExpression(0); 
+    final Expression UNIT_EXPRESSION = new BasicExpression(1); 
 
     Expression rsimp = right.simplifyOCL();  
 
@@ -23674,6 +23676,22 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       int ascore = (int) res.get("amber"); 
       res.set("amber", ascore+1); 
     } */ 
+
+    Vector leftops = left.allOperationsUsedIn(); 
+    Vector rightops = right.allOperationsUsedIn(); 
+    
+    // suspicious if there are common calls on left, right
+
+    for (int i = 0; i < leftops.size(); i++) 
+    { String lop = "" + leftops.get(i); 
+      if (rightops.contains(lop))
+      { aUses.add("!! Same operation called twice (DC): " + lop + " in " + this + "\n");
+        int ascore = (int) res.get("amber"); 
+        res.set("amber", ascore+1);
+        int dccount = (int) res.get("DC"); 
+        res.set("DC", dccount+1);
+      } 
+    } 
 
     left.energyUse(res, rUses, aUses, yUses); 
     right.energyUse(res, rUses, aUses, yUses); 
