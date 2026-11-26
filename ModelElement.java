@@ -442,6 +442,9 @@ public abstract class ModelElement implements SystemTypes
     return ename.substring(ind + 1,ename.length());
   }
 
+  public static ModelElement getByName(String nme, List mes)
+  { return lookupByName(nme, mes); } 
+
   public static ModelElement lookupByName(String nme, List mes)
   { if (mes == null || nme == null) 
     { return null; }
