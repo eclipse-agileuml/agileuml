@@ -4195,6 +4195,19 @@ class BinaryExpression extends Expression
     return res;
   }  // VectorUtil.union of the uses? 
 
+  public Vector allOperationCallsUsedIn()
+  { Vector res = new Vector(); 
+    res.addAll(left.allOperationCallsUsedIn());
+    if ("->iterate".equals(operator) && accumulator != null) 
+    { Expression expr = accumulator.getInitialExpression(); 
+      if (expr != null) 
+      { res.addAll(expr.allOperationCallsUsedIn()); }
+    }  
+
+    res.addAll(right.allOperationCallsUsedIn());
+    return res; 
+  } // ->iterate, add accumulator expression
+
   public Vector allFeaturesUsedIn()
   { Vector res = new Vector(); 
     res.addAll(left.allFeaturesUsedIn());
@@ -4286,6 +4299,34 @@ public void findClones(java.util.Map clones, String rule, String op)
     if (expr != null) 
     { expr.findClones(clones,rule,op); }
   }  
+
+  Vector leftops = left.allOperationCallsUsedIn(); 
+  Vector rightops = right.allOperationCallsUsedIn(); 
+    
+  // System.out.println(">> Calls: " + leftops + " " + rightops); 
+  // suspicious if there are common calls on left, right
+
+  for (int i = 0; i < leftops.size(); i++) 
+  { Expression lop = (Expression) leftops.get(i); 
+    if (VectorUtil.containsEqualString(lop+"", rightops))
+    { val = lop + ""; 
+      used = (Vector) clones.get(val);
+      if (used == null)
+      { used = new Vector(); }
+      if (rule != null)
+      { used.add(rule);
+        used.add(rule);
+      }
+      else if (op != null)
+      { used.add(op); 
+        used.add(op);
+      }
+      clones.put(val,used);
+      System.err.println("!! Same operation called twice (DC): " + 
+                  lop + " in " + this + "\n");
+         
+    } 
+  }
 }
 
 public void findClones(java.util.Map clones, 
@@ -4319,6 +4360,35 @@ public void findClones(java.util.Map clones,
     { expr.findClones(clones,cloneDefs,rule,op); }
   }
 
+  Vector leftops = left.allOperationCallsUsedIn(); 
+  Vector rightops = right.allOperationCallsUsedIn(); 
+    
+  // System.out.println(">> Calls: " + leftops + " " + rightops); 
+
+  // suspicious if there are common calls on left, right
+
+  for (int i = 0; i < leftops.size(); i++) 
+  { Expression lop = (Expression) leftops.get(i); 
+    if (VectorUtil.containsEqualString(lop+"", rightops))
+    { val = lop + ""; 
+      used = (Vector) clones.get(val);
+      if (used == null)
+      { used = new Vector(); }
+      if (rule != null)
+      { used.add(rule); 
+        used.add(rule); 
+      }
+      else if (op != null)
+      { used.add(op);
+        used.add(op);
+      }
+      clones.put(val, used);
+      cloneDefs.put(val, lop);
+      System.err.println("!! Same operation called twice (DC): " + 
+                  lop + " in " + this + "\n");
+         
+    } 
+  }
 }
 
   public void findMagicNumbers(java.util.Map mgns, String rule, String op)
@@ -23677,21 +23747,25 @@ public Statement generateDesignSemiTail(BehaviouralFeature bf,
       res.set("amber", ascore+1); 
     } */ 
 
-    Vector leftops = left.allOperationsUsedIn(); 
-    Vector rightops = right.allOperationsUsedIn(); 
+    /* 
+    Vector leftops = left.allOperationCallsUsedIn(); 
+    Vector rightops = right.allOperationCallsUsedIn(); 
     
+    System.out.println(">> Calls: " + leftops + " " + rightops); 
+
     // suspicious if there are common calls on left, right
 
     for (int i = 0; i < leftops.size(); i++) 
-    { String lop = "" + leftops.get(i); 
-      if (rightops.contains(lop))
-      { aUses.add("!! Same operation called twice (DC): " + lop + " in " + this + "\n");
+    { Expression lop = (Expression) leftops.get(i); 
+      if (VectorUtil.containsEqualString(lop+"", rightops))
+      { aUses.add("!! Same operation called twice (DC): " + 
+                  lop + " in " + this + "\n");
         int ascore = (int) res.get("amber"); 
         res.set("amber", ascore+1);
         int dccount = (int) res.get("DC"); 
         res.set("DC", dccount+1);
       } 
-    } 
+    } */ 
 
     left.energyUse(res, rUses, aUses, yUses); 
     right.energyUse(res, rUses, aUses, yUses); 
