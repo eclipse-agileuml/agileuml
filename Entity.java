@@ -5699,13 +5699,16 @@ public class Entity extends ModelElement implements Comparable
     // by new local declarations. Also, constant expressions
     // within loops are replaced.  
 
-    Vector anames = allAttributeNames(); 
-
-    java.util.Map clones = new java.util.HashMap(); 
-    java.util.Map cdefs = new java.util.HashMap(); 
-
     String opname = 
       JOptionPane.showInputDialog("Enter operation name to extract variable in: "); 
+    extractLocalVariables(opname); 
+  } 
+
+  public void extractLocalVariables(String opname)
+  { // Looks for clones within operations, replaces these 
+    // by new local declarations. Also, constant expressions
+    // within loops are replaced.  
+
     BehaviouralFeature op = 
       (BehaviouralFeature) 
          ModelElement.lookupByName(opname,operations);
@@ -5715,10 +5718,15 @@ public class Entity extends ModelElement implements Comparable
       return; 
     } 
 
+    Vector anames = allAttributeNames(); 
+
+    java.util.Map clones = new java.util.HashMap(); 
+    java.util.Map cdefs = new java.util.HashMap(); 
+
     op.findClones(clones,cdefs); 
      
-    // System.out.println(">> Potential clones " + clones); 
-    // System.out.println(">> Potential clone definitions " + cdefs); 
+    System.out.println(">> Potential clones " + clones); 
+    System.out.println(">> Potential clone definitions " + cdefs); 
 
     Vector vkeys = new Vector(); 
     vkeys.addAll(clones.keySet());
@@ -5728,6 +5736,9 @@ public class Entity extends ModelElement implements Comparable
       Vector copies = (Vector) clones.get(clne); 
       if (copies != null && copies.size() > 1)
       { Object obj = cdefs.get(clne); 
+
+        System.out.println(">> Selected clone: " + obj + 
+                           " " + ((Expression) obj).isSideEffecting()); 
  
         if (obj instanceof Expression)
         { Expression expr = (Expression) obj;
