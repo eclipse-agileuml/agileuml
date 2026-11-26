@@ -1515,6 +1515,8 @@ abstract class Expression
 
   public abstract Vector allFeaturesUsedIn(); 
 
+  public abstract Vector allOperationCallsUsedIn(); 
+
   public abstract Vector allAttributesUsedIn();
   
   public abstract Vector allOperationsUsedIn(); 

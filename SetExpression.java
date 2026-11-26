@@ -2879,6 +2879,16 @@ public class SetExpression extends Expression
     return res;
   }
 
+  public Vector allOperationCallsUsedIn()
+  { Vector res = new Vector();
+    for (int i = 0; i < elements.size(); i++)
+    { Expression e = (Expression) elements.get(i);
+      res.addAll(e.allOperationCallsUsedIn());
+    }
+
+    return res;
+  }
+
   public Vector allFeaturesUsedIn()
   { Vector res = new Vector();
     for (int i = 0; i < elements.size(); i++)
