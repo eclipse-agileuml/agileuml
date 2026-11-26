@@ -1504,12 +1504,28 @@ public class UCDOperations
     if (cloneLimit != null) 
     { try { CLONE_LIMIT = Integer.parseInt(cloneLimit); } 
       catch (Exception _ex) 
-      { CLONE_LIMIT = 10; } 
+      { CLONE_LIMIT = TestParameters.energyCloneSizeLimit; } 
     } 
     
     ent1.extractLocalVariables(); 
   } // may lead to updated operation activity. 
+  */ 
+
+  public void extractLocalVariable(String cname, String opname)
+  { Entity ent1 = 
+      (Entity) ModelElement.getByName(cname, entities); 
+    
+    if (ent1 == null) 
+    { System.err.println("!!! No such entity: " + cname); 
+      return; 
+    } 
+
+    CLONE_LIMIT = TestParameters.energyCloneSizeLimit;
+ 
+    ent1.extractLocalVariables(opname); 
+  } // may lead to updated operation activity. 
   
+  /* 
   public void extractComponent()
   { ListShowDialog listShowDialog = new ListShowDialog(parent);
     listShowDialog.pack();
@@ -7351,6 +7367,7 @@ public class UCDOperations
     // System.out.println(">> Set activity for operation " + nme + " of entity " + ent); 
   } */ 
 
+  /* 
   public void transformOperationActivity(Entity ent)
   { String nme = 
           JOptionPane.showInputDialog("Enter operation name:");
@@ -7396,6 +7413,59 @@ public class UCDOperations
     bf.setActivity(effect); 
     updateActivities(ent, bf, effect); 
     // System.out.println(">> Set activity for operation " + nme + " of entity " + ent); 
+  } */ 
+
+  public void replaceRecursionByIteration(String ename, String opname)
+  { Entity ent = 
+       (Entity) ModelElement.lookupByName(ename, entities); 
+    if (ent == null) 
+    { System.err.println("!! ERROR: No such class: " + ename); 
+      return; 
+    }
+
+    BehaviouralFeature bf = ent.getOperation(opname); 
+    if (bf == null) 
+    { System.err.println("!! ERROR: No such operation: " + opname); 
+      return; 
+    } 
+
+    Statement stat = bf.getActivity();
+    Statement effect = null; 
+ 
+    if (stat == null) 
+    { System.err.println("! Warning: Activity must be non-null to apply this refactoring"); 
+      bf.addStereotype("noRecursion"); 
+      effect = 
+          bf.generateDesign(ent,entities,types); 
+    } 
+    else 
+    { 
+      effect = bf.replaceRecursionByIteration(stat); 
+      // effect = bf.selfCalls2Loops(stat); 
+    } 
+
+    if (effect == null)
+    { System.err.println("!!! ERROR: Syntax error in activity"); 
+      return; 
+    } 
+    else if (effect == stat) 
+    { System.out.println(">>> No change to activity"); 
+      return; 
+    } 
+    
+    Vector contexts = new Vector(); 
+    contexts.add(ent); 
+    Vector pars = new Vector(); 
+
+    effect.setEntity(ent); 
+    pars.addAll(bf.getParameters()); 
+
+    effect.typeCheck(types,entities,contexts,pars); 
+    
+    bf.setActivity(effect); 
+    updateActivities(ent, bf, effect); 
+    System.out.println(">> Refactored operation " + 
+                       opname + " of entity " + ent); 
   }
 
   public void makeOperationCached(Entity ent)
@@ -30574,6 +30644,8 @@ public void produceCUI(PrintWriter out)
 
   /* Use as: java -jar mambaAnalysis.jar -mambaAnalysis DTOs.bo.xml */ 
 
+  /* Use as: java -jar javaAnalysis.jar -javaAnalysis code.java */ 
+
   public static void main(String[] args)
   { String cmd = ""; 
     UCDOperations model = new UCDOperations(); 
@@ -30716,8 +30788,10 @@ public void produceCUI(PrintWriter out)
       System.out.println("*********** AgileUML *******************"); 
       System.out.println("* Commands: loadKM3, analyse, loadJava, ");
       System.out.println("* view, simplify, loadPython, generateJava, generateCS, ");
-      System.out.println("* emulate cls op, ");  
-      System.out.println("* generatePython, generateCPP, exit "); 
+      System.out.println("* emulate classname opname, ");  
+      System.out.println("* generatePython, generateCPP, exit, "); 
+      System.out.println("* extractLocalVariable classname opname"); 
+      System.out.println("* replaceRecursion classname opname"); 
       System.out.println(); 
 
       try 
@@ -30787,6 +30861,26 @@ public void produceCUI(PrintWriter out)
       }
       else if ("simplify".equals(cmd))
       { model.simplifyOCL(); } 
+      else if (cmd.startsWith("extractLocalVariable"))
+      { String[] pars = cmd.split(" "); 
+        if (pars.length == 3)
+        { String cname = pars[1]; 
+          String opname = pars[2]; 
+          model.extractLocalVariable(cname,opname); 
+        }
+        else 
+        { System.err.println("Command is: extractLocalVariable classname operationname"); } 
+      }  
+      else if (cmd.startsWith("replaceRecursion"))
+      { String[] pars = cmd.split(" "); 
+        if (pars.length == 3)
+        { String cname = pars[1]; 
+          String opname = pars[2]; 
+          model.replaceRecursionByIteration(cname, opname); 
+        } 
+        else 
+        { System.err.println("Command is: replaceRecursion classname operationname"); }
+      } 
       else if (cmd.startsWith("emulate"))
       { String[] pars = cmd.split(" "); 
         if (pars.length == 3)
@@ -30797,6 +30891,8 @@ public void produceCUI(PrintWriter out)
           if (ent != null) 
           { ent.emulateOperation(op); } 
         }  
+        else 
+        { System.err.println("Command is: emulate classname operationname"); } 
       } 
       else if ("generateJava".equals(cmd))
       { File file = new File("output/Application.java");
