@@ -18334,6 +18334,31 @@ public Statement generateDesignSubtract(Expression rhs)
     return res;
   } // and from arrayIndex
 
+  public Vector allOperationCallsUsedIn()
+  { Vector res = new Vector();
+
+    if (umlkind == QUERY || umlkind == UPDATEOP ||
+        parameters != null && parameters.size() > 0)
+    { res.add(this); }
+
+    if (objectRef != null)
+    { res.addAll(objectRef.allOperationCallsUsedIn()); }
+
+    if (arrayIndex != null) 
+    { res.addAll(arrayIndex.allOperationCallsUsedIn()); } 
+
+    if (parameters != null) 
+    { for (int i = 0; i < parameters.size(); i++) 
+      { Expression par = (Expression) parameters.get(i); 
+        res.addAll(par.allOperationCallsUsedIn()); 
+      } 
+    } 
+
+    // System.out.println(">>> All operation calls in " + this + " = " + res); 
+
+    return res;
+  } 
+
   public Vector allAttributesUsedIn()
   { Vector res = new Vector();
     if ("self".equals(this + "")) 
