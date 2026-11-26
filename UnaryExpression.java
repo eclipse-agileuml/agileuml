@@ -3942,6 +3942,9 @@ public String updateFormSubset(String language, java.util.Map env, Expression va
     return res; 
   }
 
+  public Vector allOperationCallsUsedIn()
+  { return argument.allOperationCallsUsedIn(); }  
+
   public Vector allFeaturesUsedIn()
   { return argument.allFeaturesUsedIn(); }  
 
